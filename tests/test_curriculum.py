@@ -85,6 +85,19 @@ class CurriculumTest(unittest.TestCase):
     self.assertEqual(len(v['keywords']),len(set(v['keywords'])))
   self.assertEqual(len(json.loads((R/'api/rubrics.json').read_text())),246)
 
+ def test_all_authored_answer_length_and_editorial_status(self):
+  # Word count is a rehearsal proxy, never proof that answers were timed aloud.
+  self.assertEqual(len(self.l),245)
+  for name,lesson in self.l.items():
+   with self.subTest(title=name):
+    self.assertGreaterEqual(len(lesson['answer'].split()),60)
+    self.assertLessEqual(len(lesson['answer'].split()),140)
+  report=(R/'docs/COVERAGE_REPORT.md').read_text()
+  self.assertIn('| Expanded curriculum entries | 246 |',report)
+  self.assertIn('| Incomplete curriculum entries | 0 |',report)
+  self.assertIn('| Interview answer length 60–140 words | 245 / 245 |',report)
+  self.assertIn('**not established**',report)
+
  def test_topic_questions(self):
   for a,b,c,i in self.rows:
    with self.subTest(topic=c): self.assertTrue(i['summary'].strip() and i['question'].strip())
