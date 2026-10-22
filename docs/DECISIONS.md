@@ -18,3 +18,12 @@
 - M3: Adaptive retries point to unmentioned rubric concepts but avoid claiming the omissions prove factual misunderstanding; a cloud reviewer is optional and gated.
 - M3: Every Function route now rejects calls without backend-only gateway attestation. Production APIM must remove any inbound `X-Galaxy-Internal-Token` and inject a non-public one, enforce per-user quotas, and separately restrict direct Function network access.
 - M3: A signed-in Knowledge Vault user may retry extraction of their own stored document when authorized API is deployed; never pretend extraction completed when endpoint absent.
+
+## M4 — Git workflow adapted from the RetailGrowthAI coordinator (2026-10-22)
+
+- Connected GitHub identity `saifsiddiqui59` was verified and private RetailGrowthAI was readable/writable. `saifsiddiqui59/GenAI-Galaxy` remains absent/inaccessible (`404`), and the connector has no repo-creation operation; no remote Git changes happened.
+- Reuse RetailGrowthAI's coordinator/worker ownership, stacked PR dependency order, read-only CI, isolated paths, passing-test evidence and release-document checkpoints **without modifying** RetailGrowthAI or WineShopPOS.
+- Preserve M1 `main`; tag the existing M2 commit as `feat/m2-interview-foundations`, retain `feat/m3-curriculum-hardening`, and put Git preparation on `chore/m4-github-readiness`. Stage separate draft PRs on the newly created private Galaxy remote.
+- Git Bash `scripts/publish_github.sh` verifies the GitHub account, private visibility, exact origin URL and clean Git worktree; it never merges, deploys or pushes to unrelated repositories.
+- Add read-only `release-safety` CI plus branch `chore/**`, concurrency cancellation, runner/job timeouts and shell checks. It is local-only until a verified GitHub Actions run exists.
+- Fix `scripts/deploy_azure_static.sh` to include public `runtime-config.js` in future static uploads; do not deploy or provision resources under this milestone.

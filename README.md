@@ -1,4 +1,4 @@
-# GenAI Galaxy Adaptive Interview Tutor — V4 local Milestone 3
+# GenAI Galaxy Adaptive Interview Tutor — V4 local Milestone 4 (GitHub handoff)
 
 **Continue V3 without replacing it.** `V3_REFERENCE.html` preserves the recovered V3 source. The curriculum retains 17 planets, 45 original groups and 230 V3 topics, plus 16 new gap topics. There are now **147 distinct authored eight-part lessons (148 covered topic entries)** and **98 incomplete topic overviews**. The 147 authored lessons have not received expert editorial signoff; see `docs/COVERAGE_REPORT.md`.
 
@@ -41,6 +41,10 @@ python scripts/coverage_report.py
 GitHub Actions workflow is prepared, but **no remote CI has run**. Browser smoke tests simulate speech recognition and use mocked study data: they do not prove real microphone permissions, signed-in cloud data isolation, production model evaluation, Azure Speech or vault extraction. The original target `saifsiddiqui59/GenAI-Galaxy` returned 404 from the connected GitHub account, and that connection offers no repository-creation action. No new GitHub repo or cloud resource was created. RetailGrowthAI and WineShopPOS were not changed.
 
 See `docs/PROJECT_STATE.md`, `docs/NEXT_TASK.md`, and `docs/INTERFACES_V1.md` for milestones and integration contracts.
+
+## M4 GitHub workflow handoff
+
+The private Galaxy GitHub remote is not yet created. GitHub access to the separate private RetailGrowthAI repository was verified and its coordinator CI/branch/PR practices were adapted into `docs/GITHUB_WORKFLOW.md`. Local Galaxy branches now support M2/M3/M4 stacked draft PRs; run `bash scripts/publish_github.sh --check` from an authenticated Windows Git Bash session. The helper checks owner/repository/privacy and refuses other remotes. No GitHub PR, Actions run or cloud deployment has been performed. Current local checks: **20 Python tests** plus Node and browser simulations.
 
 ## M3 quality scope
 

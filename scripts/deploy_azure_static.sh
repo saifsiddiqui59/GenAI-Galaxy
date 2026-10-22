@@ -14,7 +14,7 @@ az storage blob service-properties update --account-name "$GALAXY_AZ_STORAGE" --
 cd "$(dirname "$0")/.."
 # Deploy only runtime assets, never V3 source, local reports, or confidential documents.
 mkdir -p /tmp/genai-galaxy-static/{data,speech}
-cp index.html styles.css app.js /tmp/genai-galaxy-static/
+cp index.html styles.css app.js runtime-config.js /tmp/genai-galaxy-static/
 cp data/curriculum.json data/lessons.json /tmp/genai-galaxy-static/data/
 cp speech/azure-speech-adapter.js /tmp/genai-galaxy-static/speech/
 az storage blob upload-batch --account-name "$GALAXY_AZ_STORAGE" --auth-mode login --destination '$web' --source /tmp/genai-galaxy-static --overwrite true

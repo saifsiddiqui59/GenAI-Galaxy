@@ -7,3 +7,10 @@ __pycache__/
 !.env.example
 node_modules/
 # Browser-generated preview images are optional release artifacts
+# Local browser QA evidence; share as release attachments, never commit huge generated PNGs.
+galaxy-desktop.png
+galaxy-mobile.png
+galaxy-reduced-motion.png
+# Temporary publish/coverage output
+*.log
+.coverage

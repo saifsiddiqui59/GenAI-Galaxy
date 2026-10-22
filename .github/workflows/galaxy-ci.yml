@@ -1,13 +1,19 @@
 name: Galaxy V4 validation
 on:
   pull_request:
+    branches: [main, 'feat/**'] # Supports reviewed stacked PRs before retargeting.
   push:
-    branches: [main, 'feat/**', 'fix/**']
+    branches: [main, 'feat/**', 'fix/**', 'chore/**']
+  workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: galaxy-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   curriculum-and-api:
     runs-on: ubuntu-24.04
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -17,24 +23,27 @@ jobs:
         with:
           node-version: '22'
       - run: python -m pip install pypdf==5.9.0
-      - name: Test curriculum and document safety
+      - name: Test curriculum, gateway and document safety
         run: python -m unittest discover -s tests -v
-      - name: Check JS and API syntax
+      - name: Check JS, Functions and shell syntax
         run: |
           node tests/test_engine.cjs
           node --check app.js
+          node --check runtime-config.js
           node --check speech/azure-speech-adapter.js
           python -m py_compile api/core.py api/function_app.py
-      - name: Check that server rubrics match content
+          bash -n scripts/checkpoint.sh scripts/deploy_azure_static.sh scripts/publish_github.sh
+      - name: Verify server-owned rubrics are reproducible
         run: |
           python scripts/build_api_rubrics.py
           git diff --exit-code -- api/rubrics.json
-      - name: Check coverage report reproducibility
+      - name: Verify curriculum coverage report is reproducible
         run: |
           python scripts/coverage_report.py
           git diff --exit-code -- docs/TOPIC_COVERAGE.csv docs/COVERAGE_REPORT.md
   browser-smoke:
     runs-on: ubuntu-24.04
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -44,3 +53,15 @@ jobs:
       - run: python -m playwright install --with-deps chromium
       - name: Desktop/mobile/reduced-motion and simulated mic
         run: python tests/browser_check.py
+  release-safety:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Reject accidental cross-project publishing and client secrets
+        run: python -m unittest discover -s tests -p 'test_release_guards.py' -v
+      - name: Shell syntax check (no cloud operations)
+        run: bash -n scripts/publish_github.sh scripts/checkpoint.sh scripts/deploy_azure_static.sh

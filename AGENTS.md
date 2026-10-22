@@ -10,3 +10,5 @@ Before modifying features, read: `docs/PROJECT_STATE.md`, `docs/NEXT_TASK.md`, `
 6. No multiple-choice interview checks. Do not claim lexical keyword scoring is an LLM correctness evaluator.
 7. Track factual/editorial evidence for every lesson; do not auto-expand 227 incomplete records with generic templates and declare success.
 8. Work in small feature branches; run `scripts/checkpoint.sh`; update docs and add regression tests; publish via reviewed PR; never fake CI/deployment success.
+9. Follow the RetailGrowthAI-inspired **Galaxy-only** Git/PR process in `docs/GITHUB_WORKFLOW.md`: never push to any other project, never self-merge stacked PRs, inspect real Actions logs before marking CI green.
+10. For private-repo bootstrap, use `scripts/publish_github.sh` only from a clean Galaxy Git worktree under the correct GitHub account. `--check` is read-only; `--create-private` creates an empty private remote; `--publish` pushes and opens draft PRs only. The user-controlled Git Bash CLI login is separate from the ChatGPT GitHub connector.
