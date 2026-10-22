@@ -1,8 +1,8 @@
-# GenAI Galaxy Adaptive Interview Tutor — V4 local Milestone 4 (GitHub handoff)
+# GenAI Galaxy Adaptive Interview Tutor — V4 P3 curriculum complete
 
-**Continue V3 without replacing it.** `V3_REFERENCE.html` preserves the recovered V3 source. The curriculum retains 17 planets, 45 original groups and 230 V3 topics, plus 16 new gap topics. There are now **167 distinct authored eight-part lessons (168 covered topic entries)** and **78 incomplete topic overviews**. The newest lessons remain editorial-unverified. The 147 authored lessons have not received expert editorial signoff; see `docs/COVERAGE_REPORT.md`.
+**Continue V3 without replacing it.** `V3_REFERENCE.html` preserves the recovered V3 source. The curriculum retains 17 planets, 45 original groups and 230 V3 topics, plus 16 new gap topics. There are now **245 distinct authored eight-part lessons (246 covered topic entries)** and **0 incomplete topic overviews**. All lessons remain editorial-unverified pending source/SME review and spoken-duration testing; see `docs/COVERAGE_REPORT.md`.
 
-## Preview (no cloud provisioning)
+## Local preview
 
 ```bash
 cd GenAI-Galaxy-V4
@@ -38,7 +38,7 @@ python scripts/build_api_rubrics.py
 python scripts/coverage_report.py
 ```
 
-GitHub Actions workflow is prepared, but **no remote CI has run**. Browser smoke tests simulate speech recognition and use mocked study data: they do not prove real microphone permissions, signed-in cloud data isolation, production model evaluation, Azure Speech or vault extraction. The original target `saifsiddiqui59/GenAI-Galaxy` returned 404 from the connected GitHub account, and that connection offers no repository-creation action. No new GitHub repo or cloud resource was created. RetailGrowthAI and WineShopPOS were not changed.
+GitHub Actions actually passed all **3/3 jobs** on latest P3 documentation merge `accdecd9be31cc3274f3e75e5478a87e1d2458fd` ([run #39845004927](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39845004927)). The existing public Azure Blob preview was deployed earlier and is not automatically updated by merges. Manual-only deployment requires a protected `dev` environment. The live hosted browser acceptance script now checks hashes of all seven published assets against the checked-out release plus 246/246 coverage to prevent a stale preview being reported as current. Browser smoke tests simulate speech recognition and use mocked study data: they do not prove real microphone permissions, signed-in cloud data isolation, production model evaluation, Azure Speech or vault extraction. The original target `saifsiddiqui59/GenAI-Galaxy` returned 404 from the connected GitHub account, and that connection offers no repository-creation action. No new GitHub repo or cloud resource was created. RetailGrowthAI and WineShopPOS were not changed.
 
 See `docs/PROJECT_STATE.md`, `docs/NEXT_TASK.md`, and `docs/INTERFACES_V1.md` for milestones and integration contracts.
 

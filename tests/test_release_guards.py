@@ -100,6 +100,13 @@ class ReleaseGuardTests(unittest.TestCase):
                 with self.subTest(file=str(file.relative_to(ROOT)), shape=shape):
                     self.assertIsNone(re.search(shape, content))
 
+    def test_live_browser_acceptance_rejects_stale_deploys(self):
+        hosted_test = (ROOT / 'tests/live_site_browser_check.py').read_text()
+        self.assertIn('sha256(downloaded).digest() == sha256(local).digest()', hosted_test)
+        self.assertIn('assert len(hosted_lessons) == 245', hosted_test)
+        self.assertIn('assert mapped == 246', hosted_test)
+        self.assertIn('PUBLIC_ASSETS', hosted_test)
+
     def test_no_private_documents_or_live_local_settings_in_checkout(self):
         forbidden = [
             ROOT / '.env', ROOT / '.env.production', ROOT / 'api/local.settings.json',
