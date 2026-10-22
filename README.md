@@ -1,6 +1,6 @@
-# GenAI Galaxy Adaptive Interview Tutor — V4 local Milestone 2
+# GenAI Galaxy Adaptive Interview Tutor — V4 local Milestone 3
 
-**Continue V3 without replacing it.** `V3_REFERENCE.html` preserves the recovered V3 source. The curriculum retains 17 planets, 45 original groups and 230 V3 topics, plus 16 new gap topics. There are now **49 individual authored eight-part lessons** and **197 incomplete overviews**. The 49 authored lessons have not received expert editorial signoff; see `docs/COVERAGE_REPORT.md`.
+**Continue V3 without replacing it.** `V3_REFERENCE.html` preserves the recovered V3 source. The curriculum retains 17 planets, 45 original groups and 230 V3 topics, plus 16 new gap topics. There are now **147 distinct authored eight-part lessons (148 covered topic entries)** and **98 incomplete topic overviews**. The 147 authored lessons have not received expert editorial signoff; see `docs/COVERAGE_REPORT.md`.
 
 ## Preview (no cloud provisioning)
 
@@ -18,8 +18,8 @@ Features: responsive 17-planet galaxy with animated orbits, atmospheric surfaces
 
 `api/function_app.py` provides authenticated Azure Functions routes:
 
-- `POST /api/practice/evaluate` — server-owned, allowlisted rubrics and Azure OpenAI evaluation; validates Supabase Auth JWT via `/auth/v1/user` on each request. Requires `GALAXY_EVAL_GATEWAY_RATE_LIMIT=active` after a **real external quota/rate-limit gateway** is established. Without it the route fails closed with 503.
-- `POST /api/vault/extract` — only accesses a private Supabase document row and storage object owned by the verified user. PDF (selectable text only), DOCX, TXT, MD; checks file signatures, size, ZIP decompression, document ID and ownership; updates the private metadata row with <=60,000 characters. No malware scanner or OCR yet. Do not deploy without a malware-scanning/quarantine plan for untrusted uploads.
+- `POST /api/practice/evaluate` — server-owned, allowlisted rubrics and Azure OpenAI evaluation; validates Supabase Auth JWT via `/auth/v1/user` on each request. Requires `GALAXY_EVAL_GATEWAY_RATE_LIMIT=active` after a **real external quota/rate-limit gateway** is established. Without it the route fails closed with 503. M3 also requires a backend-only APIM-injected gateway header, per-user quota enforcement and direct-ingress network restrictions.
+- `POST /api/vault/extract` — only accesses a private Supabase document row and storage object owned by the verified user. PDF (selectable text only), DOCX, TXT, MD; checks file signatures, size, ZIP decompression, document ID and ownership; updates the private metadata row with <=60,000 characters. No malware scanner or OCR yet. The signed-in UI supports retrying extraction after an initial processing failure when the service is configured. Do not deploy without a malware-scanning/quarantine plan for untrusted uploads.
 - `POST /api/speech/token` — issues short-lived Azure Speech STS tokens after user authentication. Requires a real API gateway quota and privately configured Speech key. There are no provider secrets in the static frontend.
 
 The Blob static site loads only public endpoint URLs from `runtime-config.js`. Configure these after approval; **never embed model/Speech keys, Supabase service-role credentials, or private file tokens in the frontend.** Azure Blob Static Website alone cannot run the Python API.
@@ -41,3 +41,7 @@ python scripts/coverage_report.py
 GitHub Actions workflow is prepared, but **no remote CI has run**. Browser smoke tests simulate speech recognition and use mocked study data: they do not prove real microphone permissions, signed-in cloud data isolation, production model evaluation, Azure Speech or vault extraction. The original target `saifsiddiqui59/GenAI-Galaxy` returned 404 from the connected GitHub account, and that connection offers no repository-creation action. No new GitHub repo or cloud resource was created. RetailGrowthAI and WineShopPOS were not changed.
 
 See `docs/PROJECT_STATE.md`, `docs/NEXT_TASK.md`, and `docs/INTERFACES_V1.md` for milestones and integration contracts.
+
+## M3 quality scope
+
+The M3 curriculum expansion and related scoring tests are locally available but NOT independently expert-reviewed. **128 / 147** model answers have 60–140 words; remaining shorter answers need timing edits. Topic coverage is not proof of technical correctness. Backend deployments need gateway network controls, actual quotas, test users and explicit Azure provisioning approval.

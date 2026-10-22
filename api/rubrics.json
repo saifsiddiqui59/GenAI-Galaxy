@@ -56,6 +56,24 @@
     ],
     "project_context": "When explaining Azure-hosted LLM latency, connect longer retrieved policy context to attention/prefill cost; the application does not directly tune attention heads."
   },
+  "LLM & Transformer Fundamentals / Model mechanics / Embeddings vs model output": {
+    "topic": "Embeddings vs model output",
+    "question": "Why not use a chat model for similarity search?",
+    "reference_answer": "I use embeddings to represent the semantic meaning of questions and document passages as fixed-size numerical vectors. We compare these vectors to find candidates in a knowledge base. The generative LLM does a different job: it reads selected evidence and predicts a response token by token. An embedding alone cannot explain a policy, check an account balance or guarantee truth. This distinction helps design a clear retrieval stage followed by authorized generation or tool execution.",
+    "technical_context": "An encoder maps text to dense features for nearest-neighbor search. A decoder LLM predicts sequential tokens from context. Both use learned representations, but storing an embedding does not store a validated answer or execute reasoning.",
+    "common_mistakes": [
+      "Calling embeddings answers",
+      "Believing vectors enforce ACL",
+      "Treating similarity as reasoning"
+    ],
+    "expected_concepts": [
+      "embedding",
+      "vector",
+      "generation",
+      "retrieve"
+    ],
+    "project_context": "Your banking voice assistant uses embeddings for policy retrieval and the Foundry LLM to compose the response."
+  },
   "LLM & Transformer Fundamentals / Model mechanics / Context window": {
     "topic": "Context window",
     "question": "What happens when the context becomes too large?",
@@ -74,6 +92,24 @@
       "budget"
     ],
     "project_context": "Your assistant can maintain a thread ID while using a bounded conversation summary and current policy evidence to answer a banking question."
+  },
+  "LLM & Transformer Fundamentals / Inference & latency / Inference vs training": {
+    "topic": "Inference vs training",
+    "question": "What is the difference between inference and fine-tuning?",
+    "reference_answer": "Training is the phase where a model learns by changing its weights, typically using gradient descent over data. Inference uses fixed weights to process a prompt and generate an answer token by token. In a production RAG system, we can update policy documents, search indexes and prompts without retraining the LLM. In our banking voice assistant, we use an Azure-hosted model for inference and focus on grounding, tool access and response latency.",
+    "technical_context": "Training involves dataset batches, loss gradients and optimizer updates, often on accelerators. Inference tokenizes a prompt, runs model forward passes and autoregressive decoding with sampling and KV caches; tool/RAG data usually changes context, not weights.",
+    "common_mistakes": [
+      "Calling knowledge-base updates training",
+      "Assuming inference always requires storing new weights",
+      "Ignoring retrieval cost"
+    ],
+    "expected_concepts": [
+      "training",
+      "inference",
+      "weights",
+      "RAG"
+    ],
+    "project_context": "Your Azure AI Foundry banking assistant orchestrates model inference and retrieval rather than fine-tuning or pretraining the hosted model."
   },
   "LLM & Transformer Fundamentals / Inference & latency / TTFT & total latency": {
     "topic": "TTFT & total latency",
@@ -94,6 +130,24 @@
     ],
     "project_context": "Your voice agent project has WebSocket audio, STT, a Foundry model, tool routes and TTS—trace every hop with a shared call identifier."
   },
+  "LLM & Transformer Fundamentals / Inference & latency / Prefill vs decoding": {
+    "topic": "Prefill vs decoding",
+    "question": "Which phase benefits most from prompt caching?",
+    "reference_answer": "In model inference, prefill is where the prompt is processed and attention information is cached; decoding is where the model generates each next token. A long retrieved context increases prefill work and can hurt time to first token, while a lengthy answer increases decode time. For our voice agent, I cut irrelevant policy chunks, measure first-token latency separately and stream verified response segments to text-to-speech as soon as safe.",
+    "technical_context": "Prefill builds representations and key/value cache for prompt tokens in parallel. Decode reuses that cache to predict successive tokens under autoregressive dependencies. TTFT includes queueing/prefill and often tool retrieval, while long output affects overall decode time.",
+    "common_mistakes": [
+      "Calling prefill the training phase",
+      "Expecting full KV cache reuse for unrelated prompts",
+      "Measuring only tokens-per-second"
+    ],
+    "expected_concepts": [
+      "prefill",
+      "decode",
+      "KV",
+      "latency"
+    ],
+    "project_context": "Your voice assistant benefits from concise context and streaming for faster first audible response."
+  },
   "LLM & Transformer Fundamentals / Inference & latency / KV cache": {
     "topic": "KV cache",
     "question": "What does KV caching save, and when is it invalidated?",
@@ -112,6 +166,78 @@
       "prefill"
     ],
     "project_context": "For a voice assistant, persistent conversation context can raise latency; monitor prompt prefill, decode, memory usage and KV-cache eviction separately."
+  },
+  "LLM & Transformer Fundamentals / Inference & latency / Prompt caching": {
+    "topic": "Prompt caching",
+    "question": "What input changes reduce cache hits?",
+    "reference_answer": "Prompt caching can avoid recomputing supported prompt prefixes when subsequent requests share the same model and exact preceding tokens. I keep stable instructions early and variable customer data separate, then measure actual cache-hit rates and TTFT. I do not assume every Azure model or deployment offers identical caching semantics. Cached computation is not conversation memory, and private tenant information must never be used as a shared authority or leaked through cache design.",
+    "technical_context": "Provider implementations and billing vary; reusable static prefixes should be stable while user-private context is appended securely. Cache hits depend on exact tokens and model support; cache entries must never be treated as user authorization or durable model memory.",
+    "common_mistakes": [
+      "Assuming caching stores facts forever",
+      "Claiming guaranteed hits",
+      "Mixing user-private inputs across tenants"
+    ],
+    "expected_concepts": [
+      "cache",
+      "prefix",
+      "TTFT",
+      "tokens"
+    ],
+    "project_context": "Your bank voice assistant has common instruction prefixes but must not cross-contaminate customer or tenant data."
+  },
+  "LLM & Transformer Fundamentals / Inference & latency / Temperature & sampling": {
+    "topic": "Temperature & sampling",
+    "question": "Can temperature zero guarantee an accurate answer?",
+    "reference_answer": "Temperature scales how strongly the model favors high-probability next tokens. Lower values tend to be more predictable; higher values introduce variation. Top-p can restrict the candidate token mass as another sampling control. In banking, I usually use constrained outputs and conservative settings for routing and policy answers, but I still validate factual claims and tool arguments. Zero temperature alone cannot guarantee correct, reproducible or authorized behavior.",
+    "technical_context": "Sampling draws from model token probabilities using temperature and optional top-p/other decoding constraints. Setting temperature to zero does not guarantee identical responses in distributed services; factuality must be tested independently.",
+    "common_mistakes": [
+      "Calling temperature a confidence score",
+      "Believing zero temperature means zero hallucinations",
+      "Using randomness instead of data validation"
+    ],
+    "expected_concepts": [
+      "temperature",
+      "top-p",
+      "sampling",
+      "token"
+    ],
+    "project_context": "For your banking tool-routing decisions, prefer constrained schemas and deterministic checks over hoping a low temperature prevents mistakes."
+  },
+  "LLM & Transformer Fundamentals / Inference & latency / Token, latency & cost optimization": {
+    "topic": "Token, latency & cost optimization",
+    "question": "What steps would you take to optimize latency?",
+    "reference_answer": "I profile cost and latency stage by stage: STT, retrieval, model prefill, decoding, tools and TTS. Then I remove duplicated conversation history, keep high-value policy evidence and cap verbose answers. I choose model capacity based on actual evaluation results rather than using the largest model for every intent. In a voice assistant, over-compression can harm accuracy, so I monitor grounding, user outcomes, input/output tokens and p95 response time together.",
+    "technical_context": "Track input, output and cached tokens separately; trim redundant history, rerank shorter evidence, batch compatible calls and choose a model/deployment for the accuracy target. Optimize p95 end-to-end time, not just raw model time.",
+    "common_mistakes": [
+      "Reducing tokens by removing essential citations",
+      "Ignoring retriever/tool charges",
+      "Optimizing average latency only"
+    ],
+    "expected_concepts": [
+      "tokens",
+      "latency",
+      "cost",
+      "prefill"
+    ],
+    "project_context": "Your Azure voice assistant can reduce TTFT through lean retrieval while avoiding excessive model/tool retry calls."
+  },
+  "LLM & Transformer Fundamentals / Inference & latency / Prefill bottlenecks & long-context diagnostics": {
+    "topic": "Prefill bottlenecks & long-context diagnostics",
+    "question": "Why can first response time spike even with a KV cache?",
+    "reference_answer": "When the first answer is slow, I inspect a distributed trace before changing the model. I check request queueing, retrieval duration, number of input tokens, prompt cache status and the time to first token. Prefill can dominate for long contexts, while decode dominates a long response. In the bank assistant I would compare traces with compact versus large policy evidence and optimize the demonstrated bottleneck without removing required factual context.",
+    "technical_context": "Separate network and queue time from prefill computation, retrieval and tokenization. Compare prompt lengths, cache hits, model TTFT and parallel tool spans. Slow first request can also involve cold start or provider capacity.",
+    "common_mistakes": [
+      "Blaming KV cache for every slow request",
+      "Assuming TTFT excludes retrieval",
+      "Deleting necessary policy chunks"
+    ],
+    "expected_concepts": [
+      "prefill",
+      "TTFT",
+      "trace",
+      "context"
+    ],
+    "project_context": "In your voice-agent logs, instrument incoming audio, RAG context size, model calls and TTS to identify the actual delay."
   },
   "LLM & Transformer Fundamentals / Representation & retrieval maths / Dense float vectors": {
     "topic": "Dense float vectors",
@@ -132,6 +258,24 @@
     ],
     "project_context": "In the banking RAG pipeline, policy chunks are embedded at ingestion and the caller query is embedded with the compatible model at retrieval."
   },
+  "LLM & Transformer Fundamentals / Representation & retrieval maths / Binary embeddings & quantization": {
+    "topic": "Binary embeddings & quantization",
+    "question": "How are binary and floating-point embeddings different?",
+    "reference_answer": "Normal text embeddings are usually floating-point vectors, not just strings of zeroes and ones. Quantization can compress them into lower-precision numbers or binary codes, improving storage or search speed. That compression can reduce retrieval accuracy, especially for close policy clauses. I evaluate recall at k and latency on real questions before adopting it, and may rerank candidates using full-precision vectors. I would not claim binary embeddings are automatically better or private.",
+    "technical_context": "Float32 vectors are continuous numerical arrays; scalar, product and binary quantization map them to lower-bit representations. Binary signatures may speed approximate candidate search but often require float reranking to preserve recall. Benchmark on domain labels.",
+    "common_mistakes": [
+      "Equating embedding with binary encryption",
+      "Ignoring quantization recall loss",
+      "Changing representation without index migration"
+    ],
+    "expected_concepts": [
+      "quantization",
+      "float",
+      "binary",
+      "recall"
+    ],
+    "project_context": "Your banking policy search should test whether compression misses rare product codes or important exception clauses."
+  },
   "LLM & Transformer Fundamentals / Representation & retrieval maths / Cosine, dot product & Euclidean": {
     "topic": "Cosine, dot product & Euclidean",
     "question": "Why would you choose cosine similarity?",
@@ -151,6 +295,208 @@
     ],
     "project_context": "For banking FAQ retrieval, compare metrics with a fixed labeled set and match the index metric to the embedding model guidance."
   },
+  "LLM & Transformer Fundamentals / Representation & retrieval maths / Semantic similarity": {
+    "topic": "Semantic similarity",
+    "question": "Why does semantic search find synonyms?",
+    "reference_answer": "Semantic similarity measures how close two passages are in meaning, often using embeddings and cosine similarity. It lets evaluation credit valid paraphrases instead of matching exact words. However, similarity can be high even when an answer reverses a condition or states the wrong number. For interview grading I would combine similarity with required-concept coverage, factual-error checks and human calibration, particularly for security and banking workflows.",
+    "technical_context": "Embedding cosine or learned semantic metrics can compare reference and candidate answers, but similarity is not entailment: it may miss negation, wrong values and unsupported claims. Use concept and factual checks too.",
+    "common_mistakes": [
+      "Using cosine similarity as correctness",
+      "Ignoring negation",
+      "Penalizing every paraphrase"
+    ],
+    "expected_concepts": [
+      "similarity",
+      "cosine",
+      "paraphrase",
+      "accuracy"
+    ],
+    "project_context": "Your GenAI evaluation could use answer-reference similarity as a diagnostic, never its only technical correctness score."
+  },
+  "Prompt Engineering / Prompt patterns / System, developer & user instructions": {
+    "topic": "System, developer & user instructions",
+    "question": "Where should stable policy instructions live?",
+    "reference_answer": "I separate instructions by authority. System instructions set overarching behavior, developer instructions specify application rules, and the user message supplies the current task. Retrieved policies can ground an answer but must never override the application rules. In the banking assistant, an instruction can tell the model to request verification, but backend account tools independently verify the caller and the account. That is the essential difference between prompt guidance and enforceable security.",
+    "technical_context": "System and developer messages establish higher-priority boundaries; user content is lower priority. Retrieved documents and tool outputs are untrusted data, not a source of authority. Enforcement for access and side effects must live in code, not prompts.",
+    "common_mistakes": [
+      "Putting access control only in a system prompt",
+      "Treating quoted documents as developer instructions",
+      "Trusting tool arguments because the model generated them"
+    ],
+    "expected_concepts": [
+      "instruction hierarchy",
+      "untrusted",
+      "developer",
+      "authorization"
+    ],
+    "project_context": "Your banking assistant should keep tenant boundaries and tool policies in server authorization while using instructions to shape phrasing and task sequence."
+  },
+  "Prompt Engineering / Prompt patterns / Zero-shot vs few-shot": {
+    "topic": "Zero-shot vs few-shot",
+    "question": "When are examples better than longer instructions?",
+    "reference_answer": "I start with zero-shot prompting when the task has an explicit schema and clear wording. If the model repeatedly confuses similar banking intents, I add a small set of representative few-shot examples, including boundary cases. I keep examples separate from user content and then test on a held-out dataset, not just those demonstrations. Few-shot can improve consistency, but it adds token cost and cannot replace validation or permission checks.",
+    "technical_context": "Few-shot examples can improve output format, terminology and edge-case consistency at the cost of extra prompt tokens. Select diverse, valid demonstrations and separate them from the live user request; examples do not guarantee correctness.",
+    "common_mistakes": [
+      "Testing only on the demonstrations",
+      "Assuming more examples always help",
+      "Including sensitive account data in example prompts"
+    ],
+    "expected_concepts": [
+      "examples",
+      "zero-shot",
+      "few-shot",
+      "evaluation"
+    ],
+    "project_context": "For the banking voice agent, a few verified examples could stabilize routing when customer phrasing is ambiguous."
+  },
+  "Prompt Engineering / Prompt patterns / Chain-of-thought prompting": {
+    "topic": "Chain-of-thought prompting",
+    "question": "How do you improve reasoning reliability without displaying internal steps?",
+    "reference_answer": "When a task has multiple dependent steps, I break it into verifiable outputs: identify evidence, perform calculations with tools, check constraints, then present a short explanation. I do not require hidden model reasoning to be displayed. For our anomaly RCA workflow, the response should show the measured runtime, the median and MAD baseline, and linked activity logs. Those artifacts let an interviewer or operator verify the conclusion without trusting an unsupported narrative.",
+    "technical_context": "Reasoning-style prompts are not substitutes for actual evidence. Private internal reasoning need not be exposed; request concise decision criteria, tool outputs and checkable calculations. Evaluate outcome accuracy and reproducibility.",
+    "common_mistakes": [
+      "Treating verbose reasoning as proof of correctness",
+      "Exposing unnecessary private reasoning",
+      "Using chain-of-thought instead of tools for critical arithmetic"
+    ],
+    "expected_concepts": [
+      "evidence",
+      "reasoning",
+      "validation",
+      "tools"
+    ],
+    "project_context": "The anomaly RCA assistant can surface supporting activities and calculations rather than displaying model-internal reasoning."
+  },
+  "Prompt Engineering / Prompt patterns / Role & context grounding": {
+    "topic": "Role & context grounding",
+    "question": "How do you design a robust system prompt?",
+    "reference_answer": "I define the assistant role and the task, then supply only relevant authorized context with document identifiers. I instruct it to cite evidence and say when the information is missing. In a banking assistant, the tenant and verified customer identity come from the server, not from the user prompt. I also validate sensitive tool calls outside the model. This makes prompt behavior predictable without pretending that prompt text is a security boundary.",
+    "technical_context": "Use bounded system directives, role/objective, source delimiters, allowed data, output schema, explicit abstention and current time/version when relevant. Redact secrets before prompts and test adversarial documents.",
+    "common_mistakes": [
+      "Mixing privileged rules with retrieved text",
+      "Adding entire document collections",
+      "Using user-supplied tenant ID as authority"
+    ],
+    "expected_concepts": [
+      "role",
+      "context",
+      "grounding",
+      "citations",
+      "tenant"
+    ],
+    "project_context": "Your Azure banking assistant retrieves tenant-scoped FAQs; its prompt must distinguish customer speech from authorized policy excerpts."
+  },
+  "Prompt Engineering / Prompt patterns / ReAct prompting": {
+    "topic": "ReAct prompting",
+    "question": "How does a ReAct agent decide when to call a tool?",
+    "reference_answer": "ReAct combines model planning with external observations. The agent chooses a permitted tool, the backend checks its parameters and user authorization, and the observation informs the next decision. The loop ends with a supported answer or a controlled fallback. In banking I put an approval boundary before any appointment creation or account action, and cap retries so a tool failure cannot produce an endless conversation or duplicate side effects.",
+    "technical_context": "A controller exposes only permitted actions, validates tool arguments, bounds loop count/time and captures results. Tool observations are untrusted input. A final answer is produced after sufficient evidence or a safe stop condition.",
+    "common_mistakes": [
+      "Trusting tool output as instruction",
+      "Leaving execution loops unbounded",
+      "Repeating non-idempotent actions after timeout"
+    ],
+    "expected_concepts": [
+      "tool",
+      "observation",
+      "loop",
+      "ReAct",
+      "authorization"
+    ],
+    "project_context": "In the voice assistant, an intent router selects the account or scheduling tool; a bounded controller handles observations and user confirmation."
+  },
+  "Prompt Engineering / Reliable output / Structured JSON output": {
+    "topic": "Structured JSON output",
+    "question": "Why prefer schema validation over parsing free text?",
+    "reference_answer": "I use constrained structured output when model results drive software. First I define a schema with required keys, allowed intent values and bounds. I parse the output and validate it again on the backend. If validation fails, I return a recoverable error rather than guessing the missing field. A valid JSON object still might contain incorrect facts, so authorization, existence checks and business rules are separate stages before any banking tool call.",
+    "technical_context": "Use supported JSON/schema constraints, validate parsed types and value ranges server-side, reject unexpected fields where needed and handle invalid completions. A schema cannot prove that facts within valid JSON are true.",
+    "common_mistakes": [
+      "Believing parseable JSON is necessarily accurate",
+      "Running tool calls before validation",
+      "Ignoring unexpected enum values"
+    ],
+    "expected_concepts": [
+      "schema",
+      "validation",
+      "JSON",
+      "types",
+      "authorization"
+    ],
+    "project_context": "Your voice-agent tools should validate an appointment request schema and then check ownership and slot availability in the backend."
+  },
+  "Prompt Engineering / Reliable output / Templates & variables": {
+    "topic": "Templates & variables",
+    "question": "How do you prevent user text overriding instructions?",
+    "reference_answer": "I store reusable prompt instructions as versioned templates and inject specific values like the user question and retrieved policies into clearly marked data sections. I avoid string-building security instructions from customer input. Before sending a prompt, I restrict length and check that the retrieved evidence belongs to the customer tenant. Templates improve consistency and testing, but they cannot make untrusted source content safe or replace access control.",
+    "technical_context": "Keep stable instructions immutable, escape or delimit substituted strings, version templates, cap substituted text and treat external snippets as data. Differentiate prompt composition from server-side tool authorization.",
+    "common_mistakes": [
+      "Splicing user content into system instructions",
+      "Forgetting template-version logs",
+      "Allowing unbounded variables to exceed token budget"
+    ],
+    "expected_concepts": [
+      "template",
+      "variables",
+      "version",
+      "delimiter"
+    ],
+    "project_context": "Your banking RAG prompt can swap approved policy chunks per tenant while keeping the guardrail instructions consistent."
+  },
+  "Prompt Engineering / Reliable output / Refusals & fallback prompts": {
+    "topic": "Refusals & fallback prompts",
+    "question": "What should the assistant do when retrieval fails?",
+    "reference_answer": "I distinguish three cases. When the user lacks permission, I refuse the sensitive action. When reliable evidence is missing, I say I cannot confirm the answer and offer clarification or escalation. When a tool is temporarily unavailable, I return a safe retry path and never invent a successful booking. For our voice assistant, all fallbacks should be short, understandable when spoken aloud and recorded for support without exposing personal data.",
+    "technical_context": "Define policy-driven refusal for unauthorized actions, uncertainty-driven abstention for insufficient evidence and safe recovery for transient service faults. Do not leak raw credentials, account details or internal errors.",
+    "common_mistakes": [
+      "Fabricating a bank balance after tool failure",
+      "Exposing backend exceptions",
+      "Retrying write actions without idempotency"
+    ],
+    "expected_concepts": [
+      "refusal",
+      "abstention",
+      "fallback",
+      "permission"
+    ],
+    "project_context": "Your banking voice agent needs fallbacks for uncertain STT, failed policy retrieval, account verification and scheduling timeouts."
+  },
+  "Prompt Engineering / Reliable output / Prompt versioning & regression": {
+    "topic": "Prompt versioning & regression",
+    "question": "How do you detect prompt regressions?",
+    "reference_answer": "I treat prompts as versioned artifacts. Every change runs against a fixed golden dataset with successful, missing-evidence and malicious requests, using both strict checks and evaluator scores. I track the prompt version with the model, retrieval corpus and tool schema so failures can be reproduced. In our banking use case, a new instruction cannot be shipped just because one example improved; the regression gate must protect critical balance and booking paths.",
+    "technical_context": "Record prompt hash/version, model deployment, retrieval index version and eval dataset IDs in traces. Run deterministic contract checks plus probabilistic golden-set scoring across changes; keep rollback capability.",
+    "common_mistakes": [
+      "Evaluating only a happy path",
+      "Treating nondeterministic scores as exact",
+      "Losing the previous prompt/index version"
+    ],
+    "expected_concepts": [
+      "version",
+      "golden",
+      "regression",
+      "rollback"
+    ],
+    "project_context": "For your banking assistant, compare prompt revisions on identical FAQ, verification and booking scenarios in CI."
+  },
+  "RAG & Knowledge Retrieval / Document ingestion / Parsing & cleaning": {
+    "topic": "Parsing & cleaning",
+    "question": "What can go wrong when you extract a PDF?",
+    "reference_answer": "Before RAG chunking, I extract text and document structure from the actual file format. I preserve headings, table context and page identifiers, because a flattened interest-rate table can change the meaning of a policy. I remove repeated headers and noise without discarding important values, then scan and validate the input and attach source/version metadata. Scanned PDFs need a separately approved OCR path. I quality-check extracted text before it reaches embeddings.",
+    "technical_context": "Parse PDF/DOCX according to media type, preserve page/table boundaries and headings, normalize whitespace, retain provenance and flag OCR-dependent scans. Put size limits, malware scanning and access checks ahead of indexing.",
+    "common_mistakes": [
+      "Assuming every PDF contains text",
+      "Merging table columns incorrectly",
+      "Dropping document version identifiers"
+    ],
+    "expected_concepts": [
+      "parsing",
+      "PDF",
+      "table",
+      "metadata",
+      "OCR"
+    ],
+    "project_context": "A banking policy update needs accurate extraction and document version metadata before the RAG index is updated."
+  },
   "RAG & Knowledge Retrieval / Document ingestion / Chunking & overlap": {
     "topic": "Chunking & overlap",
     "question": "Why not embed the whole document as one chunk?",
@@ -169,6 +515,44 @@
       "evaluate"
     ],
     "project_context": "In the banking voice assistant, retrieved FAQ or policy chunks should keep product, tenant and version metadata; otherwise a correct-looking clause can come from the wrong bank policy."
+  },
+  "RAG & Knowledge Retrieval / Document ingestion / Metadata & ACL tags": {
+    "topic": "Metadata & ACL tags",
+    "question": "How do you prevent cross-user data leakage in RAG?",
+    "reference_answer": "I attach source ID, version, effective dates and tenant or group authorization to each chunk at ingestion. At retrieval time the backend derives the caller permissions from a verified session and applies mandatory filters before ranking. The language model never sees unauthorized documents. This is critical in a banking assistant where a semantically relevant chunk from the wrong tenant is still a data leak, even if the final answer happens to look correct.",
+    "technical_context": "Index tenant ID, document ID, version, effective dates, page/section and authorization attributes. Enforce access in backend retrieval filters before content reaches an LLM; never rely only on the model to hide unauthorized chunks.",
+    "common_mistakes": [
+      "Trusting tenant ID from user text",
+      "Filtering only after the model sees chunks",
+      "Forgetting ACL updates after policy changes"
+    ],
+    "expected_concepts": [
+      "ACL",
+      "tenant",
+      "filter",
+      "metadata",
+      "authorization"
+    ],
+    "project_context": "Your multi-tenant banking voice assistant needs both tenant-isolated vector search and backend entitlement checks for account tools."
+  },
+  "RAG & Knowledge Retrieval / Document ingestion / Embedding pipeline": {
+    "topic": "Embedding pipeline",
+    "question": "When do you need to re-embed a collection?",
+    "reference_answer": "My embedding pipeline starts with authorized, parsed document text, generates stable chunk identifiers and converts each chunk into a vector using a versioned embedding model. I store the vectors alongside source, tenant and policy metadata. At query time I embed the question with a compatible encoder, search only authorized chunks and pass selected text to the LLM. I monitor failures and reindex after model changes rather than mixing incompatible vector spaces.",
+    "technical_context": "Use deterministic source IDs, chunking policy, embedding model/deployment version, dimensions and normalized metadata; batch with retry and rate limits. Re-embed when changed text or encoder version requires it, and use atomic index cutover to avoid mixed spaces.",
+    "common_mistakes": [
+      "Using different incompatible encoders for query and corpus",
+      "Omitting version tags",
+      "Keeping deleted policy chunks searchable"
+    ],
+    "expected_concepts": [
+      "embedding",
+      "chunk",
+      "vector",
+      "model",
+      "version"
+    ],
+    "project_context": "Your voice assistant uses stored banking policy embeddings; customers’ queries are independently embedded with the compatible query model."
   },
   "RAG & Knowledge Retrieval / Document ingestion / Incremental RAG ingestion": {
     "topic": "Incremental RAG ingestion",
@@ -190,6 +574,44 @@
     ],
     "project_context": "For updated banking policies, a checksum/event pipeline can process the changed document, switch active version only after validation, and quarantine failed ingestions."
   },
+  "RAG & Knowledge Retrieval / Document ingestion / RAG vs DE incremental loads": {
+    "topic": "RAG vs DE incremental loads",
+    "question": "How does incremental RAG indexing differ from CDC?",
+    "reference_answer": "Data engineering incremental ingestion is usually about copying or merging changed source records into tables. RAG incremental indexing has extra work: identify document versions, re-parse changed pages, regenerate affected chunks and embeddings, and remove stale vectors. The knowledge base must expose only the active authorized version. In a bank policy update, an ADF copy can succeed while RAG still gives an obsolete answer; index freshness and retrieval regression tests close that gap.",
+    "technical_context": "CDC/watermarks capture database row changes while RAG detects document deletions, replacements, layout/chunk changes and encoder version changes. RAG must tombstone obsolete chunk IDs and update index metadata in addition to any underlying file pipeline.",
+    "common_mistakes": [
+      "Confusing Delta MERGE with vector reindex",
+      "Leaving superseded chunks in search",
+      "Not tracking deleted sources"
+    ],
+    "expected_concepts": [
+      "CDC",
+      "incremental",
+      "index",
+      "delete",
+      "version"
+    ],
+    "project_context": "Your ADF/Databricks pipelines handle incremental data ingestion; your banking RAG index needs its own consistency and deletion workflow."
+  },
+  "RAG & Knowledge Retrieval / Document ingestion / Versioning & stale chunks": {
+    "topic": "Versioning & stale chunks",
+    "question": "How do you stop answers citing an obsolete policy?",
+    "reference_answer": "To prevent stale answers, every chunk carries its source ID, version and effective date. When a document changes, I create the new chunks and embeddings and only then switch the active version. Old chunks are deleted from live search or excluded by mandatory filters. I verify that known obsolete clauses no longer appear in top results. This is different from keeping old source files in audit storage, which can remain accessible only through appropriate historical workflows.",
+    "technical_context": "Store source ID/version and chunk lineage; on replacement, build the new chunk set, atomically mark its version active, remove or filter old versions and retain audit references separately. Use effective/expiry dates for policy changes.",
+    "common_mistakes": [
+      "Appending without deleting",
+      "Treating indexing success as a consistent cutover",
+      "Forgetting effective dates and tenant scope"
+    ],
+    "expected_concepts": [
+      "version",
+      "stale",
+      "chunk",
+      "tombstone",
+      "cutover"
+    ],
+    "project_context": "Your banking policy RAG layer should identify the applicable effective policy before selecting chunks."
+  },
   "RAG & Knowledge Retrieval / Vector & hybrid search / Query embedding": {
     "topic": "Query embedding",
     "question": "Do we chunk the user question too?",
@@ -208,6 +630,43 @@
       "retrieve"
     ],
     "project_context": "Your banking voice assistant can embed the transcribed intent question, retrieve permission-filtered FAQs and only then compose the LLM answer."
+  },
+  "RAG & Knowledge Retrieval / Vector & hybrid search / Vector databases": {
+    "topic": "Vector databases",
+    "question": "How do you choose vector storage?",
+    "reference_answer": "I choose vector storage by workload rather than popularity. FAISS is useful as a local nearest-neighbor index, pgvector integrates with PostgreSQL data and permissions, and Azure AI Search offers managed lexical, vector and hybrid retrieval features. I evaluate filtering, update frequency, tenant boundaries, latency, cost and operational ownership. In banking, the ability to enforce authorization before retrieval and trace the policy source matters as much as vector similarity quality.",
+    "technical_context": "Compare pgvector, FAISS, Azure AI Search and managed vector services across hybrid text/vector search, metadata filters, index types, tenant isolation, update load, observability, backups and cost. FAISS is an index library rather than a full multi-tenant database.",
+    "common_mistakes": [
+      "Calling FAISS a complete secure database",
+      "Ignoring hybrid keyword needs",
+      "Picking service without update/ACL benchmarks"
+    ],
+    "expected_concepts": [
+      "pgvector",
+      "FAISS",
+      "search",
+      "filter",
+      "hybrid"
+    ],
+    "project_context": "In your banking assistant, vector choice should support tenant scoping, managed identity and policy document versioning."
+  },
+  "RAG & Knowledge Retrieval / Vector & hybrid search / Dense semantic search": {
+    "topic": "Dense semantic search",
+    "question": "Why can dense retrieval miss exact identifiers?",
+    "reference_answer": "Dense semantic search converts the user question into an embedding, compares it to stored document vectors and returns top candidates by similarity. It handles paraphrases better than exact matching, but it can miss identifiers and confuse short or negated phrases. For a banking voice agent I use it to find relevant policy clauses, combine it with keyword search when needed and never use nearest-neighbor text as a substitute for account balance retrieval.",
+    "technical_context": "Embed compatible queries and chunks; approximate nearest-neighbor index returns candidates by cosine or dot-product. Dense search may miss exact IDs, rare acronyms, negation or very recent names; hybrid lexical retrieval can compensate.",
+    "common_mistakes": [
+      "Treating similarity as evidence of truth",
+      "Using dense retrieval for exact account numbers",
+      "Ignoring query/document encoder mismatch"
+    ],
+    "expected_concepts": [
+      "dense",
+      "cosine",
+      "vector",
+      "hybrid"
+    ],
+    "project_context": "Your policy FAQ retrieval can use dense search while balance/account identifiers must go to verified tools."
   },
   "RAG & Knowledge Retrieval / Vector & hybrid search / BM25 keyword retrieval": {
     "topic": "BM25 keyword retrieval",
@@ -247,6 +706,80 @@
     ],
     "project_context": "Your assistant retrieves banking policies and could use BM25 plus embeddings, while the pipeline RCA assistant benefits from exact pipeline ID matching."
   },
+  "RAG & Knowledge Retrieval / Vector & hybrid search / Filters & top-k": {
+    "topic": "Filters & top-k",
+    "question": "How does metadata filtering improve relevance?",
+    "reference_answer": "Before ranking policy chunks I apply mandatory tenant and authorization filters, and usually active-version and document-type restrictions. Top-k then controls how many candidates move to reranking and the prompt. A very low k can hide the needed clause; an excessive k adds irrelevant context and latency. I tune both on labeled banking questions, measuring recall and wrong-tenant leakage rather than choosing a universal k like five for every query.",
+    "technical_context": "Apply mandatory tenant, ACL and active-version filters as early as supported; tune k and candidate pool on recall@k, precision and latency. Some vector indices approximate filtering, so test whether filters are enforced before answer assembly.",
+    "common_mistakes": [
+      "Accepting tenant filter from user prompt",
+      "Believing top-k is a confidence score",
+      "Retrieving many chunks without budget checks"
+    ],
+    "expected_concepts": [
+      "filter",
+      "top-k",
+      "tenant",
+      "recall",
+      "latency"
+    ],
+    "project_context": "Your voice assistant should derive tenant scope from the session, not from a model-generated filter."
+  },
+  "RAG & Knowledge Retrieval / Vector & hybrid search / Semantic reranking": {
+    "topic": "Semantic reranking",
+    "question": "How does a reranker differ from a vector index?",
+    "reference_answer": "I use reranking after a cheap broad retrieval stage, not on every document in the bank. The initial index finds a candidate set; a semantic reranker uses more query–passage detail to sort them and select the best evidence for the LLM. I measure retrieval quality and extra latency, especially p95, because a voice assistant must respond quickly. I also keep tenant/ACL filters enforced before both stages.",
+    "technical_context": "A first-stage lexical/vector search has high recall and low cost; second-stage semantic reranking scores candidate pairs and selects a shorter context. Use metrics such as MRR/nDCG and benchmark added p95 latency.",
+    "common_mistakes": [
+      "Calling reranking an embedding replacement",
+      "Reranking unauthorized chunks",
+      "Skipping latency benchmarks"
+    ],
+    "expected_concepts": [
+      "rerank",
+      "candidates",
+      "latency",
+      "nDCG"
+    ],
+    "project_context": "Your Azure banking FAQ answers benefit from reranking only when the measurable quality gain offsets voice latency."
+  },
+  "RAG & Knowledge Retrieval / Vector & hybrid search / RRF & cross-encoder": {
+    "topic": "RRF & cross-encoder",
+    "question": "What is the difference between RRF and cross-encoder ranking?",
+    "reference_answer": "RRF is a fusion method: it combines rank positions from several searches, such as BM25 and vector retrieval, without needing those systems to share a score scale. A cross-encoder is different: it reads the query and each candidate passage jointly and produces a relevance score. I may use RRF to build a diverse candidate list, then cross-encode the top subset. I benchmark extra latency and still apply tenant permissions before retrieval.",
+    "technical_context": "RRF assigns rank-based scores across lexical and vector result lists without directly comparing heterogeneous raw similarity scales. A cross-encoder jointly processes query–passage text and is usually costlier but can yield stronger semantic ordering.",
+    "common_mistakes": [
+      "Treating RRF as a trained model",
+      "Cross-encoding entire knowledge base",
+      "Comparing raw BM25 and cosine scores directly"
+    ],
+    "expected_concepts": [
+      "RRF",
+      "BM25",
+      "cross-encoder",
+      "fusion"
+    ],
+    "project_context": "Your policy search could fuse Azure AI Search lexical/vector candidates before a constrained reranking stage."
+  },
+  "RAG & Knowledge Retrieval / Answer generation / Context construction": {
+    "topic": "Context construction",
+    "question": "How would you construct a safe RAG prompt?",
+    "reference_answer": "After retrieval I filter to authorized active passages, remove duplicates and order them by relevance and source quality. I give each excerpt a citation identifier and keep it clearly separated from trusted instructions. I respect the model token budget and reserve space for a concise answer. For a banking voice assistant, this reduces time to first token and prevents a noisy prompt from burying the key policy while preserving traceable sources.",
+    "technical_context": "Reserve token budget, prefer non-duplicated current evidence, carry precise citation IDs and separate source text from instructions. Account for contradictions and recency before response generation; preserve legal/disclaimer requirements.",
+    "common_mistakes": [
+      "Concatenating everything retrieved",
+      "Losing citation IDs",
+      "Letting a retrieved clause act as an instruction"
+    ],
+    "expected_concepts": [
+      "context",
+      "source",
+      "budget",
+      "citation",
+      "authorized"
+    ],
+    "project_context": "In your banking voice assistant, the model receives selected tenant-specific policy snippets and the customer question—not all tenant data."
+  },
   "RAG & Knowledge Retrieval / Answer generation / Source citations": {
     "topic": "Source citations",
     "question": "Are citations alone sufficient to prove correctness?",
@@ -266,6 +799,42 @@
     ],
     "project_context": "Your banking voice assistant can keep source IDs in the tool trace even if the spoken reply uses a brief natural-language attribution."
   },
+  "RAG & Knowledge Retrieval / Answer generation / Retrieval failure handling": {
+    "topic": "Retrieval failure handling",
+    "question": "What happens if relevant context cannot be found?",
+    "reference_answer": "I treat retrieval failure as an explicit outcome rather than silently sending an empty context to the model. I check whether filters removed everything, whether indexing is stale or whether the search timed out. If there is no valid policy evidence, the assistant says the answer cannot be confirmed and offers clarification or escalation. I capture an anonymized trace so engineers can distinguish an access problem from an information gap. This avoids hallucinated banking advice.",
+    "technical_context": "Distinguish no hits, filter exclusions, search timeout, stale index and conflicting evidence; log retrieval trace safely, choose a permitted fallback or escalation and test no-evidence responses in golden sets.",
+    "common_mistakes": [
+      "Inventing facts from model memory",
+      "Retrying with tenant filters removed",
+      "Hiding search timeouts from monitoring"
+    ],
+    "expected_concepts": [
+      "retrieval",
+      "failure",
+      "abstain",
+      "fallback"
+    ],
+    "project_context": "Your banking voice assistant can offer human escalation or an official channel instead of guessing a policy amount."
+  },
+  "RAG & Knowledge Retrieval / Answer generation / Query rewriting & multi-query": {
+    "topic": "Query rewriting & multi-query",
+    "question": "When do you use multi-query retrieval?",
+    "reference_answer": "I rewrite ambiguous user questions only to improve retrieval, not to alter what was asked. For a loan-closing question, I might search “foreclosure fee” and “early repayment charge” in parallel, merge and deduplicate results, then rerank. I preserve the original wording, negations, dates and verified tenant filters throughout. I measure whether this improves recall without adding irrelevant context or delaying the voice response too much.",
+    "technical_context": "Keep original intent and constraints, bound number of rewrites and deduplicate retrieved candidates. Never rewrite away tenant, date, negation or account-type conditions; evaluate recall against a held-out dataset.",
+    "common_mistakes": [
+      "Dropping negation or time qualifier",
+      "Hallucinating customer constraints",
+      "Producing too many expensive queries"
+    ],
+    "expected_concepts": [
+      "rewrite",
+      "multi-query",
+      "recall",
+      "filter"
+    ],
+    "project_context": "Your voice assistant can normalize ASR wording before policy search while retaining the raw transcript for audit."
+  },
   "RAG & Knowledge Retrieval / Answer generation / Graph RAG vs standard RAG": {
     "topic": "Graph RAG vs standard RAG",
     "question": "Why did you not use Graph RAG in the voice assistant?",
@@ -284,6 +853,24 @@
       "ACL"
     ],
     "project_context": "Banking FAQ questions mainly need grounded policy retrieval. A graph is justified only when tracing linked accounts, organizational relationships or multiple-hop RCA, and must enforce tenant authorization on every traversal."
+  },
+  "RAG & Knowledge Retrieval / Answer generation / Vectorless / SQL retrieval": {
+    "topic": "Vectorless / SQL retrieval",
+    "question": "When would SQL be better than RAG?",
+    "reference_answer": "Not every question belongs in a vector database. For exact account balances, booking slots or pipeline runtimes, I use a permission-checked SQL or API tool that returns current structured records. RAG is useful for explaining policies and unstructured documents. In our banking assistant, I first verify identity, retrieve the balance from the authorized backend and then let the model explain it without changing the number. All queries are parameterized and scoped.",
+    "technical_context": "Run parameterized read-only queries through allowlisted tools, derive user scope from verified identity, validate schema/queries and set row/timeout limits. Combine structured tool answers with RAG only when interpretation from policies is needed.",
+    "common_mistakes": [
+      "Asking LLM to guess balances",
+      "Letting model generate unrestricted SQL",
+      "Treating semantic similarity as exact record retrieval"
+    ],
+    "expected_concepts": [
+      "SQL",
+      "structured",
+      "authorization",
+      "parameterized"
+    ],
+    "project_context": "Your bank voice agent uses an account-lookup tool for balances and RAG for product FAQs; no embeddings are required to calculate a balance."
   },
   "RAG & Knowledge Retrieval / RAG metrics / Context precision": {
     "topic": "Context precision",
@@ -323,6 +910,42 @@
     ],
     "project_context": "Your banking policy RAG needs recall checks for important exception and customer eligibility conditions before the assistant takes action."
   },
+  "RAG & Knowledge Retrieval / RAG metrics / Faithfulness": {
+    "topic": "Faithfulness",
+    "question": "How is faithfulness different from factual accuracy?",
+    "reference_answer": "Faithfulness asks whether the answer is supported by the context the system retrieved. A judge can compare each factual claim with that evidence and flag unsupported details. It does not prove that the context itself is correct or current. In a banking assistant, a model can accurately summarize a superseded fee schedule while still giving a wrong answer. So I pair faithfulness with current-version retrieval tests, authorization checks and human review for critical cases.",
+    "technical_context": "Decompose response into checkable claims and estimate their entailment from provided passages. A faithful answer can inherit errors from outdated sources; measure source truth and access separately.",
+    "common_mistakes": [
+      "Equating faithfulness with truthfulness",
+      "Ignoring stale policy documents",
+      "Letting the judge see evidence the generator never saw"
+    ],
+    "expected_concepts": [
+      "faithfulness",
+      "context",
+      "claims",
+      "grounding"
+    ],
+    "project_context": "Your bank RAG evaluation needs context-faithfulness scoring plus version-validity tests."
+  },
+  "RAG & Knowledge Retrieval / RAG metrics / Answer relevance": {
+    "topic": "Answer relevance",
+    "question": "Can an answer be faithful but irrelevant?",
+    "reference_answer": "Answer relevance measures how directly the reply responds to what the user asked. An answer can be perfectly grounded in policy excerpts yet irrelevant if it talks about the wrong banking product. I evaluate question–answer fit, whether all parts were addressed and whether the answer is sufficiently concise for speech. I score faithfulness and relevance separately, because optimizing citations alone can still leave customers with unanswered questions.",
+    "technical_context": "Compare the question to answer intent and coverage; detect tangents and missing requested subparts. Relevance differs from citation faithfulness and readability/coherence.",
+    "common_mistakes": [
+      "Using groundedness as a relevance proxy",
+      "Rewarding excessive tangents",
+      "Ignoring multi-part requests"
+    ],
+    "expected_concepts": [
+      "relevance",
+      "question",
+      "intent",
+      "coverage"
+    ],
+    "project_context": "Your voice assistant should judge intent coverage independently of whether a policy quote is supported."
+  },
   "LangChain & LangGraph / Core graph building blocks / LangChain vs LangGraph": {
     "topic": "LangChain vs LangGraph",
     "question": "When would you choose LangGraph over a simple chain?",
@@ -341,6 +964,24 @@
       "edge"
     ],
     "project_context": "Your banking agent uses a multi-service orchestration pattern where intent routing and tool interactions are easier to inspect as a graph."
+  },
+  "LangChain & LangGraph / Core graph building blocks / Nodes": {
+    "topic": "Nodes",
+    "question": "What does a node return?",
+    "reference_answer": "In LangGraph, a node is a function or runnable that receives shared graph state and returns changes to that state. A node might classify intent, retrieve policy passages or validate a tool result. Edges decide which node runs next, including conditional routing. I design nodes with clear inputs and outputs so I can test each independently and trace failures. In a banking voice assistant, sensitive actions run only through authorized backend tool nodes.",
+    "technical_context": "Graph nodes take current state and return partial updates; routing depends on edges rather than calling the next node directly. Pure deterministic nodes are simpler to test than nodes that hide tool side effects.",
+    "common_mistakes": [
+      "Mutating shared state unpredictably",
+      "Hiding all work inside one giant node",
+      "Assuming every node is an LLM call"
+    ],
+    "expected_concepts": [
+      "node",
+      "state",
+      "edges",
+      "update"
+    ],
+    "project_context": "Your banking assistant can separate transcript handling, intent routing, policy retrieval and secure tool calls into nodes."
   },
   "LangChain & LangGraph / Core graph building blocks / Edges & conditional edges": {
     "topic": "Edges & conditional edges",
@@ -380,6 +1021,43 @@
     ],
     "project_context": "For the voice agent, a call/session ID ties recognized turns to one conversation thread without letting another tenant read it."
   },
+  "LangChain & LangGraph / Core graph building blocks / START & END": {
+    "topic": "START & END",
+    "question": "When does an agent stop calling tools?",
+    "reference_answer": "START is the entry point of a LangGraph execution and END represents a terminal step. A graph can end after producing a normal answer, after a clarification request, or after a safe refusal. In an agent that calls tools, I define explicit stop conditions and loop budgets so transient failures cannot run forever. Ending a turn does not have to delete thread state; the next caller utterance can resume with a valid session context.",
+    "technical_context": "Conditional routing can terminate normally, request clarification or stop on denied access. Tool-loop guards should cap depth, elapsed time and actions; ending execution is separate from persisting a checkpoint.",
+    "common_mistakes": [
+      "Thinking END deletes memory",
+      "Allowing infinite conditional cycles",
+      "Treating tool timeout as success"
+    ],
+    "expected_concepts": [
+      "START",
+      "END",
+      "termination",
+      "loop"
+    ],
+    "project_context": "Your voice agent can finish the current graph turn while preserving its thread state for the next audio message."
+  },
+  "LangChain & LangGraph / Runtime design / Tool nodes": {
+    "topic": "Tool nodes",
+    "question": "Why not let an LLM modify database rows directly?",
+    "reference_answer": "The agent may suggest a tool call, but the tool node controls execution. I validate its parameters, verify the caller identity and check resource access before contacting the banking backend. I also set timeouts and idempotency safeguards and return a structured success or failure observation. For example, balance lookup is an authorized read; appointment booking is a side effect that requires confirmation. This separation stops prompt output from becoming unrestricted database access.",
+    "technical_context": "Validate JSON schema, authenticated caller, resource scope, idempotency keys, timeouts and result handling. Return structured observations to the graph. Separate low-risk reads from high-risk writes requiring confirmation.",
+    "common_mistakes": [
+      "Letting model-generated account IDs authorize access",
+      "Retrying writes without deduplication",
+      "Returning raw internal error messages"
+    ],
+    "expected_concepts": [
+      "tool",
+      "node",
+      "schema",
+      "authorization",
+      "idempotency"
+    ],
+    "project_context": "Your banking assistant should wrap account lookup and scheduling services as explicit controlled tool nodes."
+  },
   "LangChain & LangGraph / Runtime design / Checkpointing": {
     "topic": "Checkpointing",
     "question": "How would you resume a partially completed workflow?",
@@ -398,6 +1076,133 @@
       "resume"
     ],
     "project_context": "Your banking voice assistant has thread-based memory, so you can explain how to scope a checkpoint to the authenticated call/session and avoid cross-customer leakage."
+  },
+  "LangChain & LangGraph / Runtime design / Thread-based memory": {
+    "topic": "Thread-based memory",
+    "question": "How do you maintain continuity during a call?",
+    "reference_answer": "Thread-based memory lets an agent remember the conversation over multiple turns. I assign a unique session and thread to each call and persist a bounded state such as verified customer, pending task and previous tool result. On the next utterance, I recover the correct state with server-side ownership checks. I do not put unlimited history into every prompt, nor do I use the thread ID as a substitute for verifying the caller.",
+    "technical_context": "Use a server-owned unguessable session/thread identifier, checkpoint only necessary state, apply TTL and tenant/user scoping, and avoid storing raw sensitive transcript indefinitely. Never equate a client-provided thread ID with authorization.",
+    "common_mistakes": [
+      "Reusing a global thread ID",
+      "Storing sensitive data without retention limits",
+      "Trusting client-provided thread as proof of identity"
+    ],
+    "expected_concepts": [
+      "thread",
+      "checkpoint",
+      "session",
+      "memory"
+    ],
+    "project_context": "Your voice assistant already correlates WebSocket call session with an agent conversation; keep this association unique per call."
+  },
+  "LangChain & LangGraph / Runtime design / Human-in-the-loop": {
+    "topic": "Human-in-the-loop",
+    "question": "Which bank operations require user confirmation?",
+    "reference_answer": "Human-in-the-loop is a controlled pause, not simply telling the model to be careful. The graph prepares an action, records what will happen and interrupts before any side effect. After the user or authorized reviewer confirms, the backend rechecks the identity and current conditions and only then executes. In banking, I would confirm appointment details and escalate unusual or sensitive transactions. Durable checkpoints prevent the pending task from disappearing between messages.",
+    "technical_context": "Interrupt graph before irreversible actions; capture exact proposed operation and approver identity, preserve state with durable checkpoint and revalidate permissions, parameters and conditions on resume.",
+    "common_mistakes": [
+      "Treating an LLM “yes” as user consent",
+      "Executing before confirmation",
+      "Resuming with stale authorization"
+    ],
+    "expected_concepts": [
+      "human",
+      "approval",
+      "checkpoint",
+      "interrupt"
+    ],
+    "project_context": "Your banking assistant needs explicit caller confirmation for bookings and human escalation for disputed account actions."
+  },
+  "LangChain & LangGraph / Runtime design / Retry, timeouts & fallbacks": {
+    "topic": "Retry, timeouts & fallbacks",
+    "question": "What happens when an external booking tool times out?",
+    "reference_answer": "I set separate timeouts and bounded retries for STT, retrieval and tool calls. Reads can usually retry on transient errors with backoff, but writes require an idempotency key or an outcome lookup. If a booking request times out, I cannot assume it failed; I check status before another write. When attempts are exhausted, the assistant returns a clear fallback and logs the correlation ID. This prevents duplicate appointments and misleading success messages.",
+    "technical_context": "Use backoff and jitter for idempotent reads; idempotency keys and status lookup for writes. Propagate deadlines, classify retryable versus permanent errors and persist traceable failure state.",
+    "common_mistakes": [
+      "Blindly retrying non-idempotent writes",
+      "No total deadline",
+      "Claiming success after network timeout"
+    ],
+    "expected_concepts": [
+      "retry",
+      "timeout",
+      "idempotency",
+      "fallback"
+    ],
+    "project_context": "Your banking scheduling tool must distinguish “request timed out” from “appointment definitely not booked.”"
+  },
+  "LangChain & LangGraph / Runtime design / Streaming & events": {
+    "topic": "Streaming & events",
+    "question": "How can a graph deliver voice replies faster?",
+    "reference_answer": "Streaming helps responsiveness because the user need not wait for the entire generated answer before playback. I collect model or graph events, split approved sentences into TTS-sized chunks and stream audio over the call connection. Each event carries a session identifier for tracing and cancellation. I never stream speculative balances before verifying the account API result, and I stop queued audio when a caller interrupts. I measure perceived latency separately from total task time.",
+    "technical_context": "Stream graph events or model tokens with correlation IDs; preserve ordering and cancellation semantics. Audio playback often requires sentence-aware chunking, interruptions, and avoidance of speaking unverified tool results.",
+    "common_mistakes": [
+      "Speaking unverified facts prematurely",
+      "Dropping event order",
+      "Failing to cancel old TTS when barge-in occurs"
+    ],
+    "expected_concepts": [
+      "stream",
+      "event",
+      "WebSocket",
+      "TTS",
+      "cancel"
+    ],
+    "project_context": "Your voice assistant streams audio over WebSocket and must cancel playback if the user interrupts."
+  },
+  "LangChain & LangGraph / Hands-on workflows / Intent router graph": {
+    "topic": "Intent router graph",
+    "question": "Sketch the nodes for balance lookup plus appointment scheduling.",
+    "reference_answer": "I design a graph with an initial intent router, a verification gate and specialist branches. FAQ questions go to policy retrieval; balance requests go to a scoped account API; bookings go through slot lookup and user confirmation. For multi-intent requests, the state tracks both tasks and their dependencies. The router cannot bypass permissions, and failures return to a safe clarification path. This is more predictable than one unrestricted agent calling arbitrary tools.",
+    "technical_context": "Classify intent into FAQ, authenticated account read, booking, clarification or refusal; preserve multi-intent requests as a task plan. Routing can be deterministic/LLM-assisted but actual tool authorization is independent.",
+    "common_mistakes": [
+      "Routing every request to RAG",
+      "Assuming classified intent grants access",
+      "Losing first task when second task starts"
+    ],
+    "expected_concepts": [
+      "router",
+      "intent",
+      "branch",
+      "verify"
+    ],
+    "project_context": "Your voice assistant has distinct policy RAG, appointment and banking account flows."
+  },
+  "LangChain & LangGraph / Hands-on workflows / Critic/reviewer node": {
+    "topic": "Critic/reviewer node",
+    "question": "What should a critic node check?",
+    "reference_answer": "A critic node is a quality checkpoint. It receives the draft answer and the supporting evidence, checks whether each significant claim is grounded and whether required fields are present, and either approves or requests a bounded revision. For the RCA assistant I would validate the anomaly classification deterministically from runtime data, then use a reviewer to catch unsupported explanations. I do not let a critic LLM override account permissions or pretend its opinion proves factual accuracy.",
+    "technical_context": "Compare claims to retrieved citations, check schema and forbidden actions, reject missing evidence and loop only within a bounded repair budget. Use deterministic validators for permissions and calculations; a second model cannot guarantee truth.",
+    "common_mistakes": [
+      "Calling critic score ground truth",
+      "Unbounded draft–critic cycles",
+      "Using an LLM to verify access rules"
+    ],
+    "expected_concepts": [
+      "critic",
+      "validation",
+      "grounded",
+      "review"
+    ],
+    "project_context": "Your anomaly RCA assistant can check that claimed root causes link to activity logs and numeric thresholds."
+  },
+  "LangChain & LangGraph / Hands-on workflows / Subgraph & multi-agent handoff": {
+    "topic": "Subgraph & multi-agent handoff",
+    "question": "When is a subgraph preferable to another agent?",
+    "reference_answer": "I use a subgraph when a focused workflow has several repeatable steps but belongs to the same controlled application. A distinct agent is useful when there is a genuine independent role, tool set or lifecycle. During a handoff I pass only the authorized task, minimal relevant state and expected output contract. For banking scheduling, a subgraph is often simpler and easier to secure than a freely communicating network of agents.",
+    "technical_context": "Subgraphs share a controlled execution context while agent handoff requires explicit task, state, permissions and result contract. Avoid forwarding unrestricted credentials and full conversation history to every specialist.",
+    "common_mistakes": [
+      "Copying all customer history into every agent",
+      "Losing authorization context",
+      "Creating agents when plain functions suffice"
+    ],
+    "expected_concepts": [
+      "subgraph",
+      "handoff",
+      "state",
+      "contract"
+    ],
+    "project_context": "Your banking assistant can keep scheduling as a subgraph rather than creating a separate autonomous agent for every tool."
   },
   "Agentic AI, Tools & MCP / Tool use / Tool calling lifecycle": {
     "topic": "Tool calling lifecycle",
@@ -418,6 +1223,152 @@
     ],
     "project_context": "For balance lookup in the banking assistant, caller identity verification and ownership checks must pass server-side before any account data is returned."
   },
+  "Agentic AI, Tools & MCP / Tool use / Function schema & validation": {
+    "topic": "Function schema & validation",
+    "question": "Can the model be trusted to provide valid account IDs?",
+    "reference_answer": "Tool calling is safe only when its contract is explicit. I expose small JSON schemas with required parameters and allowed values, then validate every tool call server-side. I never assume that an account number supplied by the model belongs to the user. The backend derives identity from a verified session, checks ownership, applies limits and then runs the action. Tool results are validated too, because malformed responses should not become authoritative user answers.",
+    "technical_context": "Use JSON Schema fields/enums/limits, canonicalize IDs, derive trusted identity from JWT, check ownership, apply idempotency and validate tool output. A valid schema alone is not sufficient authorization.",
+    "common_mistakes": [
+      "Confusing schema validation with access control",
+      "Accepting arbitrary SQL fields",
+      "Trusting model-generated identifiers"
+    ],
+    "expected_concepts": [
+      "schema",
+      "tool",
+      "authorization",
+      "validation"
+    ],
+    "project_context": "Your banking assistant should accept only narrowly defined account lookup or booking arguments."
+  },
+  "Agentic AI, Tools & MCP / Tool use / Stateful vs stateless agents": {
+    "topic": "Stateful vs stateless agents",
+    "question": "What should persist between voice turns?",
+    "reference_answer": "Stateful does not have to mean a long-lived server process. I keep application workers stateless where possible and persist only the conversation state required for continuity in an owned checkpoint store. A bank appointment conversation needs the pending date and verification status, while an ordinary FAQ can be independent. The session is bounded by tenant and user and expires by policy. This allows workers to scale without sharing in-process memory.",
+    "technical_context": "Store minimal durable session state and restore it by server-owned thread ID; consider concurrency locks, TTL, migration and PII retention. Stateless services scale horizontally and can read/write state via an external checkpoint store.",
+    "common_mistakes": [
+      "Storing every transcript forever",
+      "Keeping session only in one container memory",
+      "Using a user-supplied thread ID as authorization"
+    ],
+    "expected_concepts": [
+      "state",
+      "checkpoint",
+      "stateless",
+      "TTL"
+    ],
+    "project_context": "Your voice agent keeps conversation context across caller utterances without binding sessions to one compute instance."
+  },
+  "Agentic AI, Tools & MCP / Tool use / Bank tools": {
+    "topic": "Bank tools",
+    "question": "How do you combine two tool actions in one request?",
+    "reference_answer": "I design banking tools as narrow backend operations. A balance tool accepts an authorized account reference and returns the current figure and timestamp; it does not let the model calculate from guessed documents. Scheduling first checks availability, then confirms the exact details with the customer, and finally writes once with an idempotency key. I keep customer verification separate from language understanding and redact sensitive tool results from logs.",
+    "technical_context": "Separate read scopes from write scopes, gate account reads on verification, require confirmation for booking and use idempotency on write actions. Return structured balances, timestamps and error states to the model.",
+    "common_mistakes": [
+      "Disclosing balances without verification",
+      "Treating booking request as confirmation",
+      "Logging full account details"
+    ],
+    "expected_concepts": [
+      "bank",
+      "account",
+      "booking",
+      "tool",
+      "confirmation"
+    ],
+    "project_context": "Your voice assistant combines policy RAG with secure account and appointment services."
+  },
+  "Agentic AI, Tools & MCP / Multi-agent patterns / Router agent": {
+    "topic": "Router agent",
+    "question": "How would you separate banking FAQ from transactions?",
+    "reference_answer": "A router agent makes a small decision: which capability should handle the current intent. It does not need full database permissions. I define categories such as policy FAQ, verified account lookup, scheduling and clarification, then track multi-intent cases separately. After routing, each specialist runs with its own tool permissions. In our voice assistant this prevents ordinary policy questions from triggering sensitive account tools and makes each path easier to test.",
+    "technical_context": "Route based on explicit intent taxonomy, confidence and authorization; fallback to clarification on ambiguous requests. Treat multi-intent inputs as orchestrated subtasks, not one forced class.",
+    "common_mistakes": [
+      "Giving router all business permissions",
+      "Forcing multi-intent to one label",
+      "Using routing score as user identity"
+    ],
+    "expected_concepts": [
+      "router",
+      "intent",
+      "specialist",
+      "permission"
+    ],
+    "project_context": "Your banking voice assistant benefits from FAQ-versus-account-versus-booking routing."
+  },
+  "Agentic AI, Tools & MCP / Multi-agent patterns / Supervisor agent": {
+    "topic": "Supervisor agent",
+    "question": "What is the supervisor responsible for?",
+    "reference_answer": "The supervisor plans subtasks, delegates them to appropriate specialists and merges validated results. It tracks which operations are complete, which need user consent and which failed. For a balance-plus-appointment call, the account specialist performs the protected read and the scheduling specialist finds slots; the supervisor never fabricates missing outputs. I use an explicit task budget and keep permissions within each tool gateway rather than assuming the coordinating model is a security layer.",
+    "technical_context": "Track task state, dependencies, maximum calls and ownership per specialist. Apply deterministic policy/authorization gates outside supervisor LLM and validate final answer against completed tool outputs.",
+    "common_mistakes": [
+      "Giving supervisor admin credentials",
+      "Merging conflicting results silently",
+      "Infinite delegation loops"
+    ],
+    "expected_concepts": [
+      "supervisor",
+      "delegate",
+      "task",
+      "state"
+    ],
+    "project_context": "Your multi-step banking request can use a supervisor to maintain task progress without exposing broad tools to each worker."
+  },
+  "Agentic AI, Tools & MCP / Multi-agent patterns / Handoff agent": {
+    "topic": "Handoff agent",
+    "question": "How do you avoid losing user context on handoff?",
+    "reference_answer": "In a handoff, one agent stops owning a task and gives another specialist a structured request. I include just enough information to continue: task, confirmed user intent, verified scope and a correlation ID. The receiving agent does not inherit unrestricted credentials or unrelated history. When it responds, I validate its result and return control to the coordinator. If the handoff fails, the assistant clearly escalates rather than pretending the requested action completed.",
+    "technical_context": "Define receiving agent, reason, minimal context, auth scope, expected result and resumption behavior. Use correlation IDs, prevent recursive handoff loops, and do not cross tenant boundaries.",
+    "common_mistakes": [
+      "Forwarding entire sensitive transcript",
+      "Chaining unrestricted agent handoffs",
+      "Losing approval state"
+    ],
+    "expected_concepts": [
+      "handoff",
+      "scope",
+      "context",
+      "agent"
+    ],
+    "project_context": "Your banking assistant may hand off complex financial advice to an authorized human or specialist rather than answering speculatively."
+  },
+  "Agentic AI, Tools & MCP / Multi-agent patterns / Critic/validator agent": {
+    "topic": "Critic/validator agent",
+    "question": "Can a critic replace deterministic business validation?",
+    "reference_answer": "A critic agent can examine whether a draft answer is coherent and grounded, but it does not replace deterministic validation. I check schema, identity and numeric thresholds with code, then use an evaluator to flag claims unsupported by retrieved records. In the pipeline RCA project, a valid CRITICAL label comes from the median/MAD logic; the critic assesses whether the explanation cites actual activities. I evaluate critic accuracy against human-reviewed examples to catch its mistakes.",
+    "technical_context": "Run deterministic schema, permission and numerical checks first; reserve model critics for nuanced relevance, consistency and support-by-source. Measure critic disagreement on human-labeled cases.",
+    "common_mistakes": [
+      "Using model opinion to compute threshold",
+      "Treating critic as independent ground truth",
+      "Infinite revise/review loops"
+    ],
+    "expected_concepts": [
+      "critic",
+      "validator",
+      "threshold",
+      "evidence"
+    ],
+    "project_context": "Your anomaly RCA project needs separate numerical validity and evidence-grounded explanation checks."
+  },
+  "Agentic AI, Tools & MCP / Multi-agent patterns / Agentic SQL analyst": {
+    "topic": "Agentic SQL analyst",
+    "question": "How would an agent answer why revenue dropped last quarter?",
+    "reference_answer": "To answer why revenue fell, I first define revenue and comparison periods from a trusted metric catalog. The analyst queries approved tables or semantic views, calculates the period difference and decomposes it by segment or price and volume. Then it retrieves supporting operational context and clearly separates measured changes from hypotheses. I use read-only, permission-scoped SQL with row limits, audit each query and avoid claiming causation simply because two numbers moved together.",
+    "technical_context": "Use semantic metric definitions, curated schema views, approved read-only SQL templates or generated SQL review, per-user row policies, cost/time limits and reproducible aggregation. Distinguish correlation from causality.",
+    "common_mistakes": [
+      "Allowing arbitrary UPDATE/DELETE SQL",
+      "Using inconsistent metric definitions",
+      "Mistaking correlation for cause"
+    ],
+    "expected_concepts": [
+      "SQL",
+      "semantic",
+      "metric",
+      "variance",
+      "read-only"
+    ],
+    "project_context": "Your Databricks dashboards and anomaly RCA materialized views provide the structured evidence a governed analyst can query."
+  },
   "Agentic AI, Tools & MCP / MCP & interoperability / MCP server/client": {
     "topic": "MCP server/client",
     "question": "What is an MCP server?",
@@ -437,6 +1388,60 @@
     ],
     "project_context": "Your agentic RCA assistant could use an MCP server to standardize access to approved pipeline metadata, while data-layer authorization still remains mandatory."
   },
+  "Agentic AI, Tools & MCP / MCP & interoperability / MCP tools, resources & prompts": {
+    "topic": "MCP tools, resources & prompts",
+    "question": "What are the three MCP primitives?",
+    "reference_answer": "The Model Context Protocol has three important primitives. Tools are functions the client can invoke, resources provide addressable context and prompts provide reusable interactions. I would use MCP to connect approved internal knowledge and actions to an agent without coding a custom connector for each client. However, the MCP server still needs strong authentication, minimal permissions and parameter checks. Discovering a tool does not authorize a customer to access another bank account.",
+    "technical_context": "Tools expose callable operations with schemas, resources identify read-only contextual content through URIs, prompts describe reusable request templates. MCP interoperability does not automatically grant safe authorization, trust or tenant boundaries.",
+    "common_mistakes": [
+      "Assuming MCP is a model",
+      "Confusing resources with executable tools",
+      "Accepting discovered capabilities as authorized access"
+    ],
+    "expected_concepts": [
+      "MCP",
+      "tools",
+      "resources",
+      "prompts"
+    ],
+    "project_context": "Your agentic voice workflows already distinguish knowledge retrieval and tool execution; MCP formalizes integration boundaries."
+  },
+  "Agentic AI, Tools & MCP / MCP & interoperability / Azure/GitHub MCP use": {
+    "topic": "Azure/GitHub MCP use",
+    "question": "How do you secure an MCP tool connection?",
+    "reference_answer": "For Azure or GitHub MCP integrations, I start by identifying the exact workflow: reading CI logs, creating a change request or inspecting configuration. I grant only the required permissions and keep secrets out of prompts. Read-only diagnosis can run automatically, whereas merges and cloud provisioning should follow explicit review and ownership rules. An MCP protocol connection only transports tool requests; GitHub and Azure still enforce their own authorization and auditing.",
+    "technical_context": "Authorize each operation through OAuth/managed identity where supported, minimal scopes and explicit allowlists; segregate read and write operations. Protect secrets and require approvals before deployment or destructive changes.",
+    "common_mistakes": [
+      "Using broad subscription owner permissions",
+      "Exposing PATs to model context",
+      "Treating tool discovery as user consent"
+    ],
+    "expected_concepts": [
+      "MCP",
+      "Azure",
+      "GitHub",
+      "least-privilege"
+    ],
+    "project_context": "Your RetailGrowthAI project uses GitHub PR/CI coordination; Galaxy should keep its repository and cloud permissions separate."
+  },
+  "Agentic AI, Tools & MCP / MCP & interoperability / Agent-to-Agent (A2A) overview": {
+    "topic": "Agent-to-Agent (A2A) overview",
+    "question": "When would agent-to-agent communication help?",
+    "reference_answer": "Agent-to-agent protocols focus on communication among independently operated agents. One assistant can discover a specialist, send a scoped task, receive progress and collect an outcome. MCP is different because it mainly standardizes how a client accesses tools, resources and prompts. I would use A2A only when separate agent services really need that boundary. For a single banking application, LangGraph nodes or subgraphs often reduce coordination complexity and security risk.",
+    "technical_context": "Use capability discovery and task protocols with explicit identities, lifecycle events and structured outputs. Cross-agent context should be minimized; do not confuse A2A communication with MCP tool/resource access.",
+    "common_mistakes": [
+      "Using A2A for every simple function",
+      "Sending entire account context across agents",
+      "Assuming protocol discovery implies trust"
+    ],
+    "expected_concepts": [
+      "A2A",
+      "agent",
+      "delegation",
+      "protocol"
+    ],
+    "project_context": "Your banking voice application could hand off specialist tasks, but a LangGraph subgraph is simpler when all steps share one trusted runtime."
+  },
   "Agentic AI, Tools & MCP / Tool safety / Idempotent tool execution": {
     "topic": "Idempotent tool execution",
     "question": "How do you handle timeouts after booking may have already succeeded?",
@@ -455,6 +1460,24 @@
       "duplicate"
     ],
     "project_context": "Your banking voice assistant schedules financial adviser appointments, making duplicate prevention and user confirmation important tool-layer safeguards."
+  },
+  "Agentic AI, Tools & MCP / Tool safety / Tool authorization and least-privilege schemas": {
+    "topic": "Tool authorization and least-privilege schemas",
+    "question": "Can a system prompt replace authorization checks?",
+    "reference_answer": "I never rely on the model to decide whether it is authorized. The tool backend validates the caller identity, checks the requested account belongs to that user and applies an action-specific permission. I expose the smallest possible input schema and reject extra fields or unsafe operations. Reads and writes use different privileges, with user confirmation for side effects. This design protects the bank even if the model misunderstands a prompt or a retrieved document contains malicious instructions.",
+    "technical_context": "Derive user and tenant from server-validated claims, map to resource scopes, require action-specific approval and enforce allowlisted fields. Rate limits, idempotency and audit apply even to valid schema inputs.",
+    "common_mistakes": [
+      "Granting wildcard database permissions",
+      "Believing prompts prevent IDOR",
+      "Trusting caller-provided identity in tool args"
+    ],
+    "expected_concepts": [
+      "authorization",
+      "least-privilege",
+      "JWT",
+      "tool"
+    ],
+    "project_context": "Your banking assistant needs a separate secure account API gateway beyond its LLM system prompt."
   },
   "Azure AI Foundry & Cloud / AI platform / Azure AI Foundry hub vs project": {
     "topic": "Azure AI Foundry hub vs project",
@@ -513,6 +1536,42 @@
     ],
     "project_context": "For the banking voice architecture, review which components can use VNet integration, and recognize that customer telephony ingress may still need a public authenticated edge."
   },
+  "Banking Voice Assistant / End-to-end voice call / Call entry & Azure Communication Services": {
+    "topic": "Call entry & Azure Communication Services",
+    "question": "Explain the path from telephone to agent.",
+    "reference_answer": "In our banking voice architecture, the telephone provider establishes the call and a voice gateway receives call and audio events. We create a unique call session and route speech through STT, then send the transcript to the agent and relevant authorized tools. Finally we synthesize a reply and play it back. Communication Services handles transport, not banking identity verification. We correlate each stage by call ID and handle disconnects and retries explicitly.",
+    "technical_context": "Use Azure Communication Services call automation/events or a provider telephony adapter, correlate incoming call ID, authenticate appropriate operations, and route media to controlled STT/agent/TTS services. Telephony transport itself does not prove customer identity.",
+    "common_mistakes": [
+      "Treating caller ID as bank authentication",
+      "Losing call/session correlation",
+      "Assuming transport handles business authorization"
+    ],
+    "expected_concepts": [
+      "ACS",
+      "call",
+      "session",
+      "audio"
+    ],
+    "project_context": "Your resume describes a banking assistant using Azure Communication Services and Azure Speech with downstream Foundry agent tools."
+  },
+  "Banking Voice Assistant / End-to-end voice call / WebSocket audio streaming": {
+    "topic": "WebSocket audio streaming",
+    "question": "Why does streaming help latency?",
+    "reference_answer": "WebSocket streaming keeps a live bidirectional channel for small audio frames, so we can start transcription before the entire call finishes. I validate the event envelope and audio format, correlate it with a unique session and buffer only enough audio for STT. Backpressure, silence and disconnect handling matter because dropped or malformed frames can create silent responses. We trace frames, transcript requests and playback commands with one call identifier.",
+    "technical_context": "Define event/message schema, sample rate and codec, frame sequence/call ID, buffering, backpressure and timeout handling. Detect silence, ignore malformed events and bound per-session memory so audio does not stall the service.",
+    "common_mistakes": [
+      "Assuming any frame is valid speech",
+      "Mixing audio across call sessions",
+      "Unbounded buffering on slow consumers"
+    ],
+    "expected_concepts": [
+      "WebSocket",
+      "PCM",
+      "frames",
+      "buffer"
+    ],
+    "project_context": "Your voice-agent architecture uses a WebSocket streaming endpoint, Azure Functions and audio playback; debug event types and frame metrics end to end."
+  },
   "Banking Voice Assistant / End-to-end voice call / Azure Speech STT": {
     "topic": "Azure Speech STT",
     "question": "Why choose Azure Speech for speech-to-text?",
@@ -531,6 +1590,60 @@
       "recognizer"
     ],
     "project_context": "Your banking voice assistant uses Azure Communication Services plus Azure Speech for incoming call transcription, then passes recognized text to a Foundry/LangGraph agent before synthesizing reply audio."
+  },
+  "Banking Voice Assistant / End-to-end voice call / LangGraph/Foundry orchestration": {
+    "topic": "LangGraph/Foundry orchestration",
+    "question": "What components decide the next tool?",
+    "reference_answer": "After STT produces text, an agent workflow examines the caller intent and uses explicit graph state. A router selects policy retrieval, verified account lookup or appointment booking. A tool node validates authorization and a review or fallback node checks the outcome before text is passed to TTS. Azure AI Foundry provides model services, while LangGraph coordinates the application steps. I keep session state, tenant scope and tool errors visible rather than embedding everything into one prompt.",
+    "technical_context": "The state includes session ID, transcript, tenant and verification status, pending tasks and tool results. LangGraph conditional edges choose RAG, account lookup, scheduling, clarification and fallback; Foundry hosts the model or agent resources.",
+    "common_mistakes": [
+      "Confusing Foundry deployment with business authorization",
+      "Allowing tool routing to bypass verification",
+      "Forgetting pending-call state"
+    ],
+    "expected_concepts": [
+      "Foundry",
+      "LangGraph",
+      "router",
+      "tool"
+    ],
+    "project_context": "Your banking assistant project combines an Azure-hosted LLM, conversation thread and authorized backend tools."
+  },
+  "Banking Voice Assistant / End-to-end voice call / RAG on policies & FAQs": {
+    "topic": "RAG on policies & FAQs",
+    "question": "How do you update the bank policy knowledge base?",
+    "reference_answer": "For policy questions I retrieve approved bank documents at inference time. We parse and chunk current policies, store embeddings with tenant and effective-date metadata, and search using the caller question. Only authorized passages enter the model prompt and the response carries traceable sources. If retrieval is empty or conflicting, we do not invent a fee; we clarify or escalate. Account balances stay in structured banking APIs, not a policy vector store.",
+    "technical_context": "Index versioned parsed policy passages with tenant and ACL metadata, embed user queries, retrieve filtered candidates, rerank when useful and ground response in selected cited text. Detect and retire stale source versions.",
+    "common_mistakes": [
+      "Leaving obsolete policy vectors active",
+      "Allowing wrong-tenant chunks",
+      "Using RAG to guess an account value"
+    ],
+    "expected_concepts": [
+      "RAG",
+      "policy",
+      "chunk",
+      "version"
+    ],
+    "project_context": "Your banking voice assistant uses policy FAQ retrieval as a separate branch from balance and scheduling tools."
+  },
+  "Banking Voice Assistant / End-to-end voice call / Speech TTS & playback": {
+    "topic": "Speech TTS & playback",
+    "question": "Where does TTS fit in your flow?",
+    "reference_answer": "TTS comes after the application has a response it is permitted to say. The speech service synthesizes audio in an appropriate locale and supported format, then our call gateway streams or plays it. I measure how long it takes to hear the first response and handle barge-in by cancelling outdated playback. For banking, I wait for verified account or booking results before speaking them, and I keep failures from turning into false success announcements.",
+    "technical_context": "Choose supported locale/voice, output codec/sample rate and streaming chunk strategy; synchronize playback events and interruption handling. Avoid synthesizing sensitive unverified data and measure time to first audible audio.",
+    "common_mistakes": [
+      "Speaking unconfirmed tool success",
+      "Mixing unsupported audio sample rates",
+      "Failing to cancel queued TTS"
+    ],
+    "expected_concepts": [
+      "TTS",
+      "voice",
+      "audio",
+      "playback"
+    ],
+    "project_context": "Your banking voice assistant uses Azure Speech TTS and a voice transport play-audio stage."
   },
   "Banking Voice Assistant / Conversation quality / Turn-taking & silence detection": {
     "topic": "Turn-taking & silence detection",
@@ -551,6 +1664,151 @@
     ],
     "project_context": "Your voice assistant includes WebSocket PCM streaming and configurable silence settings; those should be tuned with call recordings and user consent."
   },
+  "Banking Voice Assistant / Conversation quality / Unique call/thread ID": {
+    "topic": "Unique call/thread ID",
+    "question": "Why use a unique thread ID per call?",
+    "reference_answer": "I create a distinct call ID when a new telephone session starts and associate it with exactly one agent thread and tenant context. Every STT request, tool call, TTS playback and diagnostic event carries that ID. It prevents overlapping callers from sharing state and makes latency tracing possible. The backend still checks the user and tenant; knowing the ID must not grant access. On disconnect I release buffers and expire session checkpoints according to retention rules.",
+    "technical_context": "Create unpredictable per-call identifiers, bind them to authenticated session and tenant, map media stream to graph thread, and enforce cleanup/TTL. Correlation IDs link traces; they are never authorization credentials by themselves.",
+    "common_mistakes": [
+      "Reusing a global conversation ID",
+      "Treating correlation ID as an access token",
+      "Failing to clear buffers"
+    ],
+    "expected_concepts": [
+      "call_id",
+      "thread",
+      "tenant",
+      "trace"
+    ],
+    "project_context": "Your voice-agent requirements include a single conversation thread per call and strict tenant separation."
+  },
+  "Banking Voice Assistant / Conversation quality / Greeting once & follow-ups": {
+    "topic": "Greeting once & follow-ups",
+    "question": "How do you ensure the greeting occurs only once?",
+    "reference_answer": "I model the greeting as a state transition. At the start of a new verified call, the system sends one greeting and marks greeting_sent in the session. Later turns reload that state, so the agent can interpret “make it afternoon” as an update to the pending booking without saying hello again. I keep the task slots and conversation summary bounded and handle reconnects without accidentally creating a second unrelated session.",
+    "technical_context": "Represent greeting_sent, task slots, verification state and dialog turn counter in server-scoped session state. A deterministic once-only flag is safer than asking the model to remember whether it already greeted.",
+    "common_mistakes": [
+      "Relying on a prompt to guarantee one greeting",
+      "Dropping pending appointment slots",
+      "Reusing state for a different caller"
+    ],
+    "expected_concepts": [
+      "greeting",
+      "session",
+      "thread",
+      "followup"
+    ],
+    "project_context": "Your voice assistant requires one greeting per call and a single session thread for follow-up messages."
+  },
+  "Banking Voice Assistant / Conversation quality / STT language, voices & region": {
+    "topic": "STT language, voices & region",
+    "question": "Why does voice locale selection matter?",
+    "reference_answer": "For STT I choose the recognition locale from actual caller speech and test it against recordings with local accents, background noise and code-switching. For TTS I independently choose an intelligible voice, supported output format and Azure region. Voice quality and recognition accuracy are separate problems. In our banking assistant I measure word error rate and whether essential intents like cancel versus confirm are preserved; I avoid assuming a realistic voice makes the whole system accurate.",
+    "technical_context": "Choose speech recognizer locale independently of synthesis voice, validate regional service/voice availability and deployment constraints. Evaluate noisy recordings and speaker accents with WER and task-intent accuracy, not voice aesthetics alone.",
+    "common_mistakes": [
+      "Confusing STT locale with TTS voice name",
+      "Assuming a voice exists in all regions",
+      "Measuring only perceived voice naturalness"
+    ],
+    "expected_concepts": [
+      "STT",
+      "locale",
+      "TTS",
+      "region"
+    ],
+    "project_context": "Your earlier voice work evaluated English-India speech voices; verify current Azure regional support rather than assuming every voice is everywhere."
+  },
+  "Banking Voice Assistant / Conversation quality / Latency & barge-in": {
+    "topic": "Latency & barge-in",
+    "question": "What are the main contributors to voice response latency?",
+    "reference_answer": "I measure end-to-end voice latency, not just the model response. There is a delay detecting end of speech, STT processing, retrieval or tool calls, model generation and TTS playback. For barge-in, I detect new speech while audio is playing, cancel pending chunks and start a fresh turn with the same call ID. I tune endpointing carefully because too-short silence windows cut off slow speakers while long windows feel unresponsive.",
+    "technical_context": "Trace speech endpointing, ASR, retrieval, agent execution, tools, model TTFT and TTS. On interruption cancel pending synthesis/playback and distinguish the user’s new turn from residual echo.",
+    "common_mistakes": [
+      "Optimizing model time while ignoring endpointing",
+      "Cutting off callers",
+      "Continuing stale TTS after interruption"
+    ],
+    "expected_concepts": [
+      "latency",
+      "barge-in",
+      "endpoint",
+      "STT"
+    ],
+    "project_context": "Your real-time agent uses a silence endpoint threshold plus WebSocket streaming and TTS; changes can affect cut-offs and responsiveness."
+  },
+  "Banking Voice Assistant / Banking workflows / Balance lookup & verification": {
+    "topic": "Balance lookup & verification",
+    "question": "How do you safely answer account balance questions?",
+    "reference_answer": "For balance questions I first verify the caller with the bank’s actual identity mechanism and determine which accounts they can access. I call a narrowly scoped read-only account API and use its response and timestamp, not anything the language model remembers. If verification or lookup fails, I refuse to disclose the figure and guide the customer to a safe channel. I log correlation IDs but avoid storing complete balances in traces.",
+    "technical_context": "Verify customer identity and account ownership with a trusted backend; use an explicitly scoped read API, canonical currency/amount formatting and redacted logs. Model output cannot establish authentication.",
+    "common_mistakes": [
+      "Treating caller phone number as complete verification",
+      "Inventing balance from RAG",
+      "Logging sensitive account data"
+    ],
+    "expected_concepts": [
+      "balance",
+      "verification",
+      "ownership",
+      "tool"
+    ],
+    "project_context": "Your banking voice assistant separates account lookup from its document RAG branch and applies guardrails on sensitive account details."
+  },
+  "Banking Voice Assistant / Banking workflows / Financial advisor scheduling": {
+    "topic": "Financial advisor scheduling",
+    "question": "What is the scheduling workflow?",
+    "reference_answer": "For an adviser appointment, I collect the date, location and relevant preferences, then query live availability. I present a real available slot and ask the caller to confirm the exact details. Only then do I invoke a booking API with an idempotency key. I read back success from the backend response. If it times out, I check booking status instead of guessing, because repeating writes could create duplicate appointments.",
+    "technical_context": "Validate advisor/timezone/slot and ownership, check live availability, obtain an explicit caller confirmation, book once via an idempotency key and reconcile uncertain network outcomes.",
+    "common_mistakes": [
+      "Inventing appointment slots",
+      "Booking before user consent",
+      "Retrying ambiguous writes without status check"
+    ],
+    "expected_concepts": [
+      "schedule",
+      "availability",
+      "confirmation",
+      "idempotency"
+    ],
+    "project_context": "Your voice assistant has appointment-scheduler integration; the graph should keep booking as a separate authorized workflow."
+  },
+  "Banking Voice Assistant / Banking workflows / Tenant isolation & session safety": {
+    "topic": "Tenant isolation & session safety",
+    "question": "How would you prevent bank A data leaking to bank B?",
+    "reference_answer": "For multi-tenant voice agents I derive tenant context from a trusted session and enforce it across every layer: document retrieval, graph checkpoints, account tools, secrets and storage. One global vector store can be acceptable only with reliable mandatory filters and isolation tests; separate indexes simplify some risks. A user prompt saying “switch to bank B” must not change backend permissions. I test unauthorized retrieval, direct object paths and concurrent call sessions.",
+    "technical_context": "Bind tenant ID to verified server identity, partition retrieval metadata/checkpoints/secrets and enforce scoped SQL/RLS and tool gates. Fuzz with cross-tenant test users and never accept an LLM-produced tenant switch.",
+    "common_mistakes": [
+      "Trusting a user-provided tenant ID",
+      "Using global thread keys",
+      "Relying on prompt refusals instead of RLS"
+    ],
+    "expected_concepts": [
+      "tenant",
+      "session",
+      "RLS",
+      "ACL"
+    ],
+    "project_context": "Your voice assistant uses per-tenant knowledge and a unique session/thread; backend tenant checks remain essential."
+  },
+  "Banking Voice Assistant / Banking workflows / Failure recovery": {
+    "topic": "Failure recovery",
+    "question": "How do you debug a silent or incorrect voice response?",
+    "reference_answer": "When a voice agent fails, I debug stage by stage. First I confirm the call and WebSocket connected, then inspect valid audio frames and silence detection. Next I check whether STT returned the intended transcript, whether the agent route and tool completed, and whether TTS playback was delivered. Every event shares one call ID. A missing booking acknowledgement is never presented as success; on uncertain actions I reconcile status and escalate safely.",
+    "technical_context": "Instrument session creation, media frame reception, endpointing, STT result, retrieval, tool status, TTS generation and delivery under a correlation ID. Distinguish no speech, misrecognized intent, authorization failure and disconnected caller.",
+    "common_mistakes": [
+      "Changing prompt before checking audio stream",
+      "Treating silence as user confirmation",
+      "Claiming success after tool exception"
+    ],
+    "expected_concepts": [
+      "debug",
+      "WebSocket",
+      "STT",
+      "TTS",
+      "trace"
+    ],
+    "project_context": "Your previous voice-agent logs included WebSocket connection, media frames, greeting response and dropped-silence events."
+  },
   "Banking Voice Assistant / Speech pipeline / Speech recognition WER & transcription evaluation": {
     "topic": "Speech recognition WER & transcription evaluation",
     "question": "How do you evaluate transcription quality before LLM response generation?",
@@ -569,6 +1827,42 @@
       "slots"
     ],
     "project_context": "Record consented representative banking test utterances with names/amounts and test Azure Speech recognition separately before tuning downstream agent prompts."
+  },
+  "Banking Voice Assistant / Speech pipeline / Speech recognition browser fallback": {
+    "topic": "Speech recognition browser fallback",
+    "question": "How should the UI recover from unavailable STT?",
+    "reference_answer": "For the tutor I start with feature detection for browser speech recognition, request microphone permission through the browser and append the recognized text to an editable answer field. I handle unsupported browsers, network failures and user cancellation by keeping manual text entry available. Browser speech APIs differ across devices and may rely on browser services, so I do not claim guaranteed offline operation. An Azure Speech adapter is useful where broader supported coverage is required.",
+    "technical_context": "Feature-detect SpeechRecognition/webkitSpeechRecognition, handle permissions, no-speech/errors and partial results, keep transcript editable and offer manual typing. Never claim browser recognition is a universal offline/private capability.",
+    "common_mistakes": [
+      "Assuming support in every browser",
+      "Losing typed text after STT failure",
+      "Sending API subscription keys to static JavaScript"
+    ],
+    "expected_concepts": [
+      "browser",
+      "STT",
+      "permission",
+      "transcript"
+    ],
+    "project_context": "The Galaxy tutor uses a browser speech-recognition adapter as its first option, with a planned Azure fallback."
+  },
+  "Banking Voice Assistant / Speech pipeline / Azure Speech short-lived token broker": {
+    "topic": "Azure Speech short-lived token broker",
+    "question": "How do you avoid placing a Speech subscription key in a static website?",
+    "reference_answer": "Static websites cannot safely hold Azure Speech subscription keys. I expose a backend token broker that first validates the signed-in user, checks quotas and requests a short-lived Speech authorization token from Azure using a server-only secret. The browser receives only the temporary token and region. I handle expiration and request a new one when needed. The Galaxy backend code has this route, but I would not enable it until rate limiting and cloud configuration are tested.",
+    "technical_context": "Authenticate browser JWT server-side, enforce per-user quotas, request a regional Speech authorization token and return only the limited token and matching region. Never expose the subscription key; protect CORS, abuse and usage logs.",
+    "common_mistakes": [
+      "Embedding subscription key in frontend",
+      "Skipping user-level quotas",
+      "Treating token expiry as a permanent transcription failure"
+    ],
+    "expected_concepts": [
+      "token",
+      "broker",
+      "Speech",
+      "quota"
+    ],
+    "project_context": "Galaxy M2 includes an authenticated Speech token route, but real quota gateway and Azure deployment are not configured."
   },
   "GenAI Evaluation & Quality Gates / Offline golden dataset / Golden dataset (.jsonl)": {
     "topic": "Golden dataset (.jsonl)",
@@ -627,6 +1921,25 @@
     ],
     "project_context": "Your interview prep covers both Azure AI Evaluation SDK and Ragas, so compare their metric definitions instead of assuming identical score scales."
   },
+  "GenAI Evaluation & Quality Gates / Offline golden dataset / Automated quality gates": {
+    "topic": "Automated quality gates",
+    "question": "How do you fail Azure DevOps when groundedness is below 4/5?",
+    "reference_answer": "I treat evaluation as a CI release gate, not occasional manual prompt testing. The pipeline loads a versioned golden dataset, runs the RAG chain, scores supported claims, relevance and any hard security constraints, then compares results to calibrated thresholds. For example, average groundedness below four out of five blocks deployment, but even a high average cannot override one critical tenant-leak failure. I archive scores and traces so teams can diagnose changes before merging.",
+    "technical_context": "Run golden .jsonl batch evaluations in CI; check average groundedness plus per-case critical failures, test dataset integrity and retain model/retriever/prompt versions. Threshold choices require calibration against human review.",
+    "common_mistakes": [
+      "Gating only on an average",
+      "Hiding failed evaluation traces",
+      "Picking thresholds without baseline/human labels"
+    ],
+    "expected_concepts": [
+      "gate",
+      "CI",
+      "golden",
+      "threshold",
+      "groundedness"
+    ],
+    "project_context": "Your Azure AI Foundry evaluation plan uses CI to prevent prompt or RAG regressions before publishing."
+  },
   "GenAI Evaluation & Quality Gates / Metric interpretation / Groundedness": {
     "topic": "Groundedness",
     "question": "Does groundedness need to run on every answer?",
@@ -645,6 +1958,60 @@
       "freshness"
     ],
     "project_context": "For banking FAQs, use context and answer traces from RAG; sample production outputs for automated evaluation and run golden batch gates in CI."
+  },
+  "GenAI Evaluation & Quality Gates / Metric interpretation / Faithfulness vs truthfulness": {
+    "topic": "Faithfulness vs truthfulness",
+    "question": "Can an answer be faithful but factually wrong?",
+    "reference_answer": "I separate whether the model followed supplied evidence from whether the evidence reflects reality. Faithfulness compares answer claims to retrieved passages. Truthfulness requires independent trustworthy reference facts, like the current approved policy version. If an obsolete banking rule was indexed, the model could score highly on faithfulness while telling the customer the wrong fee. I therefore evaluate source freshness, document lineage and fact accuracy in addition to groundedness.",
+    "technical_context": "Source-conditional entailment and externally verified factuality require different references. A false or stale retrieved policy can yield high faithfulness but low truthfulness; label evidence version and verification source.",
+    "common_mistakes": [
+      "Calling citations factual proof",
+      "Accepting obsolete documents",
+      "Scoring both concepts with one undocumented metric"
+    ],
+    "expected_concepts": [
+      "faithfulness",
+      "truthfulness",
+      "source",
+      "fact"
+    ],
+    "project_context": "Your policy RAG quality gate needs both context-grounding and active-document tests."
+  },
+  "GenAI Evaluation & Quality Gates / Metric interpretation / Relevance vs coherence": {
+    "topic": "Relevance vs coherence",
+    "question": "Can a response be coherent but irrelevant?",
+    "reference_answer": "Relevance checks whether the answer responds to the question and covers its required parts. Coherence checks whether the explanation is logically organized and easy to follow. These should not be blended into one quality score. A candidate may speak fluently for a minute about LangChain yet never explain what a LangGraph edge does. I would give good coherence but low relevance and provide a targeted follow-up on the missing concept.",
+    "technical_context": "Use distinct rubrics: intent coverage and required facts for relevance; organization, consistency and understandable wording for coherence. Fluent prose can still be off-topic or technically wrong.",
+    "common_mistakes": [
+      "Rewarding confidence instead of correctness",
+      "Treating polished language as complete coverage",
+      "Mixing evaluator dimensions"
+    ],
+    "expected_concepts": [
+      "relevance",
+      "coherence",
+      "clarity",
+      "coverage"
+    ],
+    "project_context": "Your interview tutor must score technical accuracy and speaking clarity independently."
+  },
+  "GenAI Evaluation & Quality Gates / Metric interpretation / Semantic similarity": {
+    "topic": "Semantic similarity",
+    "question": "Why is exact string match often too strict?",
+    "reference_answer": "Semantic similarity measures how close two passages are in meaning, often using embeddings and cosine similarity. It lets evaluation credit valid paraphrases instead of matching exact words. However, similarity can be high even when an answer reverses a condition or states the wrong number. For interview grading I would combine similarity with required-concept coverage, factual-error checks and human calibration, particularly for security and banking workflows.",
+    "technical_context": "Embedding cosine or learned semantic metrics can compare reference and candidate answers, but similarity is not entailment: it may miss negation, wrong values and unsupported claims. Use concept and factual checks too.",
+    "common_mistakes": [
+      "Using cosine similarity as correctness",
+      "Ignoring negation",
+      "Penalizing every paraphrase"
+    ],
+    "expected_concepts": [
+      "similarity",
+      "cosine",
+      "paraphrase",
+      "accuracy"
+    ],
+    "project_context": "Your GenAI evaluation could use answer-reference similarity as a diagnostic, never its only technical correctness score."
   },
   "GenAI Evaluation & Quality Gates / Metric interpretation / Tool-call accuracy & task success": {
     "topic": "Tool-call accuracy & task success",
@@ -665,6 +2032,115 @@
     ],
     "project_context": "In your banking voice assistant, use synthetic account fixtures and mocked scheduler responses to test safe lookup and booking flows end to end."
   },
+  "GenAI Evaluation & Quality Gates / Production evaluation / Trace sampling": {
+    "topic": "Trace sampling",
+    "question": "How do you select production traces?",
+    "reference_answer": "I do not judge every production answer with an expensive model evaluator. Instead I collect a random baseline sample and oversample high-risk failures like missing retrieval, low-confidence speech and unsuccessful tool calls. I redact sensitive content and record model, prompt and source versions. Then I use findings to expand the golden dataset and inspect whether specific changes caused regressions. Critical security events should trigger dedicated alerts, not depend on chance sampling.",
+    "technical_context": "Use representative random samples plus risk-weighted strata: low confidence, new model version, retrieval misses, tool failures, multilingual and user-negative feedback. Redact PII; do not assume a sample measures rare harms with certainty.",
+    "common_mistakes": [
+      "Sampling only successful calls",
+      "Storing raw balances in traces",
+      "Treating small samples as proof of zero incidents"
+    ],
+    "expected_concepts": [
+      "trace",
+      "sampling",
+      "production",
+      "risk"
+    ],
+    "project_context": "Your voice assistant monitoring should break down STT, RAG, tools and response generation for sampled calls."
+  },
+  "GenAI Evaluation & Quality Gates / Production evaluation / Human scoring": {
+    "topic": "Human scoring",
+    "question": "What if no Azure evaluation service is available?",
+    "reference_answer": "If we cannot use Azure evaluation services, I can still build a high-quality evaluation process. I define a rubric for technical accuracy, relevance, grounding and safety, then ask multiple knowledgeable reviewers to score the same blinded examples. We resolve disagreements and save reference judgments in a golden dataset. Automated tools can later be calibrated against those labels. In regulated banking tasks, human review is especially valuable for ambiguous policy interpretation.",
+    "technical_context": "Define clear rubric dimensions, blind-review examples, label disagreements and measure reviewer agreement; ensure privacy when sharing production traces. Human labels are useful references, not perfectly objective truths.",
+    "common_mistakes": [
+      "Using one unlabeled opinion as gold truth",
+      "Mixing dimensions in a single score",
+      "Sharing sensitive transcripts without controls"
+    ],
+    "expected_concepts": [
+      "human",
+      "review",
+      "rubric",
+      "calibration"
+    ],
+    "project_context": "Your golden dataset can combine technical reviewers and domain SMEs before using an LLM as judge."
+  },
+  "GenAI Evaluation & Quality Gates / Production evaluation / Drift & feedback loop": {
+    "topic": "Drift & feedback loop",
+    "question": "Users report wrong answers: what do you debug first?",
+    "reference_answer": "When users say the assistant is wrong, I first identify a reproducible failing interaction and trace each stage: transcription, query rewriting, retrieval, prompt context, generation and tool output. I check data versions and whether the failure affects one tenant or all callers. After confirming the root cause I fix the responsible component and add a golden regression case. I monitor whether the change improves errors without introducing new ones.",
+    "technical_context": "Track retrieval hit quality, user complaint themes, response quality by segment, model/prompt/index versions and operational errors. Turn verified failures into regression examples before changing components.",
+    "common_mistakes": [
+      "Tuning prompt before checking source data",
+      "Ignoring user segment differences",
+      "Fixing one example without future regression coverage"
+    ],
+    "expected_concepts": [
+      "drift",
+      "feedback",
+      "trace",
+      "regression"
+    ],
+    "project_context": "Your bank voice assistant requires an incident path to distinguish STT errors from stale retrieval or tool failures."
+  },
+  "GenAI Evaluation & Quality Gates / Production evaluation / Four-stage eval workflow": {
+    "topic": "Four-stage eval workflow",
+    "question": "Describe your four-stage evaluation process.",
+    "reference_answer": "I organize evaluation into four stages. First I validate the golden dataset and expected facts. Second I test RAG components, including retrieval precision, faithfulness and relevance. Third I run end-to-end scenarios across authentication, tools and voice so failures are visible as user outcomes. Fourth I monitor selected production traces, feedback and drift. Every confirmed failure becomes a regression fixture and critical security checks remain mandatory gates, regardless of average scores.",
+    "technical_context": "Stage one validates golden fixtures and source versions; stage two measures retrieval and answer metrics; stage three tests full tool/voice/business actions; stage four samples live traces and feeds confirmed failures back.",
+    "common_mistakes": [
+      "Starting with production scores without references",
+      "Ignoring tool success",
+      "Forgetting to refresh golden answers after policy changes"
+    ],
+    "expected_concepts": [
+      "dataset",
+      "component",
+      "e2e",
+      "production"
+    ],
+    "project_context": "Your Azure GenAI tutor can teach this flow as a production release discipline rather than a one-off scoring script."
+  },
+  "GenAI Evaluation & Quality Gates / Evaluation metrics / LLM judge calibration": {
+    "topic": "LLM judge calibration",
+    "question": "What if LLM-as-judge scores disagree with senior reviewers?",
+    "reference_answer": "An LLM judge is another probabilistic model, not an oracle. I give it an explicit rubric and reference answer, then compare its scores to human-labeled examples, especially technically fluent but incorrect answers. I check agreement, score stability and false positives on safety-critical cases. If a judge begins passing keyword-stuffed wrong explanations, I refine the rubric and hold mastery decisions until calibrated. This is why offline keyword matching alone cannot establish real proficiency.",
+    "technical_context": "Maintain balanced labeled examples and per-dimension metrics, including false passes on critical factual errors. Evaluate prompt and model versions, confidence/uncertainty and score variance; keep a human escalation threshold.",
+    "common_mistakes": [
+      "Trusting LLM score as ground truth",
+      "Calibrating only on correct examples",
+      "Ignoring factual-error false passes"
+    ],
+    "expected_concepts": [
+      "judge",
+      "calibration",
+      "human",
+      "agreement"
+    ],
+    "project_context": "Your interview tutor should require model-reviewed attempts for mastery and maintain human reference answers for difficult banking security questions."
+  },
+  "GenAI Evaluation & Quality Gates / Evaluation metrics / Speech + answer end-to-end evaluation": {
+    "topic": "Speech + answer end-to-end evaluation",
+    "question": "How do you isolate a voice assistant error to STT, RAG or LLM?",
+    "reference_answer": "I test the entire voice path rather than only the final generated text. First I measure whether STT preserved the requested intent, then whether routing chose the correct tool, whether retrieval supplied current evidence and whether the final answer was grounded. I also verify actual booking or account-tool outcomes and playback latency. A beautiful answer cannot rescue a dangerous transcription mistake, so I track errors by stage using one correlated call identifier.",
+    "technical_context": "Capture WER/semantic intent preservation for ASR, retrieval/grounding scores for answer generation, tool outcome and TTS playback latency. Use call IDs to correlate stages, avoid storing raw voice without consent and test noisy-accent conditions.",
+    "common_mistakes": [
+      "Grading text without testing STT",
+      "Ignoring end-to-end side effects",
+      "Storing sensitive customer audio by default"
+    ],
+    "expected_concepts": [
+      "STT",
+      "WER",
+      "evaluation",
+      "tool",
+      "TTS"
+    ],
+    "project_context": "Your banking voice assistant should test accents, endpointing, retrieval and authorized account tools separately and together."
+  },
   "Responsible AI & Security / Trust boundaries / Prompt injection": {
     "topic": "Prompt injection",
     "question": "How do you defend against prompt injection in a document?",
@@ -683,6 +2159,24 @@
       "authorize"
     ],
     "project_context": "Your bank assistant uses tools for account lookup and scheduling, so backend identity and authorization checks must never be overridden by text in retrieved policy material."
+  },
+  "Responsible AI & Security / Trust boundaries / Hallucinations": {
+    "topic": "Hallucinations",
+    "question": "How do you reduce hallucinations in RAG?",
+    "reference_answer": "Hallucination means a generated statement is incorrect or not supported by the trusted evidence. I reduce it with RAG on current authorized policies, strict tool calls for exact account facts, explicit abstention when retrieval fails and batch evaluation of claim support. I also track user complaints and inspect traces. I do not claim RAG makes hallucinations impossible, because an irrelevant or stale document can still yield a fluent but wrong answer.",
+    "technical_context": "Reduce risk with authorized grounding, explicit no-evidence handling, deterministic data retrieval, citation/claim checks and calibrated evaluation. No prompt or retrieval method can guarantee zero hallucinations.",
+    "common_mistakes": [
+      "Treating citation as proof of truth",
+      "Filling missing fields from intuition",
+      "Ignoring stale source data"
+    ],
+    "expected_concepts": [
+      "hallucination",
+      "RAG",
+      "grounding",
+      "abstain"
+    ],
+    "project_context": "Your banking FAQ assistant needs active-policy citations and a refusal/fallback rather than making up product rules."
   },
   "Responsible AI & Security / Trust boundaries / PII masking & redaction": {
     "topic": "PII masking & redaction",
@@ -703,6 +2197,150 @@
     ],
     "project_context": "Your banking agent may process appointment contacts and account data, so inspect logs, tracing spans, analytics exports and stored voice artifacts—not just the chat reply."
   },
+  "Responsible AI & Security / Trust boundaries / Content filters & guardrails": {
+    "topic": "Content filters & guardrails",
+    "question": "What checks belong before and after generation?",
+    "reference_answer": "I think of guardrails as a system, not a single moderation prompt. Inputs are inspected for unsafe content and attempted instruction overrides, retrieved documents remain untrusted, tool calls pass strict permission checks, and outputs are checked for protected data or unsupported claims. For financial workflows, I may require confirmation or escalation before high-risk actions. I evaluate both misses and excessive refusals, because a safe system also needs to answer legitimate requests.",
+    "technical_context": "Combine content moderation, prompt-injection defenses, PII handling, schema validation, backend authorization and human escalation. Filter categories should be contextual and tested for false positives and false negatives.",
+    "common_mistakes": [
+      "Using one content filter as account authorization",
+      "Logging sensitive raw prompts unnecessarily",
+      "Ignoring over-blocking"
+    ],
+    "expected_concepts": [
+      "guardrail",
+      "filter",
+      "authorization",
+      "PII"
+    ],
+    "project_context": "Your banking voice project describes sensitive-data guardrails and safe fallback handling."
+  },
+  "Responsible AI & Security / Trust boundaries / Data access authorization": {
+    "topic": "Data access authorization",
+    "question": "How do you prevent data leakage with vector retrieval?",
+    "reference_answer": "I distinguish authentication from authorization. Authentication tells us who is calling; authorization checks what data and actions that identity may access. I enforce permission checks in the database, storage and backend tools, not in conversational instructions alone. For a banking balance tool this means verifying account ownership before fetching records. For the tutor Knowledge Vault it means private paths and Supabase RLS that restrict rows to the authenticated user.",
+    "technical_context": "Authenticate user, derive tenant/roles from trusted claims or DB policies and enforce row/object ownership at query time. Use parameterized queries, RLS and backend tool gates; model-generated JSON must not be trusted as identity.",
+    "common_mistakes": [
+      "Believing a valid login permits every row",
+      "Taking tenant ID from user message",
+      "Applying filters only after retrieval"
+    ],
+    "expected_concepts": [
+      "authentication",
+      "authorization",
+      "RLS",
+      "ownership"
+    ],
+    "project_context": "Your voice assistant and Galaxy Knowledge Vault both require authorization below the prompt layer."
+  },
+  "Responsible AI & Security / Threat modelling / Indirect prompt injection from retrieved documents": {
+    "topic": "Indirect prompt injection from retrieved documents",
+    "question": "What if a policy PDF instructs the agent to leak an account balance?",
+    "reference_answer": "An indirect prompt injection is an instruction hidden inside material the model is supposed to read as evidence. A bank policy document might falsely tell the assistant to reveal private account data. I keep such text isolated from trusted instructions and enforce all access checks in backend code. The model can quote or summarize the document as data, but it cannot gain extra tool permissions. I also include malicious retrieved passages in negative evaluation cases.",
+    "technical_context": "Retrieved text, web pages and uploaded files are lower-trust content; delimit them, prohibit elevation to instructions, minimize accessible tools and validate side effects. Test adversarial cases with attempted data exfiltration and tool misuse.",
+    "common_mistakes": [
+      "Treating retrieved text as system instruction",
+      "Trusting model refusal as sole defense",
+      "Running arbitrary tools from document content"
+    ],
+    "expected_concepts": [
+      "prompt injection",
+      "untrusted",
+      "tool",
+      "authorization"
+    ],
+    "project_context": "Your banking RAG assistant and Galaxy document vault can ingest untrusted files, so ingestion alone must never confer tool rights."
+  },
+  "Databricks, Spark & Delta Lake / Spark & PySpark / Driver, executors & partitions": {
+    "topic": "Driver, executors & partitions",
+    "question": "Explain Spark execution at a high level.",
+    "reference_answer": "In Spark, the driver prepares the execution plan and schedules tasks, while executors run those tasks on data partitions. Each partition is a unit of parallel work. If partitions are skewed, some tasks take much longer than others; if there are too many small partitions, scheduling overhead increases. When tuning Databricks pipelines, I examine the Spark UI for stage time, shuffle, skew and task distribution before changing cluster size or partition settings.",
+    "technical_context": "Driver constructs query plans and schedules stages. Executors hold cores/memory and execute task partitions; shuffle can move data across machines. Too few partitions waste parallelism, too many tiny partitions add overhead.",
+    "common_mistakes": [
+      "Treating the driver as processing all large rows",
+      "Increasing partitions blindly",
+      "Ignoring skew and shuffle"
+    ],
+    "expected_concepts": [
+      "driver",
+      "executor",
+      "partition",
+      "shuffle"
+    ],
+    "project_context": "Your Databricks ingestion and anomaly analytics rely on Spark job planning and appropriate cluster sizing."
+  },
+  "Databricks, Spark & Delta Lake / Spark & PySpark / Lazy evaluation & DAG": {
+    "topic": "Lazy evaluation & DAG",
+    "question": "Why does a PySpark transformation not run immediately?",
+    "reference_answer": "Spark is lazily evaluated. Transformations such as select, join and filter describe what should happen, but they do not immediately process the full dataset. An action like count or a write triggers a job. The driver builds a DAG, optimizes the plan and splits stages around shuffles. When investigating a slow Databricks workflow, I inspect the physical plan and stage metrics, especially repeated scans and unnecessary wide transformations.",
+    "technical_context": "Operations like select/filter form a logical DAG and Catalyst/physical planning optimize execution. A count or write starts a job, and stages split at shuffle dependencies. Reusing uncached transformations may recompute upstream work.",
+    "common_mistakes": [
+      "Assuming transformations always execute immediately",
+      "Calling count repeatedly without reason",
+      "Ignoring shuffle boundaries"
+    ],
+    "expected_concepts": [
+      "lazy",
+      "DAG",
+      "action",
+      "stage"
+    ],
+    "project_context": "Your Azure Databricks file-processing jobs can use lazy plans to push filters early and avoid repeated scans."
+  },
+  "Databricks, Spark & Delta Lake / Spark & PySpark / Joins, shuffle & broadcast": {
+    "topic": "Joins, shuffle & broadcast",
+    "question": "How do you optimize a slow join?",
+    "reference_answer": "When joining in Spark, the expensive part is often moving rows across executors by join keys. If one side is truly small, a broadcast join can copy it to workers and avoid shuffling the large dataset. For two large tables, I inspect the plan, partitioning and skewed keys. In our pipeline RCA model, broadcasting small metadata can help, but I measure actual job time and executor memory rather than forcing broadcast everywhere.",
+    "technical_context": "For joins, inspect size/cardinality and key skew. Sort-merge or shuffle-hash joins repartition by key; broadcast hash join distributes a suitably small table, limited by memory and configuration.",
+    "common_mistakes": [
+      "Broadcasting an oversized table",
+      "Ignoring many-to-many row explosion",
+      "Assuming broadcast always faster"
+    ],
+    "expected_concepts": [
+      "join",
+      "shuffle",
+      "broadcast",
+      "skew"
+    ],
+    "project_context": "Your anomaly RCA queries join activity logs, dependencies and run history in Databricks."
+  },
+  "Databricks, Spark & Delta Lake / Spark & PySpark / Partitioning, caching & AQE": {
+    "topic": "Partitioning, caching & AQE",
+    "question": "What is adaptive query execution?",
+    "reference_answer": "I tune partitions, caching and adaptive execution based on Spark UI evidence. Partition count controls parallel tasks, but uneven keys create slow stragglers. AQE can adjust shuffle partitions or join strategies during execution. Caching helps only when data is reused and memory pressure is acceptable. For production Databricks pipelines, I benchmark representative workloads and verify costs, spills, skew and elapsed time rather than applying every tuning switch by default.",
+    "technical_context": "Adaptive Query Execution can coalesce shuffle partitions and handle skewed joins. Cache only repeatedly reused datasets that fit resources, unpersist after use and avoid high-cardinality partition columns for tables.",
+    "common_mistakes": [
+      "Caching every DataFrame",
+      "Over-partitioning on unique IDs",
+      "Assuming AQE fixes all poor join keys"
+    ],
+    "expected_concepts": [
+      "partition",
+      "AQE",
+      "cache",
+      "shuffle"
+    ],
+    "project_context": "Your Databricks operations included Spark tuning and capacity management; each optimization should have measured before/after metrics."
+  },
+  "Databricks, Spark & Delta Lake / Delta Lake / Delta transaction log & ACID": {
+    "topic": "Delta transaction log & ACID",
+    "question": "Why is Delta different from a normal relational table?",
+    "reference_answer": "Delta Lake uses a transaction log on top of Parquet files to provide ACID-style table operations. Each commit records a new table version, and readers use a consistent snapshot rather than seeing partially written files. MERGE supports row-level changes and time travel can examine earlier committed versions within retention. In our Databricks pipelines, this is more robust than treating a folder of arbitrary Parquet files as a transactional relational table.",
+    "technical_context": "Delta stores immutable Parquet data plus _delta_log actions recording adds/removes and schema/protocol metadata. Readers use a consistent snapshot; concurrent writers coordinate optimistic transactions. Retention/vacuum rules affect time travel.",
+    "common_mistakes": [
+      "Assuming all Parquet folders are ACID",
+      "Vacuuming before needed history retention",
+      "Ignoring concurrent writer conflicts"
+    ],
+    "expected_concepts": [
+      "Delta",
+      "log",
+      "ACID",
+      "snapshot"
+    ],
+    "project_context": "Your ADF/Databricks systems depend on reliable incremental updates and read-consistent Delta tables."
+  },
   "Databricks, Spark & Delta Lake / Delta Lake / Time travel & RESTORE": {
     "topic": "Time travel & RESTORE",
     "question": "How do you recover a deleted Delta table version?",
@@ -722,6 +2360,114 @@
     ],
     "project_context": "Your Databricks pipelines can use table history for incident forensics, but choose a restore plan that accounts for dependent workflows and data retention."
   },
+  "Databricks, Spark & Delta Lake / Delta Lake / Schema enforcement & evolution": {
+    "topic": "Schema enforcement & evolution",
+    "question": "How do you handle source/destination column mismatch?",
+    "reference_answer": "Delta schema enforcement prevents a pipeline from silently writing incompatible columns or types. When legitimate source changes occur, I choose an explicit evolution strategy, such as adding a nullable column with mergeSchema where supported, and test downstream consumers. I do not simply turn on unrestricted auto-merge for every job. In enterprise ingestion, schema contracts and alerts are essential because a technically successful write can still break reporting semantics.",
+    "technical_context": "Delta validates write schema by default; explicit mergeSchema/autoMerge options control evolution. Distinguish adding nullable columns from unsafe type changes; track producer/consumer contracts and quality tests.",
+    "common_mistakes": [
+      "Assuming autoMerge fixes incompatible types",
+      "Ignoring downstream dashboards",
+      "Evolving schema without governance"
+    ],
+    "expected_concepts": [
+      "schema",
+      "evolution",
+      "Delta",
+      "contract"
+    ],
+    "project_context": "Your data pipelines handle differences between incoming files and curated table columns in Databricks."
+  },
+  "Databricks, Spark & Delta Lake / Delta Lake / MERGE & incremental updates": {
+    "topic": "MERGE & incremental updates",
+    "question": "How do you implement incremental processing in Delta?",
+    "reference_answer": "For incremental Delta ingestion, I extract changed source records using a watermark or CDC feed, deduplicate them by business key and source update time, and MERGE them into the destination. I explicitly handle late data and deletions so stale rows do not remain. MERGE gives transactionally consistent upserts, but a bad key can duplicate data or overwrite the wrong record. I monitor changed-row counts and run reconciliation checks.",
+    "technical_context": "Define a stable business key and deduplicate source rows before merge; use change sequence/watermark carefully, account for late-arriving data and handle source deletes where appropriate. Partition pruning and file layout affect performance.",
+    "common_mistakes": [
+      "Merging duplicated source keys",
+      "Ignoring late data or deletes",
+      "Using a non-unique key"
+    ],
+    "expected_concepts": [
+      "MERGE",
+      "CDC",
+      "watermark",
+      "upsert"
+    ],
+    "project_context": "Your ADF and Databricks projects use parameterized incremental loads and upserts."
+  },
+  "Databricks, Spark & Delta Lake / Delta Lake / OPTIMIZE & small files": {
+    "topic": "OPTIMIZE & small files",
+    "question": "What does OPTIMIZE do?",
+    "reference_answer": "Delta OPTIMIZE is mainly about file layout. Repeated small writes create many tiny Parquet files, making later queries spend extra time on metadata and opening files. Compaction combines them into better-sized data files without changing logical table rows. I benchmark read performance and compaction costs before scheduling it. I distinguish OPTIMIZE from VACUUM, which removes eligible old files and can affect time travel retention.",
+    "technical_context": "Small-file overhead increases metadata operations and I/O scheduling. Bin-packing reduces file counts; consider auto-compaction, optimized writes and vacuum/retention separately. Compaction is not equivalent to clustering or deleting history.",
+    "common_mistakes": [
+      "Equating OPTIMIZE with VACUUM",
+      "Compacting too frequently",
+      "Assuming all slow reads are file-count problems"
+    ],
+    "expected_concepts": [
+      "OPTIMIZE",
+      "files",
+      "compaction",
+      "Delta"
+    ],
+    "project_context": "Your Databricks cost optimization work can include identifying excessive file counts and inefficient read patterns."
+  },
+  "Databricks, Spark & Delta Lake / Delta Lake / Z-ORDER vs liquid clustering": {
+    "topic": "Z-ORDER vs liquid clustering",
+    "question": "How does liquid clustering differ from Z-ORDER?",
+    "reference_answer": "I use file layout techniques to reduce how much data a query scans. Z-ORDER reorganizes data files around chosen filter columns during optimization. Liquid clustering provides a more flexible clustering model for supported Delta tables and lets keys evolve with workloads. I would not enable both indiscriminately; I check runtime compatibility, query filters, data size and maintenance cost. The real success metric is scan reduction and query time on representative workloads.",
+    "technical_context": "Z-ORDER colocates values of specified columns during OPTIMIZE; liquid clustering uses a clustering-key configuration and incremental layout maintenance. Supported runtime/table-feature constraints matter; benchmark realistic selective predicates.",
+    "common_mistakes": [
+      "Applying Z-ORDER to every column",
+      "Mixing incompatible features",
+      "Ignoring query predicate patterns"
+    ],
+    "expected_concepts": [
+      "ZORDER",
+      "liquid",
+      "clustering",
+      "skipping"
+    ],
+    "project_context": "Your Databricks interview preparation includes OPTIMIZE, Z-ORDER and liquid clustering trade-offs."
+  },
+  "Databricks, Spark & Delta Lake / Databricks operations / Job vs all-purpose clusters": {
+    "topic": "Job vs all-purpose clusters",
+    "question": "How did your team optimize cluster spend?",
+    "reference_answer": "I use jobs compute for scheduled production workloads and interactive compute for development or exploration. Job clusters can be provisioned for a run and terminated afterward, reducing idle cost and isolating production execution. The trade-off is startup time and choosing the right capacity. For our Databricks platform I would compare job duration, queueing, autoscaling, utilization and DBU/cloud cost before migrating workflows.",
+    "technical_context": "Compare startup overhead, auto-termination, workload isolation, access modes, spot/on-demand use and cost attribution. Jobs can use ephemeral compute while shared interactive clusters may incur idle charges.",
+    "common_mistakes": [
+      "Keeping large clusters idle",
+      "Ignoring job startup overhead",
+      "Reusing interactive clusters for every production pipeline"
+    ],
+    "expected_concepts": [
+      "job cluster",
+      "all-purpose",
+      "cost",
+      "compute"
+    ],
+    "project_context": "Your Databricks platform work targeted compute right-sizing and operating-cost reduction."
+  },
+  "Databricks, Spark & Delta Lake / Databricks operations / Static vs dynamic cluster scaling": {
+    "topic": "Static vs dynamic cluster scaling",
+    "question": "How can you identify whether compute autoscaling is enabled?",
+    "reference_answer": "A fixed-size cluster has a set worker count, while an autoscaling cluster can vary workers between configured minimum and maximum limits. I choose based on workload variation, startup sensitivity, skew and cost. For a heavy but brief batch, autoscaling or task-specific job compute may help; stable loads may benefit from predictable fixed capacity. I check the actual compute configuration and metrics instead of assuming every job cluster is dynamically sized.",
+    "technical_context": "Autoscale responds to observed resource conditions but adds allocation delay and may not fix data skew. Job compute and autoscaling are separate concepts; UI visibility depends on policy and access mode.",
+    "common_mistakes": [
+      "Assuming job cluster always means autoscaling",
+      "Expecting autoscale to fix poor Spark joins",
+      "Setting maximum workers without budget controls"
+    ],
+    "expected_concepts": [
+      "autoscale",
+      "static",
+      "cluster",
+      "workers"
+    ],
+    "project_context": "Your Databricks operations included capacity planning and selecting job compute for higher-load tasks."
+  },
   "Databricks, Spark & Delta Lake / Databricks operations / Unity Catalog": {
     "topic": "Unity Catalog",
     "question": "What changed during Unity Catalog migration?",
@@ -740,6 +2486,60 @@
       "lineage"
     ],
     "project_context": "Your Databricks migration story includes Unity Catalog and should be tied to concrete grants, testing, lineage and workload cutover evidence."
+  },
+  "Databricks, Spark & Delta Lake / Databricks operations / Lakeflow / declarative pipelines": {
+    "topic": "Lakeflow / declarative pipelines",
+    "question": "What is a materialized view in a Spark declarative pipeline?",
+    "reference_answer": "In a declarative data pipeline I define the datasets and transformations I want, instead of manually sequencing every notebook task. The system derives dependencies and manages refresh, with capabilities varying by pipeline type and runtime. I still add data quality expectations, lineage and monitoring. For a materialized summary table I verify refresh behavior and freshness requirements rather than assuming every aggregation updates incrementally. This keeps production orchestration observable and governed.",
+    "technical_context": "Managed pipelines handle table definitions, streaming/batch refresh, quality expectations and dependency scheduling depending on available runtime features. Verify whether materialized views refresh incrementally and use governance controls.",
+    "common_mistakes": [
+      "Assuming all views are automatically fresh",
+      "Ignoring quality expectations",
+      "Confusing declarative pipelines with ordinary SQL views"
+    ],
+    "expected_concepts": [
+      "declarative",
+      "pipeline",
+      "materialized",
+      "quality"
+    ],
+    "project_context": "Your Databricks studies include materialized views and declarative pipeline operations in addition to ADF orchestration."
+  },
+  "Databricks, Spark & Delta Lake / Databricks operations / Databricks workflows & monitoring": {
+    "topic": "Databricks workflows & monitoring",
+    "question": "How do you investigate a failed Databricks job?",
+    "reference_answer": "I use Databricks Workflows to define the sequence of ingestion, transformation and validation tasks, with clear dependencies and retry rules. Monitoring includes failed stages, run duration, cluster usage and data quality, not only whether the final status is green. Our anomaly RCA approach adds statistical baselines and linked activity logs to detect unusual runs before SLA impact. Correlated task IDs help support engineers identify the actual bottleneck.",
+    "technical_context": "Model tasks as DAG with conditional paths and alerts, set timeouts, parameterize jobs and record run/attempt IDs. Observe retries, task durations, data quality and cost together; preserve idempotency.",
+    "common_mistakes": [
+      "Retrying writes without deduplication",
+      "Watching job success only",
+      "Losing activity-level correlations"
+    ],
+    "expected_concepts": [
+      "workflow",
+      "job",
+      "monitor",
+      "dependency"
+    ],
+    "project_context": "Your anomaly RCA assistant monitors pipeline duration anomalies and correlates activity logs and dependencies."
+  },
+  "Databricks, Spark & Delta Lake / Databricks operations / Disaster recovery": {
+    "topic": "Disaster recovery",
+    "question": "What belongs in a Databricks DR plan?",
+    "reference_answer": "I begin disaster recovery by classifying critical workloads and defining RPO, the acceptable data loss, and RTO, the acceptable recovery duration. Then I design backups or replication, infrastructure recovery, secrets and metadata restoration and a clear failover runbook. I rehearse restoring a representative pipeline, not merely checking that backup files exist. For Databricks workloads I also account for jobs, Unity Catalog permissions, storage paths and external integrations.",
+    "technical_context": "Define RPO and RTO, protect storage and metadata backups, infrastructure as code, restore identities/secrets and validate alternate-region dependencies. A backup without a tested restore does not demonstrate recovery.",
+    "common_mistakes": [
+      "Treating replication as complete DR",
+      "Ignoring identity/config recovery",
+      "Never testing restore"
+    ],
+    "expected_concepts": [
+      "DR",
+      "RPO",
+      "RTO",
+      "restore"
+    ],
+    "project_context": "Your platform leadership work included disaster recovery planning for cloud data services."
   },
   "ADF, Data Pipelines & Modelling / Azure Data Factory / Self-hosted integration runtime": {
     "topic": "Self-hosted integration runtime",

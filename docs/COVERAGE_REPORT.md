@@ -10,9 +10,11 @@
 | New, non-duplicate gap records | 16 | Prior GenAI conversations/resume, added to appropriate chapters |
 | V4 total topics | 246 | Verified unique hierarchical keys |
 | V4 groups | 55 | Includes 10 dedicated gap-audit groups |
-| Expanded eight-section lessons | 49 | Authored in `data/lessons.json`; **not SME verified** |
-| Incomplete eight-section lessons | 197 | Existing topic has only short overview/interview question |
+| Expanded curriculum entries | 148 | Uses authored `data/lessons.json`; **not SME verified** |
+| Distinct eight-section lesson records | 147 | A shared title appears in two curriculum locations |
+| Incomplete curriculum entries | 98 | Existing topic has only short overview/interview question |
 | Duplicated chapter/group/topic keys | 0 | Checked by automated test |
+| Interview answer length 60–140 words | 128 / 147 | Approximate 30–60-second speaking range; **not timed or spoken-verified** |
 | Complete verified technical coverage | **not established** | Requires a topic-by-topic SME review |
 
 ## Gap themes discovered and added
@@ -22,6 +24,10 @@ Changes to long-context prefill; embeddings migration and stale-chunk cleanup; r
 ## Not yet fully audited
 
 All interview conversations beyond the accessible snippets/summaries; unpublished study PDFs; the missing V3 ZIP/Git history; user-provided project documents outside this Project; source/version correctness for each new content example. Existing V3 content is largely a one-sentence summary and a question, **not** eight-part production lesson content.
+
+## M3 editorial expansion
+
+Added individually written reference lessons for prompt design, RAG production lifecycle, LangGraph and multi-agent architecture, evaluation, speech/banking workflows, cloud/agent tool security and Spark/Delta optimization. Incomplete topics remain labeled as incomplete in the UI; breadth is not technical sign-off.
 
 ## Publishing gate
 

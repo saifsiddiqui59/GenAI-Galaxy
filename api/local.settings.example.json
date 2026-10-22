@@ -5,6 +5,7 @@
     "FUNCTIONS_WORKER_RUNTIME": "python",
     "SUPABASE_URL": "https://vfoghlhtnifpnbevgufa.supabase.co",
     "SUPABASE_PUBLISHABLE_KEY": "<existing publishable key>",
+    "GALAXY_GATEWAY_SHARED_SECRET": "<at-least-32-random-bytes-apim-injected-backend-only>",
     "GALAXY_ALLOWED_ORIGIN": "https://<new-galaxy-static-host>",
     "GALAXY_EVAL_GATEWAY_RATE_LIMIT": "not-configured",
     "GALAXY_SPEECH_GATEWAY_RATE_LIMIT": "not-configured",

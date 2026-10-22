@@ -12,7 +12,7 @@ from urllib.error import HTTPError, URLError
 import uuid
 import re
 import azure.functions as func
-from core import InputError, bearer_token, document_id, topic_key, extract_text, validate_review, MAX_BYTES
+from core import InputError, bearer_token, document_id, topic_key, extract_text, validate_review, verify_gateway, MAX_BYTES
 
 app=func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 RUBRICS=json.loads((Path(__file__).parent/'rubrics.json').read_text())
@@ -72,6 +72,9 @@ def env_config():
 
 
 def authenticate(req):
+    # APIM must strip any client-provided internal header, inject its own shared
+    # secret, enforce JWT-scoped quotas, and restrict direct Function ingress.
+    verify_gateway(req.headers.get('X-Galaxy-Internal-Token'), os.environ.get('GALAXY_GATEWAY_SHARED_SECRET'))
     token=bearer_token(req.headers.get('Authorization'))
     base,public_key=env_config()
     try:
@@ -135,7 +138,7 @@ def evaluate(req:func.HttpRequest)->func.HttpResponse:
             raise InputError('Question is too long or missing')
         review=model_review(RUBRICS[k],question,response)
         return make_response(req,review)
-    except InputError as ex:return make_response(req,{'error':str(ex)},400 if str(ex)!='Bearer authentication required' else 401)
+    except InputError as ex:return make_response(req,{'error':str(ex)},403 if str(ex)=='Trusted gateway required' else (401 if str(ex)=='Bearer authentication required' else 400))
     except (RuntimeError,UpstreamError):return make_response(req,{'error':'Evaluator service is unavailable'},503)
 
 
@@ -166,7 +169,7 @@ def vault_extract(req:func.HttpRequest)->func.HttpResponse:
         request_json(base+'/rest/v1/genai_study_documents?id=eq.'+doc_id,method='PATCH',payload={'body':content},
                      token=token,extra_headers={'apikey':public_key,'Prefer':'return=minimal'},limit=1000)
         return make_response(req,{'status':'text_extracted','characters':len(content),'document_id':doc_id})
-    except InputError as ex:return make_response(req,{'error':str(ex)},400 if str(ex)!='Bearer authentication required' else 401)
+    except InputError as ex:return make_response(req,{'error':str(ex)},403 if str(ex)=='Trusted gateway required' else (401 if str(ex)=='Bearer authentication required' else 400))
     except (UpstreamError,RuntimeError):return make_response(req,{'error':'Document extraction service unavailable'},503)
 
 

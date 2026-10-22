@@ -6,6 +6,7 @@ from __future__ import annotations
 from io import BytesIO
 import json
 import re
+import hmac
 import uuid
 from zipfile import ZipFile, BadZipFile
 from xml.etree import ElementTree
@@ -19,6 +20,19 @@ TOPIC_KEY_LIMIT = 300
 class InputError(ValueError):
     pass
 
+
+
+def verify_gateway(internal_header: str | None, configured_secret: str | None) -> None:
+    """Additional fail-closed defense: gateway must inject a private internal header.
+
+    Network rules must ALSO prevent direct access to Functions; a header by itself
+    does not establish rate limits or guarantee origin of a request.
+    """
+    if not isinstance(configured_secret, str) or len(configured_secret) < 32:
+        raise RuntimeError('Trusted gateway is not provisioned')
+    if (not isinstance(internal_header, str) or len(internal_header) > 256
+            or not hmac.compare_digest(internal_header, configured_secret)):
+        raise InputError('Trusted gateway required')
 
 def bearer_token(value: str | None) -> str:
     if not value or not re.fullmatch(r'Bearer\s+[A-Za-z0-9._~+/-]+', value):

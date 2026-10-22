@@ -15,3 +15,10 @@ Security boundaries: static file public, curriculum public, progress/documents p
 The public Blob Static Website serves read-only HTML/CSS/JS/lesson JSON and *public endpoint URLs* from `runtime-config.js`.
 
 Authenticated requests -> HTTPS API gateway with real per-user quotas -> Python Azure Functions -> Supabase Auth `/auth/v1/user` token validation. Document extraction looks up a caller-owned row under RLS, fetches a caller-owned private Storage path and patches extracted body under the same JWT. Model grading takes only server-owned `api/rubrics.json` source references, uses privately configured Azure OpenAI access and checks the output schema. Speech token route mints Azure STS tokens with a server-only subscription key. All provider calls, file parsing and privileged checks stay server-side. Require malware quarantine, observability, rate limits and staging negative-auth tests before production deployment.
+
+
+## M3 security/content revision
+
+API auth now enforces an additional fail-closed internal gateway shared-header check (`GALAXY_GATEWAY_SHARED_SECRET`) before verifying Supabase JWT. Actual deployment must enforce **network isolation of direct Function origin**, APIM stripping/injection and per-user quotas: a static header by itself is insufficient. The private document retry UI invokes the same UUID/RLS-bound extraction path; it cannot directly choose another user's file.
+
+Content is expanded to 147 unique eight-part lessons covering 148 of 246 entries. The remaining 98 topic entries explicitly show overview-only material and the lesson examples are not yet domain expert signed off. Offline hints only inspect concept mentions; strong factual grading remains disabled unless trusted services are deployed and calibrated.

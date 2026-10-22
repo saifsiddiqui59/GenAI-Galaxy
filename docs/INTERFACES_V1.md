@@ -6,9 +6,9 @@ Topic key: `${branch} / ${group} / ${title}`; persisted V3 keys are immutable.
 
 `genai_study_documents`: id UUID, user_id, title, category (`resume|project|topic|questions`), body <= 60000, filename, file_path, mime, created_at. Existing storage bucket `genai-study-docs`, private, max 8 MiB, path starts with `${auth.uid()}/`.
 
-Future Speech token broker: `POST /api/speech/token` with `Authorization: Bearer <supabase_jwt>` and body `{"purpose":"galaxy-interview-stt"}`; returns `{ "token": "<short-lived>", "region": "<region>" }` after server JWT validation and rate limiting. **No implemented backend yet.**
+Future Speech token broker: `POST /api/speech/token` with `Authorization: Bearer <supabase_jwt>` and body `{"purpose":"galaxy-interview-stt"}`; returns `{ "token": "<short-lived>", "region": "<region>" }` after server JWT validation and rate limiting. **Backend source exists locally; not deployed.**
 
-Future answer evaluator: authenticated `POST /api/practice/evaluate`; input `{topic_key, question, response, rubric_version}`; output `{accuracy, missing_concepts, clarity, improved_answer, followup, evidence_refs, judge_version}`. Not implemented in this milestone; no fake live result.
+Future answer evaluator: authenticated `POST /api/practice/evaluate`; input `{topic_key, question, response, rubric_version}`; output `{accuracy, missing_concepts, clarity, improved_answer, followup, evidence_refs, judge_version}`. Local backend source exists; requires reviewed gateway and provider deployment.
 
 ## M2 implemented API drafts — NOT deployed
 
@@ -19,3 +19,9 @@ Future answer evaluator: authenticated `POST /api/practice/evaluate`; input `{to
 `POST /api/speech/token`: signed-in user; `{purpose:"galaxy-interview-stt"}`; output `{token,region}` with short-lived Azure Speech token. Requires backend-only Speech key and real quota enforcement.
 
 Configuration `runtime-config.js` holds public URLs only; the site cannot host Functions endpoints itself.
+
+## M3 trust boundary (source only, not deployed)
+
+Every API request must pass **both** (a) a verified Supabase JWT and (b) an internal APIM-injected `X-Galaxy-Internal-Token` matching the backend-only `GALAXY_GATEWAY_SHARED_SECRET` (minimum 32 characters, constant-time compare). The gateway must strip the same client-supplied header, enforce real per-user quotas, and use network/private ingress rules to keep clients from reaching the Function origin directly. The header alone is **not** evidence that an APIM quota was enforced. No such gateway exists yet; routes must fail closed.
+
+When `genai_study_documents.body` remains empty after an upload, a signed-in frontend user can click **Retry extraction**; the client sends only the UUID, never a storage path. No server is configured in the shipped `runtime-config.js`.

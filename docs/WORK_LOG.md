@@ -9,3 +9,9 @@
 ## 2026-10-22 — M2 offline milestone
 
 Preserved M1 architecture and V3 source, authored 30 additional unique-topic eight-section lessons; regenerated 246-row coverage report (49 expanded/197 incomplete). Implemented starfield animation respecting reduced motion. Removed auto-mastery from local keyword checks and introduced optional secured model-review flow requiring two model-reviewed strong attempts. Implemented source-only Azure Functions code for private Supabase document PDF/DOCX extraction, model evaluation and short-lived Speech token brokerage, with fail-closed rate-limiter configuration. Added negative parsing/schema/auth helper tests and simulated STT browser smoke. Local tests passed; no GitHub remote, CI, Supabase writes or Azure provisioning/deployment. Production security/quality review still required.
+
+## 2026-10-22 — M3 continuation (local branch `feat/m3-curriculum-hardening`)
+
+From saved M2 files, authored 98 additional distinct reference lessons (147 unique, 148 covered entries; 98 incomplete); rebuilt private backend grading rubrics and a 246-topic coverage audit. Improved adaptive retries to name the rubric concepts not explicitly mentioned. Added a retry control for private document extraction and a fail-closed internal-gateway attestation requirement on all Function routes, plus a negative unit test. Verified offline unit/Node, static syntax and Chromium simulated STT/desktop/mobile/reduced motion checks. Remote GitHub Galaxy repository still returned 404, so local commits only. No live APIs, Azure resources or cross-user Supabase writes; production readiness remains blocked by approval/security and SME coverage.
+
+M3 diagnostic: attempted a second Playwright smoke against a local HTTP server. Browser navigation to `127.0.0.1` was denied by environment policy (`ERR_BLOCKED_BY_ADMINISTRATOR`), so this check was **not counted as passed** and was not added to CI. Mocked-resource Chromium tests did pass.
