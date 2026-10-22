@@ -56,6 +56,19 @@ def topic_key(value: object, valid_keys: set[str]) -> str:
     return value
 
 
+def owner_document_filters(user_id: str, doc_id: str) -> dict[str, str]:
+    """Return both document and authenticated-owner PostgREST filters.
+
+    Callers must still authenticate and rely on Supabase RLS. This is defense in
+    depth against accidental unscoped metadata mutations.
+    """
+    try:
+        owner = str(uuid.UUID(user_id))
+    except (TypeError, ValueError, AttributeError):
+        raise InputError('Invalid user session') from None
+    return {'id': 'eq.' + document_id(doc_id), 'user_id': 'eq.' + owner}
+
+
 def extract_text(data: bytes, filename: str) -> str:
     if not isinstance(data, bytes) or len(data) > MAX_BYTES or not data:
         raise InputError('Document is empty or larger than 8 MiB')
