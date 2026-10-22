@@ -1,0 +1,46 @@
+name: Galaxy V4 validation
+on:
+  pull_request:
+  push:
+    branches: [main, 'feat/**', 'fix/**']
+permissions:
+  contents: read
+jobs:
+  curriculum-and-api:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: python -m pip install pypdf==5.9.0
+      - name: Test curriculum and document safety
+        run: python -m unittest discover -s tests -v
+      - name: Check JS and API syntax
+        run: |
+          node tests/test_engine.cjs
+          node --check app.js
+          node --check speech/azure-speech-adapter.js
+          python -m py_compile api/core.py api/function_app.py
+      - name: Check that server rubrics match content
+        run: |
+          python scripts/build_api_rubrics.py
+          git diff --exit-code -- api/rubrics.json
+      - name: Check coverage report reproducibility
+        run: |
+          python scripts/coverage_report.py
+          git diff --exit-code -- docs/TOPIC_COVERAGE.csv docs/COVERAGE_REPORT.md
+  browser-smoke:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install playwright==1.57.0
+      - run: python -m playwright install --with-deps chromium
+      - name: Desktop/mobile/reduced-motion and simulated mic
+        run: python tests/browser_check.py
