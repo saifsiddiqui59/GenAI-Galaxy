@@ -1,0 +1,25 @@
+name: Galaxy live hosted browser acceptance
+# Read-only public guest browser test. Push trigger removed after first run is queued.
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/galaxy-live-browser.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-browser:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned Chromium
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+      - name: Check real static website navigation in guest mode
+        run: python tests/live_site_browser_check.py
