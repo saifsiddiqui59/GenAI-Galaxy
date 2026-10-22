@@ -64,7 +64,7 @@
 
 ## M13 — current priority list after integration (supersedes earlier pending-PR notes)
 
-The owner made this repository public, restoring GitHub-hosted CI execution. M8–M12 changes are merged to main via PRs #14, #18, #19, #20 and #21; old PRs #12/#13/#15/#17 were closed as superseded. **No merge/rebase action remains for those old PRs.** The CI install optimization in #21 has passed its own full PR checks; confirm [post-merge main run #39831228218](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39831228218) before claiming the final main build green.
+The owner made this repository public, restoring GitHub-hosted CI execution. M8–M12 changes are merged to main via PRs #14, #18, #19, #20 and #21; old PRs #12/#13/#15/#17 were closed as superseded. **No merge/rebase action remains for those old PRs.** The CI install optimization in #21 passed its full PR checks; [post-merge main run #39831228218](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39831228218) also passed **3/3**, verifying the final integrated feature main build.
 
 1. **Security and access acceptance (owner-approved):** Configure two isolated, pre-approved Galaxy test accounts and protected GitHub dev secrets, then deliberately run the manual-only Galaxy two-user RLS test with `TEST` confirmation. Do not reuse unrelated user data. Verify password recovery redirect allowlist, link delivery and live signed-in progress.
 2. **Speech acceptance:** Test real microphone permission, rapid start/stop, draft preservation, sign-out, and mobile behavior after explicit approval for a new static preview deployment. Mocked browser CI is not hardware proof.
