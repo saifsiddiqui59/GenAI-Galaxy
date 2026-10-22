@@ -16,7 +16,7 @@ const PALETTES=[
  ['#c5d3f6','#667ec8','#31326f','#adc1f6'],['#fbc2bd','#bd7677','#623045','#d88d94'],['#c1f2c1','#659d86','#224b53','#8bd9c4'],
  ['#eec3fa','#a15cbd','#402863','#d48ef0'],['#b3f6ff','#648add','#21346c','#7fbfff']
 ];
-const state={subjects:[],topics:[],lessons:{},current:null,chapter:0,view:'galaxy',progress:{},attempts:[],documents:[],user:null,client:null,isGuest:true,query:'',attemptQuestion:'',level:1,answerDraft:'',feedback:null,motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,voice:null,recording:false,starFrame:0,stars:[],galaxyFrame:0,lastFrame:0};
+const state={subjects:[],topics:[],lessons:{},current:null,chapter:0,view:'galaxy',progress:{},attempts:[],documents:[],user:null,client:null,isGuest:true,query:'',attemptQuestion:'',level:1,answerDraft:'',feedback:null,motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,voice:null,recording:false,voicePending:false,starFrame:0,stars:[],galaxyFrame:0,lastFrame:0};
 const total=()=>state.topics.length;
 const getP=t=>state.progress[key(t)]||{status:0,confidence:0,note:'',last_reviewed_at:null,next_review_at:null};
 const chapterTopics=c=>state.topics.filter(t=>t.branchIndex===c);
@@ -50,16 +50,90 @@ function revision(){const due=state.topics.filter(t=>getP(t).next_review_at&&Dat
 function vault(){if(state.isGuest)return intro('KNOWLEDGE VAULT','A private home for <span class="gradient-text">your experience.</span>','Upload resumes, projects, notes and question lists to your own encrypted private-storage bucket.')+`<div class="panel"><h2>Sign in to use private document storage</h2><p class="auth-only">Guest mode deliberately never stores sensitive documents in public frontend storage.</p><button class="btn accent" id="vault-auth">Sign in →</button></div>`;return intro('KNOWLEDGE VAULT','Your private <span class="gradient-text">source library.</span>','Documents are stored in Supabase private storage under your user ID. TXT/Markdown are extracted locally; PDF/DOCX need the optional authenticated extraction service. Scanned PDFs and malware scanning are not supported yet.')+`<div class="grid-two"><div class="panel"><span class="eyebrow">IMPORT DOCUMENT</span><form class="practice-form" id="vault-form"><label>Category<select id="doc-category"><option value="resume">Resume</option><option value="project">Projects</option><option value="topic">Topic notes</option><option value="questions">Interview questions</option></select></label><label>File (PDF, DOCX, TXT, MD, up to 8 MB)<input type="file" id="doc-file" accept=".pdf,.docx,.txt,.md,application/pdf,text/plain,text/markdown,application/vnd.openxmlformats-officedocument.wordprocessingml.document" required></label><button type="submit" class="btn accent" id="vault-upload">Upload privately →</button></form><p class="footnote">No files leave your browser until you explicitly upload. Never upload documents you are not authorized to store.</p></div><div class="panel"><span class="eyebrow">CONTENT EXTRACTION</span><h2>Generation readiness</h2><p>Text and Markdown documents can produce source-based draft questions. PDF and DOCX files are safely stored, but extraction/AI lesson generation remains blocked until a server worker with validation is deployed.</p></div></div><section class="panel" style="margin-top:16px"><h2>Your private documents · ${state.documents.length}</h2><div class="vault-grid">${state.documents.length?state.documents.map(d=>`<div class="doc-item"><strong>${escapeHtml(d.title)}</strong><small>${escapeHtml(d.category)} · ${escapeHtml(d.filename||'Text note')} · ${new Date(d.created_at).toLocaleDateString()}</small><p class="footnote">${d.body?.trim()?'Text extracted · draft questions available':'Stored · extraction pending'}</p><div class="inline-row"><button type="button" class="btn small" data-doc-questions="${escapeHtml(d.id)}" ${!d.body?.trim()?'disabled':''}>Draft questions</button>${!d.body?.trim()?`<button type="button" class="btn small" data-doc-extract="${escapeHtml(d.id)}">Retry extraction</button>`:''}<button type="button" class="btn small danger" data-doc-delete="${escapeHtml(d.id)}">Delete</button></div></div>`).join(''):'<p>No documents uploaded.</p>'}</div><div id="vault-questions" aria-live="polite"></div></section>`}
 function bind(){document.querySelectorAll('[data-view]').forEach(b=>{if(b.dataset.bound==='1')return;b.dataset.bound='1';b.addEventListener('click',e=>{e.preventDefault();setView(b.dataset.view)})});document.querySelectorAll('[data-topic]').forEach(b=>b.addEventListener('click',()=>{const t=state.topics.find(x=>key(x)===decodeURIComponent(b.dataset.topic));if(t)chooseTopic(t)}));const filtered=DOM('topic-filter');if(filtered)filtered.addEventListener('input',()=>{state.query=filtered.value;const p=filtered.selectionStart;render();DOM('topic-filter')?.focus();DOM('topic-filter')?.setSelectionRange(p,p)});
  document.querySelectorAll('[data-chapter]').forEach(b=>b.addEventListener('click',()=>{state.chapter=Number(b.dataset.chapter);render()}));if(DOM('open-next'))DOM('open-next').onclick=()=>{const arr=chapterTopics(state.chapter);chooseTopic(arr.find(t=>getP(t).status<2)||arr[0])};if(DOM('next-lesson'))DOM('next-lesson').onclick=()=>chooseTopic(pickNext());if(DOM('practice-this'))DOM('practice-this').onclick=startPractice;if(DOM('practice-this-side'))DOM('practice-this-side').onclick=startPractice;if(DOM('save-note'))DOM('save-note').onclick=async()=>{const p=getP(state.current);p.note=DOM('topic-note').value.slice(0,5000);state.progress[key(state.current)]=p;const saved=await saveProgress(state.current);notify(saved?'Note saved':'Note not saved')};
- if(DOM('answer-form')){DOM('answer-form').onsubmit=submitAnswer;DOM('mic-control').onclick=toggleVoice;DOM('spoken-answer').oninput=e=>state.answerDraft=e.target.value;DOM('practice-retry').onclick=()=>{state.feedback=null;state.answerDraft='';render()};DOM('focus-topic').onchange=e=>{const t=state.topics.find(x=>key(x)===decodeURIComponent(e.target.value));if(t){state.current=t;state.level=1;state.attemptQuestion=questionFor(t,1);state.feedback=null;state.answerDraft='';render()}};if(DOM('adaptive-next'))DOM('adaptive-next').onclick=nextAdaptive}
+ if(DOM('answer-form')){DOM('answer-form').onsubmit=submitAnswer;DOM('mic-control').onclick=toggleVoice;DOM('spoken-answer').oninput=e=>state.answerDraft=e.target.value;DOM('practice-retry').onclick=()=>{stopVoice();state.feedback=null;state.answerDraft='';render()};DOM('focus-topic').onchange=e=>{const t=state.topics.find(x=>key(x)===decodeURIComponent(e.target.value));if(t){stopVoice();state.current=t;state.level=1;state.attemptQuestion=questionFor(t,1);state.feedback=null;state.answerDraft='';render()}};if(DOM('adaptive-next'))DOM('adaptive-next').onclick=nextAdaptive}
  if(DOM('vault-auth'))DOM('vault-auth').onclick=()=>DOM('auth-modal').classList.remove('is-hidden');if(DOM('vault-form'))DOM('vault-form').onsubmit=uploadDoc;document.querySelectorAll('[data-doc-questions]').forEach(b=>b.onclick=()=>draftDocumentQuestions(b.dataset.docQuestions));document.querySelectorAll('[data-doc-delete]').forEach(b=>b.onclick=()=>deleteDoc(b.dataset.docDelete));document.querySelectorAll('[data-doc-extract]').forEach(b=>b.onclick=()=>retryExtractDoc(b.dataset.docExtract));}
 function render(){updateNav();DOM('root').innerHTML=({galaxy:scene,dashboard,library,lesson:lessonMarkup,practice:practiceMarkup,review:revision,vault})[state.view]();bind();if(state.view==='galaxy')positionPlanets(performance.now())}
 function positionPlanets(now){const el=DOM('universe');if(!el)return;if(matchMedia('(max-width: 660px)').matches)return;const w=el.clientWidth,h=el.clientHeight;const small=w<520;const nodes=el.querySelectorAll('[data-chapter]');for(let i=0;i<nodes.length;i++){const ring=i<5?0:i<11?1:2;const n=ring===0?5:6;const index=i-(ring===0?0:ring===1?5:11);const angle=2*Math.PI*index/n+[-1.35,-.8,-1.75][ring];const rX=(small?[.26,.36,.45]:[.23,.34,.44])[ring]*w;const rY=[.20,.33,.44][ring]*h;const movement=state.motion ? now*([.000016,-.000012,.000009][ring]):0;const a=angle+movement;const wobble=state.motion?Math.sin(now*.00045+i*1.8)*2:0;nodes[i].style.transform=`translate(calc(-50% + ${Math.cos(a)*rX}px),calc(-50% + ${Math.sin(a)*rY+wobble}px))`}}
 function cycle(now){if(state.motion&&state.view==='galaxy'&&!document.hidden&&now-state.lastFrame>58){positionPlanets(now);paintStars(now);state.lastFrame=now}state.galaxyFrame=requestAnimationFrame(cycle)}
 function drawStars(){const canvas=DOM('stars');const dpr=Math.min(devicePixelRatio||1,2),w=innerWidth,h=innerHeight;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);canvas.style.width=w+'px';canvas.style.height=h+'px';let seed=424212;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};state.stars=Array.from({length:Math.min(650,Math.round(w*h/2500))},()=>({x:random()*w,y:random()*h,r:.35+random()*1.25,alpha:.16+random()*.5,phase:random()*6.283,speed:.00035+random()*.0013}));paintStars(0)}
 function paintStars(now){const canvas=DOM('stars');const ctx=canvas?.getContext('2d');if(!ctx)return;const dpr=Math.min(devicePixelRatio||1,2),w=innerWidth,h=innerHeight;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,w,h);for(const star of state.stars){const shimmer=state.motion?(.65+.35*Math.sin(now*star.speed+star.phase)):1;ctx.fillStyle=`rgba(190,211,255,${(star.alpha*shimmer).toFixed(3)})`;ctx.beginPath();ctx.arc(star.x,star.y,star.r,0,Math.PI*2);ctx.fill()}}
-function stopVoice(){try{state.voice?.stop()}catch(_){}state.voice=null;state.recording=false}
-async function toggleVoice(){if(state.recording){stopVoice();renderVoiceState();return}const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;if(!Speech){const url=window.GALAXY_SPEECH_BROKER_URL;if(url && state.client && state.user){try{const {startAzureTranscription}=await import('./speech/azure-speech-adapter.js');const base=DOM('spoken-answer').value.trim();let text=base;state.voice=await startAzureTranscription({brokerUrl:url,supabase:state.client,onTranscript:line=>{text=[text,line].filter(Boolean).join(' ').slice(0,2000);const el=DOM('spoken-answer');if(el)el.value=text;state.answerDraft=text},onError:msg=>{notify('Azure Speech: '+msg);stopVoice();renderVoiceState()}});state.recording=true;renderVoiceState();return}catch(err){notify('Azure Speech unavailable: '+err.message)}}notify('Browser speech recognition unavailable. Type an answer, or configure a secure HTTPS Azure Speech token broker.');return}const r=new Speech();r.lang='en-IN';r.continuous=true;r.interimResults=true;r.maxAlternatives=1;const initial=DOM('spoken-answer').value.trim();state.voice=r;state.recording=true;r.onresult=e=>{const finals=[],partial=[];for(let i=0;i<e.results.length;i++){const transcript=e.results[i][0]?.transcript||'';(e.results[i].isFinal?finals:partial).push(transcript)}const textbox=DOM('spoken-answer');if(textbox){textbox.value=[initial,finals.join(' '),partial.join(' ')].filter(Boolean).join(' ').slice(0,2000);state.answerDraft=textbox.value}};r.onerror=e=>{notify('Speech input: '+e.error+'. You can type or retry.');stopVoice();render()};r.onend=()=>{state.voice=null;state.recording=false;const btn=DOM('mic-control');if(btn){btn.classList.remove('recording');btn.textContent='🎙 Start microphone';btn.setAttribute('aria-pressed','false')}};try{r.start();renderVoiceState()}catch(e){stopVoice();notify('Microphone could not start: '+e.message)}}
-function renderVoiceState(){const btn=DOM('mic-control');if(btn){btn.classList.toggle('recording',state.recording);btn.textContent=state.recording?'■ Stop listening':'🎙 Start microphone';btn.setAttribute('aria-pressed',String(state.recording))}}
+let voiceGeneration=0; // Reject results/startup from obsolete microphone sessions.
+function stopVoice(){
+ voiceGeneration++;
+ const old=state.voice;state.voice=null;state.recording=false;state.voicePending=false;
+ try{const outcome=old?.stop?.();if(outcome?.catch)outcome.catch(()=>{})}catch(_){}
+}
+async function toggleVoice(){
+ if(state.recording||state.voicePending){stopVoice();renderVoiceState();return}
+ const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
+ const generation=++voiceGeneration;
+ if(!Speech){
+  const url=window.GALAXY_SPEECH_BROKER_URL;
+  if(url&&state.client&&state.user){
+   state.voicePending=true;renderVoiceState();
+   try{
+    const {startAzureTranscription}=await import('./speech/azure-speech-adapter.js');
+    if(generation!==voiceGeneration)return;
+    const initial=DOM('spoken-answer')?.value.trim()||'';
+    let transcript=initial;
+    const handle=await startAzureTranscription({
+     brokerUrl:url,supabase:state.client,
+     onTranscript:line=>{
+      if(generation!==voiceGeneration||state.view!=='practice')return;
+      transcript=[transcript,line].filter(Boolean).join(' ').slice(0,2000);
+      const box=DOM('spoken-answer');if(box)box.value=transcript;
+      state.answerDraft=transcript;
+     },
+     onError:message=>{
+      if(generation!==voiceGeneration)return;
+      notify('Azure Speech: '+message);stopVoice();renderVoiceState();
+     }
+    });
+    if(generation!==voiceGeneration){await handle.stop();return}
+    state.voice=handle;state.recording=true;
+   }catch(err){
+    if(generation===voiceGeneration)notify('Azure Speech unavailable: '+err.message);
+   }finally{
+    if(generation===voiceGeneration){state.voicePending=false;renderVoiceState()}
+   }
+   return;
+  }
+  notify('Speech recognition unavailable. Type an answer or configure the secure Azure Speech broker.');
+  return;
+ }
+ const recognition=new Speech();
+ recognition.lang='en-IN';recognition.continuous=true;recognition.interimResults=true;recognition.maxAlternatives=1;
+ const initial=DOM('spoken-answer')?.value.trim()||'';
+ state.voice=recognition;state.recording=true;
+ recognition.onresult=event=>{
+  if(generation!==voiceGeneration||state.view!=='practice')return;
+  const finals=[],partials=[];
+  for(let i=0;i<event.results.length;i++){
+   const segment=event.results[i][0]?.transcript||'';
+   (event.results[i].isFinal?finals:partials).push(segment);
+  }
+  const box=DOM('spoken-answer');
+  if(box){box.value=[initial,finals.join(' '),partials.join(' ')].filter(Boolean).join(' ').slice(0,2000);state.answerDraft=box.value}
+ };
+ recognition.onerror=event=>{
+  if(generation!==voiceGeneration)return;
+  notify('Speech input: '+event.error+'. You can type or retry.');
+  stopVoice();renderVoiceState(); // Never erase an editable transcript on permission/error.
+ };
+ recognition.onend=()=>{
+  if(generation!==voiceGeneration)return;
+  state.voice=null;state.recording=false;renderVoiceState();
+ };
+ try{recognition.start();renderVoiceState()}
+ catch(err){stopVoice();renderVoiceState();notify('Microphone could not start: '+err.message)}
+}
+function renderVoiceState(){
+ const button=DOM('mic-control');if(!button)return;
+ const active=state.recording||state.voicePending;
+ button.classList.toggle('recording',active);
+ button.textContent=state.voicePending?'■ Cancel microphone start':state.recording?'■ Stop listening':'🎙 Start microphone';
+ button.setAttribute('aria-pressed',String(active));
+}
 async function submitAnswer(e){e.preventDefault();const answer=DOM('spoken-answer').value.trim();if(answer.length<15){notify('Please speak or type at least one complete sentence.');return}stopVoice();state.answerDraft=answer;const t=state.current;let score=evaluateAnswer(t,answer);const endpoint=window.GALAXY_EVALUATOR_URL;if(endpoint&&state.client&&state.user){const button=DOM('evaluate-btn');if(button){button.disabled=true;button.textContent='Checking against reference…'}try{if(!endpoint.startsWith('https://'))throw Error('Evaluator must use HTTPS');const {data:{session}}=await state.client.auth.getSession();if(!session?.access_token)throw Error('Sign in again to evaluate');const req=await fetch(endpoint,{method:'POST',headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({topic_key:key(t),question:state.attemptQuestion,response:answer,rubric_version:'v4-m2'})});if(!req.ok)throw Error('Evaluator unavailable ('+req.status+')');const result=await req.json();if(result.review_status!=='model_reviewed'||!Number.isFinite(result.accuracy)||!Number.isFinite(result.clarity)||!Array.isArray(result.missing_concepts))throw Error('Malformed evaluator response');const accuracy=Math.max(0,Math.min(100,result.accuracy)),clarity=Math.max(0,Math.min(100,result.clarity));score={...score,score:accuracy,accuracy,clarity,missing:result.missing_concepts.slice(0,8).map(String),serverReviewed:true,passed:accuracy>=85&&clarity>=65&&result.missing_concepts.length===0&&result.has_factual_errors===false,challengeReady:accuracy>=75&&result.has_factual_errors===false,message:result.feedback||'Compare the answer and check references manually.',improved_answer:result.improved_answer,followup:result.followup}}catch(err){notify('Model review unavailable; saved provisional practice only: '+err.message)}}state.feedback=score;const p=getP(t);const oldHistory=state.attempts.filter(a=>a.topic_key===key(t)&&a.correct===true).length;p.status=score.passed&&oldHistory>=1?2:1;p.confidence=score.serverReviewed?Math.max(1,Math.min(5,Math.round(score.accuracy/20))):Math.max(1,Math.min(3,Math.round(score.score/35)));p.last_reviewed_at=dateNow();p.next_review_at=new Date(Date.now()+(p.status===2?[1,3,7,14,30][Math.min(oldHistory,4)]:1)*DAYS).toISOString();state.progress[key(t)]=p;const row={level:state.level,passed:score.serverReviewed?score.passed:null,response:answer,feedback:`${score.serverReviewed?'model rubric':'provisional concept proxy'} ${score.score}% — missing ${score.missing.join(', ')}`};await Promise.allSettled([saveProgress(t),storeAttempt(t,row)]);render()}
 function adaptiveQuestion(t,feedback,nextLevel){
  if(feedback.challengeReady)return feedback.followup||questionFor(t,nextLevel);
@@ -67,7 +141,7 @@ function adaptiveQuestion(t,feedback,nextLevel){
  const gap=specific.length?`In your previous answer, these reference concepts were not clearly mentioned: ${specific.join(', ')}. `:'Your earlier answer needs a clearer explanation. ';
  return `${gap}Explain ${t.title} in your own words, correctly connect these concepts, and give one practical example. The keyword check cannot confirm technical accuracy.`;
 }
-function nextAdaptive(){if(!state.feedback)return;const feedback=state.feedback,harder=feedback.challengeReady;state.level=harder?Math.min(3,state.level+1):1;state.attemptQuestion=adaptiveQuestion(state.current,feedback,state.level);state.answerDraft='';state.feedback=null;render()}
+function nextAdaptive(){if(!state.feedback)return;stopVoice();const feedback=state.feedback,harder=feedback.challengeReady;state.level=harder?Math.min(3,state.level+1):1;state.attemptQuestion=adaptiveQuestion(state.current,feedback,state.level);state.answerDraft='';state.feedback=null;render()}
 async function uploadDoc(e){e.preventDefault();if(!state.client||!state.user){notify('Sign in first to upload');return}const file=DOM('doc-file').files[0],category=DOM('doc-category').value;if(!file)return;const ext=file.name.split('.').pop().toLowerCase();if(!['pdf','docx','txt','md'].includes(ext)||file.size>8*1024*1024){notify('Choose PDF, DOCX, TXT or MD under 8 MB.');return}const button=DOM('vault-upload');button.disabled=true;button.textContent='Uploading securely…';const uuid=crypto.randomUUID(),cleanName=file.name.replace(/[^a-zA-Z0-9._-]/g,'_').slice(-100),path=`${state.user.id}/${uuid}-${cleanName}`,bucket='genai-study-docs';try{const {error:upErr}=await state.client.storage.from(bucket).upload(path,file,{upsert:false,contentType:file.type||'application/octet-stream'});if(upErr)throw upErr;let body='';if(ext==='txt'||ext==='md')body=(await file.text()).slice(0,60000);const row={id:uuid,user_id:state.user.id,title:file.name.slice(0,160),category,body,filename:file.name.slice(0,255),file_path:path,mime:file.type||'application/octet-stream'};const {error}=await state.client.from('genai_study_documents').insert(row);if(error){await state.client.storage.from(bucket).remove([path]);throw error}let extracted=!!body;let extraNote='';const extractor=window.GALAXY_VAULT_EXTRACT_URL;if(!extracted&&extractor){try{if(!extractor.startsWith('https://'))throw Error('Extractor must use HTTPS');const {data:{session}}=await state.client.auth.getSession();if(!session?.access_token)throw Error('Session missing');const res=await fetch(extractor,{method:'POST',headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},body:JSON.stringify({document_id:uuid})});if(!res.ok)throw Error('Extraction HTTP '+res.status);const outcome=await res.json();if(outcome.status!=='text_extracted')throw Error('Extraction failed');extracted=true}catch(err){extraNote=' · server extraction pending: '+err.message}}await loadDocuments();render();notify('Private upload saved'+(extracted?' with searchable text':' · extraction pending')+extraNote)}catch(err){notify('Upload failed: '+(err.message||err))}finally{button.disabled=false}}
 async function retryExtractDoc(id){
  if(!state.user||!state.client)return notify('Sign in to extract a private document');
@@ -136,7 +210,7 @@ function authOpen(mode='signin'){
 function authClose(){DOM('auth-modal').classList.add('is-hidden');setAuthMode('signin')}
 let authEpoch=0; // Invalidates any in-flight reads when identity changes.
 function resetAuthToGuest(){
- authEpoch++;
+ stopVoice();authEpoch++;
  state.user=null;state.isGuest=true;state.documents=[];
  loadGuest();render();
 }
