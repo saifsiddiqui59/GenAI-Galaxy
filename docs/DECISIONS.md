@@ -61,3 +61,7 @@
 
 - Keep all password changes in Supabase Auth. Send recovery emails with a redirect built only from browser `location.origin` and `location.pathname`, excluding query or fragments. Accept password updates only after an active recovery session. No email-existence disclosure in the UI and no privileged backend/password handling.
 - Offline mocks are regression evidence, not proof of real reset email delivery; dedicated Galaxy test account and allowlisted Auth redirect URL required.
+
+## M9 — speech session ownership
+
+- Treat recognition callbacks and late asynchronous token-broker starts as owned by a monotonically increasing client generation. Sign-out, navigation and retry invalidate old sessions and close recognizers; never overwrite the draft from stale callbacks. Preserve editable transcripts on microphone errors. Static mock tests are not live microphone or Azure provider validation.
