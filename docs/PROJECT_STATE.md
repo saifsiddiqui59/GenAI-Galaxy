@@ -7,3 +7,5 @@ Completed locally: recovered V3 HTML from Library; parsed V3 17/45/230 catalog; 
 Verified remote metadata, **read-only**: `voice_agent_call` project active; Galaxy progress/attempts/docs tables have RLS enabled with own-user policies; bucket `genai-study-docs` is private with 8 MiB max size. `saifsiddiqui59/GenAI-Galaxy` repository is unavailable (404). RetailGrowthAI AGENTS.md was read as a workflow reference only.
 
 Incomplete: production-hosted browser integration tests; physical animation quality/performance benchmarking and assistive-tech audit; real microphone testing and cross-device/cross-user tests; Azure Speech broker; secured semantic answer evaluator; PDF/DOCX extraction; 227 incomplete eight-part lessons; exhaustive historical chat coverage; GitHub remote/PR/CI execution; Azure provisioning and deployment.
+
+Local Git milestones: `main` (`5767fea`) retains V3 source; `feat/v4-galaxy-m1` (`b10ee95`, `02deef3`) implements V4 features and adds docs/tests. Local commits only; remote PR not possible while target Galaxy repository returns 404.

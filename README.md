@@ -36,3 +36,7 @@ python tests/browser_check.py  # requires local Playwright + Chromium; mock data
 Chromium desktop/mobile/reduced-motion smoke tests ran successfully with local mocked JSON, not a deployed backend. Cloud operations were inspected read-only; no test user signup, bucket upload, cross-user RLS test, microphone permission test, external Azure Speech broker, Azure provisioning, GitHub Actions run, or deployed site is verified. The `saifsiddiqui59/GenAI-Galaxy` repository returns 404 through GitHub connection.
 
 See [coverage report](docs/COVERAGE_REPORT.md) and [project state](docs/PROJECT_STATE.md).
+
+## Git milestone
+
+`main` contains the recovered V3 HTML only. `feat/v4-galaxy-m1` adds V4 code, docs and automated checks across two local commits. These are **local commits**, not a published GitHub PR. Use a private repository because existing V3 reference may contain personal interview material.
