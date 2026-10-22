@@ -56,3 +56,8 @@
 
 - After the ten-topic editorial PR is reviewed and CI passes, remaining scope is **88 overview-only topic entries**, plus domain expert/source verification for all expanded lessons and spoken-answer timing checks. Do not claim complete verified curriculum merely from eight sections.
 - Continue authored batches by domain, preserving original topic IDs, regenerating `api/rubrics.json` and `docs/TOPIC_COVERAGE.csv` via the existing scripts, and enforcing regression tests.
+
+## M12 — next curriculum and integration gates
+- Complete the **78 remaining overview-only topic entries** through substantive, topic-specific content batches; retain editorial-unverified markings until expert and source checks and spoken interview-timing validation.
+- Merge prerequisites in review order when GitHub-hosted runner dispatch recovers: #12 auth recovery, then stacked #13 microphone, independent #14 Vault security, #15 curriculum, then this M12 branch retargeted to main. Require all three GitHub CI jobs to pass on each PR and after each merge.
+- Live two-account Supabase RLS, actual hardware microphone tests, production APIM/Functions security, malware scanning and cost monitoring remain separate acceptance gates and require already established approvals.
