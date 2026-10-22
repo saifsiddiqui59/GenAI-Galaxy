@@ -2,7 +2,7 @@ import io,sys,uuid,zipfile,unittest
 from pathlib import Path
 R=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(R/'api'))
-from core import InputError,extract_text,bearer_token,document_id,topic_key,validate_review,verify_gateway,owner_document_filters,MAX_BYTES
+from core import InputError,extract_text,bearer_token,document_id,topic_key,validate_review,verify_gateway,owner_document_filters,owned_storage_path,MAX_BYTES
 
 class ApiCoreTests(unittest.TestCase):
  def test_auth_header_required(self):
@@ -26,6 +26,18 @@ class ApiCoreTests(unittest.TestCase):
   self.assertEqual(filters,{'id':'eq.'+doc,'user_id':'eq.'+user})
   with self.assertRaises(InputError):owner_document_filters('not-a-user',doc)
   with self.assertRaises(InputError):owner_document_filters(user,'../../other-file')
+ def test_storage_path_rejects_foreign_and_unsafe_object_keys(self):
+  uid=str(uuid.uuid4());other=str(uuid.uuid4())
+  self.assertEqual(owned_storage_path(uid,uid+'/safe-note.md'),uid+'/safe-note.md')
+  for unsafe in (other+'/safe.md',uid+'/',uid+'//a.txt',uid+'/../secret',uid+'/./a',uid+'/a\\\\b',uid+'/a\\ninvalid.txt',uid+'/a'+('x'*600)):
+   with self.subTest(path=repr(unsafe)),self.assertRaises(InputError):owned_storage_path(uid,unsafe)
+  with self.assertRaises(InputError):owned_storage_path('not-a-uuid',uid+'/a.txt')
+ def test_vault_route_uses_server_side_path_guards(self):
+  source=(R/'api/function_app.py').read_text()
+  route=source.split('def vault_extract(',1)[1].split("@app.route(route='speech/token'",1)[0]
+  self.assertIn('owned_storage_path(user_id,row.get(',route)
+  self.assertIn('owner_document_filters(user_id,doc_id)',route)
+
  def test_vault_route_is_fail_closed_for_quotas(self):
   # Source guard; hosted rate-limit/gateway enforcement needs staging tests.
   source=(R/'api/function_app.py').read_text()
