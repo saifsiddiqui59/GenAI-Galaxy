@@ -34,3 +34,12 @@
 - Owner-supplied Azure RG `GenAI_Galaxy` is the *only* allowed resource group. Treat it as existing but **not independently verified** until a successful read-only action.
 - No Azure operations during PR/push CI. Manual Azure discovery workflow is read-only; manual static-site upload requires main branch, exact DEPLOY text, protected environment, successful tests, actual existing storage name and restricted Azure RBAC. No automatic provisioning.
 - `GenAI_Galaxy` contains an underscore and cannot be an Azure Storage account name; user has not identified storage destination, so deployment must refuse to proceed until configured.
+
+
+## M6 — approved and verified public Blob preview (2026-10-22)
+
+- Owner expressly approved creating a static Blob website with index.html in GenAI_Galaxy; this supersedes earlier restrictions against initial storage creation **for this one preview account only**.
+- Provisioned gengalaxy1429841605 in centralindia with Standard_LRS GPv2, HTTPS-only and TLS 1.2 minimum. Kept account-wide anonymous Blob container access disabled while permitting $web static endpoint reads.
+- Bootstrap action used existing RG-scoped Contributor through GitHub OIDC and a short-lived **in-memory account key** solely for website enabling and upload because it lacked Storage Blob Data Contributor. No persistent key/secret was added to GitHub or the frontend. Future deployments should use account-scoped Blob Data Contributor under the existing manual workflow.
+- Published only seven public app assets, and confirmed HTTP 200 on all eight routes. No API, vault documents, resumes, V3_REFERENCE.html, migration files or other repositories were deployed.
+- One-time push triggers were removed after queuing; retain manual-only Azure actions and do not provision further backend resources without separate security/cost review.
