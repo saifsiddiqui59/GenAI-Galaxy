@@ -92,3 +92,17 @@ Manual-only live-RLS harness PR [#10](https://github.com/saifsiddiqui59/GenAI-Ga
 - Current branch, **including dependent M11 content**, contains **167 unique authored lessons spanning 168/246 topic entries**; **78 overview-only entries remain**. The 17 planets and 230 original V3 topic IDs are unchanged.
 - Regenerated 168 server-owned rubrics, 246-row coverage CSV, metrics and topic-specific regression tests. All new interview answers are 60–140 words, not independently timed or SME approved.
 - Prior open PRs #12–#15 are unmerged due runner-allocation failures; this branch is stacked on M11 and must not merge to main independently. No GitHub CI success, Azure deployment, database writes or Supabase migrations claimed.
+
+## M13 — public-repo CI restoration and integrated M8–M12 release checkpoint (2026-10-22)
+
+**Current main:** `3a239544c93c28324f409314a41cce534422174b`. Repository visibility is **public** (owner-approved); this exposes repository code and history, but does not deploy the site or change private Supabase RLS. Supersedes historical PR/runner blockers recorded in earlier sections.
+
+- Backend Vault ownership/negative guard: merged PR #14; post-merge [main CI #39826748602](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39826748602) passed all 3 jobs.
+- Password recovery: conflict-free replacement PR #18 merged (old #12 closed); [main CI #39828044041](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39828044041) passed all 3.
+- Microphone lifecycle: replacement PR #19 merged (old #13 closed); [main CI #39828617151](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39828617151) passed all 3.
+- Editorial lessons M11: replacement PR #20 merged (old #15 closed); its post-merge CI #39829691948 became stalled during the Playwright `--with-deps` browser installation; no browser result should be inferred from that run while pending.
+- Editorial lessons M12: replacement PR #21 merged (old #17 closed) after [PR CI #39830984771](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39830984771) **passed 3/3**. It avoids a repeated system-package bootstrap in browser smoke and retains actual Chromium and desktop/mobile/reduced-motion tests. Its post-merge [main CI #39831228218](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39831228218) is pending a final result at this checkpoint.
+- Curriculum source now contains **168/246 expanded topic entries**, **167 distinct eight-section lessons**, and **78 overview-only entries**. Content remains editorial-unverified and has not undergone SME sign-off or real speech timing checks. Original V3 230 topic IDs and 17 planets preserved.
+- Runner dispatch problem [issue #16](https://github.com/saifsiddiqui59/GenAI-Galaxy/issues/16) closed after switching the repository to public. No cloud deployment, Azure Functions/APIM provisioning, hosted Supabase RLS exercise, private file handling, or paid-resource changes were performed by these PRs.
+
+**Release interpretation:** These are source and offline CI integrations. Azure Blob public preview has **not** been redeployed with the newly merged code; live authentication, two-user RLS, physical microphone, backend safety and editorial sign-off remain blocked on separate acceptance gates.
