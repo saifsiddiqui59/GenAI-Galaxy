@@ -17,8 +17,15 @@
 
 **Automated browser acceptance update:** Live guest-mode Playwright passed in GitHub Actions #39804869900 for desktop/mobile/reduced motion. Manual owner review of UX, actual microphone/STT permission, real Supabase sign-in and user isolation are still outstanding.
 
-## M7 — active feature PR: auth synchronization and isolation
+## M7 — completed client safety PR #9; live verification still pending
 
 - Implement owner-scoped cloud reads, fail-closed foreign-row checking and sign-out race cancellation; wire two-account mock tests into CI. Verify the PR's real GitHub Actions run before merge.
 - **Still blocked from marking live isolation complete:** Obtain two consented Galaxy-only auth test accounts and perform real signed-in positive/negative progress, attempts and private bucket tests including unauthorized insert/upsert/read/delete. Do not touch unrelated `voice_agent_call` data.
 - Follow-up: password/reset UX and authenticated browser smoke; then microphone hardware/STT and an approved gateway-backed service architecture. Backend provisioning and paid Azure deployment require explicit approval.
+
+## M7b — manual live Supabase RLS acceptance (test harness only)
+
+- M7 client safety PR #9 merged; post-merge main CI #39807636506 passed 3/3. Do not mistake this for live sign-in/RLS verification.
+- The manual-only `.github/workflows/galaxy-live-rls.yml` requires the exact typed `TEST`, protected GitHub `dev` environment, and existing *dedicated* Galaxy test accounts A/B. Set only `GALAXY_SUPABASE_PUBLISHABLE_KEY`, `GALAXY_TEST_A_EMAIL`, `GALAXY_TEST_A_PASSWORD`, `GALAXY_TEST_B_EMAIL`, `GALAXY_TEST_B_PASSWORD` as protected environment secrets. Never put them in code.
+- Only after those accounts are provided and owner opts in, run `Galaxy two-account RLS acceptance (manual)` from `main`, inspect true results, and remedy failures. This runner performs only scoped Galaxy fixture writes and cleanup; it is not scheduled on pushes, PRs or deployments.
+- Password recovery/account setup UX, actual microphone hardware, secure model judge/gateway, private PDF extraction, 98 lessons, and cost monitoring remain separate unfinished tasks.
