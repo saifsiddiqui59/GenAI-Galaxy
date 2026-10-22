@@ -56,5 +56,29 @@ function interim(target,text,isFinal=true){
  read('resetAuthToGuest()');
  assert.equal(read('state.recording'),false);
  assert.equal(recognizers[2].stopped,true);
- console.log('Speech lifecycle: stop, stale results, errors and sign-out cleanup PASS');
+ // Permission denied at start must fail closed and preserve the user's typed answer.
+ const before=element('spoken-answer').value;
+ const originalStart=FakeSpeech.prototype.start;
+ FakeSpeech.prototype.start=function(){throw Error('permission denied')};
+ await read('toggleVoice()');
+ assert.equal(read('state.recording'),false);
+ assert.equal(read('state.voicePending'),false);
+ assert.equal(read('state.voice'),null);
+ assert.equal(element('spoken-answer').value,before,'failed start must preserve editable text');
+ assert.ok(messages.some(m=>m.includes('Microphone could not start')));
+ FakeSpeech.prototype.start=originalStart;
+ // Reconnect after denial: stale callbacks from the unsuccessful instance cannot mutate draft.
+ await read('toggleVoice()');
+ const current=recognizers.at(-1),abandoned=recognizers.at(-2);
+ assert.equal(read('state.recording'),true);
+ interim(abandoned,'abandoned transcript');
+ assert.equal(element('spoken-answer').value,before);
+ interim(current,'valid after retry');
+ assert.match(element('spoken-answer').value,/valid after retry/);
+ read('stopVoice()');
+ assert.equal(read('state.recording'),false);
+ assert.equal(element('mic-control')['aria-pressed'],'true','button updates only on render');
+ read('renderVoiceState()');
+ assert.equal(element('mic-control')['aria-pressed'],'false');
+ console.log('Speech lifecycle: stop, stale results, errors and sign-out, permission denial, and retry guards PASS');
 })().catch(err=>{console.error(err);process.exitCode=1});
