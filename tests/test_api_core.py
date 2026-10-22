@@ -2,7 +2,7 @@ import io,sys,uuid,zipfile,unittest
 from pathlib import Path
 R=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(R/'api'))
-from core import InputError,extract_text,bearer_token,document_id,topic_key,validate_review,verify_gateway,MAX_BYTES
+from core import InputError,extract_text,bearer_token,document_id,topic_key,validate_review,verify_gateway,owner_document_filters,MAX_BYTES
 
 class ApiCoreTests(unittest.TestCase):
  def test_auth_header_required(self):
@@ -20,6 +20,19 @@ class ApiCoreTests(unittest.TestCase):
  def test_document_id(self):
   u=str(uuid.uuid4());self.assertEqual(document_id(u),u)
   with self.assertRaises(InputError):document_id('../../other-user')
+ def test_owner_scoped_document_queries(self):
+  user=str(uuid.uuid4());doc=str(uuid.uuid4())
+  filters=owner_document_filters(user,doc)
+  self.assertEqual(filters,{'id':'eq.'+doc,'user_id':'eq.'+user})
+  with self.assertRaises(InputError):owner_document_filters('not-a-user',doc)
+  with self.assertRaises(InputError):owner_document_filters(user,'../../other-file')
+ def test_vault_route_is_fail_closed_for_quotas(self):
+  # Source guard; hosted rate-limit/gateway enforcement needs staging tests.
+  source=(R/'api/function_app.py').read_text()
+  route=source.split("def vault_extract(",1)[1].split("@app.route(route='speech/token'",1)[0]
+  self.assertIn("GALAXY_VAULT_GATEWAY_RATE_LIMIT",route)
+  self.assertIn("owner_document_filters(user_id,doc_id)",route)
+  self.assertIn("urlencode(filters)",route)
  def test_topic_allowlist(self):
   key='RAG / Document ingestion / Chunking'
   self.assertEqual(topic_key(key,{key}),key)
