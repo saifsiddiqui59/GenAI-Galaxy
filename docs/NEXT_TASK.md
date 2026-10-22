@@ -61,3 +61,15 @@
 - Complete the **78 remaining overview-only topic entries** through substantive, topic-specific content batches; retain editorial-unverified markings until expert and source checks and spoken interview-timing validation.
 - Merge prerequisites in review order when GitHub-hosted runner dispatch recovers: #12 auth recovery, then stacked #13 microphone, independent #14 Vault security, #15 curriculum, then this M12 branch retargeted to main. Require all three GitHub CI jobs to pass on each PR and after each merge.
 - Live two-account Supabase RLS, actual hardware microphone tests, production APIM/Functions security, malware scanning and cost monitoring remain separate acceptance gates and require already established approvals.
+
+## M13 — current priority list after integration (supersedes earlier pending-PR notes)
+
+The owner made this repository public, restoring GitHub-hosted CI execution. M8–M12 changes are merged to main via PRs #14, #18, #19, #20 and #21; old PRs #12/#13/#15/#17 were closed as superseded. **No merge/rebase action remains for those old PRs.** The CI install optimization in #21 passed its full PR checks; [post-merge main run #39831228218](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39831228218) also passed **3/3**, verifying the final integrated feature main build.
+
+1. **Security and access acceptance (owner-approved):** Configure two isolated, pre-approved Galaxy test accounts and protected GitHub dev secrets, then deliberately run the manual-only Galaxy two-user RLS test with `TEST` confirmation. Do not reuse unrelated user data. Verify password recovery redirect allowlist, link delivery and live signed-in progress.
+2. **Speech acceptance:** Test real microphone permission, rapid start/stop, draft preservation, sign-out, and mobile behavior after explicit approval for a new static preview deployment. Mocked browser CI is not hardware proof.
+3. **Private API release design:** Real APIM per-user quotas and direct-origin network restrictions, verified model and speech-broker configuration, private extraction malware scanning/quarantine, staging JWT and tenant-negative tests, and owner cloud authorization are still required. The backend is source-only.
+4. **Content:** Author the **78 overview-only topics** individually; review 167 distinct reference lessons with domain experts, citations/evidence and timed spoken answers. Do not claim the 168 expanded entries are factually verified.
+5. **Operational safety:** Cost budget/alert for the approved Blob account, scoped keyless deployment role only if owner approves, review public GitHub history for sensitive/personal content, and maintain a no-secrets public source policy. Do not deploy Azure or apply hosted migrations automatically.
+
+The existing public static Blob preview is an older deployment and does not automatically reflect merged main.

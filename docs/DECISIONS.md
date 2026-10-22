@@ -78,3 +78,10 @@
 ## M12 — source-aware security lessons
 - Introduce explicit discussion of provider-region restrictions, APIM bypass prevention, multi-layer identity permissions, two-user isolation and financial-policy abstention. Do not imply Galaxy has a deployed model gateway, a live two-account Supabase test result or SME-reviewed content.
 - Use a stacked PR based on M11 to avoid rewriting its newly expanded lessons while CI runner dispatch is blocked. Only retarget and merge after dependency and complete three-job checks pass.
+
+## M13 — visibility, CI and release sequencing
+
+- Owner switched the isolated Galaxy repository to **public** to restore zero-usage-billing-limit GitHub-hosted Actions access. Source and Git history are public; private Galaxy study data must remain inside RLS-protected Supabase and the private storage bucket. Do not commit credentials, real uploaded resumes or customer data.
+- Keep backend, client auth, microphone and content PR integration strictly sequenced with GitHub CI: actual merged replacements were #14/#18/#19/#20/#21. Close stale stacked or conflicting PRs instead of merging duplicate changes. The first three main runs passed 3/3; #20's old browser install was blocked during `--with-deps` setup, so #21 removed repeated system-package setup and demonstrated passing new browser PR CI.
+- Require the current branch's three GitHub CI jobs and the new main run before reporting a final green checkpoint. A prior run, another commit or pending Chromium installer is never green evidence.
+- Preserve no-auto-deploy rule: public visibility, GitHub CI and source-only API code do **not** authorize a new Azure static upload, live Supabase migration/test, paid Azure provisioning or private document processing.
