@@ -1,0 +1,34 @@
+name: Galaxy public static website HTTP smoke
+# One-time read-only HTTP check; convert to manual-only after first run is queued.
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/galaxy-static-smoke.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - name: Check public website and every required frontend asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          URL='https://gengalaxy1429841605.z29.web.core.windows.net'
+          for path in / /index.html /styles.css /app.js /runtime-config.js /data/curriculum.json /data/lessons.json /speech/azure-speech-adapter.js; do
+            status=none
+            for attempt in {1..9}; do
+              status=$(curl --location --max-time 20 --silent --show-error --output /tmp/galaxy-public-response --write-out '%{http_code}' "$URL$path" || true)
+              echo "Attempt $attempt: $path -> HTTP $status"
+              if [[ "$status" == 200 ]]; then break; fi
+              sleep 6
+            done
+            [[ "$status" == 200 ]] || { echo "::error::$path not reachable"; exit 1; }
+            if [[ "$path" == /index.html ]]; then
+              grep -qi 'GenAI Galaxy' /tmp/galaxy-public-response || { echo "::error::Unexpected index"; exit 1; }
+            fi
+          done
+          echo "GALAXY_PUBLIC_HTTP_OK=$URL/"
