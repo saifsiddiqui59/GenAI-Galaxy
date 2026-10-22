@@ -45,3 +45,10 @@ No GitHub remote, PR, actual GitHub Actions run, Supabase mutation or Azure depl
 ## M5 — existing Azure + GitHub Actions wiring (LOCAL ONLY, 2026-10-22)
 
 Owner supplied `GenAI_Galaxy` for both Azure resource group and Azure application. Neither Azure object has been verified through a cloud connection. Read RetailGrowthAI's separate OIDC workflow and official GitHub/Microsoft OIDC guidance without changing RetailGrowthAI or WineShopPOS. Prepared Galaxy-specific manual read-only OIDC/RG-inventory workflow and a separately gated workflow to upload an allowlist of public static site files to an existing Storage account. Added fail-closed deploy helper, unit guard tests, and exact app/RG GitHub environment setup instructions (`docs/AZURE_GITHUB_OIDC.md`). Resource group, storage and Entra trust remain unverified. Galaxy repo remains 404: **no hosted GitHub Actions run, OIDC login, Azure deployment or cloud mutation occurred**.
+
+## M7 — authentication synchronization safety (PR #9)
+
+- Continued from the verified M6 static preview. Live `voice_agent_call` Galaxy table/policy metadata was inspected read-only: progress, attempts, and documents have RLS with user-id ownership policies; the private `genai-study-docs` bucket has an 8 MiB limit and user-prefix storage policies.
+- Frontend patch explicitly scopes Galaxy progress, attempts and document reads to the signed-in user ID, rejects unexpected owner/path rows, scrubs private state on sign-out/account switch and invalidates slow reads from old sessions. Private document delete is scoped by both document ID and owner ID.
+- Added deterministic two-account mock regression checks for account switching, foreign-row rejection and sign-out race, wired into GitHub Actions. These are not real authenticated two-user network/RLS tests; no Supabase records were created or modified, and no Azure backend deployed.
+- PR #9 carries the fix and unit/CI verification; hosted two-user Supabase network verification remains a separate release gate.

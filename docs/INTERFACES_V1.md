@@ -25,3 +25,7 @@ Configuration `runtime-config.js` holds public URLs only; the site cannot host F
 Every API request must pass **both** (a) a verified Supabase JWT and (b) an internal APIM-injected `X-Galaxy-Internal-Token` matching the backend-only `GALAXY_GATEWAY_SHARED_SECRET` (minimum 32 characters, constant-time compare). The gateway must strip the same client-supplied header, enforce real per-user quotas, and use network/private ingress rules to keep clients from reaching the Function origin directly. The header alone is **not** evidence that an APIM quota was enforced. No such gateway exists yet; routes must fail closed.
 
 When `genai_study_documents.body` remains empty after an upload, a signed-in frontend user can click **Retry extraction**; the client sends only the UUID, never a storage path. No server is configured in the shipped `runtime-config.js`.
+
+## M7 — client session invariants
+
+The client reads Galaxy `genai_study_progress`, `genai_study_attempts`, and `genai_study_documents` through user-id-filtered requests, includes `user_id` in responses for an ownership check, and keeps private snapshot writes atomic only for the current auth generation. `SIGNED_OUT` clears private state and cancels obsolete read completions. A document metadata deletion must filter by both `id` and `user_id`; storage deletion is permitted only for `${user_id}/` paths. RLS/storage policies remain authoritative; mocked JS tests are not live isolation verification.
