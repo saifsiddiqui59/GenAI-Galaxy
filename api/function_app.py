@@ -12,7 +12,7 @@ from urllib.error import HTTPError, URLError
 import uuid
 import re
 import azure.functions as func
-from core import InputError, bearer_token, document_id, topic_key, extract_text, validate_review, verify_gateway, owner_document_filters, MAX_BYTES
+from core import InputError, bearer_token, document_id, topic_key, extract_text, validate_review, verify_gateway, owner_document_filters, owned_storage_path, MAX_BYTES
 
 app=func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 RUBRICS=json.loads((Path(__file__).parent/'rubrics.json').read_text())
@@ -161,9 +161,7 @@ def vault_extract(req:func.HttpRequest)->func.HttpResponse:
         if not isinstance(rows,list) or len(rows)!=1 or rows[0].get('user_id')!=user_id:
             return make_response(req,{'error':'Document not found'},404)
         row=rows[0]
-        path=row.get('file_path')
-        if not isinstance(path,str) or not path.startswith(user_id+'/') or '..' in path.split('/'):
-            return make_response(req,{'error':'Document path does not belong to user'},403)
+        path=owned_storage_path(user_id,row.get('file_path'))
         download=base+'/storage/v1/object/authenticated/genai-study-docs/'+quote(path,safe='/')
         try:
             with urlopen(Request(download,headers={'Authorization':'Bearer '+token,'apikey':public_key}),timeout=15) as r:

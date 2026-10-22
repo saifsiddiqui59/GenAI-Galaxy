@@ -69,6 +69,24 @@ def owner_document_filters(user_id: str, doc_id: str) -> dict[str, str]:
     return {'id': 'eq.' + document_id(doc_id), 'user_id': 'eq.' + owner}
 
 
+
+def owned_storage_path(user_id: str, path: object) -> str:
+    """Fail closed on foreign-owned or unsafe private Storage object paths.
+
+    This does not replace authenticated Supabase Storage RLS or malware scanning.
+    """
+    try:
+        owner = str(uuid.UUID(user_id))
+    except (ValueError, TypeError, AttributeError):
+        raise InputError('Invalid user session') from None
+    if not isinstance(path, str) or len(path) > 512 or not path.startswith(owner + '/'):
+        raise InputError('Document path does not belong to user')
+    parts = path.split('/')
+    if (len(parts) < 2 or any(part in ('', '.', '..') for part in parts)
+            or '\\' in path or any(ord(c) < 32 or ord(c) == 127 for c in path)):
+        raise InputError('Unsafe private document path')
+    return path
+
 def extract_text(data: bytes, filename: str) -> str:
     if not isinstance(data, bytes) or len(data) > MAX_BYTES or not data:
         raise InputError('Document is empty or larger than 8 MiB')
