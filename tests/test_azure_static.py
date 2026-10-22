@@ -25,8 +25,13 @@ with log.open('a') as file:
     file.write(json.dumps({'command': args}) + '\\n')
 if args[:3] == ['storage', 'account', 'show']:
     print('/subscriptions/mock/resourceGroups/GenAI_Galaxy/providers/Microsoft.Storage/storageAccounts/gengalaxy1429841605')
-elif args[:3] == ['storage', 'blob', 'service-properties']:
+elif args[:3] == ['storage', 'account', 'blob-service-properties']:
     print(os.environ.get('MOCK_STATIC_ENABLED','true'))
+elif args[:3] == ['storage', 'container', 'show']:
+    if os.environ.get('MOCK_BLOB_ACCESS', 'true') != 'true':
+        print('AuthorizationPermissionMismatch', file=sys.stderr)
+        sys.exit(1)
+    print('$web')
 elif args[:3] == ['storage', 'blob', 'upload-batch']:
     folder = pathlib.Path(args[args.index('--source') + 1])
     assets = sorted(str(p.relative_to(folder)) for p in folder.rglob('*') if p.is_file())
@@ -39,7 +44,7 @@ else:
 
 
 class AzureStaticDeployTest(unittest.TestCase):
-    def run_script(self, *, rg='GenAI_Galaxy', storage='gengalaxy1429841605', enabled='true'):
+    def run_script(self, *, rg='GenAI_Galaxy', storage='gengalaxy1429841605', enabled='true', blob_access='true'):
         with tempfile.TemporaryDirectory() as temp:
             binpath = Path(temp)
             az = binpath / 'az'
@@ -48,7 +53,8 @@ class AzureStaticDeployTest(unittest.TestCase):
             log = binpath / 'commands.jsonl'
             env = dict(os.environ, PATH=str(binpath) + os.pathsep + os.environ.get('PATH', ''),
                        GALAXY_AZ_RG=rg, GALAXY_AZ_STORAGE=storage,
-                       MOCK_AZ_LOG=str(log), MOCK_STATIC_ENABLED=enabled)
+                       MOCK_AZ_LOG=str(log), MOCK_STATIC_ENABLED=enabled,
+                       MOCK_BLOB_ACCESS=blob_access)
             result = subprocess.run(['bash', str(SCRIPT)], text=True, capture_output=True,
                                     env=env, timeout=10)
             operations = [json.loads(line) for line in log.read_text().splitlines()] if log.exists() else []
@@ -58,12 +64,26 @@ class AzureStaticDeployTest(unittest.TestCase):
         result, operations = self.run_script()
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual([op['command'][:3] for op in operations if 'command' in op],
-                         [['storage','account','show'], ['storage','blob','service-properties'],
-                          ['storage','blob','upload-batch']])
+                         [['storage','account','show'], ['storage','account','blob-service-properties'],
+                          ['storage','container','show'], ['storage','blob','upload-batch']])
         self.assertEqual(set(operations[-1]['assets']), PUBLIC)
         self.assertTrue(all('V3_REFERENCE.html' not in v for v in operations[-1]['assets']))
         self.assertIn('login', operations[-2]['command'])
         self.assertIn('$web', operations[-2]['command'])
+
+    def test_no_blob_role_fails_before_upload(self):
+        result, operations = self.run_script(blob_access='false')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Blob data access', result.stderr)
+        self.assertFalse(any(op.get('command', [])[:3] ==
+                             ['storage', 'blob', 'upload-batch'] for op in operations))
+
+    def test_website_property_check_uses_arm_not_data_plane(self):
+        result, operations = self.run_script()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn('--resource-group', operations[1]['command'])
+        self.assertNotIn('--auth-mode', operations[1]['command'])
+        self.assertIn('--auth-mode', operations[2]['command'])
 
     def test_wrong_resource_group_cannot_touch_azure(self):
         result, operations = self.run_script(rg='RetailGrowthAI')

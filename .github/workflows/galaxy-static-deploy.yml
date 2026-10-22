@@ -68,6 +68,19 @@ jobs:
           AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Pin OIDC credential to approved Galaxy service principal
+        shell: bash
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+        run: |
+          set -euo pipefail
+          # This public application ID must identify the *same* service principal
+          # that received the storage-scoped Blob Data Contributor role.
+          if [[ "${AZURE_CLIENT_ID,,}" != "737d67b7-4984-48bb-bb1f-5f62599f645c" ]]; then
+            echo '::error::GitHub dev AZURE_CLIENT_ID is not the approved GenAI_Galaxy application. The Blob role was granted to a different service principal. Check the dev secret; do not create extra roles or use storage keys.'
+            exit 1
+          fi
+          echo 'GitHub OIDC application matches the Galaxy service principal assigned storage-scoped RBAC.'
       - name: Sign in with restricted OIDC
         uses: azure/login@v3
         with:
