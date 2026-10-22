@@ -10,11 +10,11 @@
 | New, non-duplicate gap records | 16 | Prior GenAI conversations/resume, added to appropriate chapters |
 | V4 total topics | 246 | Verified unique hierarchical keys |
 | V4 groups | 55 | Includes 10 dedicated gap-audit groups |
-| Expanded curriculum entries | 158 | Uses authored `data/lessons.json`; **not SME verified** |
-| Distinct eight-section lesson records | 157 | A shared title appears in two curriculum locations |
-| Incomplete curriculum entries | 88 | Existing topic has only short overview/interview question |
+| Expanded curriculum entries | 168 | Uses authored `data/lessons.json`; **not SME verified** |
+| Distinct eight-section lesson records | 167 | A shared title appears in two curriculum locations |
+| Incomplete curriculum entries | 78 | Existing topic has only short overview/interview question |
 | Duplicated chapter/group/topic keys | 0 | Checked by automated test |
-| Interview answer length 60–140 words | 138 / 157 | Approximate 30–60-second speaking range; **not timed or spoken-verified** |
+| Interview answer length 60–140 words | 148 / 167 | Approximate 30–60-second speaking range; **not timed or spoken-verified** |
 | Complete verified technical coverage | **not established** | Requires a topic-by-topic SME review |
 
 ## Gap themes discovered and added
