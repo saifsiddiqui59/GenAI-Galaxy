@@ -68,3 +68,9 @@ Manual-only live-RLS harness PR [#10](https://github.com/saifsiddiqui59/GenAI-Ga
 - Strengthened existing undeployed Azure Function source: `vault/extract` refuses requests unless `GALAXY_VAULT_GATEWAY_RATE_LIMIT=active` is set, mirroring model-evaluation and speech-token gates. This environment marker is **not proof** the external gateway enforces user quotas.
 - Both document SELECT and PATCH include server-verified `user_id` and UUID document ID filters in addition to existing Supabase RLS. Added pure owner-filter and static route-guard regressions.
 - Production remains blocked by actual gateway quotas, direct Function ingress isolation, malware quarantine, dedicated authentication/RLS tests, owner deployment approval and CI. No cloud or hosted database action was performed.
+
+## M8 — password reset UX (code prepared)
+
+- Added account recovery request, same-origin/path Supabase reset redirect and password update from Supabase `PASSWORD_RECOVERY` session. Password input requires eight characters for recovery; no custom password storage or elevated credentials.
+- Regression test `tests/test_auth_recovery.cjs` covers reset redirect, sign-in/sign-up compatibility, recovered session and expired-session refusal. Real reset email delivery and recovery remain unverified; hosted Auth redirect URL needs allowlisting.
+- No two-user live RLS test, hosted Supabase mutation, Azure backend or website deployment occurred. PR CI must pass before merge.
