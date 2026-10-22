@@ -57,6 +57,11 @@
 - A manual workflow with explicit `TEST` confirmation tests read/write isolation in the three Galaxy tables and owner-prefixed private bucket; its random fixtures must be cleaned after execution. No secret or service-role key is shipped to JavaScript or committed to Git.
 - CI compiles and statically guards the script, but live cloud verification must be separately reported only when the manual job actually runs and succeeds.
 
+## M10 — document extraction quota and owner filters
+
+- Keep document extraction disabled unless the API is behind a verified external authenticated per-user quota gateway; the backend's `GALAXY_VAULT_GATEWAY_RATE_LIMIT=active` switch is only an additional fail-closed configuration gate.
+- Always filter private `genai_study_documents` SELECT and PATCH by both authenticated owner and UUID document ID; keep Supabase RLS as authoritative. No custom privileges, elevated keys, private storage changes or cloud provisioning.
+
 ## M8 — Auth recovery decision
 
 - Keep all password changes in Supabase Auth. Send recovery emails with a redirect built only from browser `location.origin` and `location.pathname`, excluding query or fragments. Accept password updates only after an active recovery session. No email-existence disclosure in the UI and no privileged backend/password handling.
