@@ -9,6 +9,9 @@
 - Automatic bootstrap and website-smoke push triggers were removed immediately after scheduling. Future cloud workflows are manual-only. Azure resource charges apply; no production backend deployed, and no Vault private content or secrets were uploaded.
 - Static preview is **not** evidence of live Supabase sign-in/RLS safety, production grading, backend model evaluation, speech token broker or scanned-PDF ingestion. 148/246 authored curriculum entries and 98 overview-only entries remain the prior tested editorial state. Human content review remains outstanding.
 
+
+**M6 live hosted-browser acceptance:** [run #39804869900](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39804869900) passed Playwright on the *real public URL* for desktop 1440×900, mobile 390×844 and reduced-motion 1440×900. All 17 planets, chapter/lesson navigation, open-text practice feedback, guest vault gate and absence of page JavaScript exceptions were verified. This does not test live hardware STT, authenticated Supabase accounts or backend endpoints.
+
 **Historical M3–M5 notes below are retained for provenance; their older local-only claims are superseded by M6.**
 
 **M3 LOCAL DEVELOPMENT/TESTS — NOT GITHUB-PUBLISHED OR DEPLOYED.**
