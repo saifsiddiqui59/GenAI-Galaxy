@@ -12,7 +12,7 @@ from urllib.error import HTTPError, URLError
 import uuid
 import re
 import azure.functions as func
-from core import InputError, bearer_token, document_id, topic_key, extract_text, validate_review, verify_gateway, MAX_BYTES
+from core import InputError, bearer_token, document_id, topic_key, extract_text, validate_review, verify_gateway, owner_document_filters, MAX_BYTES
 
 app=func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 RUBRICS=json.loads((Path(__file__).parent/'rubrics.json').read_text())
@@ -148,10 +148,15 @@ def vault_extract(req:func.HttpRequest)->func.HttpResponse:
     if pending:return pending
     try:
         token,user_id,base,public_key=authenticate(req)
+        # External gateway must enforce authenticated per-user vault quotas.
+        # This marker is a fail-closed setting, not proof of a live quota policy.
+        if os.environ.get('GALAXY_VAULT_GATEWAY_RATE_LIMIT')!='active':
+            return make_response(req,{'error':'Private document extraction quota gateway is not configured'},503)
         payload=req.get_json()
         if not isinstance(payload,dict):raise InputError('Invalid request JSON')
         doc_id=document_id(payload.get('document_id'))
-        url=base+'/rest/v1/genai_study_documents?'+urlencode({'select':'id,user_id,filename,file_path','id':'eq.'+doc_id})
+        filters=owner_document_filters(user_id,doc_id)
+        url=base+'/rest/v1/genai_study_documents?'+urlencode({'select':'id,user_id,filename,file_path',**filters})
         rows=request_json(url,token=token,extra_headers={'apikey':public_key},limit=6000)
         if not isinstance(rows,list) or len(rows)!=1 or rows[0].get('user_id')!=user_id:
             return make_response(req,{'error':'Document not found'},404)
@@ -166,7 +171,7 @@ def vault_extract(req:func.HttpRequest)->func.HttpResponse:
         except (HTTPError,URLError,TimeoutError):
             return make_response(req,{'error':'Private file cannot be retrieved'},502)
         content=extract_text(raw,row.get('filename') or '')
-        request_json(base+'/rest/v1/genai_study_documents?id=eq.'+doc_id,method='PATCH',payload={'body':content},
+        request_json(base+'/rest/v1/genai_study_documents?'+urlencode(filters),method='PATCH',payload={'body':content},
                      token=token,extra_headers={'apikey':public_key,'Prefer':'return=minimal'},limit=1000)
         return make_response(req,{'status':'text_extracted','characters':len(content),'document_id':doc_id})
     except InputError as ex:return make_response(req,{'error':str(ex)},403 if str(ex)=='Trusted gateway required' else (401 if str(ex)=='Bearer authentication required' else 400))
