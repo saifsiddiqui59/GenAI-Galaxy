@@ -32,7 +32,7 @@ jobs:
           node --check app.js
           node --check runtime-config.js
           node --check speech/azure-speech-adapter.js
-          python -m py_compile api/core.py api/function_app.py
+          python -m py_compile api/core.py api/function_app.py tests/live_rls_check.py
           bash -n scripts/checkpoint.sh scripts/deploy_azure_static.sh scripts/publish_github.sh
       - name: Verify server-owned rubrics are reproducible
         run: |
