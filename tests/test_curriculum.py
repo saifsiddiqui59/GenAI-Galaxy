@@ -10,11 +10,16 @@ class CurriculumTest(unittest.TestCase):
   self.assertEqual(len([r for r in self.rows if not r[3].get('origin')]),230)
   self.assertEqual(len([r for r in self.rows if r[3].get('origin')]),16)
  def test_no_duplicate_keys(self): self.assertEqual(len(self.rows),len(set((a,b,c) for a,b,c,_ in self.rows)))
- def test_49_full_editorial_lessons(self):
-  self.assertEqual(len(self.l),49)
+ def test_expanded_editorial_lessons(self):
+  self.assertGreaterEqual(len(self.l),145)
   for title,value in self.l.items():
    with self.subTest(title=title):
     self.assertIn(title,[r[2] for r in self.rows]);self.assertTrue(all(value.get(k) for k in ('simple','technical','example','project','answer','workflow','mistakes','followups','keywords')))
+    self.assertGreaterEqual(len(value['technical']),75)
+    self.assertGreaterEqual(len(value['answer'].split()),35)
+    self.assertGreaterEqual(len(value['workflow']),3)
+    self.assertGreaterEqual(len(value['mistakes']),2)
+    self.assertGreaterEqual(len(value['followups']),2)
  def test_topic_questions(self):
   for a,b,c,i in self.rows:
    with self.subTest(topic=c): self.assertTrue(i['summary'].strip() and i['question'].strip())
