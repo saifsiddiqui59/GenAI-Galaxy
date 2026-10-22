@@ -1,20 +1,20 @@
 chapter,group,topic,curriculum_origin,content_status,eight_sections_present,source_question
-LLM & Transformer Fundamentals,Model mechanics,Tokens & tokenization,V3 verified,overview_only_incomplete,no,How do you estimate token cost for a conversation?
-LLM & Transformer Fundamentals,Model mechanics,Transformer architecture,V3 verified,overview_only_incomplete,no,Why are transformers useful for language models?
-LLM & Transformer Fundamentals,Model mechanics,Self-attention,V3 verified,overview_only_incomplete,no,What does attention do in a transformer?
+LLM & Transformer Fundamentals,Model mechanics,Tokens & tokenization,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you estimate token cost for a conversation?
+LLM & Transformer Fundamentals,Model mechanics,Transformer architecture,V3 verified,expanded_8_sections_editorial_unverified,yes,Why are transformers useful for language models?
+LLM & Transformer Fundamentals,Model mechanics,Self-attention,V3 verified,expanded_8_sections_editorial_unverified,yes,What does attention do in a transformer?
 LLM & Transformer Fundamentals,Model mechanics,Embeddings vs model output,V3 verified,overview_only_incomplete,no,Why not use a chat model for similarity search?
-LLM & Transformer Fundamentals,Model mechanics,Context window,V3 verified,overview_only_incomplete,no,What happens when the context becomes too large?
+LLM & Transformer Fundamentals,Model mechanics,Context window,V3 verified,expanded_8_sections_editorial_unverified,yes,What happens when the context becomes too large?
 LLM & Transformer Fundamentals,Inference & latency,Inference vs training,V3 verified,overview_only_incomplete,no,What is the difference between inference and fine-tuning?
-LLM & Transformer Fundamentals,Inference & latency,TTFT & total latency,V3 verified,overview_only_incomplete,no,Why can the first message take longer?
+LLM & Transformer Fundamentals,Inference & latency,TTFT & total latency,V3 verified,expanded_8_sections_editorial_unverified,yes,Why can the first message take longer?
 LLM & Transformer Fundamentals,Inference & latency,Prefill vs decoding,V3 verified,overview_only_incomplete,no,Which phase benefits most from prompt caching?
 LLM & Transformer Fundamentals,Inference & latency,KV cache,V3 verified,expanded_8_sections_editorial_unverified,yes,"What does KV caching save, and when is it invalidated?"
 LLM & Transformer Fundamentals,Inference & latency,Prompt caching,V3 verified,overview_only_incomplete,no,What input changes reduce cache hits?
 LLM & Transformer Fundamentals,Inference & latency,Temperature & sampling,V3 verified,overview_only_incomplete,no,Can temperature zero guarantee an accurate answer?
 LLM & Transformer Fundamentals,Inference & latency,"Token, latency & cost optimization",V3 verified,overview_only_incomplete,no,What steps would you take to optimize latency?
 LLM & Transformer Fundamentals,Inference & latency,Prefill bottlenecks & long-context diagnostics,V4 discovered gap,overview_only_incomplete,no,Why can first response time spike even with a KV cache?
-LLM & Transformer Fundamentals,Representation & retrieval maths,Dense float vectors,V3 verified,overview_only_incomplete,no,What is a dense embedding?
+LLM & Transformer Fundamentals,Representation & retrieval maths,Dense float vectors,V3 verified,expanded_8_sections_editorial_unverified,yes,What is a dense embedding?
 LLM & Transformer Fundamentals,Representation & retrieval maths,Binary embeddings & quantization,V3 verified,overview_only_incomplete,no,How are binary and floating-point embeddings different?
-LLM & Transformer Fundamentals,Representation & retrieval maths,"Cosine, dot product & Euclidean",V3 verified,overview_only_incomplete,no,Why would you choose cosine similarity?
+LLM & Transformer Fundamentals,Representation & retrieval maths,"Cosine, dot product & Euclidean",V3 verified,expanded_8_sections_editorial_unverified,yes,Why would you choose cosine similarity?
 LLM & Transformer Fundamentals,Representation & retrieval maths,Semantic similarity,V3 verified,overview_only_incomplete,no,Why does semantic search find synonyms?
 Prompt Engineering,Prompt patterns,"System, developer & user instructions",V3 verified,overview_only_incomplete,no,Where should stable policy instructions live?
 Prompt Engineering,Prompt patterns,Zero-shot vs few-shot,V3 verified,overview_only_incomplete,no,When are examples better than longer instructions?
@@ -32,34 +32,34 @@ RAG & Knowledge Retrieval,Document ingestion,Embedding pipeline,V3 verified,over
 RAG & Knowledge Retrieval,Document ingestion,Incremental RAG ingestion,V3 verified,expanded_8_sections_editorial_unverified,yes,What happens after today's policy document update?
 RAG & Knowledge Retrieval,Document ingestion,RAG vs DE incremental loads,V3 verified,overview_only_incomplete,no,How does incremental RAG indexing differ from CDC?
 RAG & Knowledge Retrieval,Document ingestion,Versioning & stale chunks,V3 verified,overview_only_incomplete,no,How do you stop answers citing an obsolete policy?
-RAG & Knowledge Retrieval,Vector & hybrid search,Query embedding,V3 verified,overview_only_incomplete,no,Do we chunk the user question too?
+RAG & Knowledge Retrieval,Vector & hybrid search,Query embedding,V3 verified,expanded_8_sections_editorial_unverified,yes,Do we chunk the user question too?
 RAG & Knowledge Retrieval,Vector & hybrid search,Vector databases,V3 verified,overview_only_incomplete,no,How do you choose vector storage?
 RAG & Knowledge Retrieval,Vector & hybrid search,Dense semantic search,V3 verified,overview_only_incomplete,no,Why can dense retrieval miss exact identifiers?
-RAG & Knowledge Retrieval,Vector & hybrid search,BM25 keyword retrieval,V3 verified,overview_only_incomplete,no,Where can BM25 outperform vector search?
-RAG & Knowledge Retrieval,Vector & hybrid search,Hybrid search,V3 verified,overview_only_incomplete,no,When would you use hybrid rather than pure semantic retrieval?
+RAG & Knowledge Retrieval,Vector & hybrid search,BM25 keyword retrieval,V3 verified,expanded_8_sections_editorial_unverified,yes,Where can BM25 outperform vector search?
+RAG & Knowledge Retrieval,Vector & hybrid search,Hybrid search,V3 verified,expanded_8_sections_editorial_unverified,yes,When would you use hybrid rather than pure semantic retrieval?
 RAG & Knowledge Retrieval,Vector & hybrid search,Filters & top-k,V3 verified,overview_only_incomplete,no,How does metadata filtering improve relevance?
 RAG & Knowledge Retrieval,Vector & hybrid search,Semantic reranking,V3 verified,overview_only_incomplete,no,How does a reranker differ from a vector index?
 RAG & Knowledge Retrieval,Vector & hybrid search,RRF & cross-encoder,V3 verified,overview_only_incomplete,no,What is the difference between RRF and cross-encoder ranking?
 RAG & Knowledge Retrieval,Answer generation,Context construction,V3 verified,overview_only_incomplete,no,How would you construct a safe RAG prompt?
-RAG & Knowledge Retrieval,Answer generation,Source citations,V3 verified,overview_only_incomplete,no,Are citations alone sufficient to prove correctness?
+RAG & Knowledge Retrieval,Answer generation,Source citations,V3 verified,expanded_8_sections_editorial_unverified,yes,Are citations alone sufficient to prove correctness?
 RAG & Knowledge Retrieval,Answer generation,Retrieval failure handling,V3 verified,overview_only_incomplete,no,What happens if relevant context cannot be found?
 RAG & Knowledge Retrieval,Answer generation,Query rewriting & multi-query,V3 verified,overview_only_incomplete,no,When do you use multi-query retrieval?
 RAG & Knowledge Retrieval,Answer generation,Graph RAG vs standard RAG,V3 verified,expanded_8_sections_editorial_unverified,yes,Why did you not use Graph RAG in the voice assistant?
 RAG & Knowledge Retrieval,Answer generation,Vectorless / SQL retrieval,V3 verified,overview_only_incomplete,no,When would SQL be better than RAG?
-RAG & Knowledge Retrieval,RAG metrics,Context precision,V3 verified,overview_only_incomplete,no,What does context precision measure?
-RAG & Knowledge Retrieval,RAG metrics,Context recall,V3 verified,overview_only_incomplete,no,What does low context recall suggest?
+RAG & Knowledge Retrieval,RAG metrics,Context precision,V3 verified,expanded_8_sections_editorial_unverified,yes,What does context precision measure?
+RAG & Knowledge Retrieval,RAG metrics,Context recall,V3 verified,expanded_8_sections_editorial_unverified,yes,What does low context recall suggest?
 RAG & Knowledge Retrieval,RAG metrics,Faithfulness,V3 verified,overview_only_incomplete,no,How is faithfulness different from factual accuracy?
 RAG & Knowledge Retrieval,RAG metrics,Answer relevance,V3 verified,overview_only_incomplete,no,Can an answer be faithful but irrelevant?
 RAG & Knowledge Retrieval,Retrieval & ranking,Embedding model migration & full reindex,V4 discovered gap,overview_only_incomplete,no,What happens when embeddings change but vectors remain old?
 RAG & Knowledge Retrieval,Retrieval & ranking,Reranker latency and recall trade-off,V4 discovered gap,overview_only_incomplete,no,Where do you put reranking and how do you measure its cost?
 RAG & Knowledge Retrieval,RAG lifecycle,Document change detection & tombstones,V4 discovered gap,overview_only_incomplete,no,How do you handle a revised policy without leaving stale snippets?
-LangChain & LangGraph,Core graph building blocks,LangChain vs LangGraph,V3 verified,overview_only_incomplete,no,When would you choose LangGraph over a simple chain?
+LangChain & LangGraph,Core graph building blocks,LangChain vs LangGraph,V3 verified,expanded_8_sections_editorial_unverified,yes,When would you choose LangGraph over a simple chain?
 LangChain & LangGraph,Core graph building blocks,Nodes,V3 verified,overview_only_incomplete,no,What does a node return?
 LangChain & LangGraph,Core graph building blocks,Edges & conditional edges,V3 verified,expanded_8_sections_editorial_unverified,yes,How does routing based on user intent work?
-LangChain & LangGraph,Core graph building blocks,Shared state,V3 verified,overview_only_incomplete,no,What state would a bank assistant keep?
+LangChain & LangGraph,Core graph building blocks,Shared state,V3 verified,expanded_8_sections_editorial_unverified,yes,What state would a bank assistant keep?
 LangChain & LangGraph,Core graph building blocks,START & END,V3 verified,overview_only_incomplete,no,When does an agent stop calling tools?
 LangChain & LangGraph,Runtime design,Tool nodes,V3 verified,overview_only_incomplete,no,Why not let an LLM modify database rows directly?
-LangChain & LangGraph,Runtime design,Checkpointing,V3 verified,overview_only_incomplete,no,How would you resume a partially completed workflow?
+LangChain & LangGraph,Runtime design,Checkpointing,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you resume a partially completed workflow?
 LangChain & LangGraph,Runtime design,Thread-based memory,V3 verified,overview_only_incomplete,no,How do you maintain continuity during a call?
 LangChain & LangGraph,Runtime design,Human-in-the-loop,V3 verified,overview_only_incomplete,no,Which bank operations require user confirmation?
 LangChain & LangGraph,Runtime design,"Retry, timeouts & fallbacks",V3 verified,overview_only_incomplete,no,What happens when an external booking tool times out?
@@ -77,19 +77,19 @@ LangChain & LangGraph,Hands-on workflows,Subgraph & multi-agent handoff,V3 verif
 "Agentic AI, Tools & MCP",Multi-agent patterns,Handoff agent,V3 verified,overview_only_incomplete,no,How do you avoid losing user context on handoff?
 "Agentic AI, Tools & MCP",Multi-agent patterns,Critic/validator agent,V3 verified,overview_only_incomplete,no,Can a critic replace deterministic business validation?
 "Agentic AI, Tools & MCP",Multi-agent patterns,Agentic SQL analyst,V3 verified,overview_only_incomplete,no,How would an agent answer why revenue dropped last quarter?
-"Agentic AI, Tools & MCP",MCP & interoperability,MCP server/client,V3 verified,overview_only_incomplete,no,What is an MCP server?
+"Agentic AI, Tools & MCP",MCP & interoperability,MCP server/client,V3 verified,expanded_8_sections_editorial_unverified,yes,What is an MCP server?
 "Agentic AI, Tools & MCP",MCP & interoperability,"MCP tools, resources & prompts",V3 verified,overview_only_incomplete,no,What are the three MCP primitives?
 "Agentic AI, Tools & MCP",MCP & interoperability,Azure/GitHub MCP use,V3 verified,overview_only_incomplete,no,How do you secure an MCP tool connection?
 "Agentic AI, Tools & MCP",MCP & interoperability,Agent-to-Agent (A2A) overview,V3 verified,overview_only_incomplete,no,When would agent-to-agent communication help?
-"Agentic AI, Tools & MCP",Tool safety,Idempotent tool execution,V4 discovered gap,overview_only_incomplete,no,How do you handle timeouts after booking may have already succeeded?
+"Agentic AI, Tools & MCP",Tool safety,Idempotent tool execution,V4 discovered gap,expanded_8_sections_editorial_unverified,yes,How do you handle timeouts after booking may have already succeeded?
 "Agentic AI, Tools & MCP",Tool safety,Tool authorization and least-privilege schemas,V4 discovered gap,overview_only_incomplete,no,Can a system prompt replace authorization checks?
-Azure AI Foundry & Cloud,AI platform,Azure AI Foundry hub vs project,V3 verified,overview_only_incomplete,no,Why separate hubs and projects?
+Azure AI Foundry & Cloud,AI platform,Azure AI Foundry hub vs project,V3 verified,expanded_8_sections_editorial_unverified,yes,Why separate hubs and projects?
 Azure AI Foundry & Cloud,AI platform,Azure OpenAI model deployment,V3 verified,overview_only_incomplete,no,What is a deployment versus a model?
 Azure AI Foundry & Cloud,AI platform,Azure AI Search,V3 verified,overview_only_incomplete,no,Why combine AI Search with Azure OpenAI?
 Azure AI Foundry & Cloud,AI platform,Azure AI-102 exam scope,V3 verified,overview_only_incomplete,no,What Azure services can you explain end-to-end?
 Azure AI Foundry & Cloud,AI platform,PAYG vs provisioned throughput,V3 verified,overview_only_incomplete,no,When would PTU be worth the cost?
-Azure AI Foundry & Cloud,Secure architecture,Entra ID & managed identities,V3 verified,overview_only_incomplete,no,How does an Azure Function reach Key Vault securely?
-Azure AI Foundry & Cloud,Secure architecture,Private endpoint & VNet,V3 verified,overview_only_incomplete,no,How do you secure Azure AI services for banking?
+Azure AI Foundry & Cloud,Secure architecture,Entra ID & managed identities,V3 verified,expanded_8_sections_editorial_unverified,yes,How does an Azure Function reach Key Vault securely?
+Azure AI Foundry & Cloud,Secure architecture,Private endpoint & VNet,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you secure Azure AI services for banking?
 Azure AI Foundry & Cloud,Secure architecture,RBAC & least privilege,V3 verified,overview_only_incomplete,no,How would you scope vector index permissions?
 Azure AI Foundry & Cloud,Secure architecture,API Management gateway,V3 verified,overview_only_incomplete,no,Why put APIM in front of LLM endpoints?
 Azure AI Foundry & Cloud,Secure architecture,Multi-region & failover,V3 verified,overview_only_incomplete,no,What if the AI model region becomes unavailable?
@@ -103,7 +103,7 @@ Banking Voice Assistant,End-to-end voice call,Azure Speech STT,V3 verified,expan
 Banking Voice Assistant,End-to-end voice call,LangGraph/Foundry orchestration,V3 verified,overview_only_incomplete,no,What components decide the next tool?
 Banking Voice Assistant,End-to-end voice call,RAG on policies & FAQs,V3 verified,overview_only_incomplete,no,How do you update the bank policy knowledge base?
 Banking Voice Assistant,End-to-end voice call,Speech TTS & playback,V3 verified,overview_only_incomplete,no,Where does TTS fit in your flow?
-Banking Voice Assistant,Conversation quality,Turn-taking & silence detection,V3 verified,overview_only_incomplete,no,How did you tune silence thresholds?
+Banking Voice Assistant,Conversation quality,Turn-taking & silence detection,V3 verified,expanded_8_sections_editorial_unverified,yes,How did you tune silence thresholds?
 Banking Voice Assistant,Conversation quality,Unique call/thread ID,V3 verified,overview_only_incomplete,no,Why use a unique thread ID per call?
 Banking Voice Assistant,Conversation quality,Greeting once & follow-ups,V3 verified,overview_only_incomplete,no,How do you ensure the greeting occurs only once?
 Banking Voice Assistant,Conversation quality,"STT language, voices & region",V3 verified,overview_only_incomplete,no,Why does voice locale selection matter?
@@ -117,7 +117,7 @@ Banking Voice Assistant,Speech pipeline,Speech recognition browser fallback,V4 d
 Banking Voice Assistant,Speech pipeline,Azure Speech short-lived token broker,V4 discovered gap,overview_only_incomplete,no,How do you avoid placing a Speech subscription key in a static website?
 GenAI Evaluation & Quality Gates,Offline golden dataset,Golden dataset (.jsonl),V3 verified,expanded_8_sections_editorial_unverified,yes,What is a golden dataset?
 GenAI Evaluation & Quality Gates,Offline golden dataset,Azure AI Evaluation SDK,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you run an evaluation batch?
-GenAI Evaluation & Quality Gates,Offline golden dataset,Ragas evaluation,V3 verified,overview_only_incomplete,no,How does Ragas evaluate a RAG pipeline?
+GenAI Evaluation & Quality Gates,Offline golden dataset,Ragas evaluation,V3 verified,expanded_8_sections_editorial_unverified,yes,How does Ragas evaluate a RAG pipeline?
 GenAI Evaluation & Quality Gates,Offline golden dataset,DeepEval,V3 verified,overview_only_incomplete,no,How is DeepEval used in CI?
 GenAI Evaluation & Quality Gates,Offline golden dataset,Automated quality gates,V3 verified,overview_only_incomplete,no,How do you fail Azure DevOps when groundedness is below 4/5?
 GenAI Evaluation & Quality Gates,Offline golden dataset,Regression & adversarial cases,V3 verified,overview_only_incomplete,no,How do you guard against a regression with a new prompt?
@@ -133,9 +133,9 @@ GenAI Evaluation & Quality Gates,Production evaluation,Drift & feedback loop,V3 
 GenAI Evaluation & Quality Gates,Production evaluation,Four-stage eval workflow,V3 verified,overview_only_incomplete,no,Describe your four-stage evaluation process.
 GenAI Evaluation & Quality Gates,Evaluation metrics,LLM judge calibration,V4 discovered gap,overview_only_incomplete,no,What if LLM-as-judge scores disagree with senior reviewers?
 GenAI Evaluation & Quality Gates,Evaluation metrics,Speech + answer end-to-end evaluation,V4 discovered gap,overview_only_incomplete,no,"How do you isolate a voice assistant error to STT, RAG or LLM?"
-Responsible AI & Security,Trust boundaries,Prompt injection,V3 verified,overview_only_incomplete,no,How do you defend against prompt injection in a document?
+Responsible AI & Security,Trust boundaries,Prompt injection,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you defend against prompt injection in a document?
 Responsible AI & Security,Trust boundaries,Hallucinations,V3 verified,overview_only_incomplete,no,How do you reduce hallucinations in RAG?
-Responsible AI & Security,Trust boundaries,PII masking & redaction,V3 verified,overview_only_incomplete,no,What customer data should never enter debug logs?
+Responsible AI & Security,Trust boundaries,PII masking & redaction,V3 verified,expanded_8_sections_editorial_unverified,yes,What customer data should never enter debug logs?
 Responsible AI & Security,Trust boundaries,Content filters & guardrails,V3 verified,overview_only_incomplete,no,What checks belong before and after generation?
 Responsible AI & Security,Trust boundaries,Data access authorization,V3 verified,overview_only_incomplete,no,How do you prevent data leakage with vector retrieval?
 Responsible AI & Security,High-stakes actions,Human approval & confirmation,V3 verified,overview_only_incomplete,no,When should an agent ask for approval?
@@ -149,14 +149,14 @@ Responsible AI & Security,Threat modelling,Indirect prompt injection from retrie
 "Databricks, Spark & Delta Lake",Spark & PySpark,"Partitioning, caching & AQE",V3 verified,overview_only_incomplete,no,What is adaptive query execution?
 "Databricks, Spark & Delta Lake",Spark & PySpark,Spark SQL vs PySpark,V3 verified,overview_only_incomplete,no,When would you use Spark SQL instead of PySpark?
 "Databricks, Spark & Delta Lake",Delta Lake,Delta transaction log & ACID,V3 verified,overview_only_incomplete,no,Why is Delta different from a normal relational table?
-"Databricks, Spark & Delta Lake",Delta Lake,Time travel & RESTORE,V3 verified,overview_only_incomplete,no,How do you recover a deleted Delta table version?
+"Databricks, Spark & Delta Lake",Delta Lake,Time travel & RESTORE,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you recover a deleted Delta table version?
 "Databricks, Spark & Delta Lake",Delta Lake,Schema enforcement & evolution,V3 verified,overview_only_incomplete,no,How do you handle source/destination column mismatch?
 "Databricks, Spark & Delta Lake",Delta Lake,MERGE & incremental updates,V3 verified,overview_only_incomplete,no,How do you implement incremental processing in Delta?
 "Databricks, Spark & Delta Lake",Delta Lake,OPTIMIZE & small files,V3 verified,overview_only_incomplete,no,What does OPTIMIZE do?
 "Databricks, Spark & Delta Lake",Delta Lake,Z-ORDER vs liquid clustering,V3 verified,overview_only_incomplete,no,How does liquid clustering differ from Z-ORDER?
 "Databricks, Spark & Delta Lake",Databricks operations,Job vs all-purpose clusters,V3 verified,overview_only_incomplete,no,How did your team optimize cluster spend?
 "Databricks, Spark & Delta Lake",Databricks operations,Static vs dynamic cluster scaling,V3 verified,overview_only_incomplete,no,How can you identify whether compute autoscaling is enabled?
-"Databricks, Spark & Delta Lake",Databricks operations,Unity Catalog,V3 verified,overview_only_incomplete,no,What changed during Unity Catalog migration?
+"Databricks, Spark & Delta Lake",Databricks operations,Unity Catalog,V3 verified,expanded_8_sections_editorial_unverified,yes,What changed during Unity Catalog migration?
 "Databricks, Spark & Delta Lake",Databricks operations,Lakeflow / declarative pipelines,V3 verified,overview_only_incomplete,no,What is a materialized view in a Spark declarative pipeline?
 "Databricks, Spark & Delta Lake",Databricks operations,Databricks workflows & monitoring,V3 verified,overview_only_incomplete,no,How do you investigate a failed Databricks job?
 "Databricks, Spark & Delta Lake",Databricks operations,Capacity & cost reduction,V3 verified,overview_only_incomplete,no,How would you explain the 27% cost improvement?
@@ -169,11 +169,11 @@ Responsible AI & Security,Threat modelling,Indirect prompt injection from retrie
 "ADF, Data Pipelines & Modelling",Azure Data Factory,Azure Monitor & Log Analytics,V3 verified,overview_only_incomplete,no,How can you find ADF runs taking over 15 minutes?
 "ADF, Data Pipelines & Modelling",Lakehouse & warehousing,"Bronze, Silver & Gold",V3 verified,overview_only_incomplete,no,What is medallion architecture?
 "ADF, Data Pipelines & Modelling",Lakehouse & warehousing,ADLS Gen2 & Synapse,V3 verified,overview_only_incomplete,no,"How do ADF, ADLS, Databricks and Synapse connect?"
-"ADF, Data Pipelines & Modelling",Lakehouse & warehousing,SCD Type 2 vs Type 3,V3 verified,overview_only_incomplete,no,Compare SCD2 and SCD3.
+"ADF, Data Pipelines & Modelling",Lakehouse & warehousing,SCD Type 2 vs Type 3,V3 verified,expanded_8_sections_editorial_unverified,yes,Compare SCD2 and SCD3.
 "ADF, Data Pipelines & Modelling",Lakehouse & warehousing,Dimensional modelling,V3 verified,overview_only_incomplete,no,How would you model quarterly revenue?
 "ADF, Data Pipelines & Modelling",Lakehouse & warehousing,Data quality & reconciliation,V3 verified,overview_only_incomplete,no,How do you reconcile source and destination data?
 "ADF, Data Pipelines & Modelling",Lakehouse & warehousing,Oil refinery ETL project,V3 verified,overview_only_incomplete,no,Give the end-to-end platform architecture.
-"Python, SQL & API Skills",SQL,Joins & anti-joins,V3 verified,overview_only_incomplete,no,How do you find Hive IDs missing in SQL?
+"Python, SQL & API Skills",SQL,Joins & anti-joins,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you find Hive IDs missing in SQL?
 "Python, SQL & API Skills",SQL,Window functions,V3 verified,overview_only_incomplete,no,How would you find the most recent record per account?
 "Python, SQL & API Skills",SQL,"CTEs, GROUP BY & HAVING",V3 verified,overview_only_incomplete,no,How would you compare current and previous quarter revenue?
 "Python, SQL & API Skills",SQL,Parameterized SQL,V3 verified,overview_only_incomplete,no,Why not let an agent run arbitrary SQL?
@@ -188,7 +188,7 @@ Responsible AI & Security,Threat modelling,Indirect prompt injection from retrie
 "LLMOps, Monitoring & CI/CD",Automation & testing,Git & branching strategy,V3 verified,overview_only_incomplete,no,What must pass before an AI deployment merges?
 "LLMOps, Monitoring & CI/CD",Automation & testing,GitHub Actions / Azure DevOps,V3 verified,overview_only_incomplete,no,How do you invoke a RAG eval in CI?
 "LLMOps, Monitoring & CI/CD",Automation & testing,"Unit, integration & golden tests",V3 verified,overview_only_incomplete,no,What tests would you add for a new bank tool?
-"LLMOps, Monitoring & CI/CD",Automation & testing,CI/CD eval threshold,V3 verified,overview_only_incomplete,no,How does a build fail on groundedness below 4/5?
+"LLMOps, Monitoring & CI/CD",Automation & testing,CI/CD eval threshold,V3 verified,expanded_8_sections_editorial_unverified,yes,How does a build fail on groundedness below 4/5?
 "LLMOps, Monitoring & CI/CD",Automation & testing,Configuration & Key Vault,V3 verified,overview_only_incomplete,no,How do you handle service keys in multiple environments?
 "LLMOps, Monitoring & CI/CD",Runtime monitoring,Distributed tracing,V3 verified,overview_only_incomplete,no,How do you trace a bad voice interaction?
 "LLMOps, Monitoring & CI/CD",Runtime monitoring,Token & cost telemetry,V3 verified,overview_only_incomplete,no,How do you monitor token usage?

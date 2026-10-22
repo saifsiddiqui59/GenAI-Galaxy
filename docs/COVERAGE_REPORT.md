@@ -10,8 +10,8 @@
 | New, non-duplicate gap records | 16 | Prior GenAI conversations/resume, added to appropriate chapters |
 | V4 total topics | 246 | Verified unique hierarchical keys |
 | V4 groups | 55 | Includes 10 dedicated gap-audit groups |
-| Expanded eight-section lessons | 19 | Authored in `data/lessons.json`; **not SME verified** |
-| Incomplete eight-section lessons | 227 | Existing topic has only short overview/interview question |
+| Expanded eight-section lessons | 49 | Authored in `data/lessons.json`; **not SME verified** |
+| Incomplete eight-section lessons | 197 | Existing topic has only short overview/interview question |
 | Duplicated chapter/group/topic keys | 0 | Checked by automated test |
 | Complete verified technical coverage | **not established** | Requires a topic-by-topic SME review |
 
