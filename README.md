@@ -1,6 +1,6 @@
 # GenAI Galaxy Adaptive Interview Tutor — V4 local Milestone 4 (GitHub handoff)
 
-**Continue V3 without replacing it.** `V3_REFERENCE.html` preserves the recovered V3 source. The curriculum retains 17 planets, 45 original groups and 230 V3 topics, plus 16 new gap topics. There are now **147 distinct authored eight-part lessons (148 covered topic entries)** and **98 incomplete topic overviews**. The 147 authored lessons have not received expert editorial signoff; see `docs/COVERAGE_REPORT.md`.
+**Continue V3 without replacing it.** `V3_REFERENCE.html` preserves the recovered V3 source. The curriculum retains 17 planets, 45 original groups and 230 V3 topics, plus 16 new gap topics. There are now **157 distinct authored eight-part lessons (158 covered topic entries)** and **88 incomplete topic overviews**. The newest ten lessons remain editorial-unverified. The 147 authored lessons have not received expert editorial signoff; see `docs/COVERAGE_REPORT.md`.
 
 ## Preview (no cloud provisioning)
 

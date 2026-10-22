@@ -50,9 +50,9 @@ RAG & Knowledge Retrieval,RAG metrics,Context precision,V3 verified,expanded_8_s
 RAG & Knowledge Retrieval,RAG metrics,Context recall,V3 verified,expanded_8_sections_editorial_unverified,yes,What does low context recall suggest?
 RAG & Knowledge Retrieval,RAG metrics,Faithfulness,V3 verified,expanded_8_sections_editorial_unverified,yes,How is faithfulness different from factual accuracy?
 RAG & Knowledge Retrieval,RAG metrics,Answer relevance,V3 verified,expanded_8_sections_editorial_unverified,yes,Can an answer be faithful but irrelevant?
-RAG & Knowledge Retrieval,Retrieval & ranking,Embedding model migration & full reindex,V4 discovered gap,overview_only_incomplete,no,What happens when embeddings change but vectors remain old?
-RAG & Knowledge Retrieval,Retrieval & ranking,Reranker latency and recall trade-off,V4 discovered gap,overview_only_incomplete,no,Where do you put reranking and how do you measure its cost?
-RAG & Knowledge Retrieval,RAG lifecycle,Document change detection & tombstones,V4 discovered gap,overview_only_incomplete,no,How do you handle a revised policy without leaving stale snippets?
+RAG & Knowledge Retrieval,Retrieval & ranking,Embedding model migration & full reindex,V4 discovered gap,expanded_8_sections_editorial_unverified,yes,What happens when embeddings change but vectors remain old?
+RAG & Knowledge Retrieval,Retrieval & ranking,Reranker latency and recall trade-off,V4 discovered gap,expanded_8_sections_editorial_unverified,yes,Where do you put reranking and how do you measure its cost?
+RAG & Knowledge Retrieval,RAG lifecycle,Document change detection & tombstones,V4 discovered gap,expanded_8_sections_editorial_unverified,yes,How do you handle a revised policy without leaving stale snippets?
 LangChain & LangGraph,Core graph building blocks,LangChain vs LangGraph,V3 verified,expanded_8_sections_editorial_unverified,yes,When would you choose LangGraph over a simple chain?
 LangChain & LangGraph,Core graph building blocks,Nodes,V3 verified,expanded_8_sections_editorial_unverified,yes,What does a node return?
 LangChain & LangGraph,Core graph building blocks,Edges & conditional edges,V3 verified,expanded_8_sections_editorial_unverified,yes,How does routing based on user intent work?
@@ -69,7 +69,7 @@ LangChain & LangGraph,Hands-on workflows,Critic/reviewer node,V3 verified,expand
 LangChain & LangGraph,Hands-on workflows,Subgraph & multi-agent handoff,V3 verified,expanded_8_sections_editorial_unverified,yes,When is a subgraph preferable to another agent?
 "Agentic AI, Tools & MCP",Tool use,Tool calling lifecycle,V3 verified,expanded_8_sections_editorial_unverified,yes,Explain tool calling in one minute.
 "Agentic AI, Tools & MCP",Tool use,Function schema & validation,V3 verified,expanded_8_sections_editorial_unverified,yes,Can the model be trusted to provide valid account IDs?
-"Agentic AI, Tools & MCP",Tool use,ReAct agent loop,V3 verified,overview_only_incomplete,no,How do you prevent infinite loops?
+"Agentic AI, Tools & MCP",Tool use,ReAct agent loop,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you prevent infinite loops?
 "Agentic AI, Tools & MCP",Tool use,Stateful vs stateless agents,V3 verified,expanded_8_sections_editorial_unverified,yes,What should persist between voice turns?
 "Agentic AI, Tools & MCP",Tool use,Bank tools,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you combine two tool actions in one request?
 "Agentic AI, Tools & MCP",Multi-agent patterns,Router agent,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you separate banking FAQ from transactions?
@@ -85,13 +85,13 @@ LangChain & LangGraph,Hands-on workflows,Subgraph & multi-agent handoff,V3 verif
 "Agentic AI, Tools & MCP",Tool safety,Tool authorization and least-privilege schemas,V4 discovered gap,expanded_8_sections_editorial_unverified,yes,Can a system prompt replace authorization checks?
 Azure AI Foundry & Cloud,AI platform,Azure AI Foundry hub vs project,V3 verified,expanded_8_sections_editorial_unverified,yes,Why separate hubs and projects?
 Azure AI Foundry & Cloud,AI platform,Azure OpenAI model deployment,V3 verified,overview_only_incomplete,no,What is a deployment versus a model?
-Azure AI Foundry & Cloud,AI platform,Azure AI Search,V3 verified,overview_only_incomplete,no,Why combine AI Search with Azure OpenAI?
+Azure AI Foundry & Cloud,AI platform,Azure AI Search,V3 verified,expanded_8_sections_editorial_unverified,yes,Why combine AI Search with Azure OpenAI?
 Azure AI Foundry & Cloud,AI platform,Azure AI-102 exam scope,V3 verified,overview_only_incomplete,no,What Azure services can you explain end-to-end?
 Azure AI Foundry & Cloud,AI platform,PAYG vs provisioned throughput,V3 verified,overview_only_incomplete,no,When would PTU be worth the cost?
 Azure AI Foundry & Cloud,Secure architecture,Entra ID & managed identities,V3 verified,expanded_8_sections_editorial_unverified,yes,How does an Azure Function reach Key Vault securely?
 Azure AI Foundry & Cloud,Secure architecture,Private endpoint & VNet,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you secure Azure AI services for banking?
 Azure AI Foundry & Cloud,Secure architecture,RBAC & least privilege,V3 verified,overview_only_incomplete,no,How would you scope vector index permissions?
-Azure AI Foundry & Cloud,Secure architecture,API Management gateway,V3 verified,overview_only_incomplete,no,Why put APIM in front of LLM endpoints?
+Azure AI Foundry & Cloud,Secure architecture,API Management gateway,V3 verified,expanded_8_sections_editorial_unverified,yes,Why put APIM in front of LLM endpoints?
 Azure AI Foundry & Cloud,Secure architecture,Multi-region & failover,V3 verified,overview_only_incomplete,no,What if the AI model region becomes unavailable?
 Azure AI Foundry & Cloud,Serverless & hosting,Azure Functions,V3 verified,overview_only_incomplete,no,Why choose Functions for booking or account APIs?
 Azure AI Foundry & Cloud,Serverless & hosting,Container Apps & WebSockets,V3 verified,overview_only_incomplete,no,Why use Container Apps for a voice stream?
@@ -118,16 +118,16 @@ Banking Voice Assistant,Speech pipeline,Azure Speech short-lived token broker,V4
 GenAI Evaluation & Quality Gates,Offline golden dataset,Golden dataset (.jsonl),V3 verified,expanded_8_sections_editorial_unverified,yes,What is a golden dataset?
 GenAI Evaluation & Quality Gates,Offline golden dataset,Azure AI Evaluation SDK,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you run an evaluation batch?
 GenAI Evaluation & Quality Gates,Offline golden dataset,Ragas evaluation,V3 verified,expanded_8_sections_editorial_unverified,yes,How does Ragas evaluate a RAG pipeline?
-GenAI Evaluation & Quality Gates,Offline golden dataset,DeepEval,V3 verified,overview_only_incomplete,no,How is DeepEval used in CI?
+GenAI Evaluation & Quality Gates,Offline golden dataset,DeepEval,V3 verified,expanded_8_sections_editorial_unverified,yes,How is DeepEval used in CI?
 GenAI Evaluation & Quality Gates,Offline golden dataset,Automated quality gates,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you fail Azure DevOps when groundedness is below 4/5?
-GenAI Evaluation & Quality Gates,Offline golden dataset,Regression & adversarial cases,V3 verified,overview_only_incomplete,no,How do you guard against a regression with a new prompt?
+GenAI Evaluation & Quality Gates,Offline golden dataset,Regression & adversarial cases,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you guard against a regression with a new prompt?
 GenAI Evaluation & Quality Gates,Metric interpretation,Groundedness,V3 verified,expanded_8_sections_editorial_unverified,yes,Does groundedness need to run on every answer?
 GenAI Evaluation & Quality Gates,Metric interpretation,Faithfulness vs truthfulness,V3 verified,expanded_8_sections_editorial_unverified,yes,Can an answer be faithful but factually wrong?
 GenAI Evaluation & Quality Gates,Metric interpretation,Relevance vs coherence,V3 verified,expanded_8_sections_editorial_unverified,yes,Can a response be coherent but irrelevant?
 GenAI Evaluation & Quality Gates,Metric interpretation,Semantic similarity,V3 verified,expanded_8_sections_editorial_unverified,yes,Why is exact string match often too strict?
 GenAI Evaluation & Quality Gates,Metric interpretation,Tool-call accuracy & task success,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you evaluate appointment booking success?
 GenAI Evaluation & Quality Gates,Production evaluation,Trace sampling,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you select production traces?
-GenAI Evaluation & Quality Gates,Production evaluation,LLM-as-judge cost,V3 verified,overview_only_incomplete,no,Would you evaluate every production response?
+GenAI Evaluation & Quality Gates,Production evaluation,LLM-as-judge cost,V3 verified,expanded_8_sections_editorial_unverified,yes,Would you evaluate every production response?
 GenAI Evaluation & Quality Gates,Production evaluation,Human scoring,V3 verified,expanded_8_sections_editorial_unverified,yes,What if no Azure evaluation service is available?
 GenAI Evaluation & Quality Gates,Production evaluation,Drift & feedback loop,V3 verified,expanded_8_sections_editorial_unverified,yes,Users report wrong answers: what do you debug first?
 GenAI Evaluation & Quality Gates,Production evaluation,Four-stage eval workflow,V3 verified,expanded_8_sections_editorial_unverified,yes,Describe your four-stage evaluation process.
@@ -138,7 +138,7 @@ Responsible AI & Security,Trust boundaries,Hallucinations,V3 verified,expanded_8
 Responsible AI & Security,Trust boundaries,PII masking & redaction,V3 verified,expanded_8_sections_editorial_unverified,yes,What customer data should never enter debug logs?
 Responsible AI & Security,Trust boundaries,Content filters & guardrails,V3 verified,expanded_8_sections_editorial_unverified,yes,What checks belong before and after generation?
 Responsible AI & Security,Trust boundaries,Data access authorization,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you prevent data leakage with vector retrieval?
-Responsible AI & Security,High-stakes actions,Human approval & confirmation,V3 verified,overview_only_incomplete,no,When should an agent ask for approval?
+Responsible AI & Security,High-stakes actions,Human approval & confirmation,V3 verified,expanded_8_sections_editorial_unverified,yes,When should an agent ask for approval?
 Responsible AI & Security,High-stakes actions,Audit logs & provenance,V3 verified,overview_only_incomplete,no,How would you make an answer auditable?
 Responsible AI & Security,High-stakes actions,Tenant isolation & RBAC,V3 verified,overview_only_incomplete,no,How do you test tenant separation?
 Responsible AI & Security,High-stakes actions,Financial compliance & fallback,V3 verified,overview_only_incomplete,no,What happens if a financial policy is unknown?

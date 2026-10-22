@@ -20,6 +20,19 @@ class CurriculumTest(unittest.TestCase):
     self.assertGreaterEqual(len(value['workflow']),3)
     self.assertGreaterEqual(len(value['mistakes']),2)
     self.assertGreaterEqual(len(value['followups']),2)
+ def test_m11_ten_topic_specific_lessons(self):
+  required=["Embedding model migration & full reindex","Reranker latency and recall trade-off","Document change detection & tombstones","ReAct agent loop","Azure AI Search","API Management gateway","DeepEval","Regression & adversarial cases","LLM-as-judge cost","Human approval & confirmation"]
+  self.assertEqual(len(required),10)
+  for title in required:
+   with self.subTest(topic=title):
+    self.assertIn(title,self.l)
+    lesson=self.l[title]
+    self.assertEqual(lesson['depth_status'],'expanded_editorial_unverified')
+    self.assertGreaterEqual(len(lesson['answer'].split()),60)
+    self.assertLessEqual(len(lesson['answer'].split()),140)
+    self.assertGreaterEqual(len(lesson['workflow']),4)
+    self.assertFalse(any('pending editorial' in str(value).lower() for value in lesson.values()))
+    self.assertEqual(len(set(lesson['keywords'])),len(lesson['keywords']))
  def test_topic_questions(self):
   for a,b,c,i in self.rows:
    with self.subTest(topic=c): self.assertTrue(i['summary'].strip() and i['question'].strip())
