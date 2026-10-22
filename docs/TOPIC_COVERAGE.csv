@@ -84,18 +84,18 @@ LangChain & LangGraph,Hands-on workflows,Subgraph & multi-agent handoff,V3 verif
 "Agentic AI, Tools & MCP",Tool safety,Idempotent tool execution,V4 discovered gap,expanded_8_sections_editorial_unverified,yes,How do you handle timeouts after booking may have already succeeded?
 "Agentic AI, Tools & MCP",Tool safety,Tool authorization and least-privilege schemas,V4 discovered gap,expanded_8_sections_editorial_unverified,yes,Can a system prompt replace authorization checks?
 Azure AI Foundry & Cloud,AI platform,Azure AI Foundry hub vs project,V3 verified,expanded_8_sections_editorial_unverified,yes,Why separate hubs and projects?
-Azure AI Foundry & Cloud,AI platform,Azure OpenAI model deployment,V3 verified,overview_only_incomplete,no,What is a deployment versus a model?
+Azure AI Foundry & Cloud,AI platform,Azure OpenAI model deployment,V3 verified,expanded_8_sections_editorial_unverified,yes,What is a deployment versus a model?
 Azure AI Foundry & Cloud,AI platform,Azure AI Search,V3 verified,expanded_8_sections_editorial_unverified,yes,Why combine AI Search with Azure OpenAI?
 Azure AI Foundry & Cloud,AI platform,Azure AI-102 exam scope,V3 verified,overview_only_incomplete,no,What Azure services can you explain end-to-end?
-Azure AI Foundry & Cloud,AI platform,PAYG vs provisioned throughput,V3 verified,overview_only_incomplete,no,When would PTU be worth the cost?
+Azure AI Foundry & Cloud,AI platform,PAYG vs provisioned throughput,V3 verified,expanded_8_sections_editorial_unverified,yes,When would PTU be worth the cost?
 Azure AI Foundry & Cloud,Secure architecture,Entra ID & managed identities,V3 verified,expanded_8_sections_editorial_unverified,yes,How does an Azure Function reach Key Vault securely?
 Azure AI Foundry & Cloud,Secure architecture,Private endpoint & VNet,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you secure Azure AI services for banking?
-Azure AI Foundry & Cloud,Secure architecture,RBAC & least privilege,V3 verified,overview_only_incomplete,no,How would you scope vector index permissions?
+Azure AI Foundry & Cloud,Secure architecture,RBAC & least privilege,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you scope vector index permissions?
 Azure AI Foundry & Cloud,Secure architecture,API Management gateway,V3 verified,expanded_8_sections_editorial_unverified,yes,Why put APIM in front of LLM endpoints?
-Azure AI Foundry & Cloud,Secure architecture,Multi-region & failover,V3 verified,overview_only_incomplete,no,What if the AI model region becomes unavailable?
-Azure AI Foundry & Cloud,Serverless & hosting,Azure Functions,V3 verified,overview_only_incomplete,no,Why choose Functions for booking or account APIs?
-Azure AI Foundry & Cloud,Serverless & hosting,Container Apps & WebSockets,V3 verified,overview_only_incomplete,no,Why use Container Apps for a voice stream?
-Azure AI Foundry & Cloud,Serverless & hosting,"ADLS, Key Vault & secrets",V3 verified,overview_only_incomplete,no,What is the secure way to read AKV secrets in Databricks?
+Azure AI Foundry & Cloud,Secure architecture,Multi-region & failover,V3 verified,expanded_8_sections_editorial_unverified,yes,What if the AI model region becomes unavailable?
+Azure AI Foundry & Cloud,Serverless & hosting,Azure Functions,V3 verified,expanded_8_sections_editorial_unverified,yes,Why choose Functions for booking or account APIs?
+Azure AI Foundry & Cloud,Serverless & hosting,Container Apps & WebSockets,V3 verified,expanded_8_sections_editorial_unverified,yes,Why use Container Apps for a voice stream?
+Azure AI Foundry & Cloud,Serverless & hosting,"ADLS, Key Vault & secrets",V3 verified,expanded_8_sections_editorial_unverified,yes,What is the secure way to read AKV secrets in Databricks?
 Azure AI Foundry & Cloud,Serverless & hosting,AWS vs Azure comparison,V3 verified,overview_only_incomplete,no,How would your architecture change on AWS?
 Banking Voice Assistant,End-to-end voice call,Call entry & Azure Communication Services,V3 verified,expanded_8_sections_editorial_unverified,yes,Explain the path from telephone to agent.
 Banking Voice Assistant,End-to-end voice call,WebSocket audio streaming,V3 verified,expanded_8_sections_editorial_unverified,yes,Why does streaming help latency?
@@ -139,9 +139,9 @@ Responsible AI & Security,Trust boundaries,PII masking & redaction,V3 verified,e
 Responsible AI & Security,Trust boundaries,Content filters & guardrails,V3 verified,expanded_8_sections_editorial_unverified,yes,What checks belong before and after generation?
 Responsible AI & Security,Trust boundaries,Data access authorization,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you prevent data leakage with vector retrieval?
 Responsible AI & Security,High-stakes actions,Human approval & confirmation,V3 verified,expanded_8_sections_editorial_unverified,yes,When should an agent ask for approval?
-Responsible AI & Security,High-stakes actions,Audit logs & provenance,V3 verified,overview_only_incomplete,no,How would you make an answer auditable?
-Responsible AI & Security,High-stakes actions,Tenant isolation & RBAC,V3 verified,overview_only_incomplete,no,How do you test tenant separation?
-Responsible AI & Security,High-stakes actions,Financial compliance & fallback,V3 verified,overview_only_incomplete,no,What happens if a financial policy is unknown?
+Responsible AI & Security,High-stakes actions,Audit logs & provenance,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you make an answer auditable?
+Responsible AI & Security,High-stakes actions,Tenant isolation & RBAC,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you test tenant separation?
+Responsible AI & Security,High-stakes actions,Financial compliance & fallback,V3 verified,expanded_8_sections_editorial_unverified,yes,What happens if a financial policy is unknown?
 Responsible AI & Security,Threat modelling,Indirect prompt injection from retrieved documents,V4 discovered gap,expanded_8_sections_editorial_unverified,yes,What if a policy PDF instructs the agent to leak an account balance?
 "Databricks, Spark & Delta Lake",Spark & PySpark,"Driver, executors & partitions",V3 verified,expanded_8_sections_editorial_unverified,yes,Explain Spark execution at a high level.
 "Databricks, Spark & Delta Lake",Spark & PySpark,Lazy evaluation & DAG,V3 verified,expanded_8_sections_editorial_unverified,yes,Why does a PySpark transformation not run immediately?

@@ -33,6 +33,20 @@ class CurriculumTest(unittest.TestCase):
     self.assertGreaterEqual(len(lesson['workflow']),4)
     self.assertFalse(any('pending editorial' in str(value).lower() for value in lesson.values()))
     self.assertEqual(len(set(lesson['keywords'])),len(lesson['keywords']))
+ def test_m12_azure_security_lessons(self):
+  titles=["Azure OpenAI model deployment","PAYG vs provisioned throughput","RBAC & least privilege","Multi-region & failover","Azure Functions","Container Apps & WebSockets","ADLS, Key Vault & secrets","Audit logs & provenance","Tenant isolation & RBAC","Financial compliance & fallback"]
+  self.assertEqual(len(titles),10)
+  for title in titles:
+   with self.subTest(topic=title):
+    lesson=self.l[title]
+    self.assertEqual(lesson['depth_status'],'expanded_editorial_unverified')
+    self.assertGreaterEqual(len(lesson['technical']),150)
+    self.assertGreaterEqual(len(lesson['answer'].split()),60)
+    self.assertLessEqual(len(lesson['answer'].split()),140)
+    self.assertGreaterEqual(len(lesson['workflow']),5)
+    self.assertGreaterEqual(len(lesson['mistakes']),3)
+    self.assertGreaterEqual(len(lesson['followups']),2)
+  self.assertEqual(sum(t in self.l for _,_,t,_ in self.rows),168)
  def test_topic_questions(self):
   for a,b,c,i in self.rows:
    with self.subTest(topic=c): self.assertTrue(i['summary'].strip() and i['question'].strip())
