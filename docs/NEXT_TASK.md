@@ -51,3 +51,8 @@
 
 - After M8 lands and M9 CI passes, manually test Chrome/Edge microphone permission allow/deny, interim/final transcript edits, rapid start/stop, navigation and sign-out on the real HTTPS site after an approved static deploy.
 - Browser-native recognition remains dependent on browser provider/remote processing. Azure fallback remains disabled until a secured authenticated HTTPS broker and quota gateway are approved and deployed.
+
+## M11 coverage continuation
+
+- After the ten-topic editorial PR is reviewed and CI passes, remaining scope is **88 overview-only topic entries**, plus domain expert/source verification for all expanded lessons and spoken-answer timing checks. Do not claim complete verified curriculum merely from eight sections.
+- Continue authored batches by domain, preserving original topic IDs, regenerating `api/rubrics.json` and `docs/TOPIC_COVERAGE.csv` via the existing scripts, and enforcing regression tests.
