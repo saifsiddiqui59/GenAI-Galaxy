@@ -24,7 +24,7 @@ log = pathlib.Path(os.environ['MOCK_AZ_LOG'])
 with log.open('a') as file:
     file.write(json.dumps({'command': args}) + '\\n')
 if args[:3] == ['storage', 'account', 'show']:
-    print('/subscriptions/mock/resourceGroups/GenAI_Galaxy/providers/Microsoft.Storage/storageAccounts/galaxywebdev1')
+    print('/subscriptions/mock/resourceGroups/GenAI_Galaxy/providers/Microsoft.Storage/storageAccounts/gengalaxy1429841605')
 elif args[:3] == ['storage', 'blob', 'service-properties']:
     print(os.environ.get('MOCK_STATIC_ENABLED','true'))
 elif args[:3] == ['storage', 'blob', 'upload-batch']:
@@ -39,7 +39,7 @@ else:
 
 
 class AzureStaticDeployTest(unittest.TestCase):
-    def run_script(self, *, rg='GenAI_Galaxy', storage='galaxywebdev1', enabled='true'):
+    def run_script(self, *, rg='GenAI_Galaxy', storage='gengalaxy1429841605', enabled='true'):
         with tempfile.TemporaryDirectory() as temp:
             binpath = Path(temp)
             az = binpath / 'az'
@@ -69,6 +69,12 @@ class AzureStaticDeployTest(unittest.TestCase):
         result, operations = self.run_script(rg='RetailGrowthAI')
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(operations, [])
+
+    def test_other_valid_storage_account_refused_before_azure(self):
+        result, operations = self.run_script(storage='othersite1234')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertEqual(operations, [])
+        self.assertIn('not the owner-approved existing', result.stderr)
 
     def test_invalid_storage_name_cannot_touch_azure(self):
         result, operations = self.run_script(storage='GenAI_Galaxy')

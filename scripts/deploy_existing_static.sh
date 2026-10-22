@@ -13,6 +13,11 @@ if [[ ! "$GALAXY_AZ_STORAGE" =~ ^[a-z0-9]{3,24}$ ]]; then
   echo 'Invalid Storage account name: 3-24 lowercase alphanumeric characters required.' >&2
   exit 2
 fi
+# Never target another storage account, even within the same resource group.
+if [[ "$GALAXY_AZ_STORAGE" != 'gengalaxy1429841605' ]]; then
+  echo 'Refusing upload: not the owner-approved existing GenAI-Galaxy static account.' >&2
+  exit 2
+fi
 command -v az >/dev/null || { echo 'Azure CLI required.' >&2; exit 2; }
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
