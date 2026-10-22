@@ -87,14 +87,90 @@ async function retryExtractDoc(id){
   await loadDocuments();render();notify('Document text extracted; draft questions are ready');
  }catch(err){notify('Document remains private; extraction failed: '+(err.message||'unknown'));if(button){button.disabled=false;button.textContent='Retry extraction'}}
 }
-async function loadDocuments(){if(!state.client||!state.user)return;const {data,error}=await state.client.from('genai_study_documents').select('id,title,category,body,filename,file_path,mime,created_at').order('created_at',{ascending:false}).limit(200);if(error){notify('Document list unavailable: '+error.message);return}state.documents=data||[]}
-async function deleteDoc(id){const d=state.documents.find(d=>d.id===id);if(!d||!window.confirm(`Permanently delete ${d.title}?`))return;const {error}=await state.client.from('genai_study_documents').delete().eq('id',id);if(error){notify('Delete failed: '+error.message);return}if(d.file_path){const {error:fileError}=await state.client.storage.from('genai-study-docs').remove([d.file_path]);if(fileError)notify('Metadata deleted, but file removal failed: '+fileError.message)}await loadDocuments();render()}
+async function loadDocuments(){
+ if(!state.client||!state.user||state.isGuest)return;
+ const userId=state.user.id,epoch=authEpoch;
+ const {data,error}=await state.client.from('genai_study_documents')
+  .select('id,user_id,title,category,body,filename,file_path,mime,created_at')
+  .eq('user_id',userId).order('created_at',{ascending:false}).limit(200);
+ if(epoch!==authEpoch||state.user?.id!==userId||state.isGuest)return;
+ if(error){notify('Document list unavailable: '+error.message);return}
+ if((data||[]).some(d=>d.user_id!==userId||(d.file_path&&!d.file_path.startsWith(userId+'/')))){
+  state.documents=[];notify('Rejected unexpected document ownership');return;
+ }
+ state.documents=data||[];
+}
+async function deleteDoc(id){
+ const userId=state.user?.id,epoch=authEpoch;
+ const d=state.documents.find(d=>d.id===id&&d.user_id===userId);
+ if(!userId||state.isGuest||!d||!window.confirm(`Permanently delete ${d.title}?`))return;
+ if(d.file_path&&!d.file_path.startsWith(userId+'/'))return notify('Rejected unexpected document path');
+ const {error}=await state.client.from('genai_study_documents').delete().eq('id',id).eq('user_id',userId);
+ if(epoch!==authEpoch||state.user?.id!==userId)return;
+ if(error){notify('Delete failed: '+error.message);return}
+ if(d.file_path){const {error:fileError}=await state.client.storage.from('genai-study-docs').remove([d.file_path]);if(fileError)notify('Metadata deleted, but file removal failed: '+fileError.message)}
+ await loadDocuments();if(epoch===authEpoch)render();
+}
 function draftDocumentQuestions(id){const doc=state.documents.find(d=>d.id===id);if(!doc?.body)return;const lines=doc.body.split(/[\n.!?]+/).map(x=>x.trim()).filter(x=>x.length>35).slice(0,8);DOM('vault-questions').innerHTML=`<div class="content-block"><h3>Source-based draft questions · ${escapeHtml(doc.title)}</h3><p class="footnote">These prompts are mechanically derived from your uploaded text, not model-verified lessons.</p><ol>${lines.map(l=>`<li>Explain the following from your document and give an example: “${escapeHtml(l.slice(0,160))}”</li>`).join('')}</ol></div>`}
 function authOpen(){DOM('auth-modal').classList.remove('is-hidden');DOM('auth-email').focus()}
 function authClose(){DOM('auth-modal').classList.add('is-hidden');DOM('auth-message').textContent=''}
 let creatingAccount=false;
-async function signedIn(user){if(state.user?.id===user.id&&!state.isGuest)return;const {data,error}=await state.client.from('genai_study_progress').select('topic_key,status,confidence,note,last_reviewed_at,next_review_at').limit(5000);if(error){notify('Sign-in succeeded, progress sync blocked: '+error.message);return}const hist=await state.client.from('genai_study_attempts').select('topic_key,question_key,level,correct,response,feedback,created_at').order('created_at',{ascending:false}).limit(500);if(hist.error){notify('Attempt history unavailable: '+hist.error.message);return}state.progress=Object.fromEntries((data||[]).map(p=>[p.topic_key,p]));state.attempts=hist.data||[];state.user=user;state.isGuest=false;await loadDocuments();authClose();render();notify('Signed in · private study data loaded')}
-async function initAuth(){try{const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm');state.client=createClient(SB_URL,SB_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});state.client.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_OUT'){setTimeout(()=>{state.user=null;state.isGuest=true;state.documents=[];loadGuest();render()},0)}else if(event==='SIGNED_IN'&&session?.user&&state.isGuest){setTimeout(()=>signedIn(session.user),0)}});const {data}=await state.client.auth.getUser();if(data?.user)await signedIn(data.user)}catch(e){console.warn('Supabase client unavailable; guest-only study mode',e)}}
+let authEpoch=0; // Invalidates any in-flight reads when identity changes.
+function resetAuthToGuest(){
+ authEpoch++;
+ state.user=null;state.isGuest=true;state.documents=[];
+ loadGuest();render();
+}
+async function signedIn(user){
+ if(!user?.id||!state.client)return;
+ if(state.user?.id===user.id&&!state.isGuest)return;
+ const userId=user.id,epoch=++authEpoch;
+ const current=()=>authEpoch===epoch;
+ // Never display an earlier account's private records during a user switch.
+ if(state.user?.id&&state.user.id!==userId){
+  state.user=null;state.isGuest=true;state.documents=[];loadGuest();render();
+ }
+ try{
+  const {data,error}=await state.client.from('genai_study_progress')
+   .select('user_id,topic_key,status,confidence,note,last_reviewed_at,next_review_at')
+   .eq('user_id',userId).limit(5000);
+  if(!current())return;
+  if(error)throw Error('Progress query failed: '+error.message);
+  const hist=await state.client.from('genai_study_attempts')
+   .select('user_id,topic_key,question_key,level,correct,response,feedback,created_at')
+   .eq('user_id',userId).order('created_at',{ascending:false}).limit(500);
+  if(!current())return;
+  if(hist.error)throw Error('Attempt query failed: '+hist.error.message);
+  const docs=await state.client.from('genai_study_documents')
+   .select('id,user_id,title,category,body,filename,file_path,mime,created_at')
+   .eq('user_id',userId).order('created_at',{ascending:false}).limit(200);
+  if(!current())return;
+  if(docs.error)throw Error('Document query failed: '+docs.error.message);
+  if([...(data||[]),...(hist.data||[]),...(docs.data||[])].some(row=>row.user_id!==userId)
+   ||(docs.data||[]).some(d=>d.file_path&&!d.file_path.startsWith(userId+'/')))
+   throw Error('Unexpected data ownership');
+  state.progress=Object.fromEntries((data||[]).map(p=>[p.topic_key,p]));
+  state.attempts=hist.data||[];state.documents=docs.data||[];
+  state.user=user;state.isGuest=false;
+  authClose();render();notify('Signed in · private study data loaded');
+ }catch(err){if(current())notify('Private sync unavailable: '+(err.message||'unknown error'))}
+}
+async function initAuth(){
+ try{
+  const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm');
+  state.client=createClient(SB_URL,SB_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  state.client.auth.onAuthStateChange((event,session)=>{
+   if(event==='SIGNED_OUT'){resetAuthToGuest();return}
+   if((event==='INITIAL_SESSION'||event==='SIGNED_IN')&&session?.user){
+    const epoch=authEpoch;
+    setTimeout(()=>{if(epoch===authEpoch)void signedIn(session.user)},0);
+   }
+  });
+  const epoch=authEpoch;
+  const {data}=await state.client.auth.getUser();
+  if(data?.user&&authEpoch===epoch)await signedIn(data.user);
+ }catch(e){console.warn('Supabase client unavailable; guest-only study mode',e)}
+}
 async function authSubmit(e){e.preventDefault();if(!state.client){DOM('auth-message').textContent='Supabase SDK unavailable. Open the app through HTTPS with network access.';return}const email=DOM('auth-email').value.trim(),password=DOM('auth-password').value;DOM('auth-submit').disabled=true;DOM('auth-message').textContent='';try{const r=creatingAccount?await state.client.auth.signUp({email,password}):await state.client.auth.signInWithPassword({email,password});if(r.error)throw r.error;if(r.data?.session?.user)await signedIn(r.data.user);else DOM('auth-message').textContent='Check your email to confirm your account.'}catch(err){DOM('auth-message').textContent=err.message||'Authentication failed'}finally{DOM('auth-submit').disabled=false}}
 async function start(){try{const [cr,lr]=await Promise.all([fetch('data/curriculum.json'),fetch('data/lessons.json')]);if(!cr.ok||!lr.ok)throw Error('Could not load study data');state.subjects=await cr.json();state.lessons=await lr.json();state.subjects.forEach((ch,ci)=>ch.groups.forEach(group=>group.items.forEach(t=>state.topics.push({...t,branch:ch.title,group:group.title,phase:ch.phase,branchIndex:ci}))));if(state.subjects.length!==17||state.topics.length<230)throw Error('V3 curriculum integrity check failed');loadGuest();state.current=pickNext();DOM('motion-toggle').checked=state.motion;DOM('motion-toggle').onchange=e=>{state.motion=e.target.checked;paintStars(performance.now());positionPlanets(performance.now())};DOM('signin-btn').onclick=async()=>{if(state.isGuest)authOpen();else if(window.confirm('Sign out of your study account?')){const {error}=await state.client.auth.signOut();if(error)notify(error.message)}};DOM('auth-form').onsubmit=authSubmit;DOM('auth-switch').onclick=()=>{creatingAccount=!creatingAccount;DOM('auth-title').textContent=creatingAccount?'Create your explorer account':'Welcome back, explorer.';DOM('auth-submit').textContent=creatingAccount?'Create account':'Sign in';DOM('auth-switch').textContent=creatingAccount?'I already have an account':'Create an account'};DOM('close-modal').onclick=authClose;DOM('auth-modal').onclick=e=>{if(e.target===DOM('auth-modal'))authClose()};addEventListener('resize',()=>{drawStars();positionPlanets(performance.now())});drawStars();setView('galaxy');state.galaxyFrame=requestAnimationFrame(cycle);initAuth()}catch(err){DOM('root').innerHTML=`<section class="panel"><h2>Unable to initialize study data</h2><p>${escapeHtml(err.message)}</p><p>Serve this folder over HTTP: <code>python -m http.server 8000</code>. Do not open index.html via file://.</p></section>`;console.error(err)}}
 window.GenAIGalaxyTest={evaluateAnswer,adaptiveQuestion,questionFor,key,getStats,positionPlanets};
