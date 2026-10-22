@@ -98,3 +98,9 @@
 - Treat [PR #31](https://github.com/saifsiddiqui59/GenAI-Galaxy/pull/31) as the completed structural editorial scope: 66 new distinct eight-section lessons; 246/246 covered topic entries; 245 unique lesson keys, 0 incomplete. Existing original 230 topic IDs and 17 planets preserved. All 245 answers have approximate 60–140-word written length, which **does not** prove spoken timing, factual correctness or SME signoff.
 - Release process remains **separately owner-approved** for Azure static hosting, Azure backend infrastructure, real Supabase auth/RLS fixture writes and microphone/provider checks; project-level source development permission alone does not bypass these gates.
 - Continue tracking actual CI result attached to each merge commit; main run #39843350678 passed all three jobs for P3 content integration. Public repository sources are separate from existing deployed Blob files and private Supabase data.
+
+## P4 — do not confuse previous hosted smoke with release parity
+
+- Broad owner permission to pursue remaining Galaxy work does not manufacture dedicated authentication credentials, actual device microphone access, subscription budget limits or a GitHub workflow-dispatch capability. Preserve protected manual `DEPLOY`/`TEST` gates and existing-only Azure storage targeting rather than changing CI to auto-deploy.
+- A hosted HTTP 200 or guest navigation pass is insufficient to claim P3 deployment. Require exact SHA-256 parity for all seven allowlisted public files against the selected main checkout plus 17 worlds/245 unique hosted lessons/246 mapped topics. No cloud launch is claimed from P4 source commits.
+- No changes to unrelated objects in shared Supabase project; catalog verification is safe read-only evidence, not live user-isolation proof.
