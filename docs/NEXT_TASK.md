@@ -1,15 +1,8 @@
-# Next Tasks — M4
+# Next Tasks — M5
 
-1. **Content:** Hand-author and technically review the remaining 98 incomplete topic entries. Update 19 shorter 30–60-second model answers, test spoken response times and add expert references. Verify missing historical transcripts/files when supplied; no false claim of exhaustive audit.
-2. **Remote Git/CI:** Create or grant access to a **new private** `saifsiddiqui59/GenAI-Galaxy` repository; publish saved local Git commits as small PRs and verify actual Actions run IDs before merging. The current connector cannot create repositories and the requested name returns 404.
-3. **Supabase live RLS:** Create two isolated test users and test signed-in progress, attempt rows, own-private uploads and denied cross-user access. No cross-user production data or schemas should be altered without approval.
-4. **Azure staging (approval required):** Explicitly approve new Azure RG/storage/API budget, APIM per-user quotas, function ingress restrictions, managed secret provisioning, security scanning/quarantine and logging. An internal header alone is insufficient. Set private env vars only after these controls work.
-5. **Real-world validation:** Test microphone permissions/accents, Azure Speech token expiry, model-judge calibration against human-labeled answers, PDFs with tables/scans, DOCX malware response, web accessibility and performance on real browsers.
-6. **Knowledge Vault:** Add malware scanning and asynchronous extraction status before production; OCR only if approved, plus evidence-linked lesson generation and user retention controls.
+1. Create empty **private** `saifsiddiqui59/GenAI-Galaxy`; connected GitHub has no create-repository action and repo returns 404. Publish prepared Git branches from local ZIP using Git Bash and helper. Review and merge PRs only after **real** green GitHub Actions results.
+2. Follow `docs/AZURE_GITHUB_OIDC.md`: add protected `dev` environment, three AZURE_* identifiers, federated credential on Azure app **GenAI_Galaxy** using actual immutable repo ID, and narrow Reader on existing Azure RG **GenAI_Galaxy**. Run read-only manual verification; inspect logs. Do not copy RetailGrowthAI's trust.
+3. For optional static-site release, identify actual Azure Storage account (cannot be `GenAI_Galaxy`, an invalid Storage name), configure `GALAXY_STORAGE_ACCOUNT`, grant only that Storage account Blob Data Contributor and explicitly invoke manual `DEPLOY` after approved review. No auto-provision/deploy.
+4. Continue 98 overview-only lessons, manual content QA, live auth/voice/tenant-isolation testing, frontend API gateway setup and safe document pipeline. Do not label prototype production-ready.
 
-## M4 GitHub handoff
-
-1. Use the steps in `docs/GITHUB_WORKFLOW.md` to create the empty **private** `saifsiddiqui59/GenAI-Galaxy` remote with GitHub CLI, or create it in the GitHub web UI and reconnect ChatGPT. No existing RetailGrowthAI repo should be reused.
-2. From an authenticated Windows Git Bash session, run `bash scripts/publish_github.sh --check`, then `--create-private` if absent, then after local checks `--publish`. This pushes known branches and opens **draft stacked PRs**, not a main merge.
-3. Review full PR diffs and three individual GitHub Actions jobs; record real run URLs, conclusion and failures. Fix failed branches before retargeting or merging. Mainline post-merge CI must also be inspected.
-4. Only then continue 98 unfinished lessons, expert content signoff, real Speech/Azure Auth integration and staged Supabase two-user isolation. Cloud provisioning still needs explicit approval.
+GitHub checks run on push and PR only **after** the remote exists. Current status: local-only and blocked from triggering GitHub Actions or verifying Azure resources.
