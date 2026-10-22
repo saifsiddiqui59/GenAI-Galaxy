@@ -106,3 +106,22 @@ Manual-only live-RLS harness PR [#10](https://github.com/saifsiddiqui59/GenAI-Ga
 - Runner dispatch problem [issue #16](https://github.com/saifsiddiqui59/GenAI-Galaxy/issues/16) closed after switching the repository to public. No cloud deployment, Azure Functions/APIM provisioning, hosted Supabase RLS exercise, private file handling, or paid-resource changes were performed by these PRs.
 
 **Release interpretation:** These are source and offline CI integrations. Azure Blob public preview has **not** been redeployed with the newly merged code; live authentication, two-user RLS, physical microphone, backend safety and editorial sign-off remain blocked on separate acceptance gates.
+
+## P2 six-workstream integration checkpoint — 2026-10-22 (latest)
+
+The user elected to have a **single coordinator chat** own all six previously separate branches. Those branches were developed and merged sequentially after actual three-job pull-request CI success. This section supersedes older pending P2 planning but preserves historical logs.
+
+| Stream | Merged PR | Verified source change |
+|---|---|---|
+| A — content | #24 | Twelve individually authored Spark/ADF/lakehouse/SQL lessons, source rubrics, coverage CSV and topic regression tests |
+| B — Auth/RLS readiness | #25 | Manual-only live RLS probe rejects privileged keys before network access; offline negative tests and explicit consent gate |
+| C — microphone | #26 | Simulated permission rejection/retry/stale callback regressions and real-browser acceptance checklist |
+| D — backend security | #27 | Reject owner-mismatched/traversal/control-character private Storage paths before undeployed Vault extraction, with tests |
+| E — static release | #28 | Existing-only deploy script refuses every account except approved `gengalaxy1429841605` in `GenAI_Galaxy`; fake-CLI tests |
+| F — review/cost | #29 | Public-source secret-shape guards, editorial review and evidence-based cost checklist |
+
+**Content after P2 A:** 17 worlds; original 230 V3 topics preserved within 246 total; **180/246 expanded curriculum entries**, **179 distinct eight-section lessons**, **66 overview-only entries still incomplete**. Expanded does not mean SME-approved or spoken-verified.
+
+**CI:** source PRs #24–#29 each passed all three PR checks. Confirm final post-merge main run [#39838287412](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39838287412) before claiming final integrated green status. All new work is offline/source-only; old Azure static site has not been redeployed.
+
+**Still blocked on separate owner approval/evidence:** actual hosted two-account RLS acceptance using dedicated accounts, real password reset email flow, physical microphone and speech-provider behavior, Azure backend gateway quotas/private ingress/malware scanning, approved static site upload, SME/source review and the remaining 66 lessons. No hosted Supabase migrations, resource provisioning or cross-project actions occurred in this P2 merge.
