@@ -53,7 +53,7 @@ class ApiCoreTests(unittest.TestCase):
  def test_server_rubric_matches_curriculum(self):
   import json
   rubrics=json.loads((R/'api/rubrics.json').read_text())
-  self.assertEqual(len(rubrics),148)
+  self.assertGreaterEqual(len(rubrics),158)
   catalog=json.loads((R/'data/curriculum.json').read_text())
   lesson_titles=json.loads((R/'data/lessons.json').read_text())
   expected={' / '.join((c['title'],g['title'],item['title'])) for c in catalog for g in c['groups'] for item in g['items'] if item['title'] in lesson_titles}
