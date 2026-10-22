@@ -1,0 +1,17 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "<managed deployment setting>",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    "SUPABASE_URL": "https://vfoghlhtnifpnbevgufa.supabase.co",
+    "SUPABASE_PUBLISHABLE_KEY": "<existing publishable key>",
+    "GALAXY_ALLOWED_ORIGIN": "https://<new-galaxy-static-host>",
+    "GALAXY_EVAL_GATEWAY_RATE_LIMIT": "not-configured",
+    "GALAXY_SPEECH_GATEWAY_RATE_LIMIT": "not-configured",
+    "AZURE_SPEECH_REGION": "<approved-region>",
+    "AZURE_SPEECH_KEY": "<backend-only-secret>",
+    "AZURE_OPENAI_ENDPOINT": "https://<owned-resource>.openai.azure.com",
+    "AZURE_OPENAI_DEPLOYMENT": "<model-deployment>",
+    "AZURE_OPENAI_API_KEY": "<backend-only-secret>"
+  }
+}
