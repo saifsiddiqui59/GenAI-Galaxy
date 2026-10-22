@@ -1612,6 +1612,25 @@
     ],
     "project_context": "In a banking assistant architecture, compare hybrid search with vector-only recall while validating that each tenant can retrieve only its own policy material."
   },
+  "Azure AI Foundry & Cloud / AI platform / Azure AI-102 exam scope": {
+    "topic": "Azure AI-102 exam scope",
+    "question": "What Azure services can you explain end-to-end?",
+    "reference_answer": "I can describe an Azure AI solution from input to monitoring rather than listing product names. I would choose a language, speech, search or document service for a defined business problem, protect it with identity and private networking, and evaluate quality, latency, safety and cost using test data. Generative AI may require retrieval and grounded-answer checks as well as deployment configuration. I would consult the current Microsoft AI-102 outline before claiming every exam objective is covered.",
+    "technical_context": "Build an end-to-end Azure AI architecture by separating data ingress, identity, model/search service, prompt orchestration, content safety, observability and deployment. Azure AI services include language, speech, vision and document intelligence capabilities; generative workloads can combine model endpoints with retrieval. Evaluate least privilege, managed identities, networking, quotas, content-filter policy, evaluation datasets and regional availability. Certification objectives can change by exam version, so check the current official Microsoft skills-measured outline rather than memorizing an obsolete service list.",
+    "common_mistakes": [
+      "Assuming one AI service covers every vision, speech and search use case",
+      "Treating a passed certification as proof of production experience",
+      "Using outdated exam objectives without checking version"
+    ],
+    "expected_concepts": [
+      "AI-102",
+      "Azure AI",
+      "search",
+      "identity",
+      "evaluation"
+    ],
+    "project_context": "Describe the proposed Galaxy AI evaluator and secure speech broker as designs, not as services already deployed."
+  },
   "Azure AI Foundry & Cloud / AI platform / PAYG vs provisioned throughput": {
     "topic": "PAYG vs provisioned throughput",
     "question": "When would PTU be worth the cost?",
@@ -1782,6 +1801,26 @@
       "secret"
     ],
     "project_context": "For a Databricks pipeline, describe a secret scope backed by approved Key Vault permissions; do not claim this is already configured in an unrelated workspace."
+  },
+  "Azure AI Foundry & Cloud / Serverless & hosting / AWS vs Azure comparison": {
+    "topic": "AWS vs Azure comparison",
+    "question": "How would your architecture change on AWS?",
+    "reference_answer": "I begin with the requirements rather than a one-to-one logo map. On AWS I might use S3 instead of ADLS, Lambda for event handlers, IAM roles for workload identity and a managed model service such as Bedrock. The risky parts are different permissions, network boundaries, regional support, quotas and retrieval integrations. I would port architecture contracts, authentication and evaluation tests first, benchmark actual latency and cost, and only then decide whether migration provides measurable value.",
+    "technical_context": "Map architectural responsibilities rather than choosing names solely by resemblance: Azure Functions to Lambda, Blob/ADLS to S3, Entra/managed identity to IAM role and STS, Azure Monitor to CloudWatch, Azure AI Search to a managed search/vector option, and Azure OpenAI to an appropriate managed model inference service such as Bedrock. Capabilities differ in model availability, private networking, region support, quota models and search semantics. Validate auth propagation, per-tenant isolation, logging and disaster recovery in the target cloud.",
+    "common_mistakes": [
+      "Assuming cloud products are drop-in API equivalents",
+      "Moving data without checking residency requirements",
+      "Comparing only compute unit prices rather than end-to-end spend"
+    ],
+    "expected_concepts": [
+      "AWS",
+      "Azure",
+      "IAM",
+      "S3",
+      "Lambda",
+      "model inference"
+    ],
+    "project_context": "Compare alternatives for a banking voice architecture without pretending a production AWS migration has occurred."
   },
   "Banking Voice Assistant / End-to-end voice call / Call entry & Azure Communication Services": {
     "topic": "Call entry & Azure Communication Services",
@@ -3168,6 +3207,25 @@
     ],
     "project_context": "For Dev-to-QA ADF and Databricks replication, combine copy-run metrics with SQL anti-joins and controlled aggregates for missing or changed IDs."
   },
+  "ADF, Data Pipelines & Modelling / Lakehouse & warehousing / Oil refinery ETL project": {
+    "topic": "Oil refinery ETL project",
+    "question": "Give the end-to-end platform architecture.",
+    "reference_answer": "I would describe a refinery ETL platform by starting with source contracts and reporting SLAs. ADF schedules source-to-lake ingestion; ADLS stores immutable raw extracts, and Databricks cleans, joins and validates operational data before curated reporting views are exposed. I would enforce plant identifiers, timestamp and unit consistency, row reconciliation and idempotent reruns. I would also explain monitoring and access controls. I would identify which parts are a proposed reference architecture versus actual work verified in project records.",
+    "technical_context": "Start by inventorying source systems, batch schedules, unit conventions, event timestamps and sensitive fields. Use an orchestrator such as ADF to land source extracts with run IDs in ADLS Bronze. Apply Spark/Databricks data-type checks, deduplication, late-arrival handling and domain reconciliation into Delta Silver; publish Gold facts or governed views to a SQL serving layer when justified. Use idempotent merges, exception quarantine, lineage and workload health dashboards. Do not infer production details or refinery metrics without actual project documentation.",
+    "common_mistakes": [
+      "Joining industrial measurements with inconsistent units or timestamps",
+      "Treating success of ingestion as data reconciliation",
+      "Claiming plant-specific achievements without evidence"
+    ],
+    "expected_concepts": [
+      "ADF",
+      "ADLS",
+      "Delta",
+      "Databricks",
+      "industrial ETL"
+    ],
+    "project_context": "A representative refinery ETL interview design; source contracts and any personal ownership must be verified rather than invented."
+  },
   "Python, SQL & API Skills / SQL / Joins & anti-joins": {
     "topic": "Joins & anti-joins",
     "question": "How do you find Hive IDs missing in SQL?",
@@ -3206,6 +3264,177 @@
     ],
     "project_context": "Use window ranking on Hive history tables to identify the latest snapshot before comparing with reporting SQL Server tables."
   },
+  "Python, SQL & API Skills / SQL / CTEs, GROUP BY & HAVING": {
+    "topic": "CTEs, GROUP BY & HAVING",
+    "question": "How would you compare current and previous quarter revenue?",
+    "reference_answer": "I use a CTE to make complex SQL easier to review, for example filtering valid invoices in one stage and aggregating quarterly revenue in another. GROUP BY creates totals per quarter or segment, while HAVING applies a condition to the aggregated result. WHERE removes source rows first. For comparing quarters I would normalize date and currency, handle refunds and guard against duplicate joins. I would review the execution plan rather than assume a CTE improves performance by itself.",
+    "technical_context": "A common table expression declared with WITH can break quarter-revenue SQL into stages such as authorized transactions, period normalization and aggregation. WHERE filters input records before grouping; HAVING filters groups after aggregate calculation. Use conditional aggregation or two period CTEs to compare quarters, with a canonical date dimension, currency normalization and refund adjustments. Validate joins before grouping to avoid duplicate revenue. A CTE is a logical query expression, not necessarily materialized or a performance cache; inspect the optimizer plan.",
+    "common_mistakes": [
+      "Putting aggregate conditions into WHERE",
+      "Double-counting after a one-to-many dimension join",
+      "Assuming every CTE is physically cached"
+    ],
+    "expected_concepts": [
+      "CTE",
+      "GROUP BY",
+      "HAVING",
+      "WHERE",
+      "quarter"
+    ],
+    "project_context": "Use SQL Server or Databricks SQL for trusted quarter-over-quarter revenue analysis, not an LLM-generated unapproved raw query."
+  },
+  "Python, SQL & API Skills / SQL / Parameterized SQL": {
+    "topic": "Parameterized SQL",
+    "question": "Why not let an agent run arbitrary SQL?",
+    "reference_answer": "Parameterized SQL protects against injection by sending values as bind parameters rather than concatenating user text into a query. For an AI agent that is only one layer of defense. I would restrict which metrics and tables it can ask for, use a read-only role with row-level security, validate tenant context and set execution limits. If the model proposes a table or column identifier, I map it through an explicit allowlist instead of treating it as a trusted parameter.",
+    "technical_context": "Parameterized queries use database driver bind variables for values; authorization must still constrain allowed tables, columns, joins, filters, rows and query complexity. Never assume identifiers can be safely parameterized: table/column names require a separate strict allowlist or semantic query layer. Enforce read-only roles, row-level access at the database, timeouts and maximum result sizes. SQL agents should produce a structured intent mapped to approved templates, not execute arbitrary LLM-generated SQL under broad credentials.",
+    "common_mistakes": [
+      "Concatenating user values into executable SQL",
+      "Thinking bind parameters authorize a tenant",
+      "Executing arbitrary model-generated DDL or write queries"
+    ],
+    "expected_concepts": [
+      "bind variables",
+      "SQL injection",
+      "RLS",
+      "allowlist",
+      "read-only"
+    ],
+    "project_context": "An analytics agent can select an allowlisted quarterly-revenue metric but must not generate unrestricted SELECT * FROM sensitive banking tables."
+  },
+  "Python, SQL & API Skills / SQL / Postgres & Supabase": {
+    "topic": "Postgres & Supabase",
+    "question": "How do you implement row-level security for tenants?",
+    "reference_answer": "I would create PostgreSQL tables with strong constraints and indexes, then add Supabase Auth and database row-level security. A policy should let each user see and update only records they own, with special care for inserts and ownership changes. I also protect private Storage paths and never expose a service-role key in frontend code. To verify tenant isolation I test two dedicated real user sessions for denied cross-user reads and writes; mock tests alone cannot prove that the hosted policies are correct.",
+    "technical_context": "Design relational tables with primary/foreign keys, indexes and constraints before exposing PostgREST endpoints. Supabase Auth supplies verified identity; PostgreSQL row-level security policies using auth.uid() can restrict reads and writes for user-owned or membership-scoped records. Enable and test RLS for every exposed table, check USING and WITH CHECK for ownership changes, and constrain Storage bucket paths separately. Service-role credentials bypass RLS and must never ship to the browser. Test with two actual unprivileged JWTs; frontend filters alone are not security.",
+    "common_mistakes": [
+      "Relying only on client-side user_id filters",
+      "Exposing the service-role key in JavaScript",
+      "Omitting WITH CHECK on ownership-sensitive writes"
+    ],
+    "expected_concepts": [
+      "Postgres",
+      "Supabase",
+      "RLS",
+      "auth.uid",
+      "private storage"
+    ],
+    "project_context": "Galaxy uses genai_study_* tables and private genai-study-docs; live two-account isolation verification remains separately approval-gated."
+  },
+  "Python, SQL & API Skills / Python / Lists, tuples, sets & dicts": {
+    "topic": "Lists, tuples, sets & dicts",
+    "question": "When would you use a dict rather than a list?",
+    "reference_answer": "I use a list when I need an ordered, changeable sequence, a tuple for a fixed group of values, a set for distinct items and membership checks, and a dictionary for mapping keys to values. For example, a dict is better than repeatedly searching a list when I frequently need a record by ID. I still consider memory, duplicates and concurrency. A set is not a substitute for persistent idempotency storage because it disappears when the process restarts.",
+    "technical_context": "A list preserves order and allows duplicate mutable elements; a tuple fixes the sequence structure and often represents a stable record; a set offers average constant-time membership for hashable values; a dict maps hashable keys to values, preserving insertion order in modern Python. Each has different iteration, memory and equality behavior. Do not confuse tuple immutability with deep immutability of objects inside it, and do not assume set order is stable. Use explicit data classes or typed dictionaries when structured contracts grow complex.",
+    "common_mistakes": [
+      "Depending on set iteration order",
+      "Assuming tuple freezes nested mutable members",
+      "Keeping production idempotency only in process memory"
+    ],
+    "expected_concepts": [
+      "list",
+      "tuple",
+      "set",
+      "dict",
+      "hashability"
+    ],
+    "project_context": "A voice agent's tool router can keep route configuration in a dict and track processed idempotency keys in durable storage rather than an in-process set."
+  },
+  "Python, SQL & API Skills / Python / Functions, decorators & exceptions": {
+    "topic": "Functions, decorators & exceptions",
+    "question": "How should a Python tool report an exception?",
+    "reference_answer": "I create small Python functions with clear inputs, outputs and one responsibility. Decorators help apply shared checks such as authentication or tracing, provided they preserve metadata and do not hide business logic. With exceptions I distinguish invalid user requests from retryable network failures and real coding errors. In an agent tool I return a structured error the orchestrator can handle. I never swallow an exception and claim a booking succeeded, and I use idempotency keys before retrying side effects.",
+    "technical_context": "Design Python tool functions with type-checked inputs, bounded side effects and a predictable result/error schema. Decorators can add authorization, tracing, retry or validation but may obscure call order and should preserve signatures using functools.wraps. Distinguish expected domain errors (missing slot, forbidden account) from transient upstream errors eligible for bounded retries and unexpected defects requiring alerts. Do not catch Exception and return fabricated success. For financial or booking writes, retry only under an idempotency contract and avoid logging sensitive request payloads.",
+    "common_mistakes": [
+      "Catching every exception and returning empty data",
+      "Applying retries to non-idempotent writes",
+      "Using decorators that lose function names or authorization context"
+    ],
+    "expected_concepts": [
+      "decorator",
+      "exception",
+      "authorization",
+      "idempotency",
+      "functools.wraps"
+    ],
+    "project_context": "A banking appointment tool can report validation, forbidden, provider timeout and success as distinct outcomes to a LangGraph supervisor."
+  },
+  "Python, SQL & API Skills / Python / Files, JSON & regular expressions": {
+    "topic": "Files, JSON & regular expressions",
+    "question": "How would you process a fixed-width file?",
+    "reference_answer": "For fixed-width files I start with the interface document: encoding, record length, field offsets, padding and header or trailer rules. I slice fields by declared positions, parse types explicitly and quarantine malformed records with line numbers. I use JSON schema validation for metadata and regex for limited patterns, not as a substitute for checking the complete file contract. Before publishing the transformed file I reconcile record counts and control totals against the input.",
+    "technical_context": "A fixed-width record is defined by byte or character offsets, lengths, field types and record variants. First determine encoding because multibyte UTF-8 changes byte offsets, normalize line endings, identify header/detail/trailer types and validate each slice without silently trimming significant zeros. JSON parsing needs schema validation and maximum size/depth guards; regular expressions can capture bounded field patterns but are not a universal replacement for a structured parser. Reject unexpected record lengths, preserve bad-line evidence and reconcile trailer control totals.",
+    "common_mistakes": [
+      "Using character offsets for multibyte byte-based records",
+      "Accepting regex matches without full-record validation",
+      "Dropping leading zeros from identifiers"
+    ],
+    "expected_concepts": [
+      "fixed-width",
+      "JSON schema",
+      "regex",
+      "offset",
+      "trailer"
+    ],
+    "project_context": "A metadata-driven enterprise file processor may route different source record types through validators before reconstructing an output file."
+  },
+  "Python, SQL & API Skills / Python / REST APIs & FastAPI": {
+    "topic": "REST APIs & FastAPI",
+    "question": "How do you build a callable tool API?",
+    "reference_answer": "I would define an agent tool API in FastAPI with Pydantic request schemas, authenticated routes and predictable response types. The backend checks the user's actual permissions and validates the requested operation instead of trusting model-generated arguments. I make reads safe and require confirmation plus an idempotency key for bookings or other writes. I add timeouts, quotas, tracing and tests for expired tokens, forbidden accounts and partial provider failures. The OpenAPI schema describes capability; it does not enforce authorization automatically.",
+    "technical_context": "FastAPI uses Python type hints/Pydantic validation and generates OpenAPI contracts. Design HTTP methods around read vs change semantics, use OAuth/JWT validation at the boundary, apply request size limits, per-user quotas and structured errors, and never accept tenant IDs as authorization. Async endpoints help with nonblocking I/O but blocking libraries still consume workers. For state-changing tools, require explicit confirmation and idempotency keys; propagate trace IDs and redact secrets from logs. Integration tests need expired JWT, cross-user access and provider failure cases.",
+    "common_mistakes": [
+      "Treating OpenAPI schema as proof of tenant security",
+      "Using blocking SDK calls without concurrency planning",
+      "Allowing arbitrary backend URLs in model tool arguments"
+    ],
+    "expected_concepts": [
+      "FastAPI",
+      "Pydantic",
+      "JWT",
+      "idempotency",
+      "OpenAPI"
+    ],
+    "project_context": "In the proposed banking advisor meeting API, the LLM requests a tool but does not directly gain credentials or choose an arbitrary account."
+  },
+  "Python, SQL & API Skills / Python / Asynchronous calls & concurrency": {
+    "topic": "Asynchronous calls & concurrency",
+    "question": "How can you call independent services concurrently?",
+    "reference_answer": "I use Python asyncio when a workload waits on independent network or database operations. I can launch multiple calls with gather or TaskGroup, but I set timeouts, limit concurrency and handle partial failures. If I send hundreds of calls without a semaphore, I may overload a provider or hit throttling. CPU-heavy Python code still blocks the event loop unless moved elsewhere. For banking tools I also avoid racing state-changing operations and use idempotency and explicit workflow order.",
+    "technical_context": "In asyncio, coroutines yield while waiting for nonblocking operations. Use asyncio.gather or TaskGroup for independent requests while protecting shared cancellation and propagating errors intentionally. Bound concurrency with a semaphore and provider rate limits; implement per-call deadlines, retry budgets and circuit breaking. CPU-bound parsing or model preprocessing needs worker processes, native extensions or separate tasks rather than blocking the event loop. For side effects, concurrent writes require ordering and idempotency, not just gather.",
+    "common_mistakes": [
+      "Launching unbounded tasks against a throttled API",
+      "Assuming asyncio speeds up CPU-heavy pure Python",
+      "Retrying non-idempotent writes concurrently"
+    ],
+    "expected_concepts": [
+      "asyncio",
+      "semaphore",
+      "TaskGroup",
+      "timeout",
+      "concurrency"
+    ],
+    "project_context": "A voice agent may overlap retrieval and profile reads but must not execute booking and payment writes concurrently without explicit ordering."
+  },
+  "Python, SQL & API Skills / Python / PySpark DataFrame operations": {
+    "topic": "PySpark DataFrame operations",
+    "question": "How do you handle malformed records in Spark?",
+    "reference_answer": "I handle malformed records by defining the expected Spark schema and validating each required field before the downstream transformation. I put invalid rows in a quarantine dataset with reason codes rather than silently dropping them. For normal data I prefer DataFrame functions that Spark can optimize, using joins, windows and aggregates as needed. I inspect explain plans, watch for shuffle skew and enforce correct keys before writing Delta tables. Finally I reconcile accepted and rejected record totals.",
+    "technical_context": "Read files with a declared schema where practical, manage corrupt-record handling and type casts explicitly, and distinguish null, empty and invalid values. Use select, filter, withColumn, join, groupBy and Window expressions to keep work within Spark's optimizer rather than Python UDFs by default. Inspect physical plans for shuffles, skew, broadcast eligibility and partition pruning. For Delta output, validate unique business keys, schema evolution policy and idempotent merge semantics before committing. Record rejected rows and reconcile source totals.",
+    "common_mistakes": [
+      "Silently converting malformed values to null",
+      "Collecting large datasets to the driver",
+      "Using row-by-row Python UDFs unnecessarily"
+    ],
+    "expected_concepts": [
+      "PySpark",
+      "DataFrame",
+      "schema",
+      "quarantine",
+      "Delta"
+    ],
+    "project_context": "A manufacturing data-domain pipeline can apply declarative Spark transformations before publishing governed Gold tables."
+  },
   "Python, SQL & API Skills / Data access / Supabase RLS vs API authorization": {
     "topic": "Supabase RLS vs API authorization",
     "question": "Why does a frontend user_id filter not provide security?",
@@ -3224,6 +3453,63 @@
       "storage"
     ],
     "project_context": "Your voice agent/tutor share a Supabase project; Galaxy tables and storage must be separated from call/patient tables and guarded by user-specific policies."
+  },
+  "LLMOps, Monitoring & CI/CD / Automation & testing / Git & branching strategy": {
+    "topic": "Git & branching strategy",
+    "question": "What must pass before an AI deployment merges?",
+    "reference_answer": "My Git strategy uses small, focused feature branches with pull requests into a protected main branch. I review the exact diff, enforce automated unit, integration, security and AI-evaluation checks, and resolve conflicts before merging. Each check must be attached to the current commit, not an earlier green run. After a merge I verify main again. For risky releases I keep a tested rollback and separate the code merge from any manual production deployment approval.",
+    "technical_context": "Protect main with required checks, approval policy and a predictable merge strategy. A branch should contain one independently testable change, avoid cross-workstream files, and rebase or merge the updated base only after inspecting conflicts. Build artifacts must be reproducible from pinned dependencies and commit SHA. For AI work include a golden evaluation set, prompt/model changes, negative authorization tests and rollback instructions; tests of outdated commits do not validate the final merge. Prefer a new main Actions run after each merge.",
+    "common_mistakes": [
+      "Merging because an unrelated run is green",
+      "Stacking overlapping generated files without an integration plan",
+      "Treating a merge as automatic authorization for deployment"
+    ],
+    "expected_concepts": [
+      "pull request",
+      "main",
+      "CI",
+      "merge conflict",
+      "rollback"
+    ],
+    "project_context": "Galaxy feature branches have already used separate CI checks and post-merge main verification; a cloud deployment remains a separate manual gate."
+  },
+  "LLMOps, Monitoring & CI/CD / Automation & testing / GitHub Actions / Azure DevOps": {
+    "topic": "GitHub Actions / Azure DevOps",
+    "question": "How do you invoke a RAG eval in CI?",
+    "reference_answer": "I build a CI/CD pipeline that checks code quality, unit tests, integration behavior and a versioned golden dataset for the RAG application. The evaluation stage reports groundedness, relevance and any safety-critical regressions against explicit thresholds. It must fail the build for important defects rather than show a dashboard only. I keep PR workflows read-only with mocked data and reserve OIDC cloud deployment for a protected manual environment. After merging, I verify the new main commit before shipping.",
+    "technical_context": "Use workflows that pin tool versions and run deterministic build, schema, unit, integration and security tests before conditional AI evaluations. Batch a versioned golden .jsonl set through retrieval and answer generation using safe fixtures, then compute groundedness, answer relevance and critical permission-denial assertions. CI runs on PRs with least privilege and no cloud production secrets; deployment has a separate protected manual environment with approvals and short-lived OIDC identity. Record benchmark versions and compare against baseline; avoid relying only on an LLM judge that can drift.",
+    "common_mistakes": [
+      "Putting production keys in PR jobs",
+      "Failing a model solely on an unstable unlabeled judge score",
+      "Treating workflow success as live tenant acceptance"
+    ],
+    "expected_concepts": [
+      "GitHub Actions",
+      "Azure DevOps",
+      "golden dataset",
+      "quality gate",
+      "OIDC"
+    ],
+    "project_context": "The Galaxy project tests curriculum, browser and release-safety jobs; a live RLS workflow is deliberately manual and approval-gated."
+  },
+  "LLMOps, Monitoring & CI/CD / Automation & testing / Unit, integration & golden tests": {
+    "topic": "Unit, integration & golden tests",
+    "question": "What tests would you add for a new bank tool?",
+    "reference_answer": "I start with unit tests for validators, prompt routing and tool arguments. Integration tests check that authentication, retrieval and booking systems interact correctly, especially failures and retries. I also keep a golden set of representative conversations with reference evidence and expected outcomes. A crucial test is that another customer cannot read an account or create a booking under someone else's identity. I compare both quality and side effects, then review difficult failures with humans.",
+    "technical_context": "Test tool routing, input validation and prompt assembly with deterministic unit fixtures. Integration tests exercise real contracts across auth, retrieval, LLM adapter and backing database in an isolated environment. A golden dataset stores versioned question, allowed user context, relevant evidence, expected outcome and unacceptable behaviors, including adversarial prompt injection and forbidden actions. Evaluate retrieval separately from answer correctness and tool side effects; when changing models, review drift with statistical confidence and human adjudication on disagreements.",
+    "common_mistakes": [
+      "Using only happy-path prompt examples",
+      "Confusing a plausible answer with a correct API side effect",
+      "Updating golden expected answers simply to silence failures"
+    ],
+    "expected_concepts": [
+      "unit tests",
+      "integration",
+      "golden set",
+      "negative tests",
+      "idempotency"
+    ],
+    "project_context": "For a banking voice agent, use mocked STT and booking tools in CI, then separately consented real provider tests before production release."
   },
   "LLMOps, Monitoring & CI/CD / Automation & testing / CI/CD eval threshold": {
     "topic": "CI/CD eval threshold",
@@ -3244,6 +3530,177 @@
     ],
     "project_context": "Your earlier interview preparation explicitly covered Azure AI Evaluation SDK, Ragas, golden JSONL files and CI release gates; do not claim those gates are deployed unless proven."
   },
+  "LLMOps, Monitoring & CI/CD / Automation & testing / Configuration & Key Vault": {
+    "topic": "Configuration & Key Vault",
+    "question": "How do you handle service keys in multiple environments?",
+    "reference_answer": "I keep configuration and secrets separate. Safe configuration like an environment name or service endpoint can be deployed as reviewed settings, but API keys and passwords belong in Key Vault or managed workload identity. Each environment should have its own scope and access policy so QA cannot accidentally use production secrets. I also plan rotation, audit who retrieved a secret, and make the application fail safely when a required configuration is missing.",
+    "technical_context": "Separate non-sensitive endpoints, model deployment names and feature flags from passwords, provider keys and certificates. Use managed workload identity wherever possible and authorize read access to narrowly scoped Key Vault secrets; rotate secrets with version awareness and an audit trail. Deploy environment config through reviewed templates, avoid mixing QA and Prod resource references, and fail closed when a required secret is absent. Do not log Authorization headers or copy Key Vault values into frontend runtime-config.js.",
+    "common_mistakes": [
+      "Storing keys in GitHub repo files or browser code",
+      "Reusing production secrets in development",
+      "Logging resolved secret strings during troubleshooting"
+    ],
+    "expected_concepts": [
+      "Key Vault",
+      "managed identity",
+      "secret rotation",
+      "configuration",
+      "least privilege"
+    ],
+    "project_context": "For Galaxy, public runtime configuration must never include Azure Speech or model provider keys; no secure broker is deployed yet."
+  },
+  "LLMOps, Monitoring & CI/CD / Runtime monitoring / Distributed tracing": {
+    "topic": "Distributed tracing",
+    "question": "How do you trace a bad voice interaction?",
+    "reference_answer": "I add a correlation ID for the overall call and a trace ID for each conversational turn, then propagate those identifiers across STT, retrieval, model, tool and TTS spans. When a user reports a wrong or slow reply, I can see the exact step, its outcome and its dependency timings. Traces should contain metadata and redacted identifiers, not secret tokens or full private conversations. I combine those spans with logs and metrics to distinguish timeouts, poor retrieval and model errors.",
+    "technical_context": "Propagate a stable trace context such as W3C traceparent across WebSocket connection, audio ingress, STT, agent orchestration, retrieval, tools, LLM and TTS. Create child spans with service name, model deployment, route, timestamp, outcome and safe durations, but redact user speech, account balances, secrets and raw tokens. Distinguish one phone call ID from multiple utterance/turn IDs and one logical retry from each attempt. Sample based on risk and latency while keeping enough operational evidence for failures; never fabricate traces retroactively.",
+    "common_mistakes": [
+      "Using different request IDs with no parent correlation",
+      "Logging bank balance or audio as debug payload",
+      "Treating an error status in one child span as complete root cause"
+    ],
+    "expected_concepts": [
+      "traceparent",
+      "span",
+      "correlation ID",
+      "STT",
+      "TTS"
+    ],
+    "project_context": "Use call-scoped identifiers in banking voice assistant design so a root-cause investigation can follow Functions and WebSocket boundaries."
+  },
+  "LLMOps, Monitoring & CI/CD / Runtime monitoring / Token & cost telemetry": {
+    "topic": "Token & cost telemetry",
+    "question": "How do you monitor token usage?",
+    "reference_answer": "For token monitoring I record input tokens, output tokens, cached tokens and model version for each completed call, along with retries and failures. I calculate an estimated cost using the provider's current contractual rate and reconcile the result with bills. I also track cost per successful task because a cheap response that triggers several retries may be more expensive overall. I set token budgets, cap context and evaluate caching without logging private prompts or exposing tenant-specific spending.",
+    "technical_context": "Capture provider-reported input, output and cached-token usage per model, deployment and logical request, distinguishing request retries and partial streams. Apply a versioned price table with currency and contract date for estimated spend and reconcile periodically against actual billing. Add budgets for maximum context size, retrieval chunks, response length, tool rounds and evaluation sample rate. Attribute costs by tenant with pseudonymous IDs and avoid exporting prompts with private content. Track cost per successful task, not only token totals.",
+    "common_mistakes": [
+      "Multiplying all tokens by one universal rate",
+      "Counting a retry as a new successful task",
+      "Logging prompt bodies when only token totals are needed"
+    ],
+    "expected_concepts": [
+      "tokens",
+      "cached tokens",
+      "billing",
+      "cost per task",
+      "retry"
+    ],
+    "project_context": "The Galaxy evaluator currently is not deployed; CI and design docs should not report model-token spend as live production telemetry."
+  },
+  "LLMOps, Monitoring & CI/CD / Runtime monitoring / Latency breakdown": {
+    "topic": "Latency breakdown",
+    "question": "Why can the first chat response be slow?",
+    "reference_answer": "When a user says the first answer is slow, I measure the full critical path: client connection, speech recognition, retrieval, model queue and generation, tool calls, speech synthesis and playback. I separate first-audio delay from total answer time and compare warm versus cold starts. I also use p95 rather than averages alone. If a function cold start or serial external tool dominates, changing the LLM temperature will not fix it. I tune the measured bottleneck.",
+    "technical_context": "Instrument client network, cold start, authentication, STT endpointing, retrieval, reranking, model queue/prefill/decode, sequential tool calls, TTS synthesis and audio playback. Measure first-token/first-audio latency separately from final completion, as perceived responsiveness matters for conversation. Critical-path analysis accounts for concurrent stages: summing parallel spans overstates wall time. Segment p50/p95 by deployment, language, call type and warm/cold start; apply time budgets and fallback policies to dominant delays before tuning unrelated components.",
+    "common_mistakes": [
+      "Adding overlapping parallel spans as if sequential",
+      "Reporting only server model time",
+      "Ignoring phone audio endpointing or network jitter"
+    ],
+    "expected_concepts": [
+      "p95",
+      "cold start",
+      "first token",
+      "critical path",
+      "TTS"
+    ],
+    "project_context": "For the voice assistant architecture, endpointing silence thresholds, WebSocket connection setup and speech playback can dominate first response."
+  },
+  "LLMOps, Monitoring & CI/CD / Runtime monitoring / Failed tool calls & fallback": {
+    "topic": "Failed tool calls & fallback",
+    "question": "How do you diagnose a booking tool failure?",
+    "reference_answer": "I first inspect the tool status, latency, input validation and authenticated context. A 403 needs an authorization fix, not a retry, whereas a 429 or temporary 503 may be recoverable after backoff. If a booking request times out, I cannot assume it failed or succeeded. I check the operation using an idempotency key or transaction ID before repeating it. The agent should communicate uncertainty clearly and offer safe follow-up or human assistance rather than invent a success.",
+    "technical_context": "Tool failure modes include input validation, access denial, upstream 429/5xx, timeout, schema drift and uncertain commit after request disconnect. Separate read-only retries from state-changing calls: writes require idempotency keys or reconciliation lookup before retrying. Set bounded exponential backoff with jitter for transient failures and a circuit breaker when a provider is unhealthy. The agent state must retain pending intent, show a clear failure or uncertainty message and support human handoff without exposing internal traces or guessing a booking confirmation.",
+    "common_mistakes": [
+      "Retrying booking writes without idempotency",
+      "Hiding a 403 by asking the model to try different credentials",
+      "Reporting success merely because a request was sent"
+    ],
+    "expected_concepts": [
+      "tool calling",
+      "idempotency",
+      "retry",
+      "403",
+      "circuit breaker"
+    ],
+    "project_context": "For a clinic or banking appointment assistant, verify the appointment ID before reading a voice confirmation to the caller."
+  },
+  "LLMOps, Monitoring & CI/CD / Runtime monitoring / Observability dashboards & alerts": {
+    "topic": "Observability dashboards & alerts",
+    "question": "What production dashboard would you build?",
+    "reference_answer": "I create a production dashboard around user task completion, failure rate, p95 response latency, model/tool errors, grounding quality and cost. The most important view tells us whether customers can complete the journey, not just whether a service returns HTTP 200. I configure sustained error-budget or threshold alerts with clear ownership and a trace link. I avoid high-cardinality personal identifiers and document which quality scores come from automated judges versus human reviews.",
+    "technical_context": "Track availability, task success, user-visible error rate, p50/p95 latency, tool and provider 429/5xx, STT failure, retrieval miss, groundedness sampled on approved traces, and cost per completed task. Define SLO windows and alert on burn-rate or sustained anomalies rather than one noisy point. Ensure metrics carry safe dimensions such as version, region and route, but not account balances or direct user identifiers. Separate automated quality indicators from human-labeled correctness; dashboards should provide links to redacted traces, not fabricated explanations.",
+    "common_mistakes": [
+      "Alerting on every single transient model failure",
+      "Using request success as proxy for appointment success",
+      "Leaking personal details in dashboard labels"
+    ],
+    "expected_concepts": [
+      "SLO",
+      "p95",
+      "error budget",
+      "groundedness",
+      "telemetry"
+    ],
+    "project_context": "For Galaxy, a monitoring plan can cover the future evaluator and Speech broker; no deployed backend reliability dashboard exists yet."
+  },
+  "LLMOps, Monitoring & CI/CD / Runtime monitoring / Production feedback triage": {
+    "topic": "Production feedback triage",
+    "question": "A user says the answer is wrong: what are your steps?",
+    "reference_answer": "I would ask for a reproducible example and the relevant trace rather than immediately changing the prompt. First I confirm user identity and whether the correct source existed and was accessible at that time. Then I inspect STT, retrieval, reranker, model context and tool outputs to locate the first incorrect stage. I fix that stage and add a golden regression test, including any tenant-isolation case. Finally I compare quality and latency before and after release.",
+    "technical_context": "Collect a consented session/trace reference and classify wrong output by authorization, stale index, retrieval recall, reranking, context assembly, prompt interpretation, model behavior or tool side effect. Inspect the evidence shown to the model and the true source at the incident time. Apply a narrow repair: fix ACLs or ingestion for missing documents, retrieval tuning for missed evidence, tool/schema handling for incorrect actions, or prompt/model evaluation for groundedness errors. Add a regression fixture, compare against labeled baseline and monitor deployment cohorts.",
+    "common_mistakes": [
+      "Calling every incorrect answer a hallucination",
+      "Fixing the prompt when the index was stale",
+      "Using private production data directly as a public golden fixture"
+    ],
+    "expected_concepts": [
+      "feedback",
+      "triage",
+      "retrieval",
+      "golden regression",
+      "root cause"
+    ],
+    "project_context": "For a banking voice answer complaint, correlate speech transcript and account-tool response before concluding the LLM hallucinated."
+  },
+  "LLMOps, Monitoring & CI/CD / Production operations / Correlated voice and tool tracing": {
+    "topic": "Correlated voice and tool tracing",
+    "question": "How do you debug a slow banking call end to end?",
+    "reference_answer": "For a slow banking call I would use a stable call ID and a separate turn ID for each utterance. I propagate trace context through the telephony WebSocket, speech recognition, agent nodes, retrieval, model inference, authorized tools and TTS. This lets me identify whether the delay came from endpointing, model queue time or an external banking API. I also mark retries and cancellations and redact customer details. Without that correlation, individual service logs can tell conflicting stories.",
+    "technical_context": "Use a call ID per phone session and a turn ID per utterance, propagated from WebSocket connection through STT, LangGraph state, model, retrieval and tool invocation to TTS playback. Link asynchronous spans using traceparent or explicit span links, including reconnects and retries. Observe input audio timestamps, silence endpointing, provider token delays and downstream API duration without storing customer speech or account data in traces. For overlapping turns, label cancellation generations so stale TTS or booking callbacks cannot be attached to the new turn.",
+    "common_mistakes": [
+      "Using one global trace ID for every call",
+      "Storing raw speech and balances in traces",
+      "Confusing canceled callbacks with valid current-turn output"
+    ],
+    "expected_concepts": [
+      "call ID",
+      "turn ID",
+      "traceparent",
+      "WebSocket",
+      "voice latency"
+    ],
+    "project_context": "The Galaxy frontend mic regression suite validates stale callbacks offline; distributed traces for a deployed banking system remain a design goal."
+  },
+  "Anomaly Detection & Agentic RCA / Statistical detection / Runtime history & baselines": {
+    "topic": "Runtime history & baselines",
+    "question": "What baseline do you use for pipeline runtime?",
+    "reference_answer": "I build a runtime baseline from comparable historical runs of the same pipeline, separating daily and month-end workloads or different job cluster sizes. Median and median absolute deviation are useful when a few incidents would distort an average. I also normalize for input volume and exclude failed or incomplete runs from healthy statistics. When a new run exceeds its appropriate distribution I flag it and show the actual history. The baseline should be reviewable, not a black-box claim that every long run is broken.",
+    "technical_context": "Segment duration history by pipeline, schedule window, workload size, cluster class and weekday seasonality. Exclude canceled runs, outages and known incident periods from a healthy baseline while keeping those events for audit. Use median and median absolute deviation for robust central tendency and spread, with a minimum sample count and fallback for near-zero MAD. Compare normalized runtime per input volume when data sizes vary, and periodically recompute thresholds without allowing persistent degradation to redefine healthy performance silently.",
+    "common_mistakes": [
+      "Comparing month-end jobs with daily micro-batches",
+      "Including known outages as healthy baseline",
+      "Dividing by MAD without handling zero dispersion"
+    ],
+    "expected_concepts": [
+      "median",
+      "MAD",
+      "baseline",
+      "seasonality",
+      "runtime"
+    ],
+    "project_context": "A Databricks/ADF anomaly detector can use scheduled-run history to flag slow workloads before an RCA assistant summarizes trace evidence."
+  },
   "Anomaly Detection & Agentic RCA / Statistical detection / Median & MAD": {
     "topic": "Median & MAD",
     "question": "Why use MAD instead of standard deviation?",
@@ -3262,6 +3719,291 @@
       "robust"
     ],
     "project_context": "Your RCA project establishes per-pipeline duration baselines, labels warnings/critical runs and enriches anomalies using Supabase activity logs and dependency metadata."
+  },
+  "Anomaly Detection & Agentic RCA / Statistical detection / Normal, warning & critical": {
+    "topic": "Normal, warning & critical",
+    "question": "How do you decide if a run is critical?",
+    "reference_answer": "I do not map all anomalies to severity only from a Z-score. I combine duration deviation with a pipeline's SLA, number of affected retries, downstream dependencies and business consequences. A warning could be an unusual but recoverable delay, while critical means a missed deadline or impact to an important feed. I add hysteresis so noisy metrics do not flip status on every sample. Every alert should show its threshold, run ID and evidence so a support team can defend the decision.",
+    "technical_context": "Combine a robust anomaly score with hard SLA thresholds, repeated failures, dependency criticality and downstream business impact. A normal band fits expected distribution and SLO; warning may indicate elevated duration or one missing feed; critical requires breached deadline, significant evidence of blockage or safety-sensitive effect. Use hysteresis and cool-down to reduce alert flapping and maintain overrides for known maintenance periods. Keep thresholds versioned, justify why a pipeline is business-critical and display the input evidence to the operator.",
+    "common_mistakes": [
+      "Hardcoding identical thresholds for every pipeline",
+      "Paging for transient noise without persistence checks",
+      "Automatically downgrading a confirmed SLA breach because average is low"
+    ],
+    "expected_concepts": [
+      "severity",
+      "SLA",
+      "warning",
+      "critical",
+      "hysteresis"
+    ],
+    "project_context": "For an agentic RCA monitor, severity dictates whether the agent only comments, opens a ticket or pages the responsible SME."
+  },
+  "Anomaly Detection & Agentic RCA / Statistical detection / Metadata & Supabase storage": {
+    "topic": "Metadata & Supabase storage",
+    "question": "What schema would you create for anomalies?",
+    "reference_answer": "I would design separate tables for pipeline definitions, completed runs, anomalies and the investigation or ticket lifecycle. A run stores start, end, status and workload details. An anomaly record stores the detector version, baseline and evidence that justified its severity. This makes it possible to reproduce decisions later. I use stable run IDs for idempotency, indexes for time-based analysis and row-level security where tenants share a database. I avoid mixing arbitrary LLM explanations into authoritative raw measurements.",
+    "technical_context": "A minimal schema includes pipeline identity, run ID, schedule window, started/ended timestamps, input volume, compute type and observed duration. Anomaly events reference the run plus baseline version, score, severity, threshold, detector version and evidence URI. RCA annotations and ticket links are separate append-only records with status transitions. Index (pipeline_id, run_start) and unique run IDs; enforce row-level tenant/owner scope if Supabase is shared, and redact raw credentials and business-sensitive fields. Prefer idempotent inserts/upserts on run ID.",
+    "common_mistakes": [
+      "Overwriting historical anomaly decisions without versioning",
+      "Giving the RCA agent write access to all tables",
+      "Storing secret-bearing activity payloads in general telemetry"
+    ],
+    "expected_concepts": [
+      "run ID",
+      "schema",
+      "Supabase",
+      "RLS",
+      "anomaly evidence"
+    ],
+    "project_context": "A conceptual anomaly service can persist only its own dedicated run metadata; this does not grant permission to write Galaxy or other shared Supabase tables."
+  },
+  "Anomaly Detection & Agentic RCA / Root-cause assistant / Activity logs & dependency graph": {
+    "topic": "Activity logs & dependency graph",
+    "question": "Which activity made a pipeline slow?",
+    "reference_answer": "I use the pipeline run ID to retrieve activity attempts and the configured dependency graph. Then I compare start and end times, retries and stage-level baselines to find which activity actually delayed the dependent path. When activities run in parallel, I do not simply add their durations. I also inspect whether the slow stage suffered integration-runtime saturation, source throttling or Spark skew. The output should distinguish observed bottlenecks from an unverified root-cause hypothesis.",
+    "technical_context": "Join parent pipeline runs to activity attempts by run ID, activity name, retry number, start/end timestamps and dependency edges. Construct a DAG from the pipeline definition and compute the longest blocking path, accounting for parallel activities and retries. Compare stage runtimes to per-stage baselines; do not sum unrelated parallel waits or blame the final activity because it finished last. Correlate ADF activity errors, integration runtime load, external service throttling and Databricks job duration before identifying a likely causal contributor.",
+    "common_mistakes": [
+      "Summing durations of parallel stages",
+      "Selecting last completed activity as root cause without graph analysis",
+      "Ignoring retries that restart an activity"
+    ],
+    "expected_concepts": [
+      "dependency DAG",
+      "ADF activity",
+      "critical path",
+      "retry",
+      "root cause"
+    ],
+    "project_context": "An anomaly RCA assistant can present a ranked bottleneck candidate with links to ADF activity logs and Spark stage metrics."
+  },
+  "Anomaly Detection & Agentic RCA / Root-cause assistant / Materialized RCA views": {
+    "topic": "Materialized RCA views",
+    "question": "What is the value of a materialized RCA view?",
+    "reference_answer": "A materialized RCA view stores a precomputed join of pipeline history, activity logs and anomaly metadata so the assistant does not rebuild a costly query for every investigation. I define the expected refresh interval and make the last refresh visible. I also check permissions, uniqueness and source lineage. The agent must not present stale output as a live result. I would benchmark full versus incremental maintenance according to the capabilities of the actual platform and version.",
+    "technical_context": "A materialized view persists results of a defined query for efficient repeated consumption; it needs a refresh policy, freshness indication and source lineage. Join pipeline runs, activity attempts, anomaly scores and known dependency edges into stable columns that an authorized analysis tool can query. Distinguish incremental refresh availability across engines and product versions; do not assume every Databricks declarative pipeline or SQL engine supports the same maintenance semantics. Use schema evolution gates, tenant filters and stale-view detection so an agent does not confuse yesterday's precomputed result with live status.",
+    "common_mistakes": [
+      "Calling any temporary view materialized",
+      "Assuming precomputed data is always current",
+      "Allowing a model to bypass row filters through a shared view"
+    ],
+    "expected_concepts": [
+      "materialized view",
+      "refresh",
+      "RCA",
+      "lineage",
+      "freshness"
+    ],
+    "project_context": "A Databricks SQL materialized view can support an anomaly RCA agent only when freshness, authorization and refresh failures are monitored."
+  },
+  "Anomaly Detection & Agentic RCA / Root-cause assistant / RAG + SQL grounded RCA": {
+    "topic": "RAG + SQL grounded RCA",
+    "question": "How does an RCA assistant avoid inventing causes?",
+    "reference_answer": "I separate facts from interpretation. SQL tools return actual pipeline durations, error codes and dependency stages, while RAG retrieves operational runbooks and prior approved incidents. The model can combine those sources into a ranked RCA hypothesis with citations, but it must not state that a cause is confirmed without matching evidence. I validate tenant access, show run IDs and timestamps, and allow the SME to correct or reject the suggestion. Any remediation remains separately authorized.",
+    "technical_context": "An RCA assistant should first retrieve authoritative run metrics, activity logs and dependency path from allowlisted SQL queries. Retrieve runbooks, ticket histories and platform documentation via ACL-filtered hybrid search; rerank and cite passages alongside exact run IDs and timestamps. The model synthesizes hypotheses with confidence and contradictory evidence rather than asserting causality. Guard against prompt injection in log messages and documents, verify tool permissions, and require human validation before operational changes or ticket escalation.",
+    "common_mistakes": [
+      "Passing free-form model SQL with privileged credentials",
+      "Calling correlation definitive causation",
+      "Trusting instructions embedded in activity log text"
+    ],
+    "expected_concepts": [
+      "SQL",
+      "RAG",
+      "runbook",
+      "groundedness",
+      "SME"
+    ],
+    "project_context": "The anomaly detection and agentic RCA concept combines deterministic monitoring with retrieval-backed explanation and an SME handoff."
+  },
+  "Anomaly Detection & Agentic RCA / Root-cause assistant / Ticket creation & SME workflow": {
+    "topic": "Ticket creation & SME workflow",
+    "question": "How do you shorten time to root cause?",
+    "reference_answer": "When a pipeline is genuinely critical, I create a support ticket containing the affected run, priority, measured delay, failed activity, evidence links and a suggested investigation path. I use an incident key to avoid duplicate tickets on repeated monitoring polls. The agent's explanation is labeled as a hypothesis until an SME validates it. I track response and resolution against SLA and update the ticket when new evidence appears. High-impact remediation should require human approval.",
+    "technical_context": "Open a ticket only after severity rules and routing rules authorize it. Create or reuse a stable incident key from affected pipeline, window and failure signature so repeated checks do not flood support queues. Attach the run ID, SLA/deadline, activity timings, redacted log links, suspected causes labeled as hypotheses and mitigation context. Provide confirmation for impact-changing actions. Track acknowledgement, handoff, resolution time and reopen rate; learn from SME feedback without silently altering detector thresholds.",
+    "common_mistakes": [
+      "Creating a ticket for every anomaly polling event",
+      "Marking a model hypothesis as confirmed root cause",
+      "Sharing unredacted credentials in incident details"
+    ],
+    "expected_concepts": [
+      "incident ticket",
+      "SME",
+      "SLA",
+      "deduplication",
+      "evidence"
+    ],
+    "project_context": "A support agent can route anomaly RCA summaries to an SME, but human-validated root cause remains distinct from generated suggestion."
+  },
+  "Anomaly Detection & Agentic RCA / Root-cause assistant / Data governance & business impact": {
+    "topic": "Data governance & business impact",
+    "question": "How would you quantify business impact?",
+    "reference_answer": "I use governance to know which data sources are authoritative, who can access them and how a reported RCA can be audited. For business impact, I compare detection, investigation and resolution times against a fair pre-implementation baseline. I also measure SLA misses and false-alert burden so a faster dashboard is not automatically treated as a business win. Any claimed percentage improvement needs comparable incidents and documented ticket outcomes. The model's role is to assist investigation, not replace ownership.",
+    "technical_context": "Use catalogs and lineage to identify source datasets, owners, transformations and authoritative KPIs. Apply least-privilege data access, retention, audit events and change review for RCA annotations. Quantify operational impact with pre/post baselines: mean/median time to detect, time to acknowledge, time to identify cause, SLA breach frequency and resolved incidents per on-call hour. Normalize comparisons for incident severity and volume, distinguish correlation from attribution, and avoid claiming cost savings absent controlled evidence.",
+    "common_mistakes": [
+      "Equating ticket creation with root-cause resolution",
+      "Claiming financial savings without cost evidence",
+      "Ignoring false alarms and on-call workload"
+    ],
+    "expected_concepts": [
+      "Unity Catalog",
+      "lineage",
+      "SLA",
+      "MTTR",
+      "governance"
+    ],
+    "project_context": "Unity Catalog governance and an agentic RCA workflow may contribute to faster support resolution; real impact values require ticket system evidence."
+  },
+  "Enterprise File Processing AI / File parsing framework / Fixed-width & delimited formats": {
+    "topic": "Fixed-width & delimited formats",
+    "question": "How can one ingestion engine support many formats?",
+    "reference_answer": "I would build a metadata-driven ingestion engine that selects an approved format definition for each input. A fixed-width format needs encoding, record lengths, offsets and data types, while a delimited format needs delimiter, quoting and escape rules. Both emit a normalized record with source location and error metadata. I validate header and trailer controls, reject malformed records into quarantine and compare totals before publishing. The engine is generic, but the rules are explicit and versioned.",
+    "technical_context": "A format contract describes character encoding, line endings, row kinds, required length, field name, start offset and width, delimiter/quote/escape rules, and header/trailer expectations. Fixed-width offsets may refer to bytes, not Unicode characters; delimited formats need quoted delimiter and embedded newline handling. Select a versioned contract by trusted source and validate schema before processing. Parse incrementally, quarantine malformed records, and reconcile physical row count with declared trailer count. Retain source fingerprints for deterministic replay.",
+    "common_mistakes": [
+      "Splitting CSV on a delimiter without handling quotes",
+      "Confusing byte offsets with code-point offsets",
+      "Silently dropping invalid records"
+    ],
+    "expected_concepts": [
+      "fixed-width",
+      "delimiter",
+      "encoding",
+      "schema",
+      "quarantine"
+    ],
+    "project_context": "A file-processing assistant can propose a candidate contract, but deterministic parsing and validation enforce the approved format."
+  },
+  "Enterprise File Processing AI / File parsing framework / Regex, field offsets & rules": {
+    "topic": "Regex, field offsets & rules",
+    "question": "How would you add a new file format?",
+    "reference_answer": "I store file parsing rules as versioned metadata: field start and length, data type, required flag, trim behavior and a validation pattern when useful. That lets the same parser accept a new vendor layout without new business logic. I still test offsets carefully, especially byte versus character positions. Regex checks should be anchored and bounded so malformed input cannot consume excessive CPU. Every new rule gets a golden sample, negative cases and a review before promotion.",
+    "technical_context": "Store rules for record type, offsets, lengths, trim mode, encoding, type conversion, required/default status, allowed values and optional anchored regex validation. For fixed-width text define whether offsets are zero-based and inclusive/exclusive; for delimited text include quote handling and column-to-field mapping. Regex patterns should be bounded and pre-reviewed to avoid catastrophic backtracking on untrusted inputs. Track contract version and source hash; a rule change is a schema migration requiring old and new golden fixtures.",
+    "common_mistakes": [
+      "Using free-form regex extraction as authoritative structure",
+      "Changing offsets without a test fixture",
+      "Running unbounded regex on adversarial content"
+    ],
+    "expected_concepts": [
+      "regex",
+      "offset",
+      "rule version",
+      "validation",
+      "schema"
+    ],
+    "project_context": "An LLM might draft offset suggestions from a reference file, but a validator and human reviewer approve the mapping."
+  },
+  "Enterprise File Processing AI / File parsing framework / Header/detail/trailer checks": {
+    "topic": "Header/detail/trailer checks",
+    "question": "What happens when a trailer count is wrong?",
+    "reference_answer": "I parse the header first to verify the source, version and business date. As I read detail records, I count valid rows and calculate declared control totals using exact decimal arithmetic. Then I compare those values with the trailer, accounting for the contract's inclusion rules. If the count or amount does not match, I mark the file incomplete or invalid and keep an audit record rather than treating the load as successful. I also check duplicate sequences and truncation.",
+    "technical_context": "Validate expected header identifiers, business date, source, schema version and declared encoding. Count all eligible detail records and compute control totals with correct decimal precision and signed amounts. Trailer count and sum must match exactly under the interface's inclusion/exclusion rules; never compare against an unfiltered subset accidentally. Detect duplicate or missing sequence numbers, extra trailing rows, truncated transmission and checksum mismatch. Fail or quarantine the entire batch according to agreed policy rather than publishing partial records as complete.",
+    "common_mistakes": [
+      "Using floating-point arithmetic for financial control totals",
+      "Treating trailer as optional when contract requires it",
+      "Publishing partial detail records after a failed trailer check"
+    ],
+    "expected_concepts": [
+      "header",
+      "detail",
+      "trailer",
+      "control total",
+      "reconciliation"
+    ],
+    "project_context": "An enterprise file framework must refuse a mismatched header/trailer before rebuilding or delivering downstream artifacts."
+  },
+  "Enterprise File Processing AI / File parsing framework / Transformation & reconstruction": {
+    "topic": "Transformation & reconstruction",
+    "question": "How do you prove the output file is correct?",
+    "reference_answer": "I would first validate the input and convert it into a typed canonical record structure. Then I apply approved mapping and transformation rules, preserving important identifiers and exact numeric types. The output writer serializes fields in a deterministic order, pads fixed widths correctly and recalculates its own header and trailer. Finally I parse the generated file again, compare records and control totals, and store hashes and rule versions. This creates stronger evidence than checking only that the file was created.",
+    "technical_context": "Separate parsing/validation from canonical transformation and deterministic output serialization. Preserve identifiers with leading zeros and use Decimal for financial fields, documented timezone and rounding rules, and stable row ordering when the interface requires it. Recalculate target header and trailer based on the final records rather than copying old totals. Produce a manifest with input hash, mapping version, row counts, output hash and rejected count. Reparse reconstructed output through an independent validator and compare semantic records and controls before release.",
+    "common_mistakes": [
+      "Copying source trailer values after filtering records",
+      "Losing leading zeros when converting IDs",
+      "Relying only on a visual file comparison"
+    ],
+    "expected_concepts": [
+      "reconstruction",
+      "canonical model",
+      "Decimal",
+      "trailer",
+      "manifest"
+    ],
+    "project_context": "A file conversion agent can assist in proposing new mapping rules; the byte layout and controls should remain deterministic."
+  },
+  "Enterprise File Processing AI / Agent-assisted orchestration / LangGraph orchestration": {
+    "topic": "LangGraph orchestration",
+    "question": "Sketch the processing graph.",
+    "reference_answer": "I would model the file-processing workflow as a LangGraph with explicit state and nodes for inspection, parsing, validation, optional repair proposal and output reconstruction. Conditional edges route failed validations to quarantine or human review rather than ignoring them. I keep deterministic parsers, counts and trailer checks outside the language model, and I checkpoint state for safe retry. The model may help explain errors or suggest a rule, but only an approved versioned rule can affect a production output.",
+    "technical_context": "Define typed graph state with source fingerprint, approved mapping version, parse results, validation errors, retry count and human approval flag. Nodes for inspect, parse, validate, propose repair, review and reconstruct run under conditional edges; keep critical side effects in deterministic nodes, not free-form model text. A failed validation branches to quarantine or human review, while accepted output proceeds to deterministic serialization and reconciliation. Checkpoint state and idempotency across retries, bound loops and avoid putting raw sensitive file content into conversation logs.",
+    "common_mistakes": [
+      "Letting an LLM overwrite failed validation states",
+      "Building infinite retry loops with no budget",
+      "Mixing model-generated suggestions with approved rules"
+    ],
+    "expected_concepts": [
+      "LangGraph",
+      "state",
+      "node",
+      "edge",
+      "checkpoint"
+    ],
+    "project_context": "A metadata-driven file assistant can use LangGraph for orchestration without letting the model bypass hard integrity checks."
+  },
+  "Enterprise File Processing AI / Agent-assisted orchestration / Rule learning from reference files": {
+    "topic": "Rule learning from reference files",
+    "question": "How do you safely infer a parsing rule?",
+    "reference_answer": "If I receive a new reference file, I can ask an LLM to propose record types, offsets and validation rules, but that proposal stays untrusted. I compare it with the vendor specification and test it on multiple positive and negative examples. A deterministic validator checks lengths, values and control totals, and a reviewer approves the new rule version. If examples disagree or lack coverage, I request more information instead of guessing. The LLM never directly modifies a production parser rule.",
+    "technical_context": "Supply a versioned interface guide and representative redacted good/bad files to a constrained rule-proposal process. Require the proposal to specify offsets, encoding, field types, record variants, unknowns and confidence, without executing arbitrary code. Test against a diverse labeled golden corpus including different line lengths, optional headers, negative amounts and encoding anomalies. Run deterministic contract checks, obtain human source-owner approval and version the decision. Never let a prompt injection inside a sample file change approved system rules.",
+    "common_mistakes": [
+      "Treating one sample file as exhaustive schema evidence",
+      "Letting source text supply instructions to the agent",
+      "Activating a proposed rule before a negative test"
+    ],
+    "expected_concepts": [
+      "rule learning",
+      "golden fixtures",
+      "human approval",
+      "prompt injection",
+      "versioning"
+    ],
+    "project_context": "A file processing AI can shorten onboarding of new layouts by drafting candidate mappings while humans retain release control."
+  },
+  "Enterprise File Processing AI / Agent-assisted orchestration / File comparison & regression": {
+    "topic": "File comparison & regression",
+    "question": "What are your regression tests?",
+    "reference_answer": "My regression suite contains approved source and target fixtures for normal, malformed and boundary files. I validate record count, required fields, data types, offsets, padding, computed totals and trailer accuracy. I also compare the reconstructed file byte for byte where exact output is required, and semantically where formatting may vary. When a mapping changes, I rerun both old and new fixture versions to catch regressions. I verify replay is deterministic and keep mismatches as evidence.",
+    "technical_context": "Keep golden fixtures for each format version, encoding, record type and boundary condition. Compare source-to-canonical records and reconstructed output using stable identifiers, expected ordering, field precision, padding, header/trailer metrics and a manifest of transformations. Byte-level comparisons catch unexpected output differences, while semantic comparisons distinguish harmless formatting from a wrong amount or key. Include malformed/truncated files, duplicate headers, missing trailers, multibyte encodings and idempotent replay; never approve a rule simply because a generated file superficially matches a screenshot.",
+    "common_mistakes": [
+      "Testing only the happy-path example",
+      "Ignoring signed amounts or escaped delimiters",
+      "Updating golden files without reviewing changed behavior"
+    ],
+    "expected_concepts": [
+      "golden fixtures",
+      "regression",
+      "trailer",
+      "diff",
+      "idempotency"
+    ],
+    "project_context": "File processor upgrades should run an offline fixture suite before any real bank or manufacturing file is touched."
+  },
+  "Enterprise File Processing AI / Agent-assisted orchestration / Data integrity & compliance": {
+    "topic": "Data integrity & compliance",
+    "question": "Why must deterministic checks remain primary?",
+    "reference_answer": "I keep data integrity checks deterministic. Every file is linked to a source hash, rule version, parsed record count and reconciled control totals. Invalid records are quarantined with reason codes and no AI agent can mark them valid by producing a plausible explanation. I restrict access, preserve a clear audit trail and ensure retention follows applicable policy. For high-impact data a human reviewer approves exceptions and verifies the corrected output before it reaches downstream consumers.",
+    "technical_context": "Maintain source hashes, immutable receipt metadata, schema/version history, parser outcomes, field error codes, control totals, approvals and a chain of custody to the delivered artifact. Apply least-privilege access, encryption in transit/at rest, retention and deletion rules, data minimization and redaction for logs. Where financial or regulated records are involved, require authorized human review of exceptions and evidence of reconciliation before acceptance. An LLM can summarize issues, but must not suppress errors, fabricate missing records or override validation flags.",
+    "common_mistakes": [
+      "Treating an LLM confidence score as compliance evidence",
+      "Allowing silent data repair without approval",
+      "Logging sensitive source rows in general trace output"
+    ],
+    "expected_concepts": [
+      "integrity",
+      "audit trail",
+      "reconciliation",
+      "retention",
+      "approval"
+    ],
+    "project_context": "Enterprise AI file processing can assist analysts while preserving deterministic controls and policy-driven approval."
   },
   "Architecture & System Design Cases / RAG & analytics cases / Today's policy document changes": {
     "topic": "Today's policy document changes",
@@ -3320,6 +4062,310 @@
     ],
     "project_context": "This extends your agentic RCA design: structured metric views plus incident knowledge can explain a trend with evidence rather than guessing from raw tables."
   },
+  "Architecture & System Design Cases / RAG & analytics cases / Enterprise semantic search": {
+    "topic": "Enterprise semantic search",
+    "question": "Design enterprise search for thousands of PDFs.",
+    "reference_answer": "I would ingest and version approved PDFs, extract text or OCR when authorized, chunk it with document and page metadata, and index it for hybrid keyword and vector search. User permissions are applied before retrieval and again at the document source, not after the model has seen text. I rerank a bounded candidate set and ask the model to cite the chunks it uses. I evaluate retrieval recall, answer grounding and cross-user isolation, including document updates and deletion.",
+    "technical_context": "Build an ingestion process that extracts approved PDF/text content, detects version changes, partitions into traceable chunks and stores document IDs, page numbers, ACLs and content hashes alongside embeddings. Use hybrid lexical/vector retrieval for entity names and natural questions; apply access filtering before top-k/reranking and cite exact source chunks in answers. Evaluate recall@k, context precision, groundedness and forbidden document disclosure with multi-tenant test accounts. Incremental updates need tombstones and deletion propagation; scanned PDFs need an authorized OCR stage.",
+    "common_mistakes": [
+      "Filtering ACLs only after reranking documents",
+      "Not removing stale chunks after document deletion",
+      "Claiming a citation proves the cited passage supports an answer"
+    ],
+    "expected_concepts": [
+      "hybrid search",
+      "ACL",
+      "embeddings",
+      "citation",
+      "tombstone"
+    ],
+    "project_context": "The proposed Galaxy knowledge Vault would require a secured extraction backend and per-user access filters before offering enterprise-style document search."
+  },
+  "Architecture & System Design Cases / RAG & analytics cases / Graph RAG decision": {
+    "topic": "Graph RAG decision",
+    "question": "When does Graph RAG justify its complexity?",
+    "reference_answer": "I would use regular hybrid RAG for straightforward policy, FAQ and document questions where a small number of passages directly supports the answer. I would consider Graph RAG when the question repeatedly requires navigating relationships, such as entities connected through multiple contracts or dependencies. A graph adds entity extraction, deduplication, edge provenance, permission filters and maintenance overhead. I would benchmark the hard multi-hop questions before deciding it improves answer accuracy enough to justify that complexity.",
+    "technical_context": "A graph layer models entities, edges, provenance and time validity, allowing traversal across contracts, counterparties, systems and dependencies. Graph construction brings entity resolution, schema governance and update costs; factual edges must link to verified source evidence. For direct FAQ-style queries, hybrid RAG with chunk citations is often sufficient and easier to measure. Choose Graph RAG only when benchmarks show that relationship hops or structured traversal solve failures that standard retrieval cannot, while preserving entity and edge ACLs.",
+    "common_mistakes": [
+      "Assuming a graph automatically eliminates hallucinations",
+      "Building edges from unsupported model guesses",
+      "Forgetting tenant permissions on graph neighbors"
+    ],
+    "expected_concepts": [
+      "Graph RAG",
+      "multi-hop",
+      "entities",
+      "edges",
+      "provenance"
+    ],
+    "project_context": "For a straightforward clinic FAQ or booking voice agent, a tenant-scoped document index plus transactional tools can be simpler than a knowledge graph."
+  },
+  "Architecture & System Design Cases / Action-taking agents / Account balance + meeting booking": {
+    "topic": "Account balance + meeting booking",
+    "question": "Which parts must not rely on an LLM guess?",
+    "reference_answer": "I would first authenticate the customer and verify that the requested account belongs to them. A backend balance tool returns the authoritative current figure; the language model never guesses that value. To schedule an advisor meeting I request available slots, present them to the customer and get explicit confirmation before calling the booking tool. I use an idempotency key and verify the appointment ID before announcing success. Authorization failures and provider timeouts get a transparent fallback rather than a fabricated response.",
+    "technical_context": "Route user intent into distinct verified read and write operations. Identity verification and account authorization precede the balance API; the model cannot derive a live balance from RAG or user text. Advisor availability comes from a scheduling API with timezone-safe slots; before creation, read back selected slot, location and purpose and request clear user confirmation. Use an idempotency key for booking and reconcile unknown outcomes after timeouts. Keep logs redacted and return explicit states for denied balance, unavailable slot and completed appointment.",
+    "common_mistakes": [
+      "Answering a live balance from a static knowledge base",
+      "Booking an appointment before user confirmation",
+      "Retrying a timed-out write without reconciliation"
+    ],
+    "expected_concepts": [
+      "authentication",
+      "balance API",
+      "slot",
+      "confirmation",
+      "idempotency"
+    ],
+    "project_context": "A banking voice architecture can orchestrate tool calls; Galaxy has no live banking APIs or appointment booking authorization."
+  },
+  "Architecture & System Design Cases / Action-taking agents / Banking data isolation": {
+    "topic": "Banking data isolation",
+    "question": "How would you test data isolation for two customers?",
+    "reference_answer": "For banking tenant isolation I authenticate every request, derive the customer identity from a verified token and enforce authorization at each backend tool. SQL queries and document retrieval must filter the same identity before data is returned to the model. I test two real customer-like accounts for denied cross-user reads, forged identifiers, unauthorized writes and cache leakage. A frontend user_id filter helps but cannot replace database RLS. I audit attempts and use least-privilege service credentials.",
+    "technical_context": "Enforce authentication at ingress and recheck authorization in each downstream balance, transaction, search and scheduling service. Tenant/user IDs supplied by a prompt are untrusted; derive scope from validated session claims and use database RLS or tenant-aware query guards. Index documents with ACL metadata and prevent unauthorized chunks from entering model context. Test at least two users including forged IDs, cross-user reads, inserts, upserts, storage paths, cached responses and shared conversation threads. Audit denied operations without logging sensitive balances or tokens.",
+    "common_mistakes": [
+      "Trusting the user ID in an LLM tool argument",
+      "Sharing one retrieval cache between tenants without ACL keying",
+      "Mistaking frontend filtering for secure RLS enforcement"
+    ],
+    "expected_concepts": [
+      "tenant isolation",
+      "RLS",
+      "JWT",
+      "ACL",
+      "cache"
+    ],
+    "project_context": "Galaxy's two-account RLS acceptance test is manual and has not been run with real Supabase accounts; mock isolation alone is insufficient."
+  },
+  "Architecture & System Design Cases / Action-taking agents / Safe tool retries": {
+    "topic": "Safe tool retries",
+    "question": "What if the client times out after booking succeeded?",
+    "reference_answer": "If the client times out after submitting a booking, I cannot know whether the provider committed it. I assign an idempotency key to the intended action and store its request fingerprint and result in durable storage. If the same request retries, the service either returns the original appointment ID or checks the provider for its current status. I reject reuse of the key for a different booking. Bounded retries and clear user messaging prevent duplicate state changes.",
+    "technical_context": "For state-changing operations, accept a caller-scoped idempotency key tied to the semantic action and persist an atomic record of pending/completed outcome and payload fingerprint. On retry, return the original result if identical, reject key reuse with different payload, and reconcile with the downstream provider if the initial outcome is uncertain. Set TTLs based on provider contract and use database uniqueness or transaction fencing for concurrent workers. Reads may retry with backoff, but confirmations and authorization must still be current.",
+    "common_mistakes": [
+      "Generating a fresh idempotency key on every automatic retry",
+      "Caching keys only in an in-memory Python dict",
+      "Treating a timed-out write as definitely failed"
+    ],
+    "expected_concepts": [
+      "idempotency",
+      "atomicity",
+      "booking",
+      "retry",
+      "fencing"
+    ],
+    "project_context": "A voice agent's appointment or transaction tool should never rely on an in-memory retry counter as durable idempotency."
+  },
+  "Architecture & System Design Cases / Action-taking agents / Agent SQL security": {
+    "topic": "Agent SQL security",
+    "question": "How do you stop an agent reading unauthorized tables?",
+    "reference_answer": "I prevent an agent from running arbitrary SQL by giving it read-only tools with approved queries or a constrained semantic layer. The user and tenant scope come from backend authentication, not from text generated by the model. Data values are bound as parameters, tables and columns are allowlisted, and database RLS remains active. I also set query timeout and maximum results. For updates or destructive operations I require a separate permission and confirmation workflow.",
+    "technical_context": "Map user intents to approved metrics or allowlisted parameterized read-only query templates with verified tenant filters. Use an isolated database role without schema modification, high-risk functions or access to unrelated tables. Validate requested identifier names separately from bound value parameters, enforce row/column security, query-time and result-size limits, and log template IDs rather than PII. For open-ended analytics, parse and inspect query AST plus dry-run budgets before executing, but never treat model reasoning as authorization. Require explicit human signoff for writes.",
+    "common_mistakes": [
+      "Assuming a system prompt prevents dangerous SQL",
+      "Letting a read-only model call a write-capable service role",
+      "Using parameter binding to justify arbitrary table names"
+    ],
+    "expected_concepts": [
+      "semantic layer",
+      "SQL allowlist",
+      "RLS",
+      "parameterized",
+      "read-only"
+    ],
+    "project_context": "A management assistant answering quarter-on-quarter revenue should query governed facts through an approved semantic layer, not the raw production catalog."
+  },
+  "Architecture & System Design Cases / Action-taking agents / Voice AI failover": {
+    "topic": "Voice AI failover",
+    "question": "What happens when one Azure service is down?",
+    "reference_answer": "I identify which service failed before deciding how to recover. For speech recognition uncertainty I ask the customer to repeat or offer a non-voice path. For model throttling I use bounded retry and possibly an approved fallback deployment. For booking or balance tools I preserve authentication and do not invent a result; uncertain writes are reconciled. I persist turn state so reconnections do not lose context and avoid cross-region routing without checking residency and access policy.",
+    "technical_context": "Design independent timeouts and availability policies across telephony/WebSocket, STT, retrieval, model inference, authorized tools and TTS. STT low-confidence or unsupported language should ask a clarifying question; model 429s need bounded backoff, possible approved region/model fallback and safe state retention; tool write uncertainty requires reconciliation, not blind retry; TTS failure can return a textual or operator fallback. Persist minimal call/turn state externally and gate retries by request generation to suppress stale responses. Respect residency and data confidentiality before cross-region failover.",
+    "common_mistakes": [
+      "Blindly retrying state-changing financial tools",
+      "Failing over to a region that violates data policy",
+      "Reading a success reply when STT confidence is poor"
+    ],
+    "expected_concepts": [
+      "STT",
+      "failover",
+      "429",
+      "TTS",
+      "recovery"
+    ],
+    "project_context": "A banking voice prototype can simulate failover states, but real provider latency/region resilience needs a deployed broker and tests."
+  },
+  "Architecture & System Design Cases / System trade-offs / Latency vs accuracy": {
+    "topic": "Latency vs accuracy",
+    "question": "How would you meet a strict voice latency target?",
+    "reference_answer": "I first measure first-audio and p95 end-to-end latency, including STT endpointing, retrieval, model and tool calls. I avoid improving speed by blindly removing context because that may damage answer grounding. Instead I test smaller candidate counts, bounded reranking and model routing on a labeled question set. Low-risk FAQs can use faster paths, while sensitive banking actions require accurate authentication and confirmation even if they take longer. I optimize measured bottlenecks and keep a safe fallback.",
+    "technical_context": "Break the pipeline into endpointing, STT, retrieval, reranking, prompt prefill, generation, tool calls and TTS. Set budgets per component and optimize critical-path p95, not only average model inference. Increase candidate recall to a reliable level before reducing reranker k or chunk size; benchmark answer groundedness and retrieval accuracy on a golden set with difficult queries. Choose small/large model routing based on intent risk, cache safe static instructions and stream partial audio only where it will not misstate an unverified tool outcome.",
+    "common_mistakes": [
+      "Optimizing average token time while ignoring endpointing",
+      "Trading away authorization checks for latency",
+      "Streaming a booking confirmation before write succeeds"
+    ],
+    "expected_concepts": [
+      "p95",
+      "retrieval recall",
+      "reranker",
+      "first audio",
+      "accuracy"
+    ],
+    "project_context": "In a banking voice assistant, silence endpointing and TTS first-audio latency may matter more than a minor vector-search speedup."
+  },
+  "Architecture & System Design Cases / System trade-offs / Memory vs stateless scaling": {
+    "topic": "Memory vs stateless scaling",
+    "question": "How do you scale a multi-turn agent horizontally?",
+    "reference_answer": "I keep compute workers stateless and move important session state into an external store so any healthy instance can handle the next turn. I scope every session by authenticated customer and conversation ID, preserve pending tool operations, and version state to reject stale writes from earlier turns. For booking actions I also keep a durable idempotency record. I limit retention and private context according to policy, so horizontal scaling does not accidentally leak conversations across tenants.",
+    "technical_context": "Persist a minimal session record keyed by scoped conversation ID containing user/tenant identity, turn version, pending tool intent, relevant context references and expiration policy. Pass immutable state snapshots to workers and use compare-and-set/version fencing to prevent stale concurrent turns from overwriting newer ones. Use a separate durable idempotency ledger for financial writes; short-lived cache is not the authoritative transaction state. Encrypt sensitive values, enforce per-tenant access, trim context by policy and design reconnect/resume semantics across WebSocket endpoints.",
+    "common_mistakes": [
+      "Saving all state only in container memory",
+      "Using a shared cache key without tenant context",
+      "Letting a canceled turn overwrite newer state"
+    ],
+    "expected_concepts": [
+      "stateless",
+      "session store",
+      "version fencing",
+      "idempotency",
+      "horizontal scaling"
+    ],
+    "project_context": "A multi-tenant voice assistant may use a persistent conversation ID per call, but that alone does not guarantee safe concurrent ownership."
+  },
+  "Architecture & System Design Cases / System trade-offs / Structured vs unstructured data": {
+    "topic": "Structured vs unstructured data",
+    "question": "When would you not use embeddings?",
+    "reference_answer": "I would not use embeddings for exact account balance, invoice totals or a current order status. Those need authorized APIs or structured SQL because they must be precise and fresh. I use RAG for long policies, FAQs and reports where finding supporting passages matters. A routing agent can combine both paths when a question asks for a number and an explanation, but it must retain source provenance and keep database tenant checks in force. Similarity search never becomes the source of truth.",
+    "technical_context": "Structured facts such as balances, revenue and inventory belong in transactional or analytical tables with typed schemas, constraints and clear temporal semantics. Unstructured policies and manuals benefit from access-filtered keyword/vector retrieval with citations and version-aware freshness. Agent routing classifies intent and chooses SQL/API versus RAG, with dual paths only when a question needs both factual numbers and explanatory policy text. Never replace authoritative financial tool results with vector similarity or allow model-generated SQL to bypass access controls.",
+    "common_mistakes": [
+      "Estimating live balance from embeddings",
+      "Running unrestricted SQL for 'why' questions",
+      "Treating a retrieved narrative as proof of causation"
+    ],
+    "expected_concepts": [
+      "structured data",
+      "unstructured data",
+      "SQL",
+      "RAG",
+      "source of truth"
+    ],
+    "project_context": "A bank balance should come from an authorized API while a bank's general credit policy can come from a trusted document index."
+  },
+  "Architecture & System Design Cases / System trade-offs / Human fallback & escalation": {
+    "topic": "Human fallback & escalation",
+    "question": "When should an AI agent transfer to a human?",
+    "reference_answer": "I set clear escalation rules for sensitive or uncertain situations: failed identity checks, financial disputes, repeated tool failures, missing evidence and customer requests to speak with a person. The agent should explain what it can and cannot complete, preserve a redacted case summary and route to an authorized operator. It must not invent a confirmed transaction or reveal private data just to avoid escalation. I track both successful handoffs and unnecessary transfers to improve the policy.",
+    "technical_context": "Set policy triggers for identity uncertainty, low-confidence STT, incomplete evidence, sensitive advice, payment/booking ambiguity, repeated tool failures, fraud flags and explicit customer request. Transfer a short redacted summary of validated intent, completed/uncertain actions, relevant case IDs and evidence links to the next operator without exposing credentials or speculative diagnoses. Preserve conversation consent and audit handoff; measure escalation rate, resolution and false transfers rather than just automated containment. Never allow the model to quietly override escalation rules.",
+    "common_mistakes": [
+      "Treating human handoff as a failure to be avoided at all costs",
+      "Passing raw account credentials into a support ticket",
+      "Continuing automated financial actions after identity denial"
+    ],
+    "expected_concepts": [
+      "human handoff",
+      "escalation",
+      "uncertainty",
+      "policy",
+      "audit"
+    ],
+    "project_context": "A banking voice agent design needs transparent handoff for financial ambiguity and failed transactional tools; Galaxy itself has no call-center integration."
+  },
+  "Architecture & System Design Cases / Document systems / Secure resume upload, extraction & lifecycle": {
+    "topic": "Secure resume upload, extraction & lifecycle",
+    "question": "How would you safely ingest a candidate resume into an interview tutor?",
+    "reference_answer": "I would authenticate the candidate, restrict upload size and file types, and save the resume only in a private user-scoped bucket. A backend scans the file before extraction, validates the PDF or DOCX structure and applies strict decompression and text limits. The extracted text remains untrusted and is never allowed to change system instructions. I enforce ownership on metadata, retrieval and deletion, and remove derived embeddings when the document is deleted. Live backend deployment and scanning need approval.",
+    "technical_context": "Validate file size, extension, MIME and magic bytes and store raw uploads under an authenticated user-owned path in private object storage. Quarantine and malware-scan before server-side PDF/DOCX extraction, cap pages/expanded ZIP size and treat extracted text as untrusted data including embedded prompt instructions. Keep metadata/RLS owner-scoped, log only safe processing status, and record retention, deletion and vector tombstones for all derived chunks. Deny direct client access to service-role credentials and avoid injecting resume content into public curriculum assets.",
+    "common_mistakes": [
+      "Sending a resume directly to public Blob storage",
+      "Executing instructions embedded inside a document",
+      "Deleting raw file but leaving its embeddings searchable"
+    ],
+    "expected_concepts": [
+      "resume",
+      "private bucket",
+      "malware scan",
+      "RLS",
+      "deletion"
+    ],
+    "project_context": "Galaxy's Knowledge Vault has private storage and undeployed extraction code, but lacks approved live scanning, gateway and hosted end-to-end acceptance."
+  },
+  "Interview, Resume & Career Stories / Interview opening / 60-second GenAI introduction": {
+    "topic": "60-second GenAI introduction",
+    "question": "Tell me about yourself.",
+    "reference_answer": "I have experience working across cloud data engineering and AI-driven solutions, with recent focus on GenAI adoption, agent workflows and platform reliability. My recent technical discussions include designing voice-agent flows that connect speech services, orchestration and business APIs, and improving data-platform efficiency and governance. I like solving problems end to end, from architecture and security to observability and measurable outcomes. For this role, I want to contribute that mix of hands-on engineering, responsible AI implementation and practical delivery.",
+    "technical_context": "A strong introduction has four parts: present responsibility, relevant experience, technically specific recent project, and measurable business outcome followed by future role fit. Separate personally owned implementation from team results and avoid listing every service without demonstrating decisions. A 60-second spoken answer is typically more concise than a printed biography; test it aloud rather than equating words with seconds. Verify tenure, title, savings percentages and leadership claims against your resume and project records before interviews.",
+    "common_mistakes": [
+      "Opening with a long list of tools without outcomes",
+      "Presenting a team result as solely personal achievement",
+      "Claiming certifications or years not verified by records"
+    ],
+    "expected_concepts": [
+      "introduction",
+      "GenAI",
+      "experience",
+      "impact",
+      "role fit"
+    ],
+    "project_context": "Use a real banking/clinic voice architecture and team-owned Databricks optimization where independently supported; this is an adaptable script, not a certified work history."
+  },
+  "Interview, Resume & Career Stories / Interview opening / Banking voice assistant project story": {
+    "topic": "Banking voice assistant project story",
+    "question": "Explain your best recent GenAI project.",
+    "reference_answer": "My voice-agent architecture takes audio from a phone or browser, converts it to text, and routes the user's intent through an agent that can consult approved knowledge or invoke a business tool. The backend maintains conversation context and returns a spoken response through TTS. For a banking adaptation I would add customer verification, tenant-scoped retrieval, explicit booking confirmation and auditable tool calls. I clearly separate functionality tested in a prototype from any production banking integration that has not been independently verified.",
+    "technical_context": "Tell the story as problem → speech intake → tenant-scoped conversational state → RAG/tool router → authorized business API → response synthesis → telemetry/fallback. Distinguish telephony/WebSocket, STT, speech endpointing, LangGraph/agent state, model deployment, private knowledge and TTS. Describe JWT authorization, idempotency for scheduling and call/turn correlation as requirements; only mark a feature implemented when logs/tests support it. If a clinic scheduling prototype is reframed as a banking design, explicitly label the banking flow a proposed adaptation.",
+    "common_mistakes": [
+      "Claiming banking customer integration based only on a clinic prototype",
+      "Ignoring user authorization and booking confirmation",
+      "Saying a generated reply proves a real appointment was recorded"
+    ],
+    "expected_concepts": [
+      "voice agent",
+      "STT",
+      "TTS",
+      "tool calling",
+      "tenant isolation"
+    ],
+    "project_context": "Use verified voice-agent prototype components as experience; distinguish the banking interview scenario from actual production customer deployment."
+  },
+  "Interview, Resume & Career Stories / Interview opening / Anomaly RCA project story": {
+    "topic": "Anomaly RCA project story",
+    "question": "What AI problem did you solve beyond a chatbot?",
+    "reference_answer": "The challenge was that operations teams spent time manually locating which data pipeline activity caused a delay. The solution combines run history and anomaly thresholds with activity logs, dependencies and relevant operational knowledge. A deterministic detector flags unusual runs, while an agent can assemble evidence and propose likely causes for support engineers. I would measure whether this reduces time to identify root cause and improves SLA compliance, but keep AI explanations as hypotheses until verified by an SME.",
+    "technical_context": "Structure the project as operational problem, baseline model, detection and severity logic, activity/dependency correlation, document/runbook retrieval, evidence-ranked RCA hypotheses and SME ticket workflow. Median/MAD and workload-normalized baselines may be appropriate, but a metric is only truthful if recorded in the actual implementation. Explain which joins or views are deterministic and which explanations are LLM-generated and unverified. Measure alert precision, investigation duration, ticket SLA and human corrections; do not invent resolution savings or exact automation coverage.",
+    "common_mistakes": [
+      "Treating an anomaly score as a confirmed root cause",
+      "Attributing all team improvements to one engineer",
+      "Quoting ROI without a comparable before/after incident baseline"
+    ],
+    "expected_concepts": [
+      "anomaly",
+      "RCA",
+      "ADF",
+      "MAD",
+      "ticket SLA"
+    ],
+    "project_context": "Present documented anomaly detection and agentic RCA team contributions with clear distinction between implemented detection and proposed future automation."
+  },
+  "Interview, Resume & Career Stories / Interview opening / File processor project story": {
+    "topic": "File processor project story",
+    "question": "Why use an agent in file processing?",
+    "reference_answer": "I would explain the file-processing challenge as supporting many vendor layouts without rewriting code for every small change. The system stores approved field mappings as metadata, parses files deterministically and verifies control totals before producing standardized output. An agent can inspect a new sample, propose candidate rules and explain validation failures, but it cannot bypass integrity checks. I would show the LangGraph workflow, versioned golden tests and human review path, and be clear whether each component is built or proposed.",
+    "technical_context": "Describe source layout diversity, versioned metadata rules, fixed-width/delimited parsers, canonical record transformations and header/trailer reconciliation. A LangGraph controller can route inspect, parse, validate, propose new mapping, review and reconstruction nodes. LLM rule suggestions are untrusted drafts tested against golden fixtures and approved by humans. Quantify reduction in manual onboarding or error handling only with real records; do not present an architecture exercise as a deployed regulated-processing product.",
+    "common_mistakes": [
+      "Letting the LLM generate final accounting totals",
+      "Claiming production deployment based only on a design",
+      "Ignoring file encoding or header/trailer reconciliation"
+    ],
+    "expected_concepts": [
+      "file processor",
+      "LangGraph",
+      "metadata",
+      "reconciliation",
+      "golden files"
+    ],
+    "project_context": "Enterprise file-processing AI is a design/story example unless repository commits and deployment records confirm personal implementation."
+  },
   "Interview, Resume & Career Stories / Interview opening / Databricks 27% savings story": {
     "topic": "Databricks 27% savings story",
     "question": "How did you reduce Databricks cost?",
@@ -3338,5 +4384,214 @@
       "baseline"
     ],
     "project_context": "The earlier V3 interview catalog mentions a 27% Databricks saving, but the supplied resume does not substantiate that figure. Use it only if you can verify it against billing and workload-normalized cost records."
+  },
+  "Interview, Resume & Career Stories / Interview depth / Three-layer Q&A method": {
+    "topic": "Three-layer Q&A method",
+    "question": "How deep can you explain your project?",
+    "reference_answer": "I prepare interview answers in three layers. First I give a short definition or outcome so the interviewer understands the idea. Second I explain my architecture and how the components interact. Third I go into production cases such as security, latency, failure recovery, monitoring and design alternatives. I use one concrete project example through all layers to keep the story consistent. If a deeper part is only proposed, I label it as a design decision rather than claiming it was deployed.",
+    "technical_context": "Layer one is a concise explanation of what the component does; layer two is architecture, data flow, API contracts and trade-offs; layer three defends failure modes, security, evaluation, scale, observability and ownership. Use concrete project evidence, not longer generic jargon, as depth increases. Build a question tree for likely followups and mark unsupported claims or future designs clearly. When a question probes outside your experience, state what you have built and reason about a proposal separately.",
+    "common_mistakes": [
+      "Opening with level-three detail before answering the question",
+      "Memorizing services without explaining selection criteria",
+      "Confusing proposed architecture with implemented work"
+    ],
+    "expected_concepts": [
+      "fundamentals",
+      "architecture",
+      "production",
+      "trade-offs",
+      "interview"
+    ],
+    "project_context": "Use a real voice assistant or Databricks optimization project for layered architecture practice; keep exact metrics evidence-based."
+  },
+  "Interview, Resume & Career Stories / Interview depth / Techno-managerial design": {
+    "topic": "Techno-managerial design",
+    "question": "How would you lead a multi-agent implementation?",
+    "reference_answer": "I would begin with the business questions and decide which answers need authoritative SQL, document retrieval or transactional APIs. Then I define clear interfaces and responsibility for each specialist tool or agent, with an orchestrator that controls state and permissions. As a lead I split work by ownership, establish golden evaluations and review architecture trade-offs, failure recovery and cost before rollout. I avoid building a multi-agent system just for appearance; a simpler pipeline is preferable when it meets the requirements.",
+    "technical_context": "Start from business questions and classify which need structured SQL, document retrieval, transactional tools or human decisions. Define an orchestrator/router with narrow specialist agents or tools, a shared typed state contract, allowed data scopes and explicit approval gates for writes. Compare LangGraph stateful orchestration with simpler direct routing before selecting complexity. Set team responsibilities, milestones, evaluation datasets and cost/latency budgets. Resolve conflicts through contract review and security testing; report risk and metrics instead of assuming more agents always means better decisions.",
+    "common_mistakes": [
+      "Adding agents without independent responsibilities",
+      "Ignoring authorization in cross-agent handoffs",
+      "Measuring delivered nodes rather than user task success"
+    ],
+    "expected_concepts": [
+      "multi-agent",
+      "leadership",
+      "orchestrator",
+      "governance",
+      "evaluation"
+    ],
+    "project_context": "For a cross-functional implementation, four contributors could own API, retrieval, agent workflow and evaluation, with integration controlled by reviewed interfaces."
+  },
+  "Interview, Resume & Career Stories / Interview depth / Team leadership & AI adoption": {
+    "topic": "Team leadership & AI adoption",
+    "question": "How do you lead a team of four?",
+    "reference_answer": "I lead by making the problem and definition of done clear, assigning work based on strengths and setting shared quality standards. For GenAI projects, this includes evaluation, security, access control and measurable user outcomes, not just getting a demo to answer questions. I review integrations and remove blockers while mentoring teammates on the architectural why. I keep releases small and visible, and communicate risks early. I would use only verified team sizes and accomplishments when describing past leadership.",
+    "technical_context": "Set clear objectives and decision ownership, define reviewable boundaries, choose small milestones, track risks and create a feedback loop around code quality and user outcomes. AI adoption adds model evaluation, privacy controls, training data provenance, human approval and incident response expectations. A team of four should have explicit integration ownership and cross-training so no single engineer becomes a bottleneck. Use retrospectives and capacity planning to explain prioritization. Verify team size and actual contribution history before presenting as factual experience.",
+    "common_mistakes": [
+      "Taking personal credit for every team deliverable",
+      "Measuring leadership by number of meetings",
+      "Skipping governance to meet a demo deadline"
+    ],
+    "expected_concepts": [
+      "leadership",
+      "mentoring",
+      "delivery",
+      "AI governance",
+      "team"
+    ],
+    "project_context": "A four-person AI adoption or platform team is an interview narrative only when that responsibility is supported by actual employment history."
+  },
+  "Interview, Resume & Career Stories / Interview depth / Why leaving & role fit": {
+    "topic": "Why leaving & role fit",
+    "question": "Why are you leaving your present company?",
+    "reference_answer": "I have learned a lot through my current cloud and AI work and am looking for a role where I can go deeper into production GenAI engineering, from secure agent design and retrieval quality to evaluation and operational ownership. I am interested in teams that solve real customer problems with clear engineering standards. This opportunity matches that direction and would let me contribute my data-platform and AI experience while growing in larger end-to-end deployments.",
+    "technical_context": "A persuasive motivation links verified experience to the new job's responsibilities, identifies work that the target role offers and describes learning goals without falsely promising capabilities. Keep notice-period and availability information current and distinct from career motivation. Avoid sharing confidential employer context or implying misconduct without evidence. Interviewers look for continuity of ownership, realistic growth and genuine understanding of the opportunity; the answer should stay consistent with your resume timeline.",
+    "common_mistakes": [
+      "Complaining about teammates or disclosing company secrets",
+      "Giving an answer inconsistent with resume chronology",
+      "Claiming skills or deployment scope you cannot defend"
+    ],
+    "expected_concepts": [
+      "career change",
+      "GenAI role",
+      "motivation",
+      "fit",
+      "growth"
+    ],
+    "project_context": "Apply the explanation to an Azure/GenAI engineering opportunity using only accurate present-company responsibilities and relevant project experience."
+  },
+  "Interview, Resume & Career Stories / Interview depth / STAR impact storytelling": {
+    "topic": "STAR impact storytelling",
+    "question": "Describe a production incident you resolved.",
+    "reference_answer": "For a production incident answer I use STAR. I briefly describe the affected service and why the issue mattered, then clarify what I was responsible for. I explain the actual investigation, the evidence that identified the cause, the fix or safe rollback and how we verified recovery. In the result I describe user impact, resolution time or prevention only when the incident record supports it. I finish with the monitoring or regression change we added to reduce recurrence.",
+    "technical_context": "Situation establishes system and severity; Task defines your accountable role; Action explains concrete diagnosis and implementation; Result describes measurable impact and how it was verified. For an outage, separate root cause from correlation and explain why the chosen rollback or remediation was safe. Include cross-team coordination, communication and preventive regression tests. Avoid inventing downtime, loss or savings numbers; state measurement method and uncertainty if historical records are incomplete. Practice a 90-second narrative with one technical followup.",
+    "common_mistakes": [
+      "Using 'we' for every action without defining personal role",
+      "Claiming precise savings or downtime without evidence",
+      "Describing a hypothesis as confirmed cause"
+    ],
+    "expected_concepts": [
+      "STAR",
+      "incident",
+      "impact",
+      "verification",
+      "ownership"
+    ],
+    "project_context": "Choose one incident documented in commits, monitoring, ticket records or an approved internal postmortem before claiming first-person ownership."
+  },
+  "Interview, Resume & Career Stories / Interview depth / Round-two architecture defense": {
+    "topic": "Round-two architecture defense",
+    "question": "Why did you choose each major platform component?",
+    "reference_answer": "In a technical second round I defend the choices against requirements. I explain why we selected the cloud, model, retrieval approach and orchestration pattern, what alternatives we considered and what trade-offs we accepted. Then I cover trust boundaries, latency, cost, evaluation and failure recovery. For example, a voice agent should not expose provider secrets in the browser, and an agent should not invent booking results. I show where the implementation has evidence and where controls remain proposed.",
+    "technical_context": "Interview defense covers data sources, trust boundaries, state ownership, latency budgets, provider quota, evaluation, rollback and cost. Justify Azure services based on regional availability, existing platform integration and security constraints, not familiarity alone. Explain why RAG instead of fine-tuning or Graph RAG, when LangGraph is justified over a simple router, and how the team checks hallucination and tool permissions. Use diagrams, examples and measured trade-offs; admit where a prototype's proposed controls are not yet deployed.",
+    "common_mistakes": [
+      "Defending Azure only because it was familiar",
+      "Calling every proposed security control already deployed",
+      "Not explaining why simpler alternatives were rejected"
+    ],
+    "expected_concepts": [
+      "architecture",
+      "trade-offs",
+      "RAG",
+      "security",
+      "latency"
+    ],
+    "project_context": "Use the voice agent plus data-platform operational context to distinguish implemented components, benchmarked options and future-hardening goals."
+  },
+  "Interview, Resume & Career Stories / Professional materials / ATS-friendly resume": {
+    "topic": "ATS-friendly resume",
+    "question": "Which three projects best demonstrate GenAI ownership?",
+    "reference_answer": "I keep my resume structured with a clear summary, relevant technologies, roles, dates and a few strong project bullets. For GenAI positions I emphasize concrete work in RAG, tool calling, secure Azure services, evaluation and production operations only where I can explain my contribution. I use measurable outcomes when records support them and distinguish team accomplishments from individual implementation. I avoid complicated graphics that may confuse applicant tracking systems and tailor keywords naturally to the job description.",
+    "technical_context": "Use a straightforward one- or two-column layout only if parsing has been tested; simple single-column text and standard headings are often safest. Match authentic skills to the target role without keyword stuffing, use consistent job dates and positions, and write bullets with action, implementation and outcome. Separate demonstrated GenAI implementations from learning projects and clearly identify team outcomes. Avoid logos, image-only skill lists, hidden text and unsupported certifications if machine parsing matters. Verify PDF/DOCX extraction and remove personal data not needed by the application.",
+    "common_mistakes": [
+      "Adding technologies only to match keywords",
+      "Listing unverifiable project metrics",
+      "Using image-only experience sections in an ATS resume"
+    ],
+    "expected_concepts": [
+      "ATS",
+      "resume",
+      "GenAI",
+      "verified achievements",
+      "keyword match"
+    ],
+    "project_context": "The stored ATS DOCX can be reviewed against a specific role, but this lesson does not assert unverified contents from the attachment."
+  },
+  "Interview, Resume & Career Stories / Professional materials / Azure AI Engineer Associate": {
+    "topic": "Azure AI Engineer Associate",
+    "question": "How have you applied your Azure certification knowledge?",
+    "reference_answer": "I would explain Azure AI Engineer skills through concrete engineering choices. I can describe when to use Azure AI Search, Speech, language or a model deployment and how to protect those services with identity, network boundaries and evaluation. I would also discuss quotas, regional support, data privacy and responsible AI. Exam knowledge helps organize the topics, but it is not a substitute for hands-on project evidence. I would verify the current official AI-102 objectives and my certification status before stating them.",
+    "technical_context": "AI-102 study topics can span resource provisioning, responsible AI, document/language/vision/speech solutions, search and generative AI. Product branding and official objective weightings change, so refer to the current Microsoft Learn exam page for exact requirements rather than memorizing historical weights. In an interview, explain practical service selection, identity and network boundaries, evaluation and monitoring using a project you truly implemented. Do not claim a passed certification merely because you studied its objectives.",
+    "common_mistakes": [
+      "Claiming an Azure credential without verified award",
+      "Reciting old exam scope as current fact",
+      "Confusing studied reference design with deployed customer use"
+    ],
+    "expected_concepts": [
+      "AI-102",
+      "Azure AI",
+      "certification",
+      "Speech",
+      "AI Search"
+    ],
+    "project_context": "A candidate can apply Azure Speech and Azure AI Search knowledge in a voice-agent prototype regardless of whether a certificate was issued."
+  },
+  "Interview, Resume & Career Stories / Professional materials / Job descriptions & gap analysis": {
+    "topic": "Job descriptions & gap analysis",
+    "question": "How does your profile match a senior AI engineer role?",
+    "reference_answer": "I compare a job description with evidence rather than a long checklist of buzzwords. I group requirements into architecture, Python, Azure, retrieval, agent orchestration, evaluation, security and leadership. For each one I write where I used it, what I personally built and what I can demonstrate in an interview. Missing production experience stays a gap, and I plan a focused learning or prototype task for it. This makes the resume and preparation more credible than exaggerating tool coverage.",
+    "technical_context": "Decompose a job description into must-have responsibilities, optional technologies, experience level, collaboration expectations and release/security requirements. For each item record the evidence source, ownership strength (built, operated, contributed, learned), recency and interview example; unknown evidence is not a match. Prioritize gaps by importance and time-to-close, then study concepts and build small tests rather than padding the resume. Distinguish cloud/data engineering depth from model research or production AI operations if those were not part of the role.",
+    "common_mistakes": [
+      "Calling familiarity equivalent to production ownership",
+      "Treating every optional tool as a must-have",
+      "Changing resume facts to fit a posting"
+    ],
+    "expected_concepts": [
+      "job description",
+      "gap analysis",
+      "evidence",
+      "GenAI",
+      "skills"
+    ],
+    "project_context": "Use authentic Azure data, agentic RCA and voice-agent work to create a defensible skills matrix for a specific posting."
+  },
+  "Interview, Resume & Career Stories / Professional materials / Interview cheat sheet": {
+    "topic": "Interview cheat sheet",
+    "question": "Can you answer without reading a long script?",
+    "reference_answer": "My cheat sheet contains a one-line definition, a small practical example and the main production risk for each interview topic. For RAG I remember retrieval, authorization, context and grounded answer; for agents I remember state, tools, approval and retries. I use it to practice active recall, not to read a long response. If the interviewer asks deeper questions, I expand into architecture, metrics and debugging. I also verify personal project claims so the shortcuts remain accurate.",
+    "technical_context": "Compress each topic into the core definition, one differentiating detail, an owned project connection and one likely followup. Keep separate cards for fundamentals, architecture and production debugging; include comparison hooks such as LangChain vs LangGraph or faithfulness vs context recall. Practice retrieval without reading the full answer, then expand only when prompted. Mark uncertain versions or unverified personal achievements so brevity never turns into false certainty. Use the cheat sheet with spaced review and active recall.",
+    "common_mistakes": [
+      "Memorizing exact wording without understanding",
+      "Using too many keywords to sound technical",
+      "Skipping security and debugging followups"
+    ],
+    "expected_concepts": [
+      "cheat sheet",
+      "active recall",
+      "RAG",
+      "agents",
+      "interview"
+    ],
+    "project_context": "Galaxy topics can be practiced as 20-second definitions followed by a two-minute diagram and a failure-mode defense."
+  },
+  "Interview, Resume & Career Stories / Career narratives / Explain project ownership versus proof": {
+    "topic": "Explain project ownership versus proof",
+    "question": "Which parts of your banking voice agent did you build yourself?",
+    "reference_answer": "When describing ownership I separate what I wrote or configured myself from what the wider team delivered and from what is still a design proposal. For example, I can explain an implemented speech-agent flow using actual code and test evidence, then describe how I would adapt it to a regulated banking use case. I do not claim production customer integrations or savings figures without proof. I use specific verbs and can walk through architecture, failures and the decisions I personally made.",
+    "technical_context": "Build an evidence matrix per project component: design decision, personally authored code, collaborated implementation, tests run, actual deployment, operational metrics and documented decisions. Show code paths, architecture traces or approved tickets when permitted, without exposing customer data or secrets. Use precise verbs such as designed, implemented, integrated, tested, supported or proposed; each implies a different level of responsibility. Reframing a clinic voice demo as a banking scenario must not become a false claim of banking production deployment. Confirm outcomes against logs or stakeholder records.",
+    "common_mistakes": [
+      "Saying 'I built everything' without evidence",
+      "Presenting a design enhancement as production functionality",
+      "Sharing confidential user records to prove an implementation"
+    ],
+    "expected_concepts": [
+      "ownership",
+      "evidence",
+      "prototype",
+      "production",
+      "integrity"
+    ],
+    "project_context": "Voice/agent interview answers should distinguish prototype tenant separation, tool calls and observed logs from undeployed gateway, APIM and real bank integration."
   }
 }
