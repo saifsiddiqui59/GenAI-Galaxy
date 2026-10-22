@@ -60,8 +60,44 @@ class CurriculumTest(unittest.TestCase):
     self.assertGreaterEqual(len(lesson['workflow']),4)
     self.assertGreaterEqual(len(lesson['mistakes']),3)
     self.assertGreaterEqual(len(lesson['followups']),2)
-  self.assertEqual(len(self.l),179)
-  self.assertEqual(sum(t in self.l for _,_,t,_ in self.rows),180)
+  self.assertGreaterEqual(len(self.l),179)
+  self.assertGreaterEqual(sum(t in self.l for _,_,t,_ in self.rows),180)
+ def test_p3_all_66_editorial_lessons_and_full_structural_coverage(self):
+  inventory=json.loads((R/'docs/P3_AUTHORED_TOPICS.json').read_text())
+  names=inventory['titles']
+  self.assertEqual(inventory['editorial_status'],'unverified')
+  self.assertEqual(len(names),66)
+  self.assertEqual(len(names),len(set(names)))
+  self.assertEqual(set(names) - set(self.l),set())
+  self.assertEqual(len(self.c),17)
+  self.assertEqual(len(self.l),245)  # One title intentionally occurs in two locations.
+  self.assertEqual(sum(t in self.l for _,_,t,_ in self.rows),246)
+  for title in names:
+   with self.subTest(title=title):
+    v=self.l[title]
+    self.assertEqual(v['depth_status'],'expanded_editorial_unverified')
+    self.assertGreaterEqual(len(v['technical']),150)
+    self.assertGreaterEqual(len(v['answer'].split()),60)
+    self.assertLessEqual(len(v['answer'].split()),140)
+    self.assertGreaterEqual(len(v['workflow']),4)
+    self.assertGreaterEqual(len(v['mistakes']),3)
+    self.assertGreaterEqual(len(v['followups']),2)
+    self.assertEqual(len(v['keywords']),len(set(v['keywords'])))
+  self.assertEqual(len(json.loads((R/'api/rubrics.json').read_text())),246)
+
+ def test_all_authored_answer_length_and_editorial_status(self):
+  # Word count is a rehearsal proxy, never proof that answers were timed aloud.
+  self.assertEqual(len(self.l),245)
+  for name,lesson in self.l.items():
+   with self.subTest(title=name):
+    self.assertGreaterEqual(len(lesson['answer'].split()),60)
+    self.assertLessEqual(len(lesson['answer'].split()),140)
+  report=(R/'docs/COVERAGE_REPORT.md').read_text()
+  self.assertIn('| Expanded curriculum entries | 246 |',report)
+  self.assertIn('| Incomplete curriculum entries | 0 |',report)
+  self.assertIn('| Interview answer length 60–140 words | 245 / 245 |',report)
+  self.assertIn('**not established**',report)
+
  def test_topic_questions(self):
   for a,b,c,i in self.rows:
    with self.subTest(topic=c): self.assertTrue(i['summary'].strip() and i['question'].strip())

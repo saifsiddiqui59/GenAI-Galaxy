@@ -86,7 +86,7 @@ LangChain & LangGraph,Hands-on workflows,Subgraph & multi-agent handoff,V3 verif
 Azure AI Foundry & Cloud,AI platform,Azure AI Foundry hub vs project,V3 verified,expanded_8_sections_editorial_unverified,yes,Why separate hubs and projects?
 Azure AI Foundry & Cloud,AI platform,Azure OpenAI model deployment,V3 verified,expanded_8_sections_editorial_unverified,yes,What is a deployment versus a model?
 Azure AI Foundry & Cloud,AI platform,Azure AI Search,V3 verified,expanded_8_sections_editorial_unverified,yes,Why combine AI Search with Azure OpenAI?
-Azure AI Foundry & Cloud,AI platform,Azure AI-102 exam scope,V3 verified,overview_only_incomplete,no,What Azure services can you explain end-to-end?
+Azure AI Foundry & Cloud,AI platform,Azure AI-102 exam scope,V3 verified,expanded_8_sections_editorial_unverified,yes,What Azure services can you explain end-to-end?
 Azure AI Foundry & Cloud,AI platform,PAYG vs provisioned throughput,V3 verified,expanded_8_sections_editorial_unverified,yes,When would PTU be worth the cost?
 Azure AI Foundry & Cloud,Secure architecture,Entra ID & managed identities,V3 verified,expanded_8_sections_editorial_unverified,yes,How does an Azure Function reach Key Vault securely?
 Azure AI Foundry & Cloud,Secure architecture,Private endpoint & VNet,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you secure Azure AI services for banking?
@@ -96,7 +96,7 @@ Azure AI Foundry & Cloud,Secure architecture,Multi-region & failover,V3 verified
 Azure AI Foundry & Cloud,Serverless & hosting,Azure Functions,V3 verified,expanded_8_sections_editorial_unverified,yes,Why choose Functions for booking or account APIs?
 Azure AI Foundry & Cloud,Serverless & hosting,Container Apps & WebSockets,V3 verified,expanded_8_sections_editorial_unverified,yes,Why use Container Apps for a voice stream?
 Azure AI Foundry & Cloud,Serverless & hosting,"ADLS, Key Vault & secrets",V3 verified,expanded_8_sections_editorial_unverified,yes,What is the secure way to read AKV secrets in Databricks?
-Azure AI Foundry & Cloud,Serverless & hosting,AWS vs Azure comparison,V3 verified,overview_only_incomplete,no,How would your architecture change on AWS?
+Azure AI Foundry & Cloud,Serverless & hosting,AWS vs Azure comparison,V3 verified,expanded_8_sections_editorial_unverified,yes,How would your architecture change on AWS?
 Banking Voice Assistant,End-to-end voice call,Call entry & Azure Communication Services,V3 verified,expanded_8_sections_editorial_unverified,yes,Explain the path from telephone to agent.
 Banking Voice Assistant,End-to-end voice call,WebSocket audio streaming,V3 verified,expanded_8_sections_editorial_unverified,yes,Why does streaming help latency?
 Banking Voice Assistant,End-to-end voice call,Azure Speech STT,V3 verified,expanded_8_sections_editorial_unverified,yes,Why choose Azure Speech for speech-to-text?
@@ -172,76 +172,76 @@ Responsible AI & Security,Threat modelling,Indirect prompt injection from retrie
 "ADF, Data Pipelines & Modelling",Lakehouse & warehousing,SCD Type 2 vs Type 3,V3 verified,expanded_8_sections_editorial_unverified,yes,Compare SCD2 and SCD3.
 "ADF, Data Pipelines & Modelling",Lakehouse & warehousing,Dimensional modelling,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you model quarterly revenue?
 "ADF, Data Pipelines & Modelling",Lakehouse & warehousing,Data quality & reconciliation,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you reconcile source and destination data?
-"ADF, Data Pipelines & Modelling",Lakehouse & warehousing,Oil refinery ETL project,V3 verified,overview_only_incomplete,no,Give the end-to-end platform architecture.
+"ADF, Data Pipelines & Modelling",Lakehouse & warehousing,Oil refinery ETL project,V3 verified,expanded_8_sections_editorial_unverified,yes,Give the end-to-end platform architecture.
 "Python, SQL & API Skills",SQL,Joins & anti-joins,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you find Hive IDs missing in SQL?
 "Python, SQL & API Skills",SQL,Window functions,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you find the most recent record per account?
-"Python, SQL & API Skills",SQL,"CTEs, GROUP BY & HAVING",V3 verified,overview_only_incomplete,no,How would you compare current and previous quarter revenue?
-"Python, SQL & API Skills",SQL,Parameterized SQL,V3 verified,overview_only_incomplete,no,Why not let an agent run arbitrary SQL?
-"Python, SQL & API Skills",SQL,Postgres & Supabase,V3 verified,overview_only_incomplete,no,How do you implement row-level security for tenants?
-"Python, SQL & API Skills",Python,"Lists, tuples, sets & dicts",V3 verified,overview_only_incomplete,no,When would you use a dict rather than a list?
-"Python, SQL & API Skills",Python,"Functions, decorators & exceptions",V3 verified,overview_only_incomplete,no,How should a Python tool report an exception?
-"Python, SQL & API Skills",Python,"Files, JSON & regular expressions",V3 verified,overview_only_incomplete,no,How would you process a fixed-width file?
-"Python, SQL & API Skills",Python,REST APIs & FastAPI,V3 verified,overview_only_incomplete,no,How do you build a callable tool API?
-"Python, SQL & API Skills",Python,Asynchronous calls & concurrency,V3 verified,overview_only_incomplete,no,How can you call independent services concurrently?
-"Python, SQL & API Skills",Python,PySpark DataFrame operations,V3 verified,overview_only_incomplete,no,How do you handle malformed records in Spark?
+"Python, SQL & API Skills",SQL,"CTEs, GROUP BY & HAVING",V3 verified,expanded_8_sections_editorial_unverified,yes,How would you compare current and previous quarter revenue?
+"Python, SQL & API Skills",SQL,Parameterized SQL,V3 verified,expanded_8_sections_editorial_unverified,yes,Why not let an agent run arbitrary SQL?
+"Python, SQL & API Skills",SQL,Postgres & Supabase,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you implement row-level security for tenants?
+"Python, SQL & API Skills",Python,"Lists, tuples, sets & dicts",V3 verified,expanded_8_sections_editorial_unverified,yes,When would you use a dict rather than a list?
+"Python, SQL & API Skills",Python,"Functions, decorators & exceptions",V3 verified,expanded_8_sections_editorial_unverified,yes,How should a Python tool report an exception?
+"Python, SQL & API Skills",Python,"Files, JSON & regular expressions",V3 verified,expanded_8_sections_editorial_unverified,yes,How would you process a fixed-width file?
+"Python, SQL & API Skills",Python,REST APIs & FastAPI,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you build a callable tool API?
+"Python, SQL & API Skills",Python,Asynchronous calls & concurrency,V3 verified,expanded_8_sections_editorial_unverified,yes,How can you call independent services concurrently?
+"Python, SQL & API Skills",Python,PySpark DataFrame operations,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you handle malformed records in Spark?
 "Python, SQL & API Skills",Data access,Supabase RLS vs API authorization,V4 discovered gap,expanded_8_sections_editorial_unverified,yes,Why does a frontend user_id filter not provide security?
-"LLMOps, Monitoring & CI/CD",Automation & testing,Git & branching strategy,V3 verified,overview_only_incomplete,no,What must pass before an AI deployment merges?
-"LLMOps, Monitoring & CI/CD",Automation & testing,GitHub Actions / Azure DevOps,V3 verified,overview_only_incomplete,no,How do you invoke a RAG eval in CI?
-"LLMOps, Monitoring & CI/CD",Automation & testing,"Unit, integration & golden tests",V3 verified,overview_only_incomplete,no,What tests would you add for a new bank tool?
+"LLMOps, Monitoring & CI/CD",Automation & testing,Git & branching strategy,V3 verified,expanded_8_sections_editorial_unverified,yes,What must pass before an AI deployment merges?
+"LLMOps, Monitoring & CI/CD",Automation & testing,GitHub Actions / Azure DevOps,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you invoke a RAG eval in CI?
+"LLMOps, Monitoring & CI/CD",Automation & testing,"Unit, integration & golden tests",V3 verified,expanded_8_sections_editorial_unverified,yes,What tests would you add for a new bank tool?
 "LLMOps, Monitoring & CI/CD",Automation & testing,CI/CD eval threshold,V3 verified,expanded_8_sections_editorial_unverified,yes,How does a build fail on groundedness below 4/5?
-"LLMOps, Monitoring & CI/CD",Automation & testing,Configuration & Key Vault,V3 verified,overview_only_incomplete,no,How do you handle service keys in multiple environments?
-"LLMOps, Monitoring & CI/CD",Runtime monitoring,Distributed tracing,V3 verified,overview_only_incomplete,no,How do you trace a bad voice interaction?
-"LLMOps, Monitoring & CI/CD",Runtime monitoring,Token & cost telemetry,V3 verified,overview_only_incomplete,no,How do you monitor token usage?
-"LLMOps, Monitoring & CI/CD",Runtime monitoring,Latency breakdown,V3 verified,overview_only_incomplete,no,Why can the first chat response be slow?
-"LLMOps, Monitoring & CI/CD",Runtime monitoring,Failed tool calls & fallback,V3 verified,overview_only_incomplete,no,How do you diagnose a booking tool failure?
-"LLMOps, Monitoring & CI/CD",Runtime monitoring,Observability dashboards & alerts,V3 verified,overview_only_incomplete,no,What production dashboard would you build?
-"LLMOps, Monitoring & CI/CD",Runtime monitoring,Production feedback triage,V3 verified,overview_only_incomplete,no,A user says the answer is wrong: what are your steps?
-"LLMOps, Monitoring & CI/CD",Production operations,Correlated voice and tool tracing,V4 discovered gap,overview_only_incomplete,no,How do you debug a slow banking call end to end?
-Anomaly Detection & Agentic RCA,Statistical detection,Runtime history & baselines,V3 verified,overview_only_incomplete,no,What baseline do you use for pipeline runtime?
+"LLMOps, Monitoring & CI/CD",Automation & testing,Configuration & Key Vault,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you handle service keys in multiple environments?
+"LLMOps, Monitoring & CI/CD",Runtime monitoring,Distributed tracing,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you trace a bad voice interaction?
+"LLMOps, Monitoring & CI/CD",Runtime monitoring,Token & cost telemetry,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you monitor token usage?
+"LLMOps, Monitoring & CI/CD",Runtime monitoring,Latency breakdown,V3 verified,expanded_8_sections_editorial_unverified,yes,Why can the first chat response be slow?
+"LLMOps, Monitoring & CI/CD",Runtime monitoring,Failed tool calls & fallback,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you diagnose a booking tool failure?
+"LLMOps, Monitoring & CI/CD",Runtime monitoring,Observability dashboards & alerts,V3 verified,expanded_8_sections_editorial_unverified,yes,What production dashboard would you build?
+"LLMOps, Monitoring & CI/CD",Runtime monitoring,Production feedback triage,V3 verified,expanded_8_sections_editorial_unverified,yes,A user says the answer is wrong: what are your steps?
+"LLMOps, Monitoring & CI/CD",Production operations,Correlated voice and tool tracing,V4 discovered gap,expanded_8_sections_editorial_unverified,yes,How do you debug a slow banking call end to end?
+Anomaly Detection & Agentic RCA,Statistical detection,Runtime history & baselines,V3 verified,expanded_8_sections_editorial_unverified,yes,What baseline do you use for pipeline runtime?
 Anomaly Detection & Agentic RCA,Statistical detection,Median & MAD,V3 verified,expanded_8_sections_editorial_unverified,yes,Why use MAD instead of standard deviation?
-Anomaly Detection & Agentic RCA,Statistical detection,"Normal, warning & critical",V3 verified,overview_only_incomplete,no,How do you decide if a run is critical?
-Anomaly Detection & Agentic RCA,Statistical detection,Metadata & Supabase storage,V3 verified,overview_only_incomplete,no,What schema would you create for anomalies?
-Anomaly Detection & Agentic RCA,Root-cause assistant,Activity logs & dependency graph,V3 verified,overview_only_incomplete,no,Which activity made a pipeline slow?
-Anomaly Detection & Agentic RCA,Root-cause assistant,Materialized RCA views,V3 verified,overview_only_incomplete,no,What is the value of a materialized RCA view?
-Anomaly Detection & Agentic RCA,Root-cause assistant,RAG + SQL grounded RCA,V3 verified,overview_only_incomplete,no,How does an RCA assistant avoid inventing causes?
-Anomaly Detection & Agentic RCA,Root-cause assistant,Ticket creation & SME workflow,V3 verified,overview_only_incomplete,no,How do you shorten time to root cause?
-Anomaly Detection & Agentic RCA,Root-cause assistant,Data governance & business impact,V3 verified,overview_only_incomplete,no,How would you quantify business impact?
-Enterprise File Processing AI,File parsing framework,Fixed-width & delimited formats,V3 verified,overview_only_incomplete,no,How can one ingestion engine support many formats?
-Enterprise File Processing AI,File parsing framework,"Regex, field offsets & rules",V3 verified,overview_only_incomplete,no,How would you add a new file format?
-Enterprise File Processing AI,File parsing framework,Header/detail/trailer checks,V3 verified,overview_only_incomplete,no,What happens when a trailer count is wrong?
-Enterprise File Processing AI,File parsing framework,Transformation & reconstruction,V3 verified,overview_only_incomplete,no,How do you prove the output file is correct?
-Enterprise File Processing AI,Agent-assisted orchestration,LangGraph orchestration,V3 verified,overview_only_incomplete,no,Sketch the processing graph.
-Enterprise File Processing AI,Agent-assisted orchestration,Rule learning from reference files,V3 verified,overview_only_incomplete,no,How do you safely infer a parsing rule?
-Enterprise File Processing AI,Agent-assisted orchestration,File comparison & regression,V3 verified,overview_only_incomplete,no,What are your regression tests?
-Enterprise File Processing AI,Agent-assisted orchestration,Data integrity & compliance,V3 verified,overview_only_incomplete,no,Why must deterministic checks remain primary?
+Anomaly Detection & Agentic RCA,Statistical detection,"Normal, warning & critical",V3 verified,expanded_8_sections_editorial_unverified,yes,How do you decide if a run is critical?
+Anomaly Detection & Agentic RCA,Statistical detection,Metadata & Supabase storage,V3 verified,expanded_8_sections_editorial_unverified,yes,What schema would you create for anomalies?
+Anomaly Detection & Agentic RCA,Root-cause assistant,Activity logs & dependency graph,V3 verified,expanded_8_sections_editorial_unverified,yes,Which activity made a pipeline slow?
+Anomaly Detection & Agentic RCA,Root-cause assistant,Materialized RCA views,V3 verified,expanded_8_sections_editorial_unverified,yes,What is the value of a materialized RCA view?
+Anomaly Detection & Agentic RCA,Root-cause assistant,RAG + SQL grounded RCA,V3 verified,expanded_8_sections_editorial_unverified,yes,How does an RCA assistant avoid inventing causes?
+Anomaly Detection & Agentic RCA,Root-cause assistant,Ticket creation & SME workflow,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you shorten time to root cause?
+Anomaly Detection & Agentic RCA,Root-cause assistant,Data governance & business impact,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you quantify business impact?
+Enterprise File Processing AI,File parsing framework,Fixed-width & delimited formats,V3 verified,expanded_8_sections_editorial_unverified,yes,How can one ingestion engine support many formats?
+Enterprise File Processing AI,File parsing framework,"Regex, field offsets & rules",V3 verified,expanded_8_sections_editorial_unverified,yes,How would you add a new file format?
+Enterprise File Processing AI,File parsing framework,Header/detail/trailer checks,V3 verified,expanded_8_sections_editorial_unverified,yes,What happens when a trailer count is wrong?
+Enterprise File Processing AI,File parsing framework,Transformation & reconstruction,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you prove the output file is correct?
+Enterprise File Processing AI,Agent-assisted orchestration,LangGraph orchestration,V3 verified,expanded_8_sections_editorial_unverified,yes,Sketch the processing graph.
+Enterprise File Processing AI,Agent-assisted orchestration,Rule learning from reference files,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you safely infer a parsing rule?
+Enterprise File Processing AI,Agent-assisted orchestration,File comparison & regression,V3 verified,expanded_8_sections_editorial_unverified,yes,What are your regression tests?
+Enterprise File Processing AI,Agent-assisted orchestration,Data integrity & compliance,V3 verified,expanded_8_sections_editorial_unverified,yes,Why must deterministic checks remain primary?
 Architecture & System Design Cases,RAG & analytics cases,Today's policy document changes,V3 verified,expanded_8_sections_editorial_unverified,yes,Walk through updating policy documents in production.
 Architecture & System Design Cases,RAG & analytics cases,Wrong answers after deployment,V3 verified,expanded_8_sections_editorial_unverified,yes,What would you debug first and why?
 Architecture & System Design Cases,RAG & analytics cases,Revenue fell last quarter,V3 verified,expanded_8_sections_editorial_unverified,yes,Design a multi-agent financial analyst.
-Architecture & System Design Cases,RAG & analytics cases,Enterprise semantic search,V3 verified,overview_only_incomplete,no,Design enterprise search for thousands of PDFs.
-Architecture & System Design Cases,RAG & analytics cases,Graph RAG decision,V3 verified,overview_only_incomplete,no,When does Graph RAG justify its complexity?
-Architecture & System Design Cases,Action-taking agents,Account balance + meeting booking,V3 verified,overview_only_incomplete,no,Which parts must not rely on an LLM guess?
-Architecture & System Design Cases,Action-taking agents,Banking data isolation,V3 verified,overview_only_incomplete,no,How would you test data isolation for two customers?
-Architecture & System Design Cases,Action-taking agents,Safe tool retries,V3 verified,overview_only_incomplete,no,What if the client times out after booking succeeded?
-Architecture & System Design Cases,Action-taking agents,Agent SQL security,V3 verified,overview_only_incomplete,no,How do you stop an agent reading unauthorized tables?
-Architecture & System Design Cases,Action-taking agents,Voice AI failover,V3 verified,overview_only_incomplete,no,What happens when one Azure service is down?
-Architecture & System Design Cases,System trade-offs,Latency vs accuracy,V3 verified,overview_only_incomplete,no,How would you meet a strict voice latency target?
-Architecture & System Design Cases,System trade-offs,Memory vs stateless scaling,V3 verified,overview_only_incomplete,no,How do you scale a multi-turn agent horizontally?
-Architecture & System Design Cases,System trade-offs,Structured vs unstructured data,V3 verified,overview_only_incomplete,no,When would you not use embeddings?
-Architecture & System Design Cases,System trade-offs,Human fallback & escalation,V3 verified,overview_only_incomplete,no,When should an AI agent transfer to a human?
-Architecture & System Design Cases,Document systems,"Secure resume upload, extraction & lifecycle",V4 discovered gap,overview_only_incomplete,no,How would you safely ingest a candidate resume into an interview tutor?
-"Interview, Resume & Career Stories",Interview opening,60-second GenAI introduction,V3 verified,overview_only_incomplete,no,Tell me about yourself.
-"Interview, Resume & Career Stories",Interview opening,Banking voice assistant project story,V3 verified,overview_only_incomplete,no,Explain your best recent GenAI project.
-"Interview, Resume & Career Stories",Interview opening,Anomaly RCA project story,V3 verified,overview_only_incomplete,no,What AI problem did you solve beyond a chatbot?
-"Interview, Resume & Career Stories",Interview opening,File processor project story,V3 verified,overview_only_incomplete,no,Why use an agent in file processing?
+Architecture & System Design Cases,RAG & analytics cases,Enterprise semantic search,V3 verified,expanded_8_sections_editorial_unverified,yes,Design enterprise search for thousands of PDFs.
+Architecture & System Design Cases,RAG & analytics cases,Graph RAG decision,V3 verified,expanded_8_sections_editorial_unverified,yes,When does Graph RAG justify its complexity?
+Architecture & System Design Cases,Action-taking agents,Account balance + meeting booking,V3 verified,expanded_8_sections_editorial_unverified,yes,Which parts must not rely on an LLM guess?
+Architecture & System Design Cases,Action-taking agents,Banking data isolation,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you test data isolation for two customers?
+Architecture & System Design Cases,Action-taking agents,Safe tool retries,V3 verified,expanded_8_sections_editorial_unverified,yes,What if the client times out after booking succeeded?
+Architecture & System Design Cases,Action-taking agents,Agent SQL security,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you stop an agent reading unauthorized tables?
+Architecture & System Design Cases,Action-taking agents,Voice AI failover,V3 verified,expanded_8_sections_editorial_unverified,yes,What happens when one Azure service is down?
+Architecture & System Design Cases,System trade-offs,Latency vs accuracy,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you meet a strict voice latency target?
+Architecture & System Design Cases,System trade-offs,Memory vs stateless scaling,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you scale a multi-turn agent horizontally?
+Architecture & System Design Cases,System trade-offs,Structured vs unstructured data,V3 verified,expanded_8_sections_editorial_unverified,yes,When would you not use embeddings?
+Architecture & System Design Cases,System trade-offs,Human fallback & escalation,V3 verified,expanded_8_sections_editorial_unverified,yes,When should an AI agent transfer to a human?
+Architecture & System Design Cases,Document systems,"Secure resume upload, extraction & lifecycle",V4 discovered gap,expanded_8_sections_editorial_unverified,yes,How would you safely ingest a candidate resume into an interview tutor?
+"Interview, Resume & Career Stories",Interview opening,60-second GenAI introduction,V3 verified,expanded_8_sections_editorial_unverified,yes,Tell me about yourself.
+"Interview, Resume & Career Stories",Interview opening,Banking voice assistant project story,V3 verified,expanded_8_sections_editorial_unverified,yes,Explain your best recent GenAI project.
+"Interview, Resume & Career Stories",Interview opening,Anomaly RCA project story,V3 verified,expanded_8_sections_editorial_unverified,yes,What AI problem did you solve beyond a chatbot?
+"Interview, Resume & Career Stories",Interview opening,File processor project story,V3 verified,expanded_8_sections_editorial_unverified,yes,Why use an agent in file processing?
 "Interview, Resume & Career Stories",Interview opening,Databricks 27% savings story,V3 verified,expanded_8_sections_editorial_unverified,yes,How did you reduce Databricks cost?
-"Interview, Resume & Career Stories",Interview depth,Three-layer Q&A method,V3 verified,overview_only_incomplete,no,How deep can you explain your project?
-"Interview, Resume & Career Stories",Interview depth,Techno-managerial design,V3 verified,overview_only_incomplete,no,How would you lead a multi-agent implementation?
-"Interview, Resume & Career Stories",Interview depth,Team leadership & AI adoption,V3 verified,overview_only_incomplete,no,How do you lead a team of four?
-"Interview, Resume & Career Stories",Interview depth,Why leaving & role fit,V3 verified,overview_only_incomplete,no,Why are you leaving your present company?
-"Interview, Resume & Career Stories",Interview depth,STAR impact storytelling,V3 verified,overview_only_incomplete,no,Describe a production incident you resolved.
-"Interview, Resume & Career Stories",Interview depth,Round-two architecture defense,V3 verified,overview_only_incomplete,no,Why did you choose each major platform component?
-"Interview, Resume & Career Stories",Professional materials,ATS-friendly resume,V3 verified,overview_only_incomplete,no,Which three projects best demonstrate GenAI ownership?
-"Interview, Resume & Career Stories",Professional materials,Azure AI Engineer Associate,V3 verified,overview_only_incomplete,no,How have you applied your Azure certification knowledge?
-"Interview, Resume & Career Stories",Professional materials,Job descriptions & gap analysis,V3 verified,overview_only_incomplete,no,How does your profile match a senior AI engineer role?
-"Interview, Resume & Career Stories",Professional materials,Interview cheat sheet,V3 verified,overview_only_incomplete,no,Can you answer without reading a long script?
-"Interview, Resume & Career Stories",Career narratives,Explain project ownership versus proof,V4 discovered gap,overview_only_incomplete,no,Which parts of your banking voice agent did you build yourself?
+"Interview, Resume & Career Stories",Interview depth,Three-layer Q&A method,V3 verified,expanded_8_sections_editorial_unverified,yes,How deep can you explain your project?
+"Interview, Resume & Career Stories",Interview depth,Techno-managerial design,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you lead a multi-agent implementation?
+"Interview, Resume & Career Stories",Interview depth,Team leadership & AI adoption,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you lead a team of four?
+"Interview, Resume & Career Stories",Interview depth,Why leaving & role fit,V3 verified,expanded_8_sections_editorial_unverified,yes,Why are you leaving your present company?
+"Interview, Resume & Career Stories",Interview depth,STAR impact storytelling,V3 verified,expanded_8_sections_editorial_unverified,yes,Describe a production incident you resolved.
+"Interview, Resume & Career Stories",Interview depth,Round-two architecture defense,V3 verified,expanded_8_sections_editorial_unverified,yes,Why did you choose each major platform component?
+"Interview, Resume & Career Stories",Professional materials,ATS-friendly resume,V3 verified,expanded_8_sections_editorial_unverified,yes,Which three projects best demonstrate GenAI ownership?
+"Interview, Resume & Career Stories",Professional materials,Azure AI Engineer Associate,V3 verified,expanded_8_sections_editorial_unverified,yes,How have you applied your Azure certification knowledge?
+"Interview, Resume & Career Stories",Professional materials,Job descriptions & gap analysis,V3 verified,expanded_8_sections_editorial_unverified,yes,How does your profile match a senior AI engineer role?
+"Interview, Resume & Career Stories",Professional materials,Interview cheat sheet,V3 verified,expanded_8_sections_editorial_unverified,yes,Can you answer without reading a long script?
+"Interview, Resume & Career Stories",Career narratives,Explain project ownership versus proof,V4 discovered gap,expanded_8_sections_editorial_unverified,yes,Which parts of your banking voice agent did you build yourself?
