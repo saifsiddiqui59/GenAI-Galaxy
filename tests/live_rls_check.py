@@ -21,6 +21,32 @@ class CheckFailed(RuntimeError):
     pass
 
 
+
+def validate_publishable_key(key):
+    """Reject accidentally supplying an elevated Supabase key to the live probe.
+
+    Old Supabase anon JWT keys are accepted only when their role claim is anon.
+    New opaque publishable keys start sb_publishable_; never use sb_secret_.
+    """
+    import base64
+    if not isinstance(key, str) or not key.strip() or len(key) > 4096:
+        raise CheckFailed("Invalid Supabase publishable key")
+    if key.startswith("sb_secret_"):
+        raise CheckFailed("Refusing privileged Supabase key")
+    if key.startswith("sb_publishable_"):
+        return key
+    if key.count(".") != 2:
+        raise CheckFailed("Expected an anon or publishable Supabase key")
+    try:
+        claims = key.split(".")[1]
+        raw = base64.urlsafe_b64decode(claims + "=" * (-len(claims) % 4))
+        role = json.loads(raw).get("role")
+    except (ValueError, UnicodeError, TypeError):
+        raise CheckFailed("Unrecognized Supabase JWT key") from None
+    if role != "anon":
+        raise CheckFailed("Refusing privileged Supabase key")
+    return key
+
 def request(method, path, key, token=None, body=None, content_type=None, prefer=None):
     headers = {"apikey": key}
     if token:
@@ -104,7 +130,7 @@ def run():
     require(not missing, "Missing required dedicated test-account environment variables: " + ", ".join(missing))
     require(os.getenv("GALAXY_SUPABASE_URL", URL) == URL,
             "Refusing a different Supabase project URL")
-    key = os.environ["GALAXY_SUPABASE_PUBLISHABLE_KEY"]
+    key = validate_publishable_key(os.environ["GALAXY_SUPABASE_PUBLISHABLE_KEY"])
     a = sign_in(os.environ["GALAXY_TEST_A_EMAIL"], os.environ["GALAXY_TEST_A_PASSWORD"], key)
     b = sign_in(os.environ["GALAXY_TEST_B_EMAIL"], os.environ["GALAXY_TEST_B_PASSWORD"], key)
     require(a[0] != b[0], "Both credentials resolve to the same account")
