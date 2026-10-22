@@ -19,3 +19,11 @@ Local unit tests: **16 Python passed**; Node engine passed; app and Functions sy
 GitHub private repository `saifsiddiqui59/GenAI-Galaxy` continues to return **404** through the connected GitHub account. The connector exposes no repository-creation operation. No remote PR, Actions run or Azure deployment happened. RetailGrowthAI and WineShopPOS were untouched.
 
 Local served-site Playwright navigation was also attempted but **blocked by the execution environment's localhost restriction**; this is neither a product-pass nor an application failure and is excluded from completed test claims.
+
+## M4 — GitHub coordination readiness (local only, 2026-10-22)
+
+Read RetailGrowthAI `AGENTS.md`, CI documentation, parallel-work plan and coordinator state through the GitHub connection. Verified identity `saifsiddiqui59` and write permission on the separate private RetailGrowthAI repository; no changes to it. Verified that `saifsiddiqui59/GenAI-Galaxy` returns 404 and is absent from the authenticated repository list; the available GitHub connector has no `create_repo` operation.
+
+Implemented a Galaxy-only Git Bash publishing helper, documented an M2/M3/M4 stacked draft-PR sequence, added read-only safety CI (third job), bounded CI timeouts/concurrency, static config/repository guard tests and the missing public runtime-config deploy asset. Local **20 Python tests** and Node learning-engine/syntax checks passed. Mocked Playwright desktop/mobile/reduced-motion navigation and microphone transcription also passed. Reproducible rubric and coverage artifacts matched committed state: **148/246 authored entries, 98 incomplete**.
+
+No GitHub remote, PR, actual GitHub Actions run, Supabase mutation or Azure deployment was created or verified in M4. Browser tests still mock voice and backend. Production readiness remains blocked by the prerequisites in `NEXT_TASK.md`.
