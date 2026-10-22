@@ -14,3 +14,5 @@
 6. **Monitoring/cost:** Set Azure spending alert and estimate blob capacity/request costs; retain explicit manual control over further Azure provisioning.
 
 **Site is a publicly accessible frontend preview, not production readiness.**
+
+**Automated browser acceptance update:** Live guest-mode Playwright passed in GitHub Actions #39804869900 for desktop/mobile/reduced motion. Manual owner review of UX, actual microphone/STT permission, real Supabase sign-in and user isolation are still outstanding.
