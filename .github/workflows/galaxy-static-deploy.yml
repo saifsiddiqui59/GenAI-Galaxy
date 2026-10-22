@@ -1,0 +1,83 @@
+name: Galaxy static website deployment (manual, existing only)
+
+# No PR or push deployment; never provisions storage, roles, apps or resource groups.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_deploy:
+        description: 'Type DEPLOY to publish approved public static assets to the existing Galaxy storage account'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    if: github.ref == 'refs/heads/main' && github.repository == 'saifsiddiqui59/GenAI-Galaxy' && inputs.confirm_deploy == 'DEPLOY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test source and verify static asset allowlist
+        run: |
+          python -m pip install pypdf==5.9.0
+          python -m unittest discover -s tests -v
+          node tests/test_engine.cjs
+          bash -n scripts/deploy_existing_static.sh
+          python scripts/build_api_rubrics.py
+          git diff --exit-code -- api/rubrics.json
+          python scripts/coverage_report.py
+          git diff --exit-code -- docs/TOPIC_COVERAGE.csv docs/COVERAGE_REPORT.md
+
+  deploy:
+    needs: validate
+    if: github.ref == 'refs/heads/main' && github.repository == 'saifsiddiqui59/GenAI-Galaxy' && inputs.confirm_deploy == 'DEPLOY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GALAXY_AZ_RG: GenAI_Galaxy
+      GALAXY_AZ_STORAGE: ${{ vars.GALAXY_STORAGE_ACCOUNT }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Refuse deployment without exact existing storage destination
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "$GALAXY_AZ_STORAGE" || ! "$GALAXY_AZ_STORAGE" =~ ^[a-z0-9]{3,24}$ ]]; then
+            echo '::error::Set dev environment variable GALAXY_STORAGE_ACCOUNT to the actual existing Azure Storage account name (3-24 lowercase letters/digits).'
+            exit 1
+          fi
+          for name in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Missing dev environment secret $name"
+              exit 1
+            fi
+          done
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Sign in with restricted OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Upload only allowlisted frontend assets to existing static website
+        shell: bash
+        run: bash scripts/deploy_existing_static.sh
+      - name: Remove Azure runner login
+        if: always()
+        shell: bash
+        run: az logout >/dev/null 2>&1 || true

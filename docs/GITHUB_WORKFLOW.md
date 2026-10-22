@@ -30,8 +30,13 @@
 | M2 | `feat/m2-interview-foundations` | `main` | Secure API drafts, speech UI, grading boundary and tests |
 | M3 | `feat/m3-curriculum-hardening` | `feat/m2-interview-foundations` | Expanded lessons and backend trust controls |
 | M4 | `chore/m4-github-readiness` | `feat/m3-curriculum-hardening` | GitHub bootstrap, CI hardening, documentation |
+| M5 | `chore/m5-azure-actions` | `chore/m4-github-readiness` | Azure read-only OIDC workflow and manual existing-static-site deployment |
 
 After M2 merges, rebase/retarget M3 to `main`; after M3 merges, retarget M4 to `main`. Do **not** merge stacked PRs into main without checking the resulting diff and post-merge CI. Git history has been retained, but no remote action has happened.
+
+## M5 Azure read-only and manually approved static workflow
+
+See `docs/AZURE_GITHUB_OIDC.md`. The existing resource group and Entra app are both reported by the owner as `GenAI_Galaxy`; neither has been verified through Azure. `GenAI_Galaxy` is NOT a valid storage account name. A new `chore/m5-azure-actions` branch is stacked on M4 for two **manually triggered** Azure workflows. They do not run on normal CI/PRs. The read-only workflow checks OIDC and RG access; the static upload requires a verified **existing** storage account, explicit `DEPLOY` acknowledgement, tests and a protected environment. **No remote actions have run.**
 
 ## CI gates versus real-world verification
 

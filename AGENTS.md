@@ -12,3 +12,5 @@ Before modifying features, read: `docs/PROJECT_STATE.md`, `docs/NEXT_TASK.md`, `
 8. Work in small feature branches; run `scripts/checkpoint.sh`; update docs and add regression tests; publish via reviewed PR; never fake CI/deployment success.
 9. Follow the RetailGrowthAI-inspired **Galaxy-only** Git/PR process in `docs/GITHUB_WORKFLOW.md`: never push to any other project, never self-merge stacked PRs, inspect real Actions logs before marking CI green.
 10. For private-repo bootstrap, use `scripts/publish_github.sh` only from a clean Galaxy Git worktree under the correct GitHub account. `--check` is read-only; `--create-private` creates an empty private remote; `--publish` pushes and opens draft PRs only. The user-controlled Git Bash CLI login is separate from the ChatGPT GitHub connector.
+
+Azure DEV and GitHub Actions: read `docs/AZURE_GITHUB_OIDC.md`. Never reuse RetailGrowthAI's Entra federation or Azure secrets. The Azure group/app name provided by owner is `GenAI_Galaxy`, but storage account needs separate verification. No cloud work on pushes/PRs; manual `dev` approval and confirmed existing account required for Azure deployments.

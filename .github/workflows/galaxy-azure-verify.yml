@@ -1,0 +1,56 @@
+name: Galaxy Azure OIDC + resource discovery (read-only)
+
+# Manual only. NEVER runs on pull requests, provisions resources, or deploys.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  azure-read-only:
+    if: github.ref == 'refs/heads/main' && github.repository == 'saifsiddiqui59/GenAI-Galaxy'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GALAXY_AZ_RG: GenAI_Galaxy
+      GALAXY_APP_NAME: GenAI_Galaxy
+    steps:
+      - name: Verify required dev environment secrets
+        shell: bash
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          for key in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID; do
+            if [[ -z "${!key:-}" ]]; then
+              echo "::error::Missing dev environment secret: $key"
+              exit 1
+            fi
+          done
+      - name: Sign in using federated GitHub OIDC (no client secret)
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Check existing Galaxy resource group and inventory (read-only)
+        shell: bash
+        run: |
+          set -euo pipefail
+          az account show --query '{subscription:name, state:state}' -o json
+          test "$(az account show --query state -o tsv)" = Enabled
+          az group show --name "$GALAXY_AZ_RG" --query '{name:name,location:location,id:id}' -o json
+          az resource list --resource-group "$GALAXY_AZ_RG" --query '[].{name:name,type:type,location:location}' -o table
+          echo "Entra app display name expected: ${GALAXY_APP_NAME}. The successful OIDC login proves the configured app ID, not its display name."
+          echo 'No Azure resources were modified.'
+      - name: Remove Azure runner login
+        if: always()
+        shell: bash
+        run: az logout >/dev/null 2>&1 || true

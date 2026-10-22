@@ -49,3 +49,8 @@ The private Galaxy GitHub remote is not yet created. GitHub access to the separa
 ## M3 quality scope
 
 The M3 curriculum expansion and related scoring tests are locally available but NOT independently expert-reviewed. **128 / 147** model answers have 60–140 words; remaining shorter answers need timing edits. Topic coverage is not proof of technical correctness. Backend deployments need gateway network controls, actual quotas, test users and explicit Azure provisioning approval.
+
+
+### M5 GitHub Actions / existing Azure account
+
+Separate Galaxy-only `.github/workflows/galaxy-ci.yml` for push/PR tests and `.github/workflows/galaxy-azure-verify.yml` for **manual read-only OIDC checks** on RG `GenAI_Galaxy`, using Entra app `GenAI_Galaxy`. `.github/workflows/galaxy-static-deploy.yml` optionally uploads public assets only on manual main-branch `DEPLOY`, after protected DEV approval and verified existing storage account. See `docs/AZURE_GITHUB_OIDC.md`; **none of these have run remotely** because private `saifsiddiqui59/GenAI-Galaxy` repository is still unavailable. No cloud provisioning or deployment occurred.

@@ -27,3 +27,10 @@
 - Git Bash `scripts/publish_github.sh` verifies the GitHub account, private visibility, exact origin URL and clean Git worktree; it never merges, deploys or pushes to unrelated repositories.
 - Add read-only `release-safety` CI plus branch `chore/**`, concurrency cancellation, runner/job timeouts and shell checks. It is local-only until a verified GitHub Actions run exists.
 - Fix `scripts/deploy_azure_static.sh` to include public `runtime-config.js` in future static uploads; do not deploy or provision resources under this milestone.
+
+## M5 — Azure OIDC modeled on RetailGrowthAI (2026-10-22)
+
+- Use a **Galaxy-only** Entra app registration for federated workload trust (owner supplied app name `GenAI_Galaxy`, but whether it is an Entra registration or App Service is unverified) for private GitHub Galaxy `dev` environment. Do **not** reuse RetailGrowthAI's federation or secrets. Exact post-July-2026 immutable OIDC subject needs real Galaxy repo ID after creation.
+- Owner-supplied Azure RG `GenAI_Galaxy` is the *only* allowed resource group. Treat it as existing but **not independently verified** until a successful read-only action.
+- No Azure operations during PR/push CI. Manual Azure discovery workflow is read-only; manual static-site upload requires main branch, exact DEPLOY text, protected environment, successful tests, actual existing storage name and restricted Azure RBAC. No automatic provisioning.
+- `GenAI_Galaxy` contains an underscore and cannot be an Azure Storage account name; user has not identified storage destination, so deployment must refuse to proceed until configured.
