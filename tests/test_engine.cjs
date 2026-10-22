@@ -1,0 +1,18 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
+const source=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8').replace(/\nstart\(\);\s*$/,'\n');
+const state={};const context={console,window:{},matchMedia:()=>({matches:false}),document:{getElementById:()=>null},localStorage:{},setTimeout,clearTimeout,Date,Math,JSON,URL,performance:{now:()=>0},requestAnimationFrame:()=>0,location:{},navigator:{},addEventListener:()=>{}};
+vm.runInNewContext(source,context,{filename:'app.js'});
+const e=context.window.GenAIGalaxyTest;
+const curriculum=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','curriculum.json'),'utf8'));
+const lessons=JSON.parse(fs.readFileSync(path.join(__dirname,'..','data','lessons.json'),'utf8'));
+const t={title:'KV cache',branch:'LLM & Transformer Fundamentals',group:'Inference & latency',summary:'KV cache saves keys and values.',question:'Explain KV cache.'};
+vm.runInNewContext("state.lessons=__lessons;",Object.assign(context,{__lessons:lessons}));
+assert.equal(e.key(t),'LLM & Transformer Fundamentals / Inference & latency / KV cache');
+const good=e.evaluateAnswer(t,'Attention key and value tensors speed decode after prefill. In our model the cache lets autoregressive text generation reuse previous calculations during inference. It avoids repeating work as the sequence grows.');
+const bad=e.evaluateAnswer(t,'It does something smart and always produces perfect facts.');
+assert.ok(good.score>bad.score,JSON.stringify({good,bad}));
+assert.ok(good.missing.length<bad.missing.length);
+assert.equal(e.questionFor(t,1),t.question);
+assert.equal(e.questionFor(t,2),lessons['KV cache'].followups[0]);
+assert.equal(curriculum.length,17);
+console.log('Node learning-engine checks passed');
