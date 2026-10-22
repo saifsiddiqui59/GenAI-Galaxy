@@ -76,7 +76,7 @@ The existing public static Blob preview is an older deployment and does not auto
 
 ## P2 — updated next steps after six merged workstreams (supersedes earlier backlog totals)
 
-- **Six P2 source PRs #24–#29 are merged.** Source implementation/readiness checks are complete for those PRs, **not** hosted acceptance or deployment. Confirm final [main CI #39838287412](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39838287412) 3/3 before treating this exact latest integration commit as verified green.
+- **Six P2 source PRs #24–#29 are merged.** Source implementation/readiness checks are complete for those PRs, **not** hosted acceptance or deployment. Final [feature main CI #39838287412](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39838287412) **passed all 3 jobs** on integrated feature commit `18bf47f8`.
 - **66 remaining overview-only lesson topics** still need distinct, evidence-based eight-part explanations. Preserve 17 worlds, 246 entries and original V3 IDs. Run coverage/rubric generators and full curriculum regression tests after each authored batch.
 - **Auth:** owner-approve real A/B Galaxy-only test accounts and protected dev secrets, then separately authorize manual `TEST` two-user RLS workflow. Offline key validation is not proof of hosted policy correctness. Verify password recovery redirect/email delivery with a dedicated account.
 - **Mic:** owner-approve updated preview publish and use real devices to test permissions, start/stop, language recognition, transcript retention and denial fallback. Simulated CI is not hardware proof.
