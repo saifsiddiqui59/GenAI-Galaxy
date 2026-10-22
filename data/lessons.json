@@ -5332,5 +5332,366 @@
       "deterministic order"
     ],
     "depth_status": "expanded_editorial_unverified"
+  },
+  "Azure AI-102 exam scope": {
+    "simple": "AI-102 assesses the ability to design, implement, deploy and monitor Azure AI solutions, not merely recall service names.",
+    "technical": "Build an end-to-end Azure AI architecture by separating data ingress, identity, model/search service, prompt orchestration, content safety, observability and deployment. Azure AI services include language, speech, vision and document intelligence capabilities; generative workloads can combine model endpoints with retrieval. Evaluate least privilege, managed identities, networking, quotas, content-filter policy, evaluation datasets and regional availability. Certification objectives can change by exam version, so check the current official Microsoft skills-measured outline rather than memorizing an obsolete service list.",
+    "example": "For a document assistant, index approved files with Azure AI Search, call a backend-hosted model endpoint, and log reference citations and refusal decisions.",
+    "project": "Describe the proposed Galaxy AI evaluator and secure speech broker as designs, not as services already deployed.",
+    "answer": "I can describe an Azure AI solution from input to monitoring rather than listing product names. I would choose a language, speech, search or document service for a defined business problem, protect it with identity and private networking, and evaluate quality, latency, safety and cost using test data. Generative AI may require retrieval and grounded-answer checks as well as deployment configuration. I would consult the current Microsoft AI-102 outline before claiming every exam objective is covered.",
+    "workflow": [
+      "Translate a scenario into functional and responsible-AI requirements",
+      "Select Azure AI services and approved data access",
+      "Design identity, search/model orchestration and evaluation",
+      "Plan deployment, monitoring, regression and cost controls"
+    ],
+    "mistakes": [
+      "Assuming one AI service covers every vision, speech and search use case",
+      "Treating a passed certification as proof of production experience",
+      "Using outdated exam objectives without checking version"
+    ],
+    "followups": [
+      "How would you evaluate a speech-plus-search solution?",
+      "What privacy controls differ between document extraction and model inference?"
+    ],
+    "keywords": [
+      "AI-102",
+      "Azure AI",
+      "search",
+      "identity",
+      "evaluation"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "AWS vs Azure comparison": {
+    "simple": "The design principles stay largely the same across clouds, but identities, service contracts and operations change.",
+    "technical": "Map architectural responsibilities rather than choosing names solely by resemblance: Azure Functions to Lambda, Blob/ADLS to S3, Entra/managed identity to IAM role and STS, Azure Monitor to CloudWatch, Azure AI Search to a managed search/vector option, and Azure OpenAI to an appropriate managed model inference service such as Bedrock. Capabilities differ in model availability, private networking, region support, quota models and search semantics. Validate auth propagation, per-tenant isolation, logging and disaster recovery in the target cloud.",
+    "example": "Move an Azure document-ingestion pipeline to AWS by replacing Functions triggers, object events, IAM grants and the retrieval service while preserving document ACLs.",
+    "project": "Compare alternatives for a banking voice architecture without pretending a production AWS migration has occurred.",
+    "answer": "I begin with the requirements rather than a one-to-one logo map. On AWS I might use S3 instead of ADLS, Lambda for event handlers, IAM roles for workload identity and a managed model service such as Bedrock. The risky parts are different permissions, network boundaries, regional support, quotas and retrieval integrations. I would port architecture contracts, authentication and evaluation tests first, benchmark actual latency and cost, and only then decide whether migration provides measurable value.",
+    "workflow": [
+      "Inventory user journeys, data boundaries and SLOs",
+      "Map storage, compute, identity, inference and search responsibilities",
+      "Prototype representative secure request flows and evaluate costs",
+      "Test tenant isolation, disaster recovery and rollback"
+    ],
+    "mistakes": [
+      "Assuming cloud products are drop-in API equivalents",
+      "Moving data without checking residency requirements",
+      "Comparing only compute unit prices rather than end-to-end spend"
+    ],
+    "followups": [
+      "How would managed identities translate to AWS IAM roles?",
+      "Where can an AWS model/search substitute change answer quality?"
+    ],
+    "keywords": [
+      "AWS",
+      "Azure",
+      "IAM",
+      "S3",
+      "Lambda",
+      "model inference"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Oil refinery ETL project": {
+    "simple": "An industrial ETL design ingests operational records, validates and transforms them, and provides governed reporting data.",
+    "technical": "Start by inventorying source systems, batch schedules, unit conventions, event timestamps and sensitive fields. Use an orchestrator such as ADF to land source extracts with run IDs in ADLS Bronze. Apply Spark/Databricks data-type checks, deduplication, late-arrival handling and domain reconciliation into Delta Silver; publish Gold facts or governed views to a SQL serving layer when justified. Use idempotent merges, exception quarantine, lineage and workload health dashboards. Do not infer production details or refinery metrics without actual project documentation.",
+    "example": "Ingest pump-maintenance events and production-volume extracts separately, standardize plant IDs and time zones, then validate daily totals before reports.",
+    "project": "A representative refinery ETL interview design; source contracts and any personal ownership must be verified rather than invented.",
+    "answer": "I would describe a refinery ETL platform by starting with source contracts and reporting SLAs. ADF schedules source-to-lake ingestion; ADLS stores immutable raw extracts, and Databricks cleans, joins and validates operational data before curated reporting views are exposed. I would enforce plant identifiers, timestamp and unit consistency, row reconciliation and idempotent reruns. I would also explain monitoring and access controls. I would identify which parts are a proposed reference architecture versus actual work verified in project records.",
+    "workflow": [
+      "Document source ownership, cadence, units and expected SLAs",
+      "Ingest immutable run-scoped raw data with ADF",
+      "Validate and merge standard records in Delta",
+      "Reconcile Gold KPIs and expose governed views"
+    ],
+    "mistakes": [
+      "Joining industrial measurements with inconsistent units or timestamps",
+      "Treating success of ingestion as data reconciliation",
+      "Claiming plant-specific achievements without evidence"
+    ],
+    "followups": [
+      "How do you handle a late correction from a historian?",
+      "Which reconciliation controls suit production volumes?"
+    ],
+    "keywords": [
+      "ADF",
+      "ADLS",
+      "Delta",
+      "Databricks",
+      "industrial ETL"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "CTEs, GROUP BY & HAVING": {
+    "simple": "CTEs organize a readable query, GROUP BY forms summary rows and HAVING filters aggregated groups.",
+    "technical": "A common table expression declared with WITH can break quarter-revenue SQL into stages such as authorized transactions, period normalization and aggregation. WHERE filters input records before grouping; HAVING filters groups after aggregate calculation. Use conditional aggregation or two period CTEs to compare quarters, with a canonical date dimension, currency normalization and refund adjustments. Validate joins before grouping to avoid duplicate revenue. A CTE is a logical query expression, not necessarily materialized or a performance cache; inspect the optimizer plan.",
+    "example": "Group invoice lines by quarter and customer segment, then HAVING SUM(net_revenue) > 0 excludes only non-positive aggregate groups.",
+    "project": "Use SQL Server or Databricks SQL for trusted quarter-over-quarter revenue analysis, not an LLM-generated unapproved raw query.",
+    "answer": "I use a CTE to make complex SQL easier to review, for example filtering valid invoices in one stage and aggregating quarterly revenue in another. GROUP BY creates totals per quarter or segment, while HAVING applies a condition to the aggregated result. WHERE removes source rows first. For comparing quarters I would normalize date and currency, handle refunds and guard against duplicate joins. I would review the execution plan rather than assume a CTE improves performance by itself.",
+    "workflow": [
+      "Define invoice grain and approved source filters",
+      "Normalize dates, currencies and refunds in a CTE",
+      "Aggregate by quarter and segment using GROUP BY",
+      "Compare prior period and validate HAVING/WHERE semantics"
+    ],
+    "mistakes": [
+      "Putting aggregate conditions into WHERE",
+      "Double-counting after a one-to-many dimension join",
+      "Assuming every CTE is physically cached"
+    ],
+    "followups": [
+      "How can LAG compare quarterly totals?",
+      "What changes if a quarter is incomplete?"
+    ],
+    "keywords": [
+      "CTE",
+      "GROUP BY",
+      "HAVING",
+      "WHERE",
+      "quarter"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Parameterized SQL": {
+    "simple": "Bind data values separately from SQL text so users cannot change query structure through input.",
+    "technical": "Parameterized queries use database driver bind variables for values; authorization must still constrain allowed tables, columns, joins, filters, rows and query complexity. Never assume identifiers can be safely parameterized: table/column names require a separate strict allowlist or semantic query layer. Enforce read-only roles, row-level access at the database, timeouts and maximum result sizes. SQL agents should produce a structured intent mapped to approved templates, not execute arbitrary LLM-generated SQL under broad credentials.",
+    "example": "Execute SELECT balance FROM accounts WHERE customer_id = :customer_id using a verified customer ID bound as a parameter and a row policy.",
+    "project": "An analytics agent can select an allowlisted quarterly-revenue metric but must not generate unrestricted SELECT * FROM sensitive banking tables.",
+    "answer": "Parameterized SQL protects against injection by sending values as bind parameters rather than concatenating user text into a query. For an AI agent that is only one layer of defense. I would restrict which metrics and tables it can ask for, use a read-only role with row-level security, validate tenant context and set execution limits. If the model proposes a table or column identifier, I map it through an explicit allowlist instead of treating it as a trusted parameter.",
+    "workflow": [
+      "Authenticate the user and authorize intended metric",
+      "Select a reviewed query or semantic-layer operation",
+      "Bind values and apply enforced tenant filter",
+      "Limit runtime/results and log query template metadata"
+    ],
+    "mistakes": [
+      "Concatenating user values into executable SQL",
+      "Thinking bind parameters authorize a tenant",
+      "Executing arbitrary model-generated DDL or write queries"
+    ],
+    "followups": [
+      "Can table names be safely bound as SQL parameters?",
+      "What if the database role has permission beyond the user's tenant?"
+    ],
+    "keywords": [
+      "bind variables",
+      "SQL injection",
+      "RLS",
+      "allowlist",
+      "read-only"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Postgres & Supabase": {
+    "simple": "PostgreSQL stores relational data; Supabase adds authentication, APIs and storage that must respect database policies.",
+    "technical": "Design relational tables with primary/foreign keys, indexes and constraints before exposing PostgREST endpoints. Supabase Auth supplies verified identity; PostgreSQL row-level security policies using auth.uid() can restrict reads and writes for user-owned or membership-scoped records. Enable and test RLS for every exposed table, check USING and WITH CHECK for ownership changes, and constrain Storage bucket paths separately. Service-role credentials bypass RLS and must never ship to the browser. Test with two actual unprivileged JWTs; frontend filters alone are not security.",
+    "example": "genai_study_documents rows use user_id and owner policies; private Storage objects live under the authenticated user's prefix.",
+    "project": "Galaxy uses genai_study_* tables and private genai-study-docs; live two-account isolation verification remains separately approval-gated.",
+    "answer": "I would create PostgreSQL tables with strong constraints and indexes, then add Supabase Auth and database row-level security. A policy should let each user see and update only records they own, with special care for inserts and ownership changes. I also protect private Storage paths and never expose a service-role key in frontend code. To verify tenant isolation I test two dedicated real user sessions for denied cross-user reads and writes; mock tests alone cannot prove that the hosted policies are correct.",
+    "workflow": [
+      "Model tables, ownership keys and foreign-key constraints",
+      "Enable RLS with select/insert/update/delete policies",
+      "Keep Storage private and restrict user prefixes",
+      "Run consented two-account negative integration tests"
+    ],
+    "mistakes": [
+      "Relying only on client-side user_id filters",
+      "Exposing the service-role key in JavaScript",
+      "Omitting WITH CHECK on ownership-sensitive writes"
+    ],
+    "followups": [
+      "How does USING differ from WITH CHECK in RLS?",
+      "What would happen if an API used a service-role client?"
+    ],
+    "keywords": [
+      "Postgres",
+      "Supabase",
+      "RLS",
+      "auth.uid",
+      "private storage"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Lists, tuples, sets & dicts": {
+    "simple": "Choose Python collections by data shape, mutability, membership needs and access patterns.",
+    "technical": "A list preserves order and allows duplicate mutable elements; a tuple fixes the sequence structure and often represents a stable record; a set offers average constant-time membership for hashable values; a dict maps hashable keys to values, preserving insertion order in modern Python. Each has different iteration, memory and equality behavior. Do not confuse tuple immutability with deep immutability of objects inside it, and do not assume set order is stable. Use explicit data classes or typed dictionaries when structured contracts grow complex.",
+    "example": "Use a dict keyed by customer ID for quick lookups, a list of appointment slots for ordering and a set for deduplicating visited IDs.",
+    "project": "A voice agent's tool router can keep route configuration in a dict and track processed idempotency keys in durable storage rather than an in-process set.",
+    "answer": "I use a list when I need an ordered, changeable sequence, a tuple for a fixed group of values, a set for distinct items and membership checks, and a dictionary for mapping keys to values. For example, a dict is better than repeatedly searching a list when I frequently need a record by ID. I still consider memory, duplicates and concurrency. A set is not a substitute for persistent idempotency storage because it disappears when the process restarts.",
+    "workflow": [
+      "Identify access by index, key or membership",
+      "Choose collection and define key/hashability constraints",
+      "Measure lookup/iteration costs for expected scale",
+      "Add typing and persistence for shared or durable state"
+    ],
+    "mistakes": [
+      "Depending on set iteration order",
+      "Assuming tuple freezes nested mutable members",
+      "Keeping production idempotency only in process memory"
+    ],
+    "followups": [
+      "Why must dict keys be hashable?",
+      "When could a list outperform a dict despite lookup cost?"
+    ],
+    "keywords": [
+      "list",
+      "tuple",
+      "set",
+      "dict",
+      "hashability"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Functions, decorators & exceptions": {
+    "simple": "Functions encapsulate reusable work; decorators wrap behavior; exceptions signal failures through explicit contracts.",
+    "technical": "Design Python tool functions with type-checked inputs, bounded side effects and a predictable result/error schema. Decorators can add authorization, tracing, retry or validation but may obscure call order and should preserve signatures using functools.wraps. Distinguish expected domain errors (missing slot, forbidden account) from transient upstream errors eligible for bounded retries and unexpected defects requiring alerts. Do not catch Exception and return fabricated success. For financial or booking writes, retry only under an idempotency contract and avoid logging sensitive request payloads.",
+    "example": "An @require_auth decorator rejects a missing user session; a booking function returns a structured SlotUnavailable error rather than pretending it succeeded.",
+    "project": "A banking appointment tool can report validation, forbidden, provider timeout and success as distinct outcomes to a LangGraph supervisor.",
+    "answer": "I create small Python functions with clear inputs, outputs and one responsibility. Decorators help apply shared checks such as authentication or tracing, provided they preserve metadata and do not hide business logic. With exceptions I distinguish invalid user requests from retryable network failures and real coding errors. In an agent tool I return a structured error the orchestrator can handle. I never swallow an exception and claim a booking succeeded, and I use idempotency keys before retrying side effects.",
+    "workflow": [
+      "Validate typed inputs and user authorization",
+      "Execute function with traced context and bounded timeout",
+      "Classify expected, transient and unexpected errors",
+      "Return structured failure or verified result and test recovery"
+    ],
+    "mistakes": [
+      "Catching every exception and returning empty data",
+      "Applying retries to non-idempotent writes",
+      "Using decorators that lose function names or authorization context"
+    ],
+    "followups": [
+      "What does functools.wraps do?",
+      "When would you re-raise rather than convert an exception?"
+    ],
+    "keywords": [
+      "decorator",
+      "exception",
+      "authorization",
+      "idempotency",
+      "functools.wraps"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Files, JSON & regular expressions": {
+    "simple": "Parse files using explicit schemas, encoding and validation; use regex only where its matching rules are clear.",
+    "technical": "A fixed-width record is defined by byte or character offsets, lengths, field types and record variants. First determine encoding because multibyte UTF-8 changes byte offsets, normalize line endings, identify header/detail/trailer types and validate each slice without silently trimming significant zeros. JSON parsing needs schema validation and maximum size/depth guards; regular expressions can capture bounded field patterns but are not a universal replacement for a structured parser. Reject unexpected record lengths, preserve bad-line evidence and reconcile trailer control totals.",
+    "example": "Extract account_code from columns 1–8 and amount from 9–20 using a versioned mapping, then compare the trailer amount sum.",
+    "project": "A metadata-driven enterprise file processor may route different source record types through validators before reconstructing an output file.",
+    "answer": "For fixed-width files I start with the interface document: encoding, record length, field offsets, padding and header or trailer rules. I slice fields by declared positions, parse types explicitly and quarantine malformed records with line numbers. I use JSON schema validation for metadata and regex for limited patterns, not as a substitute for checking the complete file contract. Before publishing the transformed file I reconcile record counts and control totals against the input.",
+    "workflow": [
+      "Determine encoding, newline contract and record types",
+      "Load versioned field offsets and expected types",
+      "Parse and quarantine invalid records with redacted evidence",
+      "Check trailer counts/sums and produce a replayable output"
+    ],
+    "mistakes": [
+      "Using character offsets for multibyte byte-based records",
+      "Accepting regex matches without full-record validation",
+      "Dropping leading zeros from identifiers"
+    ],
+    "followups": [
+      "What changes when an input format adds a field?",
+      "How would you validate an entire trailer without loading the file in memory?"
+    ],
+    "keywords": [
+      "fixed-width",
+      "JSON schema",
+      "regex",
+      "offset",
+      "trailer"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "REST APIs & FastAPI": {
+    "simple": "A callable agent tool is an authenticated API with a strict request contract, controlled side effects and clear errors.",
+    "technical": "FastAPI uses Python type hints/Pydantic validation and generates OpenAPI contracts. Design HTTP methods around read vs change semantics, use OAuth/JWT validation at the boundary, apply request size limits, per-user quotas and structured errors, and never accept tenant IDs as authorization. Async endpoints help with nonblocking I/O but blocking libraries still consume workers. For state-changing tools, require explicit confirmation and idempotency keys; propagate trace IDs and redact secrets from logs. Integration tests need expired JWT, cross-user access and provider failure cases.",
+    "example": "POST /appointments accepts a reviewed slot identifier and idempotency key, checks caller access and returns a persistent appointment ID or a typed conflict.",
+    "project": "In the proposed banking advisor meeting API, the LLM requests a tool but does not directly gain credentials or choose an arbitrary account.",
+    "answer": "I would define an agent tool API in FastAPI with Pydantic request schemas, authenticated routes and predictable response types. The backend checks the user's actual permissions and validates the requested operation instead of trusting model-generated arguments. I make reads safe and require confirmation plus an idempotency key for bookings or other writes. I add timeouts, quotas, tracing and tests for expired tokens, forbidden accounts and partial provider failures. The OpenAPI schema describes capability; it does not enforce authorization automatically.",
+    "workflow": [
+      "Define typed request/response and side-effect policy",
+      "Verify identity and row-level authorization server-side",
+      "Apply quotas, confirmation and idempotency for writes",
+      "Test success, conflict, timeout and unauthorized cases"
+    ],
+    "mistakes": [
+      "Treating OpenAPI schema as proof of tenant security",
+      "Using blocking SDK calls without concurrency planning",
+      "Allowing arbitrary backend URLs in model tool arguments"
+    ],
+    "followups": [
+      "When would you use async def versus def?",
+      "What response is appropriate when booking already exists?"
+    ],
+    "keywords": [
+      "FastAPI",
+      "Pydantic",
+      "JWT",
+      "idempotency",
+      "OpenAPI"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Asynchronous calls & concurrency": {
+    "simple": "Concurrency overlaps waiting for independent I/O, but does not remove provider limits or make CPU work magically parallel.",
+    "technical": "In asyncio, coroutines yield while waiting for nonblocking operations. Use asyncio.gather or TaskGroup for independent requests while protecting shared cancellation and propagating errors intentionally. Bound concurrency with a semaphore and provider rate limits; implement per-call deadlines, retry budgets and circuit breaking. CPU-bound parsing or model preprocessing needs worker processes, native extensions or separate tasks rather than blocking the event loop. For side effects, concurrent writes require ordering and idempotency, not just gather.",
+    "example": "Fetch three independent non-sensitive reference APIs concurrently with semaphore 3, combine results after verifying every source responded.",
+    "project": "A voice agent may overlap retrieval and profile reads but must not execute booking and payment writes concurrently without explicit ordering.",
+    "answer": "I use Python asyncio when a workload waits on independent network or database operations. I can launch multiple calls with gather or TaskGroup, but I set timeouts, limit concurrency and handle partial failures. If I send hundreds of calls without a semaphore, I may overload a provider or hit throttling. CPU-heavy Python code still blocks the event loop unless moved elsewhere. For banking tools I also avoid racing state-changing operations and use idempotency and explicit workflow order.",
+    "workflow": [
+      "Identify truly independent I/O tasks and resource limits",
+      "Bound concurrent calls and assign deadlines",
+      "Aggregate results with explicit failure/cancellation semantics",
+      "Instrument p95 latency, 429s and queue depth"
+    ],
+    "mistakes": [
+      "Launching unbounded tasks against a throttled API",
+      "Assuming asyncio speeds up CPU-heavy pure Python",
+      "Retrying non-idempotent writes concurrently"
+    ],
+    "followups": [
+      "How does a semaphore protect rate limits?",
+      "How do TaskGroup and gather handle failures differently?"
+    ],
+    "keywords": [
+      "asyncio",
+      "semaphore",
+      "TaskGroup",
+      "timeout",
+      "concurrency"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "PySpark DataFrame operations": {
+    "simple": "PySpark DataFrames express distributed transformations; handling malformed data requires schema checks and explicit quarantine.",
+    "technical": "Read files with a declared schema where practical, manage corrupt-record handling and type casts explicitly, and distinguish null, empty and invalid values. Use select, filter, withColumn, join, groupBy and Window expressions to keep work within Spark's optimizer rather than Python UDFs by default. Inspect physical plans for shuffles, skew, broadcast eligibility and partition pruning. For Delta output, validate unique business keys, schema evolution policy and idempotent merge semantics before committing. Record rejected rows and reconcile source totals.",
+    "example": "Read an account dataset, cast amount with a controlled parser, quarantine invalid currency values and deduplicate by the latest event version.",
+    "project": "A manufacturing data-domain pipeline can apply declarative Spark transformations before publishing governed Gold tables.",
+    "answer": "I handle malformed records by defining the expected Spark schema and validating each required field before the downstream transformation. I put invalid rows in a quarantine dataset with reason codes rather than silently dropping them. For normal data I prefer DataFrame functions that Spark can optimize, using joins, windows and aggregates as needed. I inspect explain plans, watch for shuffle skew and enforce correct keys before writing Delta tables. Finally I reconcile accepted and rejected record totals.",
+    "workflow": [
+      "Declare schema and source parsing mode",
+      "Validate required fields and quarantine rejects",
+      "Transform using optimized DataFrame and window functions",
+      "Check physical plan, keys and idempotent target writes"
+    ],
+    "mistakes": [
+      "Silently converting malformed values to null",
+      "Collecting large datasets to the driver",
+      "Using row-by-row Python UDFs unnecessarily"
+    ],
+    "followups": [
+      "How do you handle schema drift in Delta Lake?",
+      "How can you diagnose skewed join partitions?"
+    ],
+    "keywords": [
+      "PySpark",
+      "DataFrame",
+      "schema",
+      "quarantine",
+      "Delta"
+    ],
+    "depth_status": "expanded_editorial_unverified"
   }
 }
