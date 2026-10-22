@@ -61,3 +61,8 @@
 
 - Keep document extraction disabled unless the API is behind a verified external authenticated per-user quota gateway; the backend's `GALAXY_VAULT_GATEWAY_RATE_LIMIT=active` switch is only an additional fail-closed configuration gate.
 - Always filter private `genai_study_documents` SELECT and PATCH by both authenticated owner and UUID document ID; keep Supabase RLS as authoritative. No custom privileges, elevated keys, private storage changes or cloud provisioning.
+
+## M8 — Auth recovery decision
+
+- Keep all password changes in Supabase Auth. Send recovery emails with a redirect built only from browser `location.origin` and `location.pathname`, excluding query or fragments. Accept password updates only after an active recovery session. No email-existence disclosure in the UI and no privileged backend/password handling.
+- Offline mocks are regression evidence, not proof of real reset email delivery; dedicated Galaxy test account and allowlisted Auth redirect URL required.
