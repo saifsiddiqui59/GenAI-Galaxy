@@ -68,3 +68,9 @@ Manual-only live-RLS harness PR [#10](https://github.com/saifsiddiqui59/GenAI-Ga
 - Added 10 domain-specific eight-section lessons: embedding migration, reranking, change tombstones, ReAct, Azure AI Search, APIM, DeepEval, adversarial regressions, LLM-judge cost, and human approval. Every new record includes practical workflow, mistakes, interview answer and follow-up questions.
 - Coverage advanced to **158/246 expanded topic entries, 157 distinct authored lessons, 88 overview-only entries**. The added answers are each 60–140 words; content is **editorial unverified**, not expert signoff. Original 230 V3 topic IDs and 17 planets unchanged.
 - Regenerated deterministic coverage CSV/report and server-owned rubrics (158 keys), and added topic-content assertions. No Azure deployment, Supabase data write, private document access or changes to other projects.
+
+## M12 — Azure/security curriculum expansion (stacked feature PR)
+- Added ten individually authored, editorial-unverified eight-part lessons covering Azure OpenAI deployment, PAYG/PTU, least privilege, regional failover, Functions, Container Apps/WebSockets, ADLS/Key Vault, provenance, tenant RLS and financial fallback.
+- Current branch, **including dependent M11 content**, contains **167 unique authored lessons spanning 168/246 topic entries**; **78 overview-only entries remain**. The 17 planets and 230 original V3 topic IDs are unchanged.
+- Regenerated 168 server-owned rubrics, 246-row coverage CSV, metrics and topic-specific regression tests. All new interview answers are 60–140 words, not independently timed or SME approved.
+- Prior open PRs #12–#15 are unmerged due runner-allocation failures; this branch is stacked on M11 and must not merge to main independently. No GitHub CI success, Azure deployment, database writes or Supabase migrations claimed.
