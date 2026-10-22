@@ -35,3 +35,8 @@
 - PR #9 **merged**; actual main CI #39807636506 passed 3/3.
 - PR #10 **merged**; actual main CI #39808755655 passed 3/3. The manual signed-in Galaxy two-account RLS workflow is now available on main, but has **NOT** run and requires existing dedicated test accounts/secrets in the protected `dev` environment.
 - Only run the protected `Galaxy two-account RLS acceptance (manual)` workflow after dedicated A/B credentials are available; typed confirmation `TEST`. No cloud backend or other paid Azure resources approved.
+
+## M11 coverage continuation
+
+- After the ten-topic editorial PR is reviewed and CI passes, remaining scope is **88 overview-only topic entries**, plus domain expert/source verification for all expanded lessons and spoken-answer timing checks. Do not claim complete verified curriculum merely from eight sections.
+- Continue authored batches by domain, preserving original topic IDs, regenerating `api/rubrics.json` and `docs/TOPIC_COVERAGE.csv` via the existing scripts, and enforcing regression tests.
