@@ -5152,5 +5152,185 @@
       "CI/CD"
     ],
     "depth_status": "expanded_editorial_unverified"
+  },
+  "Azure Monitor & Log Analytics": {
+    "simple": "Azure Monitor collects platform telemetry; Log Analytics lets engineers query records such as ADF pipeline and activity duration.",
+    "technical": "For operational analytics, route diagnostic categories from the correct ADF instance to a Log Analytics workspace. Kusto Query Language filters by time, status, resource and normalized run identifiers. Duration can be computed from start/end timestamps or reported duration fields, with explicit handling of in-progress runs, late log ingestion, time zones and duplicate activity retries. Workspace retention may be shorter than a requested ninety-day investigation; verify retention and sampling before making conclusions. Alert on sustained errors or p95 changes with enough context for run-level triage.",
+    "example": "Use KQL to find completed activity runs with elapsed execution greater than fifteen minutes and group their failures by linked service or pipeline ID.",
+    "project": "For ADF runs over fifteen minutes, query the workspace with a bounded ninety-day filter only after verifying logs were retained that long.",
+    "answer": "For ADF runtime troubleshooting I first check that pipeline and activity diagnostic logs are being sent to the correct Log Analytics workspace. Then I write a KQL query limited to the affected resource and time period, calculate or inspect runtime, and filter activity runs exceeding fifteen minutes. I compare slow jobs with historical baselines and related errors. Finally I capture run IDs, integration runtime, dependency stages and alert thresholds. I verify data retention before claiming a complete ninety-day analysis.",
+    "workflow": [
+      "Confirm ADF diagnostics and workspace retention",
+      "Query scoped pipeline/activity events by run IDs and timestamps",
+      "Calculate duration and exclude in-progress or duplicated attempts",
+      "Correlate integration-runtime, failure and trend metrics for alerts"
+    ],
+    "mistakes": [
+      "Assuming logs exist for a period beyond configured retention",
+      "Mixing milliseconds and seconds when computing runtime",
+      "Treating ingestion time as the original activity start time"
+    ],
+    "followups": [
+      "What KQL operators help compute p95 duration?",
+      "How can you correlate activities to one pipeline run?"
+    ],
+    "keywords": [
+      "Azure Monitor",
+      "Log Analytics",
+      "KQL",
+      "ADF",
+      "diagnostic settings"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Bronze, Silver & Gold": {
+    "simple": "Medallion design separates raw source history, validated standardized data and business-ready analytics.",
+    "technical": "Bronze preserves source payload, ingestion metadata and replay capability; Silver validates types, deduplicates, applies CDC semantics and normalizes entities; Gold publishes stable domain metrics and dimensional aggregates. Delta Lake transaction logs enable atomic writes, schema enforcement and rollback/time travel within retention limits. Each layer has explicit quality contracts, ownership and refresh schedules. Security labels and tenant ACLs must remain in downstream tables; a Gold view is not automatically safe because it is curated. Track lineage and handle reprocessing from an immutable Bronze snapshot.",
+    "example": "A source customer change lands raw in Bronze, is reconciled with latest version in Silver and contributes to a Gold revenue fact table.",
+    "project": "An Azure Databricks platform can use Bronze/Silver/Gold with Unity Catalog governance and ADF orchestration, testing invariants at layer transitions.",
+    "answer": "In a medallion lakehouse, Bronze holds raw incoming data and ingestion metadata so I can replay or audit a source. Silver cleans, standardizes, deduplicates and resolves update or delete semantics into reliable entities. Gold presents curated facts, dimensions or KPIs for downstream reporting. I add quality assertions at every boundary and maintain lineage. The layers are logical data contracts, not automatically separate physical systems. I also preserve access control, so a curated Gold table does not accidentally expose sensitive raw fields.",
+    "workflow": [
+      "Land original events with source IDs and ingestion timestamps in Bronze",
+      "Validate types, schema changes and CDC into Silver",
+      "Publish reviewed aggregates and dimensions to Gold",
+      "Enforce Unity Catalog access and reconcile outputs to source"
+    ],
+    "mistakes": [
+      "Overwriting Bronze without replay history",
+      "Skipping duplicate or delete handling in Silver",
+      "Exposing restricted columns in Gold"
+    ],
+    "followups": [
+      "Where would you correct late events?",
+      "What Delta capabilities support safe replay?"
+    ],
+    "keywords": [
+      "Bronze",
+      "Silver",
+      "Gold",
+      "Delta Lake",
+      "lineage"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "ADLS Gen2 & Synapse": {
+    "simple": "ADLS Gen2 stores lakehouse files, Databricks transforms them, and Synapse can serve or analyze curated data; ADF coordinates movement.",
+    "technical": "ADLS Gen2 supports hierarchical namespaces and enterprise data lake paths with Entra identity, RBAC and POSIX-like ACLs where applicable. ADF can schedule ingestion into ADLS, while Spark/Databricks transforms Delta tables with managed governance. Synapse dedicated or serverless SQL can support different serving and exploration workloads, with distinct costs and query semantics. Choose architecture based on scale, query latency and governance instead of deploying every service by default. Validate access identities end to end and avoid broad account keys in pipeline definitions.",
+    "example": "Copy daily manufacturing source extracts into ADLS Bronze; Databricks produces Delta Silver; analysts query a governed Gold layer via appropriate SQL endpoints.",
+    "project": "Explain how ADF, ADLS, Azure Databricks and Synapse divide ingestion, transformation, governed storage and analytical consumption.",
+    "answer": "I treat ADLS Gen2 as the scalable storage layer and ADF as an orchestration and ingestion service. Databricks performs distributed Spark transformations and manages Delta tables, while Synapse SQL options can serve analytical queries depending on the workload. I would not introduce every service without a reason: some architectures can serve Gold Delta directly. The key design decisions are identity and ACL boundaries, file layout, schema quality, refresh targets and total cost across the pipeline.",
+    "workflow": [
+      "Map source cadence, volumes, SLA and consumer SQL needs",
+      "Set ADLS paths and least-privilege identities",
+      "Use ADF ingestion and Spark validation/Delta transforms",
+      "Publish governed access paths and measure query cost/latency"
+    ],
+    "mistakes": [
+      "Treating Synapse and Databricks as mandatory in every pipeline",
+      "Granting shared account keys to all services",
+      "Ignoring Gen2 hierarchical ACLs when RBAC is broad"
+    ],
+    "followups": [
+      "When would serverless SQL be preferable?",
+      "How do permissions propagate from ADLS to serving?"
+    ],
+    "keywords": [
+      "ADLS Gen2",
+      "ADF",
+      "Databricks",
+      "Synapse",
+      "Entra"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Dimensional modelling": {
+    "simple": "A fact table stores measured events; dimension tables describe the entities by which those measures are filtered and grouped.",
+    "technical": "A star schema starts by declaring the grain of each fact record, for example one invoice line per transaction date, product and customer. Facts hold additive or semi-additive measures and surrogate keys to conformed dimensions. Calendar and slowly changing dimensions support consistent quarter comparisons and historical state. Model revenue, refunds and currency conversion explicitly rather than summing incompatible values. Enforce uniqueness at declared grain and reconcile source amounts so join fan-out does not inflate totals; many-to-many bridges require special care.",
+    "example": "InvoiceLineFact contains quantity and net revenue while DateDim, ProductDim and CustomerDim supply quarter, category and segment attributes.",
+    "project": "A quarterly revenue assistant should query a governed fact/semantic layer rather than infer amounts from vector-indexed PDF narratives.",
+    "answer": "I begin dimensional modelling by defining the business process and the grain, such as one row per invoice line. The fact table holds measures like quantity or net sales and foreign keys to conformed date, product and customer dimensions. Dimensions supply stable descriptive context, including historical attributes when SCD Type 2 is required. To compare quarter-over-quarter revenue I must handle refunds, currency, late invoices and duplicate joins consistently. I validate totals against source accounting controls before publishing a KPI.",
+    "workflow": [
+      "Define business process, fact grain and measure additivity",
+      "Create conformed dimensions with history policy",
+      "Load fact keys, timestamps and transaction measures",
+      "Reconcile totals and test duplicate keys and fan-out"
+    ],
+    "mistakes": [
+      "Joining two detailed fact tables directly and double-counting",
+      "Ignoring refunds or exchange rates",
+      "Treating an SCD2 dimension as current-only history"
+    ],
+    "followups": [
+      "Why do surrogate keys help historical attributes?",
+      "How do you handle a many-to-many relationship?"
+    ],
+    "keywords": [
+      "fact grain",
+      "star schema",
+      "dimension",
+      "SCD Type 2",
+      "revenue"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Data quality & reconciliation": {
+    "simple": "Data reconciliation verifies that the destination represents the intended source records, values and controls, not merely that a job finished.",
+    "technical": "Build quality contracts for schema, completeness, uniqueness, referential integrity, validity and freshness. At ingestion, compare source and target counts and aggregate control totals within a consistent extraction window. For incremental upserts, compare change-set inserts/updates/deletes and check stable keys, null handling and late arrivals rather than raw full-table counts alone. Quarantine exceptions, attach run IDs and sample failing keys for deterministic replay. Alert on breaches using baselines and severity; never modify production data silently to make a metric pass.",
+    "example": "After merging account records, verify unique AccountId, number of new/changed keys, null constraints and reconciliation of balance or net amount totals.",
+    "project": "For Dev-to-QA ADF and Databricks replication, combine copy-run metrics with SQL anti-joins and controlled aggregates for missing or changed IDs.",
+    "answer": "A successful pipeline run only tells me its activities executed; it does not prove every record is accurate. I check expected schemas, key uniqueness, null constraints, row counts and financial or operational control totals. For incremental loads I compare the exact change window and count inserts, updates and deletes separately. When numbers differ I use anti-joins and checksums or keyed comparisons to isolate mismatches. I quarantine exceptions, document the run ID and only publish reconciled data downstream.",
+    "workflow": [
+      "Agree source-to-target keys, columns and business controls",
+      "Capture bounded source extract and target snapshot",
+      "Compare schema, counts, key anti-joins and control totals",
+      "Quarantine differences, investigate and rerun idempotently"
+    ],
+    "mistakes": [
+      "Equating row counts with complete data correctness",
+      "Comparing different extraction times",
+      "Suppressing mismatches without retaining evidence"
+    ],
+    "followups": [
+      "When can checksums produce false confidence?",
+      "How does reconciliation change for an SCD2 target?"
+    ],
+    "keywords": [
+      "reconciliation",
+      "anti-join",
+      "control totals",
+      "quality checks",
+      "freshness"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Window functions": {
+    "simple": "A SQL window function computes a per-row value across related rows without collapsing them into one GROUP BY result.",
+    "technical": "ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD and aggregate OVER clauses combine partition definitions, explicit ordering and frame semantics. To select the latest account record, use ROW_NUMBER over PARTITION BY account_id ORDER BY effective_at DESC, event_id DESC, then filter rn=1; the second sort key makes ties deterministic. Window functions run before final ORDER BY, and different engines differ in null ordering and default frames. For financial time series, validate period boundaries and late records before comparing lagged values.",
+    "example": "ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY updated_at DESC, version_id DESC) chooses each account's newest version.",
+    "project": "Use window ranking on Hive history tables to identify the latest snapshot before comparing with reporting SQL Server tables.",
+    "answer": "I use SQL window functions when I need information from related rows while still returning individual rows. For the latest record per account, I partition by account ID, order by update time descending with a deterministic tie-breaker and assign ROW_NUMBER. Then I select row number one. LAG and LEAD help compare adjacent values such as current and prior quarters. I check duplicate timestamps, null sort order and window frame semantics so the result is reproducible.",
+    "workflow": [
+      "Define partition keys and intended row grain",
+      "Choose deterministic order and any frame specification",
+      "Apply ROW_NUMBER, LAG or aggregates as appropriate",
+      "Validate ties, nulls and historical edge cases"
+    ],
+    "mistakes": [
+      "Using MAX(timestamp) join that returns duplicate ties",
+      "Omitting ORDER BY for latest-record selection",
+      "Confusing window PARTITION BY with physical storage partitions"
+    ],
+    "followups": [
+      "When is DENSE_RANK different from ROW_NUMBER?",
+      "How do default frames affect cumulative totals?"
+    ],
+    "keywords": [
+      "ROW_NUMBER",
+      "PARTITION BY",
+      "LAG",
+      "LEAD",
+      "deterministic order"
+    ],
+    "depth_status": "expanded_editorial_unverified"
   }
 }
