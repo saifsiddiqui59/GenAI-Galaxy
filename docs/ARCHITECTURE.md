@@ -22,3 +22,7 @@ Authenticated requests -> HTTPS API gateway with real per-user quotas -> Python 
 API auth now enforces an additional fail-closed internal gateway shared-header check (`GALAXY_GATEWAY_SHARED_SECRET`) before verifying Supabase JWT. Actual deployment must enforce **network isolation of direct Function origin**, APIM stripping/injection and per-user quotas: a static header by itself is insufficient. The private document retry UI invokes the same UUID/RLS-bound extraction path; it cannot directly choose another user's file.
 
 Content is expanded to 147 unique eight-part lessons covering 148 of 246 entries. The remaining 98 topic entries explicitly show overview-only material and the lesson examples are not yet domain expert signed off. Offline hints only inspect concept mentions; strong factual grading remains disabled unless trusted services are deployed and calibrated.
+
+## M7 — browser-side cloud session safety (feature PR)
+
+Auth transitions increment a client-local epoch. Each async Supabase progress/attempt/document load captures the epoch and verified user ID, uses explicit `eq('user_id', userId)` filters, and refuses to commit a result once a newer identity transition occurs. Sign-out immediately clears private data and restores guest-only state. Document removal additionally requires an owned document with a path inside the current user's storage prefix. These are defense-in-depth client protections; server-side RLS must independently enforce ownership, and fully authenticated network testing remains a release gate.
