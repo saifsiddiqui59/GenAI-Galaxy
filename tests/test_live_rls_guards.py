@@ -44,6 +44,34 @@ class LiveRLSGuards(unittest.TestCase):
                 with self.assertRaisesRegex(probe.CheckFailed, "different Supabase project"):
                     probe.run()
 
+    def test_rejects_service_role_keys_before_sign_in(self):
+        import base64
+        import json
+        claims = base64.urlsafe_b64encode(json.dumps({"role": "service_role"}).encode()).decode().rstrip("=")
+        jwt = "eyJhbGciOiJIUzI1NiJ9." + claims + ".dummy-signature"
+        for key in ("sb_secret_example", jwt, "a-bogus-key"):
+            with self.subTest(key_type=key.split("_")[0]):
+                with self.assertRaisesRegex(probe.CheckFailed, "(privileged|Expected)"):
+                    probe.validate_publishable_key(key)
+
+    def test_accepts_only_anon_or_public_key_format(self):
+        import base64
+        import json
+        claims = base64.urlsafe_b64encode(json.dumps({"role": "anon"}).encode()).decode().rstrip("=")
+        anon_jwt = "eyJhbGciOiJIUzI1NiJ9." + claims + ".dummy-signature"
+        self.assertEqual(probe.validate_publishable_key(anon_jwt), anon_jwt)
+        self.assertEqual(probe.validate_publishable_key("sb_publishable_test"), "sb_publishable_test")
+
+    def test_missing_or_privileged_key_never_reaches_sign_in(self):
+        env = {name: "dummy" for name in (
+            "GALAXY_TEST_A_EMAIL", "GALAXY_TEST_A_PASSWORD",
+            "GALAXY_TEST_B_EMAIL", "GALAXY_TEST_B_PASSWORD")}
+        env["GALAXY_SUPABASE_PUBLISHABLE_KEY"] = "sb_secret_must_not_use"
+        with patch.dict(os.environ, env, clear=True):
+            with patch.object(probe, "sign_in", side_effect=AssertionError("unexpected network")):
+                with self.assertRaisesRegex(probe.CheckFailed, "privileged"):
+                    probe.run()
+
     def test_galaxy_table_allowlist(self):
         self.assertEqual(probe.BUCKET, "genai-study-docs")
         self.assertEqual(probe.URL, "https://vfoghlhtnifpnbevgufa.supabase.co")
