@@ -1,8 +1,16 @@
-# Next Tasks — M5
+# Next Tasks — after Azure static preview (2026-10-22)
 
-1. Create empty **private** `saifsiddiqui59/GenAI-Galaxy`; connected GitHub has no create-repository action and repo returns 404. Publish prepared Git branches from local ZIP using Git Bash and helper. Review and merge PRs only after **real** green GitHub Actions results.
-2. Follow `docs/AZURE_GITHUB_OIDC.md`: add protected `dev` environment, three AZURE_* identifiers, federated credential on Azure app **GenAI_Galaxy** using actual immutable repo ID, and narrow Reader on existing Azure RG **GenAI_Galaxy**. Run read-only manual verification; inspect logs. Do not copy RetailGrowthAI's trust.
-3. For optional static-site release, identify actual Azure Storage account (cannot be `GenAI_Galaxy`, an invalid Storage name), configure `GALAXY_STORAGE_ACCOUNT`, grant only that Storage account Blob Data Contributor and explicitly invoke manual `DEPLOY` after approved review. No auto-provision/deploy.
-4. Continue 98 overview-only lessons, manual content QA, live auth/voice/tenant-isolation testing, frontend API gateway setup and safe document pipeline. Do not label prototype production-ready.
+## Completed, independently checked
+- Private Galaxy repo, GitHub Actions CI, feature PRs #1–#5, and dedicated Entra GitHub OIDC trust.
+- Resource group GenAI_Galaxy in centralindia, one low-cost GPv2 Standard_LRS account gengalaxy1429841605, and Blob $web static website.
+- Website: https://gengalaxy1429841605.z29.web.core.windows.net/ ; GitHub Actions HTTP smoke #39804008329 verified all eight routes as HTTP 200. No additional cloud backend resources deployed.
 
-GitHub checks run on push and PR only **after** the remote exists. Current status: local-only and blocked from triggering GitHub Actions or verifying Azure resources.
+## Remaining, in dependency order
+1. **Browser acceptance:** Owner inspect real site on mobile/desktop, planet clicks, content, reduced-motion setting and microphone permission. GitHub browser test uses simulated STT, not live hardware.
+2. **Live authentication / isolation:** Verify existing Supabase voice_agent_call sign-in, progress rows, RLS, vault permissions, password/reset and negative two-user tests using Galaxy-only fixtures. Never modify unrelated tenants/projects.
+3. **Repeat deployments:** Set GitHub dev environment variable GALAXY_STORAGE_ACCOUNT=gengalaxy1429841605; assign narrowly scoped Storage Blob Data Contributor only on this account to the Galaxy OIDC service principal if using existing manual keyless deploy workflow. The initial bootstrap's temporary account key was not persisted.
+4. **Private API architecture:** Scope and approve secure Azure Functions + APIM/gateway, per-user quotas, JWT checks, direct-ingress restrictions, Speech broker, model judge, malware scanning and secure document extraction. Do not turn these on merely because the website is live.
+5. **Content:** Author the remaining 98 overview-only topics individually. Complete reference verification, SME sign-off, interview-answer timing and regression checks; no generic filler or claiming model review is a factual grade.
+6. **Monitoring/cost:** Set Azure spending alert and estimate blob capacity/request costs; retain explicit manual control over further Azure provisioning.
+
+**Site is a publicly accessible frontend preview, not production readiness.**
