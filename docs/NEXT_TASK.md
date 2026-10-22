@@ -16,3 +16,9 @@
 **Site is a publicly accessible frontend preview, not production readiness.**
 
 **Automated browser acceptance update:** Live guest-mode Playwright passed in GitHub Actions #39804869900 for desktop/mobile/reduced motion. Manual owner review of UX, actual microphone/STT permission, real Supabase sign-in and user isolation are still outstanding.
+
+## M7 — active feature PR: auth synchronization and isolation
+
+- Implement owner-scoped cloud reads, fail-closed foreign-row checking and sign-out race cancellation; wire two-account mock tests into CI. Verify the PR's real GitHub Actions run before merge.
+- **Still blocked from marking live isolation complete:** Obtain two consented Galaxy-only auth test accounts and perform real signed-in positive/negative progress, attempts and private bucket tests including unauthorized insert/upsert/read/delete. Do not touch unrelated `voice_agent_call` data.
+- Follow-up: password/reset UX and authenticated browser smoke; then microphone hardware/STT and an approved gateway-backed service architecture. Backend provisioning and paid Azure deployment require explicit approval.
