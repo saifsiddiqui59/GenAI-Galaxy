@@ -1,5 +1,7 @@
 # GenAI Galaxy — GitHub Actions to existing Azure resources (M5)
 
+**LIVE status (2026-10-22):** GitHub OIDC login and resource-group read access passed (Action #39801831000); owner-approved initial Blob static preview was deployed using ephemeral management-plane key (Action #39803629502). The HTTPS site is https://gengalaxy1429841605.z29.web.core.windows.net/ and all eight public paths returned HTTP 200 in smoke #39804008329. Initial bootstrap and HTTP smoke workflows have been restored to manual-only. Sections below describe the **original M5 plan** and pre-approval state, not the current deployment status. The existing manual keyless deploy still needs account-scoped Storage Blob Data Contributor plus GitHub dev variable GALAXY_STORAGE_ACCOUNT.
+
 **Prepared locally, not connected or deployed.** Scope: GitHub `saifsiddiqui59/GenAI-Galaxy`, Azure RG `GenAI_Galaxy`, Azure application named `GenAI_Galaxy` **as supplied by the owner** (its type is not verified: it could be an Entra app registration or an Azure App Service). The resource group and app were *not* independently read from Azure. OIDC specifically requires an **Entra app registration**; if the supplied app is an App Service, identify or create a distinct Entra app registration only after approval. Neither Azure CLI nor deployment identity is available in this chat. No GitHub repo exists at the requested name through the connected account (404).
 
 ## Two separate workflows
