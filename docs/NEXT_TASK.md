@@ -29,3 +29,9 @@
 - The manual-only `.github/workflows/galaxy-live-rls.yml` requires the exact typed `TEST`, protected GitHub `dev` environment, and existing *dedicated* Galaxy test accounts A/B. Set only `GALAXY_SUPABASE_PUBLISHABLE_KEY`, `GALAXY_TEST_A_EMAIL`, `GALAXY_TEST_A_PASSWORD`, `GALAXY_TEST_B_EMAIL`, `GALAXY_TEST_B_PASSWORD` as protected environment secrets. Never put them in code.
 - Only after those accounts are provided and owner opts in, run `Galaxy two-account RLS acceptance (manual)` from `main`, inspect true results, and remedy failures. This runner performs only scoped Galaxy fixture writes and cleanup; it is not scheduled on pushes, PRs or deployments.
 - Password recovery/account setup UX, actual microphone hardware, secure model judge/gateway, private PDF extraction, 98 lessons, and cost monitoring remain separate unfinished tasks.
+
+### Status checkpoint after PR #10
+
+- PR #9 **merged**; actual main CI #39807636506 passed 3/3.
+- PR #10 **merged**; actual main CI #39808755655 passed 3/3. The manual signed-in Galaxy two-account RLS workflow is now available on main, but has **NOT** run and requires existing dedicated test accounts/secrets in the protected `dev` environment.
+- Only run the protected `Galaxy two-account RLS acceptance (manual)` workflow after dedicated A/B credentials are available; typed confirmation `TEST`. No cloud backend or other paid Azure resources approved.
