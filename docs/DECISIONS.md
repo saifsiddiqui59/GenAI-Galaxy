@@ -56,3 +56,7 @@
 - Never create production users or mine existing Supabase credentials for RLS probes. Use two different, pre-approved Galaxy test accounts passed only as protected GitHub `dev` secrets.
 - A manual workflow with explicit `TEST` confirmation tests read/write isolation in the three Galaxy tables and owner-prefixed private bucket; its random fixtures must be cleaned after execution. No secret or service-role key is shipped to JavaScript or committed to Git.
 - CI compiles and statically guards the script, but live cloud verification must be separately reported only when the manual job actually runs and succeeds.
+
+## M11 — curriculum batching and provenance
+
+- Prioritize distinct, technically specific lessons rather than auto-generating filler for 98 overview-only records. Keep an unverified editorial marker until independent fact/source and spoken-duration review. Preserve the 17 planets and original V3 topic identifiers; regenerate server-owned rubrics and topic coverage for each authored batch. Ten substantive topics are in this independent PR; after merge 88 overview-only entries remain.
