@@ -6863,5 +6863,455 @@
       "deletion"
     ],
     "depth_status": "expanded_editorial_unverified"
+  },
+  "60-second GenAI introduction": {
+    "simple": "Introduce your background, recent AI scope, strongest verified impact and the role you are seeking in one natural minute.",
+    "technical": "A strong introduction has four parts: present responsibility, relevant experience, technically specific recent project, and measurable business outcome followed by future role fit. Separate personally owned implementation from team results and avoid listing every service without demonstrating decisions. A 60-second spoken answer is typically more concise than a printed biography; test it aloud rather than equating words with seconds. Verify tenure, title, savings percentages and leadership claims against your resume and project records before interviews.",
+    "example": "Lead with cloud/data and agentic AI work, then describe a secured voice-agent flow and a verified cost or operational outcome.",
+    "project": "Use a real banking/clinic voice architecture and team-owned Databricks optimization where independently supported; this is an adaptable script, not a certified work history.",
+    "answer": "I have experience working across cloud data engineering and AI-driven solutions, with recent focus on GenAI adoption, agent workflows and platform reliability. My recent technical discussions include designing voice-agent flows that connect speech services, orchestration and business APIs, and improving data-platform efficiency and governance. I like solving problems end to end, from architecture and security to observability and measurable outcomes. For this role, I want to contribute that mix of hands-on engineering, responsible AI implementation and practical delivery.",
+    "workflow": [
+      "Verify current title, total experience and real scope",
+      "Choose one architecture story and one supported metric",
+      "Practice concise problem-action-impact delivery aloud",
+      "Tailor final sentence to the role and recheck accuracy"
+    ],
+    "mistakes": [
+      "Opening with a long list of tools without outcomes",
+      "Presenting a team result as solely personal achievement",
+      "Claiming certifications or years not verified by records"
+    ],
+    "followups": [
+      "Which parts of the voice architecture did you personally implement?",
+      "How did you measure platform savings?"
+    ],
+    "keywords": [
+      "introduction",
+      "GenAI",
+      "experience",
+      "impact",
+      "role fit"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Banking voice assistant project story": {
+    "simple": "Explain the user journey, technical architecture and verified outcomes without implying that a renamed demo was deployed in banking production.",
+    "technical": "Tell the story as problem → speech intake → tenant-scoped conversational state → RAG/tool router → authorized business API → response synthesis → telemetry/fallback. Distinguish telephony/WebSocket, STT, speech endpointing, LangGraph/agent state, model deployment, private knowledge and TTS. Describe JWT authorization, idempotency for scheduling and call/turn correlation as requirements; only mark a feature implemented when logs/tests support it. If a clinic scheduling prototype is reframed as a banking design, explicitly label the banking flow a proposed adaptation.",
+    "example": "Caller requests an advisor slot; recognizer transcribes; the agent checks a trusted scheduling API; after user confirmation it returns a booking reference via TTS.",
+    "project": "Use verified voice-agent prototype components as experience; distinguish the banking interview scenario from actual production customer deployment.",
+    "answer": "My voice-agent architecture takes audio from a phone or browser, converts it to text, and routes the user's intent through an agent that can consult approved knowledge or invoke a business tool. The backend maintains conversation context and returns a spoken response through TTS. For a banking adaptation I would add customer verification, tenant-scoped retrieval, explicit booking confirmation and auditable tool calls. I clearly separate functionality tested in a prototype from any production banking integration that has not been independently verified.",
+    "workflow": [
+      "Describe business need and supported prototype scope",
+      "Walk through audio, agent, tools, state and response path",
+      "Explain security, error handling and measured tests",
+      "State honest ownership, limitations and next hardening work"
+    ],
+    "mistakes": [
+      "Claiming banking customer integration based only on a clinic prototype",
+      "Ignoring user authorization and booking confirmation",
+      "Saying a generated reply proves a real appointment was recorded"
+    ],
+    "followups": [
+      "Why did you choose Azure STT rather than a local model?",
+      "How is the conversation ID scoped to a single call?"
+    ],
+    "keywords": [
+      "voice agent",
+      "STT",
+      "TTS",
+      "tool calling",
+      "tenant isolation"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Anomaly RCA project story": {
+    "simple": "Anomaly RCA combines detection signals with evidence-backed investigation, not just a chatbot that explains alert text.",
+    "technical": "Structure the project as operational problem, baseline model, detection and severity logic, activity/dependency correlation, document/runbook retrieval, evidence-ranked RCA hypotheses and SME ticket workflow. Median/MAD and workload-normalized baselines may be appropriate, but a metric is only truthful if recorded in the actual implementation. Explain which joins or views are deterministic and which explanations are LLM-generated and unverified. Measure alert precision, investigation duration, ticket SLA and human corrections; do not invent resolution savings or exact automation coverage.",
+    "example": "An ADF pipeline breaches duration baseline; analysis identifies a slow Copy stage, retrieves a relevant runbook and raises an SME ticket.",
+    "project": "Present documented anomaly detection and agentic RCA team contributions with clear distinction between implemented detection and proposed future automation.",
+    "answer": "The challenge was that operations teams spent time manually locating which data pipeline activity caused a delay. The solution combines run history and anomaly thresholds with activity logs, dependencies and relevant operational knowledge. A deterministic detector flags unusual runs, while an agent can assemble evidence and propose likely causes for support engineers. I would measure whether this reduces time to identify root cause and improves SLA compliance, but keep AI explanations as hypotheses until verified by an SME.",
+    "workflow": [
+      "Explain baseline incident triage pain and monitoring inputs",
+      "Describe anomaly scoring and activity dependency evidence",
+      "Show agent/RAG hypothesis with ticket and human approval",
+      "State measured impact only from incident and SLA records"
+    ],
+    "mistakes": [
+      "Treating an anomaly score as a confirmed root cause",
+      "Attributing all team improvements to one engineer",
+      "Quoting ROI without a comparable before/after incident baseline"
+    ],
+    "followups": [
+      "Why choose MAD rather than standard deviation?",
+      "How do you stop the RCA agent inventing a causal claim?"
+    ],
+    "keywords": [
+      "anomaly",
+      "RCA",
+      "ADF",
+      "MAD",
+      "ticket SLA"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "File processor project story": {
+    "simple": "Explain why agents help onboard file rules while deterministic parsing and reconciliation retain operational control.",
+    "technical": "Describe source layout diversity, versioned metadata rules, fixed-width/delimited parsers, canonical record transformations and header/trailer reconciliation. A LangGraph controller can route inspect, parse, validate, propose new mapping, review and reconstruction nodes. LLM rule suggestions are untrusted drafts tested against golden fixtures and approved by humans. Quantify reduction in manual onboarding or error handling only with real records; do not present an architecture exercise as a deployed regulated-processing product.",
+    "example": "New vendor file has a shifted amount field; the agent suggests a mapping, a validator checks sample variants and a reviewer approves the rule version.",
+    "project": "Enterprise file-processing AI is a design/story example unless repository commits and deployment records confirm personal implementation.",
+    "answer": "I would explain the file-processing challenge as supporting many vendor layouts without rewriting code for every small change. The system stores approved field mappings as metadata, parses files deterministically and verifies control totals before producing standardized output. An agent can inspect a new sample, propose candidate rules and explain validation failures, but it cannot bypass integrity checks. I would show the LangGraph workflow, versioned golden tests and human review path, and be clear whether each component is built or proposed.",
+    "workflow": [
+      "State source layout variability and data integrity risks",
+      "Describe rule metadata, parser and canonical output",
+      "Explain agent proposal and deterministic gate boundaries",
+      "Present golden tests, signoff and verified business impact"
+    ],
+    "mistakes": [
+      "Letting the LLM generate final accounting totals",
+      "Claiming production deployment based only on a design",
+      "Ignoring file encoding or header/trailer reconciliation"
+    ],
+    "followups": [
+      "What does the graph state store?",
+      "Why can't an LLM replace a deterministic parser?"
+    ],
+    "keywords": [
+      "file processor",
+      "LangGraph",
+      "metadata",
+      "reconciliation",
+      "golden files"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Three-layer Q&A method": {
+    "simple": "Prepare each project question at definition, implementation and production-defense depth.",
+    "technical": "Layer one is a concise explanation of what the component does; layer two is architecture, data flow, API contracts and trade-offs; layer three defends failure modes, security, evaluation, scale, observability and ownership. Use concrete project evidence, not longer generic jargon, as depth increases. Build a question tree for likely followups and mark unsupported claims or future designs clearly. When a question probes outside your experience, state what you have built and reason about a proposal separately.",
+    "example": "RAG: layer 1 retrieval plus generation; layer 2 indexing, chunking, hybrid search and reranking; layer 3 stale-chunk cleanup, ACL leakage and groundedness regression.",
+    "project": "Use a real voice assistant or Databricks optimization project for layered architecture practice; keep exact metrics evidence-based.",
+    "answer": "I prepare interview answers in three layers. First I give a short definition or outcome so the interviewer understands the idea. Second I explain my architecture and how the components interact. Third I go into production cases such as security, latency, failure recovery, monitoring and design alternatives. I use one concrete project example through all layers to keep the story consistent. If a deeper part is only proposed, I label it as a design decision rather than claiming it was deployed.",
+    "workflow": [
+      "Write a clear 20-second fundamental answer",
+      "Draw the actual components and owned interfaces",
+      "Prepare security, latency and failure followups",
+      "Practice verbal transitions and verify claims"
+    ],
+    "mistakes": [
+      "Opening with level-three detail before answering the question",
+      "Memorizing services without explaining selection criteria",
+      "Confusing proposed architecture with implemented work"
+    ],
+    "followups": [
+      "How does your RAG retrieval handle deletes?",
+      "What production failure most changed your architecture?"
+    ],
+    "keywords": [
+      "fundamentals",
+      "architecture",
+      "production",
+      "trade-offs",
+      "interview"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Techno-managerial design": {
+    "simple": "Lead a multi-agent solution by defining business boundaries, ownership, technical interfaces and measurable safeguards.",
+    "technical": "Start from business questions and classify which need structured SQL, document retrieval, transactional tools or human decisions. Define an orchestrator/router with narrow specialist agents or tools, a shared typed state contract, allowed data scopes and explicit approval gates for writes. Compare LangGraph stateful orchestration with simpler direct routing before selecting complexity. Set team responsibilities, milestones, evaluation datasets and cost/latency budgets. Resolve conflicts through contract review and security testing; report risk and metrics instead of assuming more agents always means better decisions.",
+    "example": "A revenue agent gets figures from a governed semantic layer, a policy agent retrieves reference documents, and a supervisor synthesizes a cited explanation.",
+    "project": "For a cross-functional implementation, four contributors could own API, retrieval, agent workflow and evaluation, with integration controlled by reviewed interfaces.",
+    "answer": "I would begin with the business questions and decide which answers need authoritative SQL, document retrieval or transactional APIs. Then I define clear interfaces and responsibility for each specialist tool or agent, with an orchestrator that controls state and permissions. As a lead I split work by ownership, establish golden evaluations and review architecture trade-offs, failure recovery and cost before rollout. I avoid building a multi-agent system just for appearance; a simpler pipeline is preferable when it meets the requirements.",
+    "workflow": [
+      "Clarify business outcomes, access boundaries and baseline metrics",
+      "Define typed specialist/tool contracts and ownership",
+      "Plan evaluation, security and iterative team milestones",
+      "Integrate with review, observability and rollback gates"
+    ],
+    "mistakes": [
+      "Adding agents without independent responsibilities",
+      "Ignoring authorization in cross-agent handoffs",
+      "Measuring delivered nodes rather than user task success"
+    ],
+    "followups": [
+      "When is a single agent enough?",
+      "How do you handle a conflicting recommendation between specialists?"
+    ],
+    "keywords": [
+      "multi-agent",
+      "leadership",
+      "orchestrator",
+      "governance",
+      "evaluation"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Team leadership & AI adoption": {
+    "simple": "Leadership balances delivery, mentoring and governance rather than only distributing technical tasks.",
+    "technical": "Set clear objectives and decision ownership, define reviewable boundaries, choose small milestones, track risks and create a feedback loop around code quality and user outcomes. AI adoption adds model evaluation, privacy controls, training data provenance, human approval and incident response expectations. A team of four should have explicit integration ownership and cross-training so no single engineer becomes a bottleneck. Use retrospectives and capacity planning to explain prioritization. Verify team size and actual contribution history before presenting as factual experience.",
+    "example": "One engineer focuses on retrieval quality, another on authenticated tools, another on frontend integration, while lead coordinates CI and incident acceptance.",
+    "project": "A four-person AI adoption or platform team is an interview narrative only when that responsibility is supported by actual employment history.",
+    "answer": "I lead by making the problem and definition of done clear, assigning work based on strengths and setting shared quality standards. For GenAI projects, this includes evaluation, security, access control and measurable user outcomes, not just getting a demo to answer questions. I review integrations and remove blockers while mentoring teammates on the architectural why. I keep releases small and visible, and communicate risks early. I would use only verified team sizes and accomplishments when describing past leadership.",
+    "workflow": [
+      "Define business goal and ownership boundaries",
+      "Agree code, security and evaluation acceptance criteria",
+      "Use short feedback cycles, reviews and cross-training",
+      "Measure team outcome, incidents and skill growth"
+    ],
+    "mistakes": [
+      "Taking personal credit for every team deliverable",
+      "Measuring leadership by number of meetings",
+      "Skipping governance to meet a demo deadline"
+    ],
+    "followups": [
+      "How would you handle a teammate missing a deadline?",
+      "How do you measure AI adoption quality?"
+    ],
+    "keywords": [
+      "leadership",
+      "mentoring",
+      "delivery",
+      "AI governance",
+      "team"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Why leaving & role fit": {
+    "simple": "Explain a career move through future-facing role alignment, not criticism of current coworkers or speculation about compensation.",
+    "technical": "A persuasive motivation links verified experience to the new job's responsibilities, identifies work that the target role offers and describes learning goals without falsely promising capabilities. Keep notice-period and availability information current and distinct from career motivation. Avoid sharing confidential employer context or implying misconduct without evidence. Interviewers look for continuity of ownership, realistic growth and genuine understanding of the opportunity; the answer should stay consistent with your resume timeline.",
+    "example": "I want to work more deeply on production GenAI system design, evaluation and secure agent integrations that match the role's responsibilities.",
+    "project": "Apply the explanation to an Azure/GenAI engineering opportunity using only accurate present-company responsibilities and relevant project experience.",
+    "answer": "I have learned a lot through my current cloud and AI work and am looking for a role where I can go deeper into production GenAI engineering, from secure agent design and retrieval quality to evaluation and operational ownership. I am interested in teams that solve real customer problems with clear engineering standards. This opportunity matches that direction and would let me contribute my data-platform and AI experience while growing in larger end-to-end deployments.",
+    "workflow": [
+      "Read the job description for genuine role responsibilities",
+      "Select two verified strengths relevant to those needs",
+      "Explain forward-looking motivation in professional terms",
+      "Check timeline, availability and compensation answers separately"
+    ],
+    "mistakes": [
+      "Complaining about teammates or disclosing company secrets",
+      "Giving an answer inconsistent with resume chronology",
+      "Claiming skills or deployment scope you cannot defend"
+    ],
+    "followups": [
+      "Why this company rather than a similar role elsewhere?",
+      "What will you bring in the first ninety days?"
+    ],
+    "keywords": [
+      "career change",
+      "GenAI role",
+      "motivation",
+      "fit",
+      "growth"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "STAR impact storytelling": {
+    "simple": "STAR turns a production incident into a concise account of context, responsibility, action and supported result.",
+    "technical": "Situation establishes system and severity; Task defines your accountable role; Action explains concrete diagnosis and implementation; Result describes measurable impact and how it was verified. For an outage, separate root cause from correlation and explain why the chosen rollback or remediation was safe. Include cross-team coordination, communication and preventive regression tests. Avoid inventing downtime, loss or savings numbers; state measurement method and uncertainty if historical records are incomplete. Practice a 90-second narrative with one technical followup.",
+    "example": "A QA data-pipeline run had unexpected delays; investigation traced the issue to a misconfigured environment connection, then tests prevented repetition.",
+    "project": "Choose one incident documented in commits, monitoring, ticket records or an approved internal postmortem before claiming first-person ownership.",
+    "answer": "For a production incident answer I use STAR. I briefly describe the affected service and why the issue mattered, then clarify what I was responsible for. I explain the actual investigation, the evidence that identified the cause, the fix or safe rollback and how we verified recovery. In the result I describe user impact, resolution time or prevention only when the incident record supports it. I finish with the monitoring or regression change we added to reduce recurrence.",
+    "workflow": [
+      "Select a documented incident with defensible evidence",
+      "Identify situation, task and personal responsibility",
+      "Explain causal diagnosis, action and safe verification",
+      "Quantify supported result and preventive change"
+    ],
+    "mistakes": [
+      "Using 'we' for every action without defining personal role",
+      "Claiming precise savings or downtime without evidence",
+      "Describing a hypothesis as confirmed cause"
+    ],
+    "followups": [
+      "What would you do differently next time?",
+      "How did you verify the problem was fixed?"
+    ],
+    "keywords": [
+      "STAR",
+      "incident",
+      "impact",
+      "verification",
+      "ownership"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Round-two architecture defense": {
+    "simple": "Defend every component by explaining the requirement it solves, alternatives considered and failure modes it introduces.",
+    "technical": "Interview defense covers data sources, trust boundaries, state ownership, latency budgets, provider quota, evaluation, rollback and cost. Justify Azure services based on regional availability, existing platform integration and security constraints, not familiarity alone. Explain why RAG instead of fine-tuning or Graph RAG, when LangGraph is justified over a simple router, and how the team checks hallucination and tool permissions. Use diagrams, examples and measured trade-offs; admit where a prototype's proposed controls are not yet deployed.",
+    "example": "Choose a secure Azure Speech token broker because the browser must not hold a subscription key; test failover separately.",
+    "project": "Use the voice agent plus data-platform operational context to distinguish implemented components, benchmarked options and future-hardening goals.",
+    "answer": "In a technical second round I defend the choices against requirements. I explain why we selected the cloud, model, retrieval approach and orchestration pattern, what alternatives we considered and what trade-offs we accepted. Then I cover trust boundaries, latency, cost, evaluation and failure recovery. For example, a voice agent should not expose provider secrets in the browser, and an agent should not invent booking results. I show where the implementation has evidence and where controls remain proposed.",
+    "workflow": [
+      "State measurable functional and nonfunctional requirements",
+      "Map each component to an explicit design decision",
+      "Compare alternatives and failure/safety trade-offs",
+      "Support claims with tests, logs and rollout evidence"
+    ],
+    "mistakes": [
+      "Defending Azure only because it was familiar",
+      "Calling every proposed security control already deployed",
+      "Not explaining why simpler alternatives were rejected"
+    ],
+    "followups": [
+      "Why use normal RAG instead of Graph RAG?",
+      "How would you redesign if provider quotas halved?"
+    ],
+    "keywords": [
+      "architecture",
+      "trade-offs",
+      "RAG",
+      "security",
+      "latency"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "ATS-friendly resume": {
+    "simple": "An ATS-friendly resume presents verifiable experience with clear section headings, accessible text and job-relevant language.",
+    "technical": "Use a straightforward one- or two-column layout only if parsing has been tested; simple single-column text and standard headings are often safest. Match authentic skills to the target role without keyword stuffing, use consistent job dates and positions, and write bullets with action, implementation and outcome. Separate demonstrated GenAI implementations from learning projects and clearly identify team outcomes. Avoid logos, image-only skill lists, hidden text and unsupported certifications if machine parsing matters. Verify PDF/DOCX extraction and remove personal data not needed by the application.",
+    "example": "Implemented tenant-scoped retrieval with regression tests, reducing unauthorized-context risk in a prototype; do not invent a percentage impact.",
+    "project": "The stored ATS DOCX can be reviewed against a specific role, but this lesson does not assert unverified contents from the attachment.",
+    "answer": "I keep my resume structured with a clear summary, relevant technologies, roles, dates and a few strong project bullets. For GenAI positions I emphasize concrete work in RAG, tool calling, secure Azure services, evaluation and production operations only where I can explain my contribution. I use measurable outcomes when records support them and distinguish team accomplishments from individual implementation. I avoid complicated graphics that may confuse applicant tracking systems and tailor keywords naturally to the job description.",
+    "workflow": [
+      "Extract relevant requirements from the target role",
+      "Verify chronology, ownership and metrics against evidence",
+      "Write concise action-technology-outcome bullets",
+      "Test DOCX/PDF text extraction and proofreading"
+    ],
+    "mistakes": [
+      "Adding technologies only to match keywords",
+      "Listing unverifiable project metrics",
+      "Using image-only experience sections in an ATS resume"
+    ],
+    "followups": [
+      "How do you distinguish team and individual impact?",
+      "What should a GenAI project bullet include?"
+    ],
+    "keywords": [
+      "ATS",
+      "resume",
+      "GenAI",
+      "verified achievements",
+      "keyword match"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Azure AI Engineer Associate": {
+    "simple": "Azure AI Engineer Associate knowledge covers designing and using Azure AI services; certification status must be independently verified.",
+    "technical": "AI-102 study topics can span resource provisioning, responsible AI, document/language/vision/speech solutions, search and generative AI. Product branding and official objective weightings change, so refer to the current Microsoft Learn exam page for exact requirements rather than memorizing historical weights. In an interview, explain practical service selection, identity and network boundaries, evaluation and monitoring using a project you truly implemented. Do not claim a passed certification merely because you studied its objectives.",
+    "example": "Explain how a secure Speech token broker, model gateway and private retrieval index fit into an AI-102-aligned architecture.",
+    "project": "A candidate can apply Azure Speech and Azure AI Search knowledge in a voice-agent prototype regardless of whether a certificate was issued.",
+    "answer": "I would explain Azure AI Engineer skills through concrete engineering choices. I can describe when to use Azure AI Search, Speech, language or a model deployment and how to protect those services with identity, network boundaries and evaluation. I would also discuss quotas, regional support, data privacy and responsible AI. Exam knowledge helps organize the topics, but it is not a substitute for hands-on project evidence. I would verify the current official AI-102 objectives and my certification status before stating them.",
+    "workflow": [
+      "Check current Microsoft Learn objectives and own certification records",
+      "Map each service topic to an implemented or proposed example",
+      "Prepare security, evaluation and operations followups",
+      "State actual credential status and project experience accurately"
+    ],
+    "mistakes": [
+      "Claiming an Azure credential without verified award",
+      "Reciting old exam scope as current fact",
+      "Confusing studied reference design with deployed customer use"
+    ],
+    "followups": [
+      "How would you implement secure Azure Speech authentication?",
+      "What does responsible AI add to a document assistant?"
+    ],
+    "keywords": [
+      "AI-102",
+      "Azure AI",
+      "certification",
+      "Speech",
+      "AI Search"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Job descriptions & gap analysis": {
+    "simple": "Map every job requirement to concrete evidence, identify true gaps and build a targeted preparation plan.",
+    "technical": "Decompose a job description into must-have responsibilities, optional technologies, experience level, collaboration expectations and release/security requirements. For each item record the evidence source, ownership strength (built, operated, contributed, learned), recency and interview example; unknown evidence is not a match. Prioritize gaps by importance and time-to-close, then study concepts and build small tests rather than padding the resume. Distinguish cloud/data engineering depth from model research or production AI operations if those were not part of the role.",
+    "example": "If a senior AI job needs LangGraph, RAG evaluation and APIM, cite actual project nodes/evaluators and identify APIM deployment as a gap if it was only designed.",
+    "project": "Use authentic Azure data, agentic RCA and voice-agent work to create a defensible skills matrix for a specific posting.",
+    "answer": "I compare a job description with evidence rather than a long checklist of buzzwords. I group requirements into architecture, Python, Azure, retrieval, agent orchestration, evaluation, security and leadership. For each one I write where I used it, what I personally built and what I can demonstrate in an interview. Missing production experience stays a gap, and I plan a focused learning or prototype task for it. This makes the resume and preparation more credible than exaggerating tool coverage.",
+    "workflow": [
+      "Extract and rank technical/leadership requirements",
+      "Map each to proof and personal contribution level",
+      "Identify high-impact gaps and create targeted demonstrations",
+      "Tailor resume and interview scenarios without overclaiming"
+    ],
+    "mistakes": [
+      "Calling familiarity equivalent to production ownership",
+      "Treating every optional tool as a must-have",
+      "Changing resume facts to fit a posting"
+    ],
+    "followups": [
+      "Which gaps are blockers versus learnable?",
+      "How do you describe a skill used only in a prototype?"
+    ],
+    "keywords": [
+      "job description",
+      "gap analysis",
+      "evidence",
+      "GenAI",
+      "skills"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Interview cheat sheet": {
+    "simple": "A cheat sheet is a memory aid for short, accurate answers, not a script to read aloud word for word.",
+    "technical": "Compress each topic into the core definition, one differentiating detail, an owned project connection and one likely followup. Keep separate cards for fundamentals, architecture and production debugging; include comparison hooks such as LangChain vs LangGraph or faithfulness vs context recall. Practice retrieval without reading the full answer, then expand only when prompted. Mark uncertain versions or unverified personal achievements so brevity never turns into false certainty. Use the cheat sheet with spaced review and active recall.",
+    "example": "RAG = retrieve authorized chunks → grounded prompt → cited response; key risk = stale or unauthorized evidence; metric = retrieval recall plus groundedness.",
+    "project": "Galaxy topics can be practiced as 20-second definitions followed by a two-minute diagram and a failure-mode defense.",
+    "answer": "My cheat sheet contains a one-line definition, a small practical example and the main production risk for each interview topic. For RAG I remember retrieval, authorization, context and grounded answer; for agents I remember state, tools, approval and retries. I use it to practice active recall, not to read a long response. If the interviewer asks deeper questions, I expand into architecture, metrics and debugging. I also verify personal project claims so the shortcuts remain accurate.",
+    "workflow": [
+      "Pick most likely questions and reduce to one-line anchors",
+      "Add one real example and one common failure mode",
+      "Practice aloud without looking and log weak recall",
+      "Expand weak subjects into diagram and production followups"
+    ],
+    "mistakes": [
+      "Memorizing exact wording without understanding",
+      "Using too many keywords to sound technical",
+      "Skipping security and debugging followups"
+    ],
+    "followups": [
+      "How would you expand a RAG answer into design detail?",
+      "Which topics need live coding rather than memorization?"
+    ],
+    "keywords": [
+      "cheat sheet",
+      "active recall",
+      "RAG",
+      "agents",
+      "interview"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Explain project ownership versus proof": {
+    "simple": "Distinguish features you personally implemented, those the team delivered and those you proposed for future deployment.",
+    "technical": "Build an evidence matrix per project component: design decision, personally authored code, collaborated implementation, tests run, actual deployment, operational metrics and documented decisions. Show code paths, architecture traces or approved tickets when permitted, without exposing customer data or secrets. Use precise verbs such as designed, implemented, integrated, tested, supported or proposed; each implies a different level of responsibility. Reframing a clinic voice demo as a banking scenario must not become a false claim of banking production deployment. Confirm outcomes against logs or stakeholder records.",
+    "example": "I implemented a phone-to-speech agent prototype; for banking, my proposal adds account authorization and booking audit. Do not merge those into one false production statement.",
+    "project": "Voice/agent interview answers should distinguish prototype tenant separation, tool calls and observed logs from undeployed gateway, APIM and real bank integration.",
+    "answer": "When describing ownership I separate what I wrote or configured myself from what the wider team delivered and from what is still a design proposal. For example, I can explain an implemented speech-agent flow using actual code and test evidence, then describe how I would adapt it to a regulated banking use case. I do not claim production customer integrations or savings figures without proof. I use specific verbs and can walk through architecture, failures and the decisions I personally made.",
+    "workflow": [
+      "Inventory components and identify personal versus team work",
+      "Associate code, tests, logs and deployment records with each claim",
+      "Label prototype, production and proposed enhancements separately",
+      "Practice precise ownership statements and technical followups"
+    ],
+    "mistakes": [
+      "Saying 'I built everything' without evidence",
+      "Presenting a design enhancement as production functionality",
+      "Sharing confidential user records to prove an implementation"
+    ],
+    "followups": [
+      "Show one component you debugged end to end.",
+      "Which security control is still only planned?"
+    ],
+    "keywords": [
+      "ownership",
+      "evidence",
+      "prototype",
+      "production",
+      "integrity"
+    ],
+    "depth_status": "expanded_editorial_unverified"
   }
 }
