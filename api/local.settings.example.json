@@ -8,6 +8,7 @@
     "GALAXY_GATEWAY_SHARED_SECRET": "<at-least-32-random-bytes-apim-injected-backend-only>",
     "GALAXY_ALLOWED_ORIGIN": "https://<new-galaxy-static-host>",
     "GALAXY_EVAL_GATEWAY_RATE_LIMIT": "not-configured",
+    "GALAXY_VAULT_GATEWAY_RATE_LIMIT": "not-configured",
     "GALAXY_SPEECH_GATEWAY_RATE_LIMIT": "not-configured",
     "AZURE_SPEECH_REGION": "<approved-region>",
     "AZURE_SPEECH_KEY": "<backend-only-secret>",
