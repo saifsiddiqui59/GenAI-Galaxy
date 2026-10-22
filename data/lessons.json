@@ -5693,5 +5693,335 @@
       "Delta"
     ],
     "depth_status": "expanded_editorial_unverified"
+  },
+  "Git & branching strategy": {
+    "simple": "Short feature branches and reviewed pull requests keep changes isolated and allow CI to evaluate the exact proposed code.",
+    "technical": "Protect main with required checks, approval policy and a predictable merge strategy. A branch should contain one independently testable change, avoid cross-workstream files, and rebase or merge the updated base only after inspecting conflicts. Build artifacts must be reproducible from pinned dependencies and commit SHA. For AI work include a golden evaluation set, prompt/model changes, negative authorization tests and rollback instructions; tests of outdated commits do not validate the final merge. Prefer a new main Actions run after each merge.",
+    "example": "A new reranker branch changes retrieval code and golden fixtures, waits for passing pipeline quality tests, and merges only after review.",
+    "project": "Galaxy feature branches have already used separate CI checks and post-merge main verification; a cloud deployment remains a separate manual gate.",
+    "answer": "My Git strategy uses small, focused feature branches with pull requests into a protected main branch. I review the exact diff, enforce automated unit, integration, security and AI-evaluation checks, and resolve conflicts before merging. Each check must be attached to the current commit, not an earlier green run. After a merge I verify main again. For risky releases I keep a tested rollback and separate the code merge from any manual production deployment approval.",
+    "workflow": [
+      "Branch from a verified main commit and define exclusive file ownership",
+      "Commit code with fixtures, tests and release notes",
+      "Review PR diff and wait for all current required CI checks",
+      "Merge sequentially and revalidate the new main SHA"
+    ],
+    "mistakes": [
+      "Merging because an unrelated run is green",
+      "Stacking overlapping generated files without an integration plan",
+      "Treating a merge as automatic authorization for deployment"
+    ],
+    "followups": [
+      "How do you recover from a conflicting stacked PR?",
+      "Why rerun CI after merging?"
+    ],
+    "keywords": [
+      "pull request",
+      "main",
+      "CI",
+      "merge conflict",
+      "rollback"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "GitHub Actions / Azure DevOps": {
+    "simple": "A release pipeline executes repeatable checks and stops deployment when quality or security gates fail.",
+    "technical": "Use workflows that pin tool versions and run deterministic build, schema, unit, integration and security tests before conditional AI evaluations. Batch a versioned golden .jsonl set through retrieval and answer generation using safe fixtures, then compute groundedness, answer relevance and critical permission-denial assertions. CI runs on PRs with least privilege and no cloud production secrets; deployment has a separate protected manual environment with approvals and short-lived OIDC identity. Record benchmark versions and compare against baseline; avoid relying only on an LLM judge that can drift.",
+    "example": "Fail a candidate release when a labeled groundedness sample falls below a reviewed threshold or an unauthorized bank-tool call unexpectedly succeeds.",
+    "project": "The Galaxy project tests curriculum, browser and release-safety jobs; a live RLS workflow is deliberately manual and approval-gated.",
+    "answer": "I build a CI/CD pipeline that checks code quality, unit tests, integration behavior and a versioned golden dataset for the RAG application. The evaluation stage reports groundedness, relevance and any safety-critical regressions against explicit thresholds. It must fail the build for important defects rather than show a dashboard only. I keep PR workflows read-only with mocked data and reserve OIDC cloud deployment for a protected manual environment. After merging, I verify the new main commit before shipping.",
+    "workflow": [
+      "Pin dependencies and select golden scenarios tied to change risk",
+      "Run lint, API tests and authorized tenant-negative cases",
+      "Evaluate groundedness/relevance and publish versioned metric evidence",
+      "Gate merge and separate approved production deployment"
+    ],
+    "mistakes": [
+      "Putting production keys in PR jobs",
+      "Failing a model solely on an unstable unlabeled judge score",
+      "Treating workflow success as live tenant acceptance"
+    ],
+    "followups": [
+      "How do you handle evaluator score variance?",
+      "Where would you store golden set versions?"
+    ],
+    "keywords": [
+      "GitHub Actions",
+      "Azure DevOps",
+      "golden dataset",
+      "quality gate",
+      "OIDC"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Unit, integration & golden tests": {
+    "simple": "Unit tests isolate one function, integration tests verify boundaries, and golden tests lock down realistic expected behavior.",
+    "technical": "Test tool routing, input validation and prompt assembly with deterministic unit fixtures. Integration tests exercise real contracts across auth, retrieval, LLM adapter and backing database in an isolated environment. A golden dataset stores versioned question, allowed user context, relevant evidence, expected outcome and unacceptable behaviors, including adversarial prompt injection and forbidden actions. Evaluate retrieval separately from answer correctness and tool side effects; when changing models, review drift with statistical confidence and human adjudication on disagreements.",
+    "example": "A bank booking test submits the same idempotency key twice and asserts a single confirmed appointment, not two writes.",
+    "project": "For a banking voice agent, use mocked STT and booking tools in CI, then separately consented real provider tests before production release.",
+    "answer": "I start with unit tests for validators, prompt routing and tool arguments. Integration tests check that authentication, retrieval and booking systems interact correctly, especially failures and retries. I also keep a golden set of representative conversations with reference evidence and expected outcomes. A crucial test is that another customer cannot read an account or create a booking under someone else's identity. I compare both quality and side effects, then review difficult failures with humans.",
+    "workflow": [
+      "Write deterministic unit cases for every tool contract",
+      "Exercise isolated auth, retrieval and provider integration paths",
+      "Version golden positive, edge and adversarial conversations",
+      "Compare outcomes, deny unauthorized side effects and triage regressions"
+    ],
+    "mistakes": [
+      "Using only happy-path prompt examples",
+      "Confusing a plausible answer with a correct API side effect",
+      "Updating golden expected answers simply to silence failures"
+    ],
+    "followups": [
+      "How would you test a provider timeout after a successful write?",
+      "What makes a golden dataset representative?"
+    ],
+    "keywords": [
+      "unit tests",
+      "integration",
+      "golden set",
+      "negative tests",
+      "idempotency"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Configuration & Key Vault": {
+    "simple": "Configuration chooses environment behavior; secret managers keep credentials away from source control and static clients.",
+    "technical": "Separate non-sensitive endpoints, model deployment names and feature flags from passwords, provider keys and certificates. Use managed workload identity wherever possible and authorize read access to narrowly scoped Key Vault secrets; rotate secrets with version awareness and an audit trail. Deploy environment config through reviewed templates, avoid mixing QA and Prod resource references, and fail closed when a required secret is absent. Do not log Authorization headers or copy Key Vault values into frontend runtime-config.js.",
+    "example": "An Azure Function reads its Key Vault secret using a managed identity, while its public webpage contains only the HTTPS API endpoint.",
+    "project": "For Galaxy, public runtime configuration must never include Azure Speech or model provider keys; no secure broker is deployed yet.",
+    "answer": "I keep configuration and secrets separate. Safe configuration like an environment name or service endpoint can be deployed as reviewed settings, but API keys and passwords belong in Key Vault or managed workload identity. Each environment should have its own scope and access policy so QA cannot accidentally use production secrets. I also plan rotation, audit who retrieved a secret, and make the application fail safely when a required configuration is missing.",
+    "workflow": [
+      "Classify fields as public config, private config or secret",
+      "Assign managed identity and least-privilege vault permissions",
+      "Deploy environment-specific references without copying values",
+      "Test missing secret, rotation and access-denied behavior"
+    ],
+    "mistakes": [
+      "Storing keys in GitHub repo files or browser code",
+      "Reusing production secrets in development",
+      "Logging resolved secret strings during troubleshooting"
+    ],
+    "followups": [
+      "What changes when a Key Vault secret rotates?",
+      "Why prefer managed identity over embedded credentials?"
+    ],
+    "keywords": [
+      "Key Vault",
+      "managed identity",
+      "secret rotation",
+      "configuration",
+      "least privilege"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Distributed tracing": {
+    "simple": "A trace links all spans belonging to one request across services, showing where errors and delays happened.",
+    "technical": "Propagate a stable trace context such as W3C traceparent across WebSocket connection, audio ingress, STT, agent orchestration, retrieval, tools, LLM and TTS. Create child spans with service name, model deployment, route, timestamp, outcome and safe durations, but redact user speech, account balances, secrets and raw tokens. Distinguish one phone call ID from multiple utterance/turn IDs and one logical retry from each attempt. Sample based on risk and latency while keeping enough operational evidence for failures; never fabricate traces retroactively.",
+    "example": "A voice turn trace shows STT 420 ms, retrieval 95 ms, model 1.3 s and scheduling tool timeout 4 s, clearly identifying the tool bottleneck.",
+    "project": "Use call-scoped identifiers in banking voice assistant design so a root-cause investigation can follow Functions and WebSocket boundaries.",
+    "answer": "I add a correlation ID for the overall call and a trace ID for each conversational turn, then propagate those identifiers across STT, retrieval, model, tool and TTS spans. When a user reports a wrong or slow reply, I can see the exact step, its outcome and its dependency timings. Traces should contain metadata and redacted identifiers, not secret tokens or full private conversations. I combine those spans with logs and metrics to distinguish timeouts, poor retrieval and model errors.",
+    "workflow": [
+      "Create call and turn identifiers at trusted ingress",
+      "Propagate trace context to every downstream request",
+      "Record bounded, privacy-safe span timing and status",
+      "Correlate traces with logs and alerts to isolate failure"
+    ],
+    "mistakes": [
+      "Using different request IDs with no parent correlation",
+      "Logging bank balance or audio as debug payload",
+      "Treating an error status in one child span as complete root cause"
+    ],
+    "followups": [
+      "How are retries represented in a trace?",
+      "What tracing fields would you avoid in a financial agent?"
+    ],
+    "keywords": [
+      "traceparent",
+      "span",
+      "correlation ID",
+      "STT",
+      "TTS"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Token & cost telemetry": {
+    "simple": "Monitor tokens, cache use, retries and provider prices by feature to explain model cost trends.",
+    "technical": "Capture provider-reported input, output and cached-token usage per model, deployment and logical request, distinguishing request retries and partial streams. Apply a versioned price table with currency and contract date for estimated spend and reconcile periodically against actual billing. Add budgets for maximum context size, retrieval chunks, response length, tool rounds and evaluation sample rate. Attribute costs by tenant with pseudonymous IDs and avoid exporting prompts with private content. Track cost per successful task, not only token totals.",
+    "example": "A routing experiment reduces average prompt tokens but increases retry volume, so overall cost per resolved conversation rises.",
+    "project": "The Galaxy evaluator currently is not deployed; CI and design docs should not report model-token spend as live production telemetry.",
+    "answer": "For token monitoring I record input tokens, output tokens, cached tokens and model version for each completed call, along with retries and failures. I calculate an estimated cost using the provider's current contractual rate and reconcile the result with bills. I also track cost per successful task because a cheap response that triggers several retries may be more expensive overall. I set token budgets, cap context and evaluate caching without logging private prompts or exposing tenant-specific spending.",
+    "workflow": [
+      "Capture provider token usage and request outcome",
+      "Apply versioned prices and account for cached tokens/retries",
+      "Aggregate per task and pseudonymous tenant and reconcile billing",
+      "Alert on unexpected cost or unsuccessful-token spikes"
+    ],
+    "mistakes": [
+      "Multiplying all tokens by one universal rate",
+      "Counting a retry as a new successful task",
+      "Logging prompt bodies when only token totals are needed"
+    ],
+    "followups": [
+      "How does KV/prompt caching affect cost interpretation?",
+      "What metric detects expensive failed tool loops?"
+    ],
+    "keywords": [
+      "tokens",
+      "cached tokens",
+      "billing",
+      "cost per task",
+      "retry"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Latency breakdown": {
+    "simple": "Overall latency is a sum of critical-path waits, not just the model's decoding time.",
+    "technical": "Instrument client network, cold start, authentication, STT endpointing, retrieval, reranking, model queue/prefill/decode, sequential tool calls, TTS synthesis and audio playback. Measure first-token/first-audio latency separately from final completion, as perceived responsiveness matters for conversation. Critical-path analysis accounts for concurrent stages: summing parallel spans overstates wall time. Segment p50/p95 by deployment, language, call type and warm/cold start; apply time budgets and fallback policies to dominant delays before tuning unrelated components.",
+    "example": "A cold-start Function adds 1.8 seconds before model inference, so smaller top-k alone cannot solve a first-reply complaint.",
+    "project": "For the voice assistant architecture, endpointing silence thresholds, WebSocket connection setup and speech playback can dominate first response.",
+    "answer": "When a user says the first answer is slow, I measure the full critical path: client connection, speech recognition, retrieval, model queue and generation, tool calls, speech synthesis and playback. I separate first-audio delay from total answer time and compare warm versus cold starts. I also use p95 rather than averages alone. If a function cold start or serial external tool dominates, changing the LLM temperature will not fix it. I tune the measured bottleneck.",
+    "workflow": [
+      "Add trace timing across all voice and agent stages",
+      "Compute critical path and first-audio/last-audio times",
+      "Segment cold/warm requests and p50/p95 by user journey",
+      "Fix highest-impact dependency and repeat measurement"
+    ],
+    "mistakes": [
+      "Adding overlapping parallel spans as if sequential",
+      "Reporting only server model time",
+      "Ignoring phone audio endpointing or network jitter"
+    ],
+    "followups": [
+      "What causes first-turn delay but not second-turn delay?",
+      "How can you reduce p95 without reducing answer quality?"
+    ],
+    "keywords": [
+      "p95",
+      "cold start",
+      "first token",
+      "critical path",
+      "TTS"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Failed tool calls & fallback": {
+    "simple": "Classify tool failures and recover without claiming an action happened when it may not have.",
+    "technical": "Tool failure modes include input validation, access denial, upstream 429/5xx, timeout, schema drift and uncertain commit after request disconnect. Separate read-only retries from state-changing calls: writes require idempotency keys or reconciliation lookup before retrying. Set bounded exponential backoff with jitter for transient failures and a circuit breaker when a provider is unhealthy. The agent state must retain pending intent, show a clear failure or uncertainty message and support human handoff without exposing internal traces or guessing a booking confirmation.",
+    "example": "If a scheduling API times out after submitting a booking, query the booking by idempotency key before trying again.",
+    "project": "For a clinic or banking appointment assistant, verify the appointment ID before reading a voice confirmation to the caller.",
+    "answer": "I first inspect the tool status, latency, input validation and authenticated context. A 403 needs an authorization fix, not a retry, whereas a 429 or temporary 503 may be recoverable after backoff. If a booking request times out, I cannot assume it failed or succeeded. I check the operation using an idempotency key or transaction ID before repeating it. The agent should communicate uncertainty clearly and offer safe follow-up or human assistance rather than invent a success.",
+    "workflow": [
+      "Classify error as validation, permission, transient or unknown commit",
+      "Inspect scoped logs, trace and idempotency identifier",
+      "Retry only safe operations under bounded policy",
+      "Reconcile uncertain writes and offer transparent fallback"
+    ],
+    "mistakes": [
+      "Retrying booking writes without idempotency",
+      "Hiding a 403 by asking the model to try different credentials",
+      "Reporting success merely because a request was sent"
+    ],
+    "followups": [
+      "How can you distinguish a timeout from a committed booking?",
+      "When would you use a circuit breaker?"
+    ],
+    "keywords": [
+      "tool calling",
+      "idempotency",
+      "retry",
+      "403",
+      "circuit breaker"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Observability dashboards & alerts": {
+    "simple": "Dashboards combine reliability, latency, quality and business success with alerts that request an actionable response.",
+    "technical": "Track availability, task success, user-visible error rate, p50/p95 latency, tool and provider 429/5xx, STT failure, retrieval miss, groundedness sampled on approved traces, and cost per completed task. Define SLO windows and alert on burn-rate or sustained anomalies rather than one noisy point. Ensure metrics carry safe dimensions such as version, region and route, but not account balances or direct user identifiers. Separate automated quality indicators from human-labeled correctness; dashboards should provide links to redacted traces, not fabricated explanations.",
+    "example": "A 15-minute burn-rate alert for voice booking failures opens a dashboard filtered to the release and provider deployment involved.",
+    "project": "For Galaxy, a monitoring plan can cover the future evaluator and Speech broker; no deployed backend reliability dashboard exists yet.",
+    "answer": "I create a production dashboard around user task completion, failure rate, p95 response latency, model/tool errors, grounding quality and cost. The most important view tells us whether customers can complete the journey, not just whether a service returns HTTP 200. I configure sustained error-budget or threshold alerts with clear ownership and a trace link. I avoid high-cardinality personal identifiers and document which quality scores come from automated judges versus human reviews.",
+    "workflow": [
+      "Define user-journey SLOs and approved metric dimensions",
+      "Instrument errors, quality, latency and cost per route",
+      "Build dashboards with trace drill-down and release markers",
+      "Tune actionable alert thresholds and on-call runbooks"
+    ],
+    "mistakes": [
+      "Alerting on every single transient model failure",
+      "Using request success as proxy for appointment success",
+      "Leaking personal details in dashboard labels"
+    ],
+    "followups": [
+      "How does an error-budget burn-rate alert work?",
+      "What is the difference between automated groundedness and human accuracy?"
+    ],
+    "keywords": [
+      "SLO",
+      "p95",
+      "error budget",
+      "groundedness",
+      "telemetry"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Production feedback triage": {
+    "simple": "A complaint becomes a reproducible, categorized test case rather than random prompt tweaking.",
+    "technical": "Collect a consented session/trace reference and classify wrong output by authorization, stale index, retrieval recall, reranking, context assembly, prompt interpretation, model behavior or tool side effect. Inspect the evidence shown to the model and the true source at the incident time. Apply a narrow repair: fix ACLs or ingestion for missing documents, retrieval tuning for missed evidence, tool/schema handling for incorrect actions, or prompt/model evaluation for groundedness errors. Add a regression fixture, compare against labeled baseline and monitor deployment cohorts.",
+    "example": "A user sees an outdated insurance policy answer because the vector index still holds an old document version; rebuild only affected chunks and add a tombstone test.",
+    "project": "For a banking voice answer complaint, correlate speech transcript and account-tool response before concluding the LLM hallucinated.",
+    "answer": "I would ask for a reproducible example and the relevant trace rather than immediately changing the prompt. First I confirm user identity and whether the correct source existed and was accessible at that time. Then I inspect STT, retrieval, reranker, model context and tool outputs to locate the first incorrect stage. I fix that stage and add a golden regression test, including any tenant-isolation case. Finally I compare quality and latency before and after release.",
+    "workflow": [
+      "Capture consented session ID, expected outcome and source timestamp",
+      "Inspect authorized evidence, trace and each pipeline stage",
+      "Fix the first defective component and add regression scenario",
+      "Evaluate canary results and track recurring feedback"
+    ],
+    "mistakes": [
+      "Calling every incorrect answer a hallucination",
+      "Fixing the prompt when the index was stale",
+      "Using private production data directly as a public golden fixture"
+    ],
+    "followups": [
+      "How would you tell retrieval failure from model reasoning failure?",
+      "What if the original source was wrong?"
+    ],
+    "keywords": [
+      "feedback",
+      "triage",
+      "retrieval",
+      "golden regression",
+      "root cause"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Correlated voice and tool tracing": {
+    "simple": "One banking call spans telephony, audio processing and tools; tracing must preserve causal links between them.",
+    "technical": "Use a call ID per phone session and a turn ID per utterance, propagated from WebSocket connection through STT, LangGraph state, model, retrieval and tool invocation to TTS playback. Link asynchronous spans using traceparent or explicit span links, including reconnects and retries. Observe input audio timestamps, silence endpointing, provider token delays and downstream API duration without storing customer speech or account data in traces. For overlapping turns, label cancellation generations so stale TTS or booking callbacks cannot be attached to the new turn.",
+    "example": "Trace call 123 turn 4 from endpointing to a slow balance API, proving the delay was upstream of TTS rather than voice synthesis.",
+    "project": "The Galaxy frontend mic regression suite validates stale callbacks offline; distributed traces for a deployed banking system remain a design goal.",
+    "answer": "For a slow banking call I would use a stable call ID and a separate turn ID for each utterance. I propagate trace context through the telephony WebSocket, speech recognition, agent nodes, retrieval, model inference, authorized tools and TTS. This lets me identify whether the delay came from endpointing, model queue time or an external banking API. I also mark retries and cancellations and redact customer details. Without that correlation, individual service logs can tell conflicting stories.",
+    "workflow": [
+      "Assign trusted call/turn identifiers at ingress",
+      "Attach trace context and spans across each service boundary",
+      "Record retries, cancellations and first-audio milestones",
+      "Find critical-path delay and verify fix on subsequent calls"
+    ],
+    "mistakes": [
+      "Using one global trace ID for every call",
+      "Storing raw speech and balances in traces",
+      "Confusing canceled callbacks with valid current-turn output"
+    ],
+    "followups": [
+      "How would you correlate a reconnect after a WebSocket drop?",
+      "Which span proves TTS playback started?"
+    ],
+    "keywords": [
+      "call ID",
+      "turn ID",
+      "traceparent",
+      "WebSocket",
+      "voice latency"
+    ],
+    "depth_status": "expanded_editorial_unverified"
   }
 }
