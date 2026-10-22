@@ -6263,5 +6263,245 @@
       "governance"
     ],
     "depth_status": "expanded_editorial_unverified"
+  },
+  "Fixed-width & delimited formats": {
+    "simple": "One parser framework can read many data formats when record structure is declared as metadata and validated on every file.",
+    "technical": "A format contract describes character encoding, line endings, row kinds, required length, field name, start offset and width, delimiter/quote/escape rules, and header/trailer expectations. Fixed-width offsets may refer to bytes, not Unicode characters; delimited formats need quoted delimiter and embedded newline handling. Select a versioned contract by trusted source and validate schema before processing. Parse incrementally, quarantine malformed records, and reconcile physical row count with declared trailer count. Retain source fingerprints for deterministic replay.",
+    "example": "Format A slices positions 1–8 for an account ID, while format B parses semicolon-separated quoted fields using the same normalized output schema.",
+    "project": "A file-processing assistant can propose a candidate contract, but deterministic parsing and validation enforce the approved format.",
+    "answer": "I would build a metadata-driven ingestion engine that selects an approved format definition for each input. A fixed-width format needs encoding, record lengths, offsets and data types, while a delimited format needs delimiter, quoting and escape rules. Both emit a normalized record with source location and error metadata. I validate header and trailer controls, reject malformed records into quarantine and compare totals before publishing. The engine is generic, but the rules are explicit and versioned.",
+    "workflow": [
+      "Identify source and approved versioned format contract",
+      "Parse records incrementally under size and encoding limits",
+      "Validate typed fields, row types and positional rules",
+      "Reconcile totals, quarantine failures and persist lineage"
+    ],
+    "mistakes": [
+      "Splitting CSV on a delimiter without handling quotes",
+      "Confusing byte offsets with code-point offsets",
+      "Silently dropping invalid records"
+    ],
+    "followups": [
+      "How do you add a new version without breaking old files?",
+      "How do you handle multiline quoted fields?"
+    ],
+    "keywords": [
+      "fixed-width",
+      "delimiter",
+      "encoding",
+      "schema",
+      "quarantine"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Regex, field offsets & rules": {
+    "simple": "Versioned extraction rules describe where values appear and how to validate them without editing core parser code.",
+    "technical": "Store rules for record type, offsets, lengths, trim mode, encoding, type conversion, required/default status, allowed values and optional anchored regex validation. For fixed-width text define whether offsets are zero-based and inclusive/exclusive; for delimited text include quote handling and column-to-field mapping. Regex patterns should be bounded and pre-reviewed to avoid catastrophic backtracking on untrusted inputs. Track contract version and source hash; a rule change is a schema migration requiring old and new golden fixtures.",
+    "example": "Rule revision 2 moves InvoiceDate from bytes 41–48 to 45–52, with YYYYMMDD parsing and a valid calendar-date check.",
+    "project": "An LLM might draft offset suggestions from a reference file, but a validator and human reviewer approve the mapping.",
+    "answer": "I store file parsing rules as versioned metadata: field start and length, data type, required flag, trim behavior and a validation pattern when useful. That lets the same parser accept a new vendor layout without new business logic. I still test offsets carefully, especially byte versus character positions. Regex checks should be anchored and bounded so malformed input cannot consume excessive CPU. Every new rule gets a golden sample, negative cases and a review before promotion.",
+    "workflow": [
+      "Define versioned field map with exact offset convention",
+      "Validate types, patterns and required values",
+      "Test malformed and old-format fixtures",
+      "Approve and deploy rule version with rollback"
+    ],
+    "mistakes": [
+      "Using free-form regex extraction as authoritative structure",
+      "Changing offsets without a test fixture",
+      "Running unbounded regex on adversarial content"
+    ],
+    "followups": [
+      "How do you avoid regex catastrophic backtracking?",
+      "What does inclusive versus exclusive field end mean?"
+    ],
+    "keywords": [
+      "regex",
+      "offset",
+      "rule version",
+      "validation",
+      "schema"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Header/detail/trailer checks": {
+    "simple": "Headers identify file context, details contain records and trailers verify that the complete file was transmitted.",
+    "technical": "Validate expected header identifiers, business date, source, schema version and declared encoding. Count all eligible detail records and compute control totals with correct decimal precision and signed amounts. Trailer count and sum must match exactly under the interface's inclusion/exclusion rules; never compare against an unfiltered subset accidentally. Detect duplicate or missing sequence numbers, extra trailing rows, truncated transmission and checksum mismatch. Fail or quarantine the entire batch according to agreed policy rather than publishing partial records as complete.",
+    "example": "A payment file trailer claims 1,005 entries worth ₹2.5 million but parser sees 1,004 entries; block settlement and investigate.",
+    "project": "An enterprise file framework must refuse a mismatched header/trailer before rebuilding or delivering downstream artifacts.",
+    "answer": "I parse the header first to verify the source, version and business date. As I read detail records, I count valid rows and calculate declared control totals using exact decimal arithmetic. Then I compare those values with the trailer, accounting for the contract's inclusion rules. If the count or amount does not match, I mark the file incomplete or invalid and keep an audit record rather than treating the load as successful. I also check duplicate sequences and truncation.",
+    "workflow": [
+      "Validate header identifier, source and date",
+      "Accumulate count, amount and sequence controls during details",
+      "Compare computed and declared trailer metrics",
+      "Reject or quarantine batch and record exact mismatch"
+    ],
+    "mistakes": [
+      "Using floating-point arithmetic for financial control totals",
+      "Treating trailer as optional when contract requires it",
+      "Publishing partial detail records after a failed trailer check"
+    ],
+    "followups": [
+      "How do you recover after a truncated file?",
+      "Why might physical line count differ from detail record count?"
+    ],
+    "keywords": [
+      "header",
+      "detail",
+      "trailer",
+      "control total",
+      "reconciliation"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Transformation & reconstruction": {
+    "simple": "Reconstruction must reproduce an agreed target contract from validated normalized records, with auditable totals.",
+    "technical": "Separate parsing/validation from canonical transformation and deterministic output serialization. Preserve identifiers with leading zeros and use Decimal for financial fields, documented timezone and rounding rules, and stable row ordering when the interface requires it. Recalculate target header and trailer based on the final records rather than copying old totals. Produce a manifest with input hash, mapping version, row counts, output hash and rejected count. Reparse reconstructed output through an independent validator and compare semantic records and controls before release.",
+    "example": "A vendor format is normalized, transformed to a bank's fixed-width schema, and regenerated with a fresh trailer count and exact amount sum.",
+    "project": "A file conversion agent can assist in proposing new mapping rules; the byte layout and controls should remain deterministic.",
+    "answer": "I would first validate the input and convert it into a typed canonical record structure. Then I apply approved mapping and transformation rules, preserving important identifiers and exact numeric types. The output writer serializes fields in a deterministic order, pads fixed widths correctly and recalculates its own header and trailer. Finally I parse the generated file again, compare records and control totals, and store hashes and rule versions. This creates stronger evidence than checking only that the file was created.",
+    "workflow": [
+      "Parse validated source into typed canonical records",
+      "Apply approved transforms with explicit rounding/ordering",
+      "Write target layout and recompute header/trailer",
+      "Reparse output and verify hashes, totals and golden fixtures"
+    ],
+    "mistakes": [
+      "Copying source trailer values after filtering records",
+      "Losing leading zeros when converting IDs",
+      "Relying only on a visual file comparison"
+    ],
+    "followups": [
+      "Why reparse generated output?",
+      "How do you prove deterministic output on retries?"
+    ],
+    "keywords": [
+      "reconstruction",
+      "canonical model",
+      "Decimal",
+      "trailer",
+      "manifest"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "LangGraph orchestration": {
+    "simple": "A graph coordinates file-inspection and validation stages with explicit state and conditional routing.",
+    "technical": "Define typed graph state with source fingerprint, approved mapping version, parse results, validation errors, retry count and human approval flag. Nodes for inspect, parse, validate, propose repair, review and reconstruct run under conditional edges; keep critical side effects in deterministic nodes, not free-form model text. A failed validation branches to quarantine or human review, while accepted output proceeds to deterministic serialization and reconciliation. Checkpoint state and idempotency across retries, bound loops and avoid putting raw sensitive file content into conversation logs.",
+    "example": "inspect → parse → validate; if trailer mismatch → human review, else reconstruct → compare → approve delivery.",
+    "project": "A metadata-driven file assistant can use LangGraph for orchestration without letting the model bypass hard integrity checks.",
+    "answer": "I would model the file-processing workflow as a LangGraph with explicit state and nodes for inspection, parsing, validation, optional repair proposal and output reconstruction. Conditional edges route failed validations to quarantine or human review rather than ignoring them. I keep deterministic parsers, counts and trailer checks outside the language model, and I checkpoint state for safe retry. The model may help explain errors or suggest a rule, but only an approved versioned rule can affect a production output.",
+    "workflow": [
+      "Define typed graph state, ownership and checkpoints",
+      "Run inspect/parse/validate as deterministic nodes",
+      "Route uncertain or failing inputs to bounded review",
+      "Reconstruct, compare and approve before delivery"
+    ],
+    "mistakes": [
+      "Letting an LLM overwrite failed validation states",
+      "Building infinite retry loops with no budget",
+      "Mixing model-generated suggestions with approved rules"
+    ],
+    "followups": [
+      "How do conditional edges represent failure paths?",
+      "What state must survive worker restart?"
+    ],
+    "keywords": [
+      "LangGraph",
+      "state",
+      "node",
+      "edge",
+      "checkpoint"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Rule learning from reference files": {
+    "simple": "A model may suggest a format rule from examples, but examples alone do not prove the rule is correct.",
+    "technical": "Supply a versioned interface guide and representative redacted good/bad files to a constrained rule-proposal process. Require the proposal to specify offsets, encoding, field types, record variants, unknowns and confidence, without executing arbitrary code. Test against a diverse labeled golden corpus including different line lengths, optional headers, negative amounts and encoding anomalies. Run deterministic contract checks, obtain human source-owner approval and version the decision. Never let a prompt injection inside a sample file change approved system rules.",
+    "example": "A model suspects bytes 1–4 are record codes; a verifier checks every sample variant and flags conflicting rows before approval.",
+    "project": "A file processing AI can shorten onboarding of new layouts by drafting candidate mappings while humans retain release control.",
+    "answer": "If I receive a new reference file, I can ask an LLM to propose record types, offsets and validation rules, but that proposal stays untrusted. I compare it with the vendor specification and test it on multiple positive and negative examples. A deterministic validator checks lengths, values and control totals, and a reviewer approves the new rule version. If examples disagree or lack coverage, I request more information instead of guessing. The LLM never directly modifies a production parser rule.",
+    "workflow": [
+      "Redact and sample representative input and interface docs",
+      "Propose typed rule candidates with uncertainty",
+      "Validate on held-out good/bad fixtures and constraints",
+      "Secure human signoff, version mapping and monitor drift"
+    ],
+    "mistakes": [
+      "Treating one sample file as exhaustive schema evidence",
+      "Letting source text supply instructions to the agent",
+      "Activating a proposed rule before a negative test"
+    ],
+    "followups": [
+      "How do you detect unseen optional record types?",
+      "What evidence should a human reviewer see?"
+    ],
+    "keywords": [
+      "rule learning",
+      "golden fixtures",
+      "human approval",
+      "prompt injection",
+      "versioning"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "File comparison & regression": {
+    "simple": "Regression must compare structure, control totals and field-level meaning, not only whether two files have equal length.",
+    "technical": "Keep golden fixtures for each format version, encoding, record type and boundary condition. Compare source-to-canonical records and reconstructed output using stable identifiers, expected ordering, field precision, padding, header/trailer metrics and a manifest of transformations. Byte-level comparisons catch unexpected output differences, while semantic comparisons distinguish harmless formatting from a wrong amount or key. Include malformed/truncated files, duplicate headers, missing trailers, multibyte encodings and idempotent replay; never approve a rule simply because a generated file superficially matches a screenshot.",
+    "example": "A new parser passes a normal sample but fails a trailer with a negative refund; the golden regression blocks promotion.",
+    "project": "File processor upgrades should run an offline fixture suite before any real bank or manufacturing file is touched.",
+    "answer": "My regression suite contains approved source and target fixtures for normal, malformed and boundary files. I validate record count, required fields, data types, offsets, padding, computed totals and trailer accuracy. I also compare the reconstructed file byte for byte where exact output is required, and semantically where formatting may vary. When a mapping changes, I rerun both old and new fixture versions to catch regressions. I verify replay is deterministic and keep mismatches as evidence.",
+    "workflow": [
+      "Maintain versioned source/expected output fixtures",
+      "Parse, transform and reconstruct under selected rule version",
+      "Compare byte layout, semantic fields and control totals",
+      "Run negative cases and deterministic retry checks"
+    ],
+    "mistakes": [
+      "Testing only the happy-path example",
+      "Ignoring signed amounts or escaped delimiters",
+      "Updating golden files without reviewing changed behavior"
+    ],
+    "followups": [
+      "When is byte-for-byte equality too strict?",
+      "How would you detect an accidental precision loss?"
+    ],
+    "keywords": [
+      "golden fixtures",
+      "regression",
+      "trailer",
+      "diff",
+      "idempotency"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Data integrity & compliance": {
+    "simple": "Deterministic validation and audit trails make files defensible; an AI explanation cannot substitute for accounting controls.",
+    "technical": "Maintain source hashes, immutable receipt metadata, schema/version history, parser outcomes, field error codes, control totals, approvals and a chain of custody to the delivered artifact. Apply least-privilege access, encryption in transit/at rest, retention and deletion rules, data minimization and redaction for logs. Where financial or regulated records are involved, require authorized human review of exceptions and evidence of reconciliation before acceptance. An LLM can summarize issues, but must not suppress errors, fabricate missing records or override validation flags.",
+    "example": "A mismatched settlement total stops delivery, produces a redacted validation report and requires authorized signoff before reprocessing.",
+    "project": "Enterprise AI file processing can assist analysts while preserving deterministic controls and policy-driven approval.",
+    "answer": "I keep data integrity checks deterministic. Every file is linked to a source hash, rule version, parsed record count and reconciled control totals. Invalid records are quarantined with reason codes and no AI agent can mark them valid by producing a plausible explanation. I restrict access, preserve a clear audit trail and ensure retention follows applicable policy. For high-impact data a human reviewer approves exceptions and verifies the corrected output before it reaches downstream consumers.",
+    "workflow": [
+      "Capture source fingerprint, ownership and approved rule version",
+      "Run strict schema and financial-control checks",
+      "Quarantine exceptions and record immutable evidence",
+      "Approve reconciled output under policy and audit delivery"
+    ],
+    "mistakes": [
+      "Treating an LLM confidence score as compliance evidence",
+      "Allowing silent data repair without approval",
+      "Logging sensitive source rows in general trace output"
+    ],
+    "followups": [
+      "Which evidence establishes chain of custody?",
+      "When should the complete batch be rejected rather than individual records?"
+    ],
+    "keywords": [
+      "integrity",
+      "audit trail",
+      "reconciliation",
+      "retention",
+      "approval"
+    ],
+    "depth_status": "expanded_editorial_unverified"
   }
 }
