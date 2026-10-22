@@ -43,3 +43,10 @@
 - Bootstrap action used existing RG-scoped Contributor through GitHub OIDC and a short-lived **in-memory account key** solely for website enabling and upload because it lacked Storage Blob Data Contributor. No persistent key/secret was added to GitHub or the frontend. Future deployments should use account-scoped Blob Data Contributor under the existing manual workflow.
 - Published only seven public app assets, and confirmed HTTP 200 on all eight routes. No API, vault documents, resumes, V3_REFERENCE.html, migration files or other repositories were deployed.
 - One-time push triggers were removed after queuing; retain manual-only Azure actions and do not provision further backend resources without separate security/cost review.
+
+## M7 — cloud client isolation defense in depth
+
+- Add explicit `user_id` filters to Galaxy progress, attempts and documents on every client read; this complements, never replaces, database RLS.
+- Reject mismatched owner/path records; fail closed before replacing private state. A monotonically increasing auth epoch invalidates pending reads on sign-out or account switch to prevent stale results reappearing.
+- Scope document metadata deletes by both UUID and the current user, and validate storage path prefix before removal.
+- Develop/test entirely via GitHub with mock identities. Do not create real Supabase users, mutate the shared database, configure paid Azure services or assert real two-user isolation from mocks.
