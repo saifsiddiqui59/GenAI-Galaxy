@@ -147,7 +147,7 @@ Responsible AI & Security,Threat modelling,Indirect prompt injection from retrie
 "Databricks, Spark & Delta Lake",Spark & PySpark,Lazy evaluation & DAG,V3 verified,expanded_8_sections_editorial_unverified,yes,Why does a PySpark transformation not run immediately?
 "Databricks, Spark & Delta Lake",Spark & PySpark,"Joins, shuffle & broadcast",V3 verified,expanded_8_sections_editorial_unverified,yes,How do you optimize a slow join?
 "Databricks, Spark & Delta Lake",Spark & PySpark,"Partitioning, caching & AQE",V3 verified,expanded_8_sections_editorial_unverified,yes,What is adaptive query execution?
-"Databricks, Spark & Delta Lake",Spark & PySpark,Spark SQL vs PySpark,V3 verified,overview_only_incomplete,no,When would you use Spark SQL instead of PySpark?
+"Databricks, Spark & Delta Lake",Spark & PySpark,Spark SQL vs PySpark,V3 verified,expanded_8_sections_editorial_unverified,yes,When would you use Spark SQL instead of PySpark?
 "Databricks, Spark & Delta Lake",Delta Lake,Delta transaction log & ACID,V3 verified,expanded_8_sections_editorial_unverified,yes,Why is Delta different from a normal relational table?
 "Databricks, Spark & Delta Lake",Delta Lake,Time travel & RESTORE,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you recover a deleted Delta table version?
 "Databricks, Spark & Delta Lake",Delta Lake,Schema enforcement & evolution,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you handle source/destination column mismatch?
@@ -159,22 +159,22 @@ Responsible AI & Security,Threat modelling,Indirect prompt injection from retrie
 "Databricks, Spark & Delta Lake",Databricks operations,Unity Catalog,V3 verified,expanded_8_sections_editorial_unverified,yes,What changed during Unity Catalog migration?
 "Databricks, Spark & Delta Lake",Databricks operations,Lakeflow / declarative pipelines,V3 verified,expanded_8_sections_editorial_unverified,yes,What is a materialized view in a Spark declarative pipeline?
 "Databricks, Spark & Delta Lake",Databricks operations,Databricks workflows & monitoring,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you investigate a failed Databricks job?
-"Databricks, Spark & Delta Lake",Databricks operations,Capacity & cost reduction,V3 verified,overview_only_incomplete,no,How would you explain the 27% cost improvement?
+"Databricks, Spark & Delta Lake",Databricks operations,Capacity & cost reduction,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you explain the 27% cost improvement?
 "Databricks, Spark & Delta Lake",Databricks operations,Disaster recovery,V3 verified,expanded_8_sections_editorial_unverified,yes,What belongs in a Databricks DR plan?
-"ADF, Data Pipelines & Modelling",Azure Data Factory,Linked services & datasets,V3 verified,overview_only_incomplete,no,What is the role of a linked service?
-"ADF, Data Pipelines & Modelling",Azure Data Factory,Copy activity & mapping,V3 verified,overview_only_incomplete,no,What if a QA linked service points to Dev?
-"ADF, Data Pipelines & Modelling",Azure Data Factory,Incremental ingestion & watermark,V3 verified,overview_only_incomplete,no,Explain an ADF incremental load.
+"ADF, Data Pipelines & Modelling",Azure Data Factory,Linked services & datasets,V3 verified,expanded_8_sections_editorial_unverified,yes,What is the role of a linked service?
+"ADF, Data Pipelines & Modelling",Azure Data Factory,Copy activity & mapping,V3 verified,expanded_8_sections_editorial_unverified,yes,What if a QA linked service points to Dev?
+"ADF, Data Pipelines & Modelling",Azure Data Factory,Incremental ingestion & watermark,V3 verified,expanded_8_sections_editorial_unverified,yes,Explain an ADF incremental load.
 "ADF, Data Pipelines & Modelling",Azure Data Factory,Self-hosted integration runtime,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you handle concurrent SHIR jobs?
-"ADF, Data Pipelines & Modelling",Azure Data Factory,Parameterized pipelines,V3 verified,overview_only_incomplete,no,How do you promote ADF from Dev to QA?
-"ADF, Data Pipelines & Modelling",Azure Data Factory,Azure Monitor & Log Analytics,V3 verified,overview_only_incomplete,no,How can you find ADF runs taking over 15 minutes?
-"ADF, Data Pipelines & Modelling",Lakehouse & warehousing,"Bronze, Silver & Gold",V3 verified,overview_only_incomplete,no,What is medallion architecture?
-"ADF, Data Pipelines & Modelling",Lakehouse & warehousing,ADLS Gen2 & Synapse,V3 verified,overview_only_incomplete,no,"How do ADF, ADLS, Databricks and Synapse connect?"
+"ADF, Data Pipelines & Modelling",Azure Data Factory,Parameterized pipelines,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you promote ADF from Dev to QA?
+"ADF, Data Pipelines & Modelling",Azure Data Factory,Azure Monitor & Log Analytics,V3 verified,expanded_8_sections_editorial_unverified,yes,How can you find ADF runs taking over 15 minutes?
+"ADF, Data Pipelines & Modelling",Lakehouse & warehousing,"Bronze, Silver & Gold",V3 verified,expanded_8_sections_editorial_unverified,yes,What is medallion architecture?
+"ADF, Data Pipelines & Modelling",Lakehouse & warehousing,ADLS Gen2 & Synapse,V3 verified,expanded_8_sections_editorial_unverified,yes,"How do ADF, ADLS, Databricks and Synapse connect?"
 "ADF, Data Pipelines & Modelling",Lakehouse & warehousing,SCD Type 2 vs Type 3,V3 verified,expanded_8_sections_editorial_unverified,yes,Compare SCD2 and SCD3.
-"ADF, Data Pipelines & Modelling",Lakehouse & warehousing,Dimensional modelling,V3 verified,overview_only_incomplete,no,How would you model quarterly revenue?
-"ADF, Data Pipelines & Modelling",Lakehouse & warehousing,Data quality & reconciliation,V3 verified,overview_only_incomplete,no,How do you reconcile source and destination data?
+"ADF, Data Pipelines & Modelling",Lakehouse & warehousing,Dimensional modelling,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you model quarterly revenue?
+"ADF, Data Pipelines & Modelling",Lakehouse & warehousing,Data quality & reconciliation,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you reconcile source and destination data?
 "ADF, Data Pipelines & Modelling",Lakehouse & warehousing,Oil refinery ETL project,V3 verified,overview_only_incomplete,no,Give the end-to-end platform architecture.
 "Python, SQL & API Skills",SQL,Joins & anti-joins,V3 verified,expanded_8_sections_editorial_unverified,yes,How do you find Hive IDs missing in SQL?
-"Python, SQL & API Skills",SQL,Window functions,V3 verified,overview_only_incomplete,no,How would you find the most recent record per account?
+"Python, SQL & API Skills",SQL,Window functions,V3 verified,expanded_8_sections_editorial_unverified,yes,How would you find the most recent record per account?
 "Python, SQL & API Skills",SQL,"CTEs, GROUP BY & HAVING",V3 verified,overview_only_incomplete,no,How would you compare current and previous quarter revenue?
 "Python, SQL & API Skills",SQL,Parameterized SQL,V3 verified,overview_only_incomplete,no,Why not let an agent run arbitrary SQL?
 "Python, SQL & API Skills",SQL,Postgres & Supabase,V3 verified,overview_only_incomplete,no,How do you implement row-level security for tenants?

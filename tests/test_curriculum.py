@@ -46,7 +46,22 @@ class CurriculumTest(unittest.TestCase):
     self.assertGreaterEqual(len(lesson['workflow']),5)
     self.assertGreaterEqual(len(lesson['mistakes']),3)
     self.assertGreaterEqual(len(lesson['followups']),2)
-  self.assertEqual(sum(t in self.l for _,_,t,_ in self.rows),168)
+  self.assertGreaterEqual(sum(t in self.l for _,_,t,_ in self.rows),168)
+ def test_p2_twelve_new_platform_lessons(self):
+  expected=["Spark SQL vs PySpark","Capacity & cost reduction","Linked services & datasets","Copy activity & mapping","Incremental ingestion & watermark","Parameterized pipelines","Azure Monitor & Log Analytics","Bronze, Silver & Gold","ADLS Gen2 & Synapse","Dimensional modelling","Data quality & reconciliation","Window functions"]
+  self.assertEqual(len(expected),12)
+  for title in expected:
+   with self.subTest(title=title):
+    lesson=self.l[title]
+    self.assertEqual(lesson['depth_status'],'expanded_editorial_unverified')
+    self.assertGreaterEqual(len(lesson['answer'].split()),60)
+    self.assertLessEqual(len(lesson['answer'].split()),140)
+    self.assertGreaterEqual(len(lesson['technical']),150)
+    self.assertGreaterEqual(len(lesson['workflow']),4)
+    self.assertGreaterEqual(len(lesson['mistakes']),3)
+    self.assertGreaterEqual(len(lesson['followups']),2)
+  self.assertEqual(len(self.l),179)
+  self.assertEqual(sum(t in self.l for _,_,t,_ in self.rows),180)
  def test_topic_questions(self):
   for a,b,c,i in self.rows:
    with self.subTest(topic=c): self.assertTrue(i['summary'].strip() and i['question'].strip())

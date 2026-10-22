@@ -4972,5 +4972,365 @@
       "escalation"
     ],
     "depth_status": "expanded_editorial_unverified"
+  },
+  "Spark SQL vs PySpark": {
+    "simple": "Spark SQL expresses transformations declaratively; PySpark DataFrames express them in Python while still relying on Spark's execution engine.",
+    "technical": "Both Spark SQL and PySpark DataFrame operations are translated into Spark logical plans, optimized by Catalyst and executed in distributed stages. SQL suits existing SQL teams, concise analytics and view-oriented logic; DataFrames suit reusable Python functions, schema-driven transformations, conditional workflows and composition with other Spark APIs. Avoid confusing PySpark DataFrames with ordinary local Python loops or pandas: collecting large partitions into the driver negates distributed execution. Compare physical plans and shuffle volume rather than assuming one interface is always faster.",
+    "example": "Compute customer revenue by month with a SQL GROUP BY or the equivalent PySpark groupBy; inspect explain() to compare the plans.",
+    "project": "For governed reporting tables, use SQL for shared transformations and PySpark when complex validation rules are packaged as reusable transformations.",
+    "answer": "I choose Spark SQL for readable joins, aggregations and reporting logic that analysts can review, and PySpark DataFrames for programmatic data pipelines, complex schemas and reusable Python functions. Both generally use Spark's Catalyst optimizer, so choosing SQL instead of DataFrames does not automatically make a job faster. I compare explain plans, joins, shuffle stages and data volumes. I also avoid collecting distributed data into local Python unnecessarily, because that can make a scalable job slow or unstable.",
+    "workflow": [
+      "Express the transformation using SQL or DataFrame operators",
+      "Inspect logical and physical plans and partitioning",
+      "Measure shuffle, skew and stage runtime on representative data",
+      "Validate identical outputs and null semantics"
+    ],
+    "mistakes": [
+      "Assuming PySpark means per-row Python execution for every DataFrame expression",
+      "Calling collect() on a large dataset",
+      "Comparing performance without the physical plans"
+    ],
+    "followups": [
+      "When does a Python UDF become a performance concern?",
+      "How do you detect shuffle-heavy joins?"
+    ],
+    "keywords": [
+      "Catalyst",
+      "Spark SQL",
+      "DataFrame",
+      "shuffle",
+      "physical plan"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Capacity & cost reduction": {
+    "simple": "Save compute cost by matching cluster size, runtime and autoscaling behavior to the actual job rather than reserving excess capacity.",
+    "technical": "A defensible Databricks saving is workload normalized. Separate DBUs, VM compute, storage and job frequency, then measure total spend before and after while holding comparable data volume, SLAs and success rate. Use ephemeral job compute for scheduled batch jobs, automatic termination, right-sized workers, Photon where appropriate, partition pruning, shuffle tuning and workload concurrency limits. Test that smaller compute does not increase retries, latency or downstream cost. Attribute savings to documented baselines; avoid suggesting a team achieved a percentage that accounting has not verified.",
+    "example": "A daily ETL job moving from an always-on oversized cluster to right-sized job compute can remove idle-hour spend if SLA remains satisfied.",
+    "project": "Explain the previously reported 27% Databricks operational cost reduction as a team achievement supported by capacity planning, job compute and Spark configuration changes; validate against billing data.",
+    "answer": "For compute cost reduction I first establish the monthly cost, DBU and VM usage, workload volume, job failure rate and SLAs. Then I right-size long-running workloads, replace idle shared compute with job clusters where suitable and tune Spark joins or partitions that waste CPU and shuffle time. I compare like-for-like periods, not just cluster sizes, and make sure reliability and latency have not worsened. A percentage saving is credible only when it is reconciled with billing and a documented baseline.",
+    "workflow": [
+      "Capture normalized baseline cost, input volume and SLA",
+      "Find idle clusters, long shuffles and oversized resources",
+      "Pilot job compute, autoscaling and Spark configuration changes",
+      "Compare billable usage, runtime and failure outcomes"
+    ],
+    "mistakes": [
+      "Counting smaller nodes as savings without measuring runtime",
+      "Ignoring extra retry cost",
+      "Using one team's savings percentage as a guaranteed result elsewhere"
+    ],
+    "followups": [
+      "How did you account for workload growth during comparison?",
+      "When can a smaller cluster cost more?"
+    ],
+    "keywords": [
+      "DBU",
+      "capacity planning",
+      "job cluster",
+      "shuffle",
+      "billing baseline"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Linked services & datasets": {
+    "simple": "An ADF linked service holds a connection to a system, while a dataset describes the data to read or write through that connection.",
+    "technical": "Azure Data Factory separates linked services, datasets, integration runtimes and activities. A linked service defines connector details and authentication, often using managed identity and a Key Vault reference. A dataset binds a location, file format, table or schema to that connector, optionally with parameters. A Copy activity consumes source and sink datasets. Environments must use distinct validated endpoint and credential configuration, so a QA pipeline does not accidentally read Dev data. Secret values must not be embedded in pipeline JSON or logs.",
+    "example": "A SQL linked service points at QA SQL Server; a dataset references dbo.Account; the Copy activity reads that dataset and writes to an ADLS dataset.",
+    "project": "During Dev-to-QA promotion, confirm the QA linked service actually resolves to QA and check integration runtime networking before executing a copy.",
+    "answer": "A linked service is the connection definition for a source or destination, such as Azure SQL, ADLS or Key Vault. A dataset describes the specific table, file path and format used by an activity. The integration runtime provides the execution and network boundary for movement. When moving an ADF pipeline from Dev to QA, I review environment parameters, linked service endpoints, identity and dataset paths because a QA deployment can still accidentally point to a Dev database.",
+    "workflow": [
+      "Define connector endpoint and managed identity as a linked service",
+      "Specify table/path/format as a parameterized dataset",
+      "Bind source and sink datasets to the activity",
+      "Test endpoint and identity isolation per environment"
+    ],
+    "mistakes": [
+      "Treating a linked service as a table schema",
+      "Hardcoding credentials in datasets",
+      "Promoting QA while leaving a Dev connector selected"
+    ],
+    "followups": [
+      "What does an integration runtime do?",
+      "How can linked service parameters prevent cross-environment reads?"
+    ],
+    "keywords": [
+      "ADF",
+      "linked service",
+      "dataset",
+      "integration runtime",
+      "environment"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Copy activity & mapping": {
+    "simple": "ADF Copy activity transports data from a configured source to sink and applies declared field mappings, not arbitrary business transformation.",
+    "technical": "Copy activity supports source/sink connectors, explicit column mapping, type conversion, fault handling and staging options. Diagnose schema drift by comparing source columns and sink contracts and deliberately choosing strict mapping versus allowed additions. Validate the configured integration runtime, throughput and network path; a connection pointing at Dev is a deployment configuration defect rather than a data mapping fix. Audit row counts, rejected records and copy metrics. For complex calculations or upserts, use suitable downstream transformations, SQL procedures or Delta merge instead.",
+    "example": "Map source AccountId VARCHAR to destination account_id string and reject an unexpected timestamp precision mismatch rather than silently discarding rows.",
+    "project": "When copying reporting tables from Dev to QA, first verify the QA linked service target, then check explicit mapping and row reconciliation.",
+    "answer": "ADF Copy activity is for moving data between sources and sinks using defined connectors and column mappings. I check the linked services, integration runtime, schemas, nullability, data types and fault policies before running it. If columns change between source and destination, I decide whether the pipeline should reject the change or apply an approved mapping. After the copy, I compare source and target counts, rejected rows and control totals, instead of assuming a successful activity status means all data is correct.",
+    "workflow": [
+      "Validate source/sink credentials, network and environment",
+      "Compare schemas and define explicit mappings",
+      "Run on a bounded fixture and inspect rejects and metrics",
+      "Reconcile source and destination records and exceptions"
+    ],
+    "mistakes": [
+      "Assuming Copy activity replaces complex transformations",
+      "Treating success status as row-level correctness",
+      "Leaving QA linked to a Dev database"
+    ],
+    "followups": [
+      "What happens when the source adds a new nullable field?",
+      "How do you handle a slowly changing dimension after copying?"
+    ],
+    "keywords": [
+      "Copy activity",
+      "column mapping",
+      "schema drift",
+      "reconciliation",
+      "integration runtime"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Incremental ingestion & watermark": {
+    "simple": "Incremental loading copies only records new or changed since a durable, successfully committed checkpoint.",
+    "technical": "A high-watermark pipeline reads the last successfully processed timestamp or version, chooses an upper bound for the current run and extracts rows in a defined interval such as updated_at greater than the previous watermark and less than or equal to the upper bound. Land and merge with a stable business key so retries do not duplicate records. Update the watermark only after validation and destination commit. Time-based watermarks can miss late arrivals or deletes; use a safety overlap, change tracking or CDC when the source supports it, and reconcile counts.",
+    "example": "For a 10:00 checkpoint, read changes through a captured 11:00 upper bound, merge on customer ID and advance the checkpoint only after success.",
+    "project": "ADF controls extraction windows while Databricks Delta MERGE makes reruns idempotent; CDC handles deletes where the source exposes them.",
+    "answer": "In an incremental ADF load, I persist the last committed watermark, capture a new upper bound and query source rows inside that interval. I land the results, deduplicate and merge them into the destination using a stable key. Only after the destination transaction and quality checks succeed do I advance the watermark. I also plan for late records, equal timestamps, timezone consistency and deletes. For those cases CDC or overlap windows are often safer than relying only on updated timestamps.",
+    "workflow": [
+      "Read durable last-successful checkpoint and capture upper bound",
+      "Query bounded changes with consistent timezone and ordering",
+      "Stage and idempotently merge into destination with delete rules",
+      "Validate counts and atomically commit checkpoint on success"
+    ],
+    "mistakes": [
+      "Advancing watermark before target commit",
+      "Ignoring records sharing the same timestamp",
+      "Expecting updated_at alone to detect hard deletes"
+    ],
+    "followups": [
+      "What happens when an ADF run retries after target load succeeded?",
+      "How would you detect a deletion without a tombstone?"
+    ],
+    "keywords": [
+      "watermark",
+      "CDC",
+      "idempotent",
+      "upper bound",
+      "late arrivals"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Parameterized pipelines": {
+    "simple": "One pipeline definition can run in multiple environments by injecting the correct table, path and service configuration for that environment.",
+    "technical": "ADF pipeline parameters describe runtime inputs, while linked service and dataset parameters bind environment-specific endpoints, object names and paths. A deployable artifact should separate code from configuration, resolve secrets through Key Vault/managed identities and apply validation before deployment. Dev/QA/Prod should have isolated data targets, identities, integration runtimes and approval gates. Keep typed/default parameters understandable; never allow untrusted user input to select arbitrary storage accounts or production tables. Add smoke tests that prove QA is not accidentally wired to Dev.",
+    "example": "Use pipeline parameter `environment=qa` to select approved QA datasets, while environment-specific linked service configuration comes from reviewed deployment settings.",
+    "project": "A Dev-to-QA reporting-table copy uses the same pipeline logic but explicit QA linked services, schema mappings and feature-branch validation.",
+    "answer": "I parameterize the pipeline for file locations, table names and runtime behavior instead of copying the entire ADF pipeline for each environment. Linked services and datasets use their own parameters, while identities and secrets stay environment-specific. During promotion I review the deployment configuration, verify integration runtime connectivity and run a small reconciliation test. I particularly check that a QA linked service cannot silently target the Dev database, because that is an easy way to contaminate downstream testing.",
+    "workflow": [
+      "Separate pipeline logic from environment configuration",
+      "Bind reviewed linked service and dataset parameters",
+      "Validate identity, endpoints and object allowlists",
+      "Promote through CI with QA smoke and reconciliation checks"
+    ],
+    "mistakes": [
+      "Hardcoding Dev hostnames into QA",
+      "Allowing arbitrary user-supplied database targets",
+      "Copying production secrets into templates"
+    ],
+    "followups": [
+      "How do factory global parameters differ from pipeline parameters?",
+      "How do you prevent a QA linked service from pointing at Dev?"
+    ],
+    "keywords": [
+      "ADF parameters",
+      "environment promotion",
+      "Key Vault",
+      "linked service",
+      "CI/CD"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Azure Monitor & Log Analytics": {
+    "simple": "Azure Monitor collects platform telemetry; Log Analytics lets engineers query records such as ADF pipeline and activity duration.",
+    "technical": "For operational analytics, route diagnostic categories from the correct ADF instance to a Log Analytics workspace. Kusto Query Language filters by time, status, resource and normalized run identifiers. Duration can be computed from start/end timestamps or reported duration fields, with explicit handling of in-progress runs, late log ingestion, time zones and duplicate activity retries. Workspace retention may be shorter than a requested ninety-day investigation; verify retention and sampling before making conclusions. Alert on sustained errors or p95 changes with enough context for run-level triage.",
+    "example": "Use KQL to find completed activity runs with elapsed execution greater than fifteen minutes and group their failures by linked service or pipeline ID.",
+    "project": "For ADF runs over fifteen minutes, query the workspace with a bounded ninety-day filter only after verifying logs were retained that long.",
+    "answer": "For ADF runtime troubleshooting I first check that pipeline and activity diagnostic logs are being sent to the correct Log Analytics workspace. Then I write a KQL query limited to the affected resource and time period, calculate or inspect runtime, and filter activity runs exceeding fifteen minutes. I compare slow jobs with historical baselines and related errors. Finally I capture run IDs, integration runtime, dependency stages and alert thresholds. I verify data retention before claiming a complete ninety-day analysis.",
+    "workflow": [
+      "Confirm ADF diagnostics and workspace retention",
+      "Query scoped pipeline/activity events by run IDs and timestamps",
+      "Calculate duration and exclude in-progress or duplicated attempts",
+      "Correlate integration-runtime, failure and trend metrics for alerts"
+    ],
+    "mistakes": [
+      "Assuming logs exist for a period beyond configured retention",
+      "Mixing milliseconds and seconds when computing runtime",
+      "Treating ingestion time as the original activity start time"
+    ],
+    "followups": [
+      "What KQL operators help compute p95 duration?",
+      "How can you correlate activities to one pipeline run?"
+    ],
+    "keywords": [
+      "Azure Monitor",
+      "Log Analytics",
+      "KQL",
+      "ADF",
+      "diagnostic settings"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Bronze, Silver & Gold": {
+    "simple": "Medallion design separates raw source history, validated standardized data and business-ready analytics.",
+    "technical": "Bronze preserves source payload, ingestion metadata and replay capability; Silver validates types, deduplicates, applies CDC semantics and normalizes entities; Gold publishes stable domain metrics and dimensional aggregates. Delta Lake transaction logs enable atomic writes, schema enforcement and rollback/time travel within retention limits. Each layer has explicit quality contracts, ownership and refresh schedules. Security labels and tenant ACLs must remain in downstream tables; a Gold view is not automatically safe because it is curated. Track lineage and handle reprocessing from an immutable Bronze snapshot.",
+    "example": "A source customer change lands raw in Bronze, is reconciled with latest version in Silver and contributes to a Gold revenue fact table.",
+    "project": "An Azure Databricks platform can use Bronze/Silver/Gold with Unity Catalog governance and ADF orchestration, testing invariants at layer transitions.",
+    "answer": "In a medallion lakehouse, Bronze holds raw incoming data and ingestion metadata so I can replay or audit a source. Silver cleans, standardizes, deduplicates and resolves update or delete semantics into reliable entities. Gold presents curated facts, dimensions or KPIs for downstream reporting. I add quality assertions at every boundary and maintain lineage. The layers are logical data contracts, not automatically separate physical systems. I also preserve access control, so a curated Gold table does not accidentally expose sensitive raw fields.",
+    "workflow": [
+      "Land original events with source IDs and ingestion timestamps in Bronze",
+      "Validate types, schema changes and CDC into Silver",
+      "Publish reviewed aggregates and dimensions to Gold",
+      "Enforce Unity Catalog access and reconcile outputs to source"
+    ],
+    "mistakes": [
+      "Overwriting Bronze without replay history",
+      "Skipping duplicate or delete handling in Silver",
+      "Exposing restricted columns in Gold"
+    ],
+    "followups": [
+      "Where would you correct late events?",
+      "What Delta capabilities support safe replay?"
+    ],
+    "keywords": [
+      "Bronze",
+      "Silver",
+      "Gold",
+      "Delta Lake",
+      "lineage"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "ADLS Gen2 & Synapse": {
+    "simple": "ADLS Gen2 stores lakehouse files, Databricks transforms them, and Synapse can serve or analyze curated data; ADF coordinates movement.",
+    "technical": "ADLS Gen2 supports hierarchical namespaces and enterprise data lake paths with Entra identity, RBAC and POSIX-like ACLs where applicable. ADF can schedule ingestion into ADLS, while Spark/Databricks transforms Delta tables with managed governance. Synapse dedicated or serverless SQL can support different serving and exploration workloads, with distinct costs and query semantics. Choose architecture based on scale, query latency and governance instead of deploying every service by default. Validate access identities end to end and avoid broad account keys in pipeline definitions.",
+    "example": "Copy daily manufacturing source extracts into ADLS Bronze; Databricks produces Delta Silver; analysts query a governed Gold layer via appropriate SQL endpoints.",
+    "project": "Explain how ADF, ADLS, Azure Databricks and Synapse divide ingestion, transformation, governed storage and analytical consumption.",
+    "answer": "I treat ADLS Gen2 as the scalable storage layer and ADF as an orchestration and ingestion service. Databricks performs distributed Spark transformations and manages Delta tables, while Synapse SQL options can serve analytical queries depending on the workload. I would not introduce every service without a reason: some architectures can serve Gold Delta directly. The key design decisions are identity and ACL boundaries, file layout, schema quality, refresh targets and total cost across the pipeline.",
+    "workflow": [
+      "Map source cadence, volumes, SLA and consumer SQL needs",
+      "Set ADLS paths and least-privilege identities",
+      "Use ADF ingestion and Spark validation/Delta transforms",
+      "Publish governed access paths and measure query cost/latency"
+    ],
+    "mistakes": [
+      "Treating Synapse and Databricks as mandatory in every pipeline",
+      "Granting shared account keys to all services",
+      "Ignoring Gen2 hierarchical ACLs when RBAC is broad"
+    ],
+    "followups": [
+      "When would serverless SQL be preferable?",
+      "How do permissions propagate from ADLS to serving?"
+    ],
+    "keywords": [
+      "ADLS Gen2",
+      "ADF",
+      "Databricks",
+      "Synapse",
+      "Entra"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Dimensional modelling": {
+    "simple": "A fact table stores measured events; dimension tables describe the entities by which those measures are filtered and grouped.",
+    "technical": "A star schema starts by declaring the grain of each fact record, for example one invoice line per transaction date, product and customer. Facts hold additive or semi-additive measures and surrogate keys to conformed dimensions. Calendar and slowly changing dimensions support consistent quarter comparisons and historical state. Model revenue, refunds and currency conversion explicitly rather than summing incompatible values. Enforce uniqueness at declared grain and reconcile source amounts so join fan-out does not inflate totals; many-to-many bridges require special care.",
+    "example": "InvoiceLineFact contains quantity and net revenue while DateDim, ProductDim and CustomerDim supply quarter, category and segment attributes.",
+    "project": "A quarterly revenue assistant should query a governed fact/semantic layer rather than infer amounts from vector-indexed PDF narratives.",
+    "answer": "I begin dimensional modelling by defining the business process and the grain, such as one row per invoice line. The fact table holds measures like quantity or net sales and foreign keys to conformed date, product and customer dimensions. Dimensions supply stable descriptive context, including historical attributes when SCD Type 2 is required. To compare quarter-over-quarter revenue I must handle refunds, currency, late invoices and duplicate joins consistently. I validate totals against source accounting controls before publishing a KPI.",
+    "workflow": [
+      "Define business process, fact grain and measure additivity",
+      "Create conformed dimensions with history policy",
+      "Load fact keys, timestamps and transaction measures",
+      "Reconcile totals and test duplicate keys and fan-out"
+    ],
+    "mistakes": [
+      "Joining two detailed fact tables directly and double-counting",
+      "Ignoring refunds or exchange rates",
+      "Treating an SCD2 dimension as current-only history"
+    ],
+    "followups": [
+      "Why do surrogate keys help historical attributes?",
+      "How do you handle a many-to-many relationship?"
+    ],
+    "keywords": [
+      "fact grain",
+      "star schema",
+      "dimension",
+      "SCD Type 2",
+      "revenue"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Data quality & reconciliation": {
+    "simple": "Data reconciliation verifies that the destination represents the intended source records, values and controls, not merely that a job finished.",
+    "technical": "Build quality contracts for schema, completeness, uniqueness, referential integrity, validity and freshness. At ingestion, compare source and target counts and aggregate control totals within a consistent extraction window. For incremental upserts, compare change-set inserts/updates/deletes and check stable keys, null handling and late arrivals rather than raw full-table counts alone. Quarantine exceptions, attach run IDs and sample failing keys for deterministic replay. Alert on breaches using baselines and severity; never modify production data silently to make a metric pass.",
+    "example": "After merging account records, verify unique AccountId, number of new/changed keys, null constraints and reconciliation of balance or net amount totals.",
+    "project": "For Dev-to-QA ADF and Databricks replication, combine copy-run metrics with SQL anti-joins and controlled aggregates for missing or changed IDs.",
+    "answer": "A successful pipeline run only tells me its activities executed; it does not prove every record is accurate. I check expected schemas, key uniqueness, null constraints, row counts and financial or operational control totals. For incremental loads I compare the exact change window and count inserts, updates and deletes separately. When numbers differ I use anti-joins and checksums or keyed comparisons to isolate mismatches. I quarantine exceptions, document the run ID and only publish reconciled data downstream.",
+    "workflow": [
+      "Agree source-to-target keys, columns and business controls",
+      "Capture bounded source extract and target snapshot",
+      "Compare schema, counts, key anti-joins and control totals",
+      "Quarantine differences, investigate and rerun idempotently"
+    ],
+    "mistakes": [
+      "Equating row counts with complete data correctness",
+      "Comparing different extraction times",
+      "Suppressing mismatches without retaining evidence"
+    ],
+    "followups": [
+      "When can checksums produce false confidence?",
+      "How does reconciliation change for an SCD2 target?"
+    ],
+    "keywords": [
+      "reconciliation",
+      "anti-join",
+      "control totals",
+      "quality checks",
+      "freshness"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Window functions": {
+    "simple": "A SQL window function computes a per-row value across related rows without collapsing them into one GROUP BY result.",
+    "technical": "ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD and aggregate OVER clauses combine partition definitions, explicit ordering and frame semantics. To select the latest account record, use ROW_NUMBER over PARTITION BY account_id ORDER BY effective_at DESC, event_id DESC, then filter rn=1; the second sort key makes ties deterministic. Window functions run before final ORDER BY, and different engines differ in null ordering and default frames. For financial time series, validate period boundaries and late records before comparing lagged values.",
+    "example": "ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY updated_at DESC, version_id DESC) chooses each account's newest version.",
+    "project": "Use window ranking on Hive history tables to identify the latest snapshot before comparing with reporting SQL Server tables.",
+    "answer": "I use SQL window functions when I need information from related rows while still returning individual rows. For the latest record per account, I partition by account ID, order by update time descending with a deterministic tie-breaker and assign ROW_NUMBER. Then I select row number one. LAG and LEAD help compare adjacent values such as current and prior quarters. I check duplicate timestamps, null sort order and window frame semantics so the result is reproducible.",
+    "workflow": [
+      "Define partition keys and intended row grain",
+      "Choose deterministic order and any frame specification",
+      "Apply ROW_NUMBER, LAG or aggregates as appropriate",
+      "Validate ties, nulls and historical edge cases"
+    ],
+    "mistakes": [
+      "Using MAX(timestamp) join that returns duplicate ties",
+      "Omitting ORDER BY for latest-record selection",
+      "Confusing window PARTITION BY with physical storage partitions"
+    ],
+    "followups": [
+      "When is DENSE_RANK different from ROW_NUMBER?",
+      "How do default frames affect cumulative totals?"
+    ],
+    "keywords": [
+      "ROW_NUMBER",
+      "PARTITION BY",
+      "LAG",
+      "LEAD",
+      "deterministic order"
+    ],
+    "depth_status": "expanded_editorial_unverified"
   }
 }
