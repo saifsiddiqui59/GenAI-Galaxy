@@ -1,10 +1,8 @@
-# Next Work — dependency order
+# Next Tasks — M3
 
-1. **P0 QA:** Chromium desktop/mobile click-through and reduced-motion preference smoke now pass with locally mocked JSON. Next run full served-site E2E in Chrome/Edge including keyboard focus, real orbital frames, animation FPS, assisted tech, and live auth.
-2. **P0 Content:** Expand and SME-review 227 incomplete topic lessons using the attached historical questions, project architecture and reference documents; measure 30–60-second answer length.
-3. **P0 STT:** Run real mic capture in supported HTTPS browser; deploy and smoke-test secure Azure Speech token broker when approved; handle region, expiry, rate limits and auth.
-4. **P0 AI evaluation:** Build authenticated server evaluator with rubric, source-supported technical correctness, error analysis and calibrated judge; replace proxy-only mastery criteria.
-5. **P1 Vault:** Add MIME-signature inspection, malware scanning, private server PDF/DOCX text extraction, async processing status and source-linked generation.
-6. **P1 Security:** Verify two distinct Supabase accounts and malicious cross-user row/document paths; recheck RLS and bucket policies after any migration.
-7. **P1 Git/CI:** Create private GitHub repo with user account, push prepared history, open PRs, and inspect real runs.
-8. **P2 Hosting:** Obtain explicit resource/cost approval, provision separate Azure RG/storage, publish static files, configure Auth redirect URLs, CDN/CSP and monitoring.
+1. **Publish safely:** Owner creates a new *private* `saifsiddiqui59/GenAI-Galaxy` repository or grants a connection that supports repo creation. Push preserved local Git main and feature branch, open small PRs, inspect actual GitHub Actions runs and fix failures. No CI run yet.
+2. **Editorial:** Author and independently review remaining **197** topic lessons; validate 30–60-second delivery, references, examples and rubric questions; finish full historical conversation audit if transcripts become available.
+3. **Live identity/security:** Add two test accounts, run negative Supabase row/object RLS tests, and check login, uploads and synchronization across distinct browsers. No production user data in tests.
+4. **Backend deployment gate:** Approve Azure provisioning/resources and estimate costs; configure Functions with managed secret storage, strict allowed origin, HTTPS, API gateway per-user quotas, abuse logging and malicious-file quarantine. Never enable eval/Speech token route by flipping a flag until the actual gateway exists.
+5. **Production testing:** Deploy restricted staging environment only after approval; validate real Azure model judge calibration, speech token expiration and microphone behavior, PDF/DOCX processing, malformed ZIP/PDF handling, performance, keyboard/screen reader/reduced-motion and mobile layout.
+6. **Content vault enhancement:** Add antivirus scanner/quarantine and user-facing asynchronous processing states, scanned-PDF OCR where approved, evidence-linked lesson generation with source citations and privacy/retention policy.

@@ -5,3 +5,7 @@
 2026-10-22 — Follow-up local verification: 17 planet nodes and the main learning navigation/practice path pass Chromium desktop/mobile mocked-resource smoke tests, including a reduced-motion browser preference variant. Corrected the 27% savings example to clearly distinguish the V3 study story from verified resume evidence. Galaxy remote remains unavailable (404); did not run GitHub Actions, provision Azure, or mutate Supabase.
 
 2026-10-22 — Initialized separate **local** Git repository (not RetailGrowthAI or WineShopPOS), preserved V3 HTML as initial main commit, then created feature branch `feat/v4-galaxy-m1` with code and tests/docs as two separate commits. Remote PR/CI not run (target remote returns 404).
+
+## 2026-10-22 — M2 offline milestone
+
+Preserved M1 architecture and V3 source, authored 30 additional unique-topic eight-section lessons; regenerated 246-row coverage report (49 expanded/197 incomplete). Implemented starfield animation respecting reduced motion. Removed auto-mastery from local keyword checks and introduced optional secured model-review flow requiring two model-reviewed strong attempts. Implemented source-only Azure Functions code for private Supabase document PDF/DOCX extraction, model evaluation and short-lived Speech token brokerage, with fail-closed rate-limiter configuration. Added negative parsing/schema/auth helper tests and simulated STT browser smoke. Local tests passed; no GitHub remote, CI, Supabase writes or Azure provisioning/deployment. Production security/quality review still required.

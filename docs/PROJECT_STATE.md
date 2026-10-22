@@ -1,11 +1,13 @@
-# Project State — 2026-10-22
+# GenAI Galaxy Project State — 2026-10-22
 
-Status: **V4 LOCAL IMPLEMENTATION — NOT DEPLOYED**.
+**M2 LOCAL CODE AND TESTS PASS — NOT GITHUB-PUBLISHED OR CLOUD-DEPLOYED.**
 
-Completed locally: recovered V3 HTML from Library; parsed V3 17/45/230 catalog; created unique 16-topic gap extension; implemented animated starfield and 17 distinct CSS 3D-style planet worlds; chapter→group→topic navigation, reduced-motion switch, responsive layout, expanded lessons, open-response microphone practice with rubric feedback, per-topic adaptive follow-up, V3-compatible local/Supabase progress, private upload/vault frontend, Azure Speech token-broker adapter, 7 Python + Node learning-engine checks and JavaScript syntax checks; Chromium desktop/mobile navigation and reduced-motion smoke checks with mocked data passed.
+**Preserved:** exact 17 original chapters and 230 V3 topic keys; 16 new topics make 246. Previous M1 UI, cloud-Supabase auth/progress/vault client (unverified live) and open-answer practice remain intact.
 
-Verified remote metadata, **read-only**: `voice_agent_call` project active; Galaxy progress/attempts/docs tables have RLS enabled with own-user policies; bucket `genai-study-docs` is private with 8 MiB max size. `saifsiddiqui59/GenAI-Galaxy` repository is unavailable (404). RetailGrowthAI AGENTS.md was read as a workflow reference only.
+**M2 completed locally:** 30 more topic-specific eight-section lessons (49 total), 197 overviews explicitly incomplete; animated/twinkling deterministic starfield tied to reduced motion; offline keyword score no longer awards mastery; calibrated separation between provisional concept hints and optional model review; two model-reviewed strong attempts before marking mastery; private endpoint runtime config; Azure Functions source for JWT-authenticated evaluation, Speech token broker and owned-document extraction with PDF/DOCX/TXT/MD limits. 15 Python tests, Node evaluation checks, JavaScript syntax checks, API syntax and Playwright desktop/mobile/reduced-motion/mock-STT checks passed locally. Added CI workflow to run these tests on future pushes/PRs.
 
-Incomplete: production-hosted browser integration tests; physical animation quality/performance benchmarking and assistive-tech audit; real microphone testing and cross-device/cross-user tests; Azure Speech broker; secured semantic answer evaluator; PDF/DOCX extraction; 227 incomplete eight-part lessons; exhaustive historical chat coverage; GitHub remote/PR/CI execution; Azure provisioning and deployment.
+**Read-only remote verification inherited from M1:** existing `voice_agent_call` Supabase study tables have RLS; `genai-study-docs` private bucket, 8 MiB. No production data or schema changed.
 
-Local Git milestones: `main` (`5767fea`) retains V3 source; `feat/v4-galaxy-m1` (`b10ee95`, `02deef3`) implements V4 features and adds docs/tests. Local commits only; remote PR not possible while target Galaxy repository returns 404.
+**Not verified or incomplete:** 197 lessons; expert technical signoff; actual mic permission and remote STT behavior; provider-powered model grading; API rate limit/quota and security scanning; live PDF/DOCX extraction service, cloud identity integration, multi-account isolation, cross-device sync; published GitHub CI and Azure hosting. Input parsing is NOT antivirus or content moderation. Scanned PDF OCR not supported. No production system is ready for unrestricted users.
+
+**GitHub:** `saifsiddiqui59/GenAI-Galaxy` previously returned 404 through the GitHub connector, which has no repo-creation operation. Private GitHub creation/push/PR blocked until repository exists and auth permits publishing. Other repositories untouched.

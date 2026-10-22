@@ -1,42 +1,43 @@
-# GenAI Galaxy Adaptive Interview Tutor — V4 local milestone
+# GenAI Galaxy Adaptive Interview Tutor — V4 local Milestone 2
 
-**V3 continuity:** V3 source recovered as `V3_REFERENCE.html`; its 17 chapters, 230 topic records, 45 groups, and existing Supabase topic keys are preserved. V4 adds 16 identified gap topics, a 3D-style CSS planet galaxy, open-answer practice with browser STT and optional Azure Speech adapter, 19 expanded eight-part lessons, and a private Knowledge Vault frontend.
+**Continue V3 without replacing it.** `V3_REFERENCE.html` preserves the recovered V3 source. The curriculum retains 17 planets, 45 original groups and 230 V3 topics, plus 16 new gap topics. There are now **49 individual authored eight-part lessons** and **197 incomplete overviews**. The 49 authored lessons have not received expert editorial signoff; see `docs/COVERAGE_REPORT.md`.
 
-## Run locally
+## Preview (no cloud provisioning)
 
 ```bash
 cd GenAI-Galaxy-V4
 python -m http.server 8000
-# Open http://localhost:8000/index.html
+# http://localhost:8000/index.html
 ```
 
-No package installation is required for the static frontend. Online Supabase sign-in uses a pinned ESM version of supabase-js. The current V4 app is a preview, **not a deployed production service**.
+Features: responsive 17-planet galaxy with animated orbits, atmospheric surfaces and a twinkling starfield; motion toggle and OS reduced-motion detection; chapter/group/topic navigation; private study account integration; open-ended typed/spoken answers with editable transcripts; lesson guidance and due-date scheduling; and a private Knowledge Vault UI. The browser STT engine can use a browser-operated remote service: see your browser's privacy policy.
 
-## Tests
+**Security and scoring:** Local concept matching is only a provisional learning hint and **never marks a topic as mastered**. Authenticated Azure model reviews can be enabled only once a secure backend, rate-limit gateway, and Azure endpoint have been configured and tested. Even a model-reviewed answer needs critical source verification. Two high-scoring model-reviewed attempts are required for the local mastery flag.
+
+## API code (implemented locally; not deployed)
+
+`api/function_app.py` provides authenticated Azure Functions routes:
+
+- `POST /api/practice/evaluate` — server-owned, allowlisted rubrics and Azure OpenAI evaluation; validates Supabase Auth JWT via `/auth/v1/user` on each request. Requires `GALAXY_EVAL_GATEWAY_RATE_LIMIT=active` after a **real external quota/rate-limit gateway** is established. Without it the route fails closed with 503.
+- `POST /api/vault/extract` — only accesses a private Supabase document row and storage object owned by the verified user. PDF (selectable text only), DOCX, TXT, MD; checks file signatures, size, ZIP decompression, document ID and ownership; updates the private metadata row with <=60,000 characters. No malware scanner or OCR yet. Do not deploy without a malware-scanning/quarantine plan for untrusted uploads.
+- `POST /api/speech/token` — issues short-lived Azure Speech STS tokens after user authentication. Requires a real API gateway quota and privately configured Speech key. There are no provider secrets in the static frontend.
+
+The Blob static site loads only public endpoint URLs from `runtime-config.js`. Configure these after approval; **never embed model/Speech keys, Supabase service-role credentials, or private file tokens in the frontend.** Azure Blob Static Website alone cannot run the Python API.
+
+## Local test commands
 
 ```bash
+python -m pip install pypdf==5.9.0
 python -m unittest discover -s tests -v
 node tests/test_engine.cjs
 node --check app.js
-node --check speech/azure-speech-adapter.js
-python tests/browser_check.py  # requires local Playwright + Chromium; mock data smoke
+node --check runtime-config.js
+python -m py_compile api/core.py api/function_app.py
+python tests/browser_check.py  # Playwright/Chromium required; simulated mic, not real audio
+python scripts/build_api_rubrics.py
+python scripts/coverage_report.py
 ```
 
-## Deployment design (approval gate)
+GitHub Actions workflow is prepared, but **no remote CI has run**. Browser smoke tests simulate speech recognition and use mocked study data: they do not prove real microphone permissions, signed-in cloud data isolation, production model evaluation, Azure Speech or vault extraction. The original target `saifsiddiqui59/GenAI-Galaxy` returned 404 from the connected GitHub account, and that connection offers no repository-creation action. No new GitHub repo or cloud resource was created. RetailGrowthAI and WineShopPOS were not changed.
 
-- Host `index.html`, `styles.css`, `app.js`, `data/`, and `speech/` under the Azure storage account static website `$web` container.
-- Create **new** Azure resource group/storage only after explicit approval. `scripts/deploy_azure_static.sh` will not run without `--approve-provisioning`.
-- Existing Supabase `voice_agent_call`: verified `genai_study_progress`, `genai_study_attempts`, `genai_study_documents` RLS enabled, and `genai-study-docs` is a **private** bucket limited to **8 MiB**. No schema changes have been made.
-- Browser Web Speech API works only in supported secure contexts and may use remote recognition. Unsupported browsers can type. For Azure fallback, deploy an authenticated HTTPS token broker, set `window.GALAXY_SPEECH_BROKER_URL` in a secure runtime configuration, and bundle the pinned Speech SDK.
-- PDF/DOCX file upload and private metadata storage are implemented in code; **parsing/lesson generation is not**. TXT/MD source-derived question drafts are explicitly labeled provisional.
-- Keyword rubric is a *coverage proxy*, not semantic/correctness scoring. A production answer evaluator needs a secured authenticated API and validated SME question rubric.
-
-## Current limits
-
-Chromium desktop/mobile/reduced-motion smoke tests ran successfully with local mocked JSON, not a deployed backend. Cloud operations were inspected read-only; no test user signup, bucket upload, cross-user RLS test, microphone permission test, external Azure Speech broker, Azure provisioning, GitHub Actions run, or deployed site is verified. The `saifsiddiqui59/GenAI-Galaxy` repository returns 404 through GitHub connection.
-
-See [coverage report](docs/COVERAGE_REPORT.md) and [project state](docs/PROJECT_STATE.md).
-
-## Git milestone
-
-`main` contains the recovered V3 HTML only. `feat/v4-galaxy-m1` adds V4 code, docs and automated checks across two local commits. These are **local commits**, not a published GitHub PR. Use a private repository because existing V3 reference may contain personal interview material.
+See `docs/PROJECT_STATE.md`, `docs/NEXT_TASK.md`, and `docs/INTERFACES_V1.md` for milestones and integration contracts.
