@@ -1574,6 +1574,25 @@
     ],
     "project_context": "Your voice-agent work uses an Azure AI Foundry project with a deployed GPT model; validate whether it is hub-based before presenting exact parent resource hierarchy."
   },
+  "Azure AI Foundry & Cloud / AI platform / Azure OpenAI model deployment": {
+    "topic": "Azure OpenAI model deployment",
+    "question": "What is a deployment versus a model?",
+    "reference_answer": "An Azure OpenAI model is the underlying AI capability, while a deployment is a configured serving endpoint for a model in an Azure resource. My application would use the deployment name, endpoint and compatible API version, not hard-code a model label. Before go-live I would confirm region availability, quota, content filtering, throughput, authentication and data-residency requirements. I would keep provider credentials on a protected backend, test a staging deployment, monitor throttling and latency, and retain a tested rollback target when changing versions.",
+    "technical_context": "Applications call an Azure model deployment by its deployment name and endpoint, not simply by a catalog description. Availability, deployment type, quota, rate limits, model versions and supported regions differ. Validate API version compatibility, context limits, data residency, content filters and capacity before rollout. Keep endpoint and deployment name outside application code and manage credentials with identity or backend secret storage. Route only through a secured server-side gateway; a browser must not receive Azure OpenAI credentials.",
+    "common_mistakes": [
+      "Assuming the catalog model name is always the callable deployment name",
+      "Publishing an Azure OpenAI key in frontend JavaScript",
+      "Assuming region support or quota transfers automatically to another region"
+    ],
+    "expected_concepts": [
+      "deployment",
+      "region",
+      "quota",
+      "endpoint",
+      "version"
+    ],
+    "project_context": "For a banking assistant, model routing and rollback are deployment configuration decisions; no Galaxy Azure OpenAI deployment has been approved or created."
+  },
   "Azure AI Foundry & Cloud / AI platform / Azure AI Search": {
     "topic": "Azure AI Search",
     "question": "Why combine AI Search with Azure OpenAI?",
@@ -1592,6 +1611,25 @@
       "citation"
     ],
     "project_context": "In a banking assistant architecture, compare hybrid search with vector-only recall while validating that each tenant can retrieve only its own policy material."
+  },
+  "Azure AI Foundry & Cloud / AI platform / PAYG vs provisioned throughput": {
+    "topic": "PAYG vs provisioned throughput",
+    "question": "When would PTU be worth the cost?",
+    "reference_answer": "PAYG is a good starting point when AI traffic is uncertain because you pay for actual usage. Provisioned throughput becomes worth considering for predictable, sustained demand and strict latency targets, but it carries capacity and commitment costs. I would measure peak requests, prompt and completion tokens, retries, p95 latency and effective hourly spending on a representative workload. Then I would compare those numbers against available provisioned options and commitments, including idle capacity. I would not choose PTU only because a single day had a large spike.",
+    "technical_context": "In consumption-based inference, costs vary with billable input and output units and can spike with large prompts or repeated tool calls. Provisioned deployment options reserve capacity measured under their own throughput model and billing terms. A correct comparison includes sustained and peak load, prompt-to-completion ratio, caching, retry rate, latency SLOs, idle time, region/model support and minimum commitments. Benchmark with realistic requests; high average utilization alone does not guarantee predictable tail latency. Budget guards and quota monitoring remain essential under both models.",
+    "common_mistakes": [
+      "Comparing PTU price with only peak PAYG spending",
+      "Treating PTU capacity as unlimited or perfectly elastic",
+      "Ignoring reservation terms, idle hours and model/region compatibility"
+    ],
+    "expected_concepts": [
+      "payg",
+      "ptu",
+      "throughput",
+      "latency",
+      "cost"
+    ],
+    "project_context": "For a voice assistant with call spikes, compare peak concurrency and per-minute traffic against real provisioned capacity quotations instead of asserting a savings percentage."
   },
   "Azure AI Foundry & Cloud / Secure architecture / Entra ID & managed identities": {
     "topic": "Entra ID & managed identities",
@@ -1631,6 +1669,25 @@
     ],
     "project_context": "For the banking voice architecture, review which components can use VNet integration, and recognize that customer telephony ingress may still need a public authenticated edge."
   },
+  "Azure AI Foundry & Cloud / Secure architecture / RBAC & least privilege": {
+    "topic": "RBAC & least privilege",
+    "question": "How would you scope vector index permissions?",
+    "reference_answer": "I apply least privilege at multiple layers. The deployment identity only needs narrowly scoped rights to the approved Azure resource, while the running application needs separate data-plane permissions. For a vector index I would check whether the service supports index-level roles and restrict ingestion and query identities differently. Tenant authorization cannot be delegated to cloud RBAC alone; every document or database request must enforce the verified user's scope. I would test both allowed and denied operations, review inherited roles and avoid long-lived broad credentials.",
+    "technical_context": "Separate human operator roles, workload managed identities, service-to-service permissions and end-user data authorization. Azure RBAC operates at management or data-plane scopes depending on the resource and role; application tenant ownership still needs document filters, row-level security or equivalent controls. Restrict permissions to a specific resource/index where the supported role model allows it rather than granting subscription Contributor. Use short-lived federated credentials or managed identities, log assignments, review regularly and test denial from identities that should not see the data.",
+    "common_mistakes": [
+      "Granting subscription Contributor just to update one storage account",
+      "Assuming Azure RBAC automatically isolates application tenants",
+      "Letting the browser possess administrative cloud credentials"
+    ],
+    "expected_concepts": [
+      "rbac",
+      "least privilege",
+      "identity",
+      "scope",
+      "authorization"
+    ],
+    "project_context": "Galaxy's GitHub identity should receive account-scoped permission only for approved static deployment; production study data still requires user-JWT/RLS checks."
+  },
   "Azure AI Foundry & Cloud / Secure architecture / API Management gateway": {
     "topic": "API Management gateway",
     "question": "Why put APIM in front of LLM endpoints?",
@@ -1649,6 +1706,82 @@
       "throttling"
     ],
     "project_context": "Galaxy's source API has fail-closed configuration switches; the real APIM policy, network restrictions and quota load test are still deployment prerequisites."
+  },
+  "Azure AI Foundry & Cloud / Secure architecture / Multi-region & failover": {
+    "topic": "Multi-region & failover",
+    "question": "What if the AI model region becomes unavailable?",
+    "reference_answer": "I would design model failover as a controlled backend capability, not a blind retry loop. I would pre-approve a secondary region for data residency, deploy a compatible model and verify its independent quota. The router monitors failures, uses circuit breakers and bounded retries, and transfers traffic only when the backup passes health and policy checks. I would also plan for session continuity, tool availability and inconsistent retrieval indexes. If failover is unsafe, the assistant should degrade gracefully and offer a human route rather than hallucinate a response.",
+    "technical_context": "Failover plans distinguish transient retryable faults from regional outages and explicitly account for unequal model availability, quotas, model versions and data-residency permissions. Configure bounded retries with jitter, per-region circuit breakers, health signals and a routing decision at the secured backend. A secondary deployment requires independent capacity and evaluation. Session state, private document indexes and tool endpoints must remain consistent or degrade safely. Measure recovery time, error budget, answer-quality drift, and the cost of standby capacity. Do not silently route regulated data to an unapproved jurisdiction.",
+    "common_mistakes": [
+      "Failing over regulated content to any available region",
+      "Assuming identical models or quotas in every geography",
+      "Retrying side-effecting tool calls without idempotency"
+    ],
+    "expected_concepts": [
+      "failover",
+      "region",
+      "retries",
+      "residency",
+      "circuit breaker"
+    ],
+    "project_context": "For a banking voice assistant, preserve call session state and provide a human handoff if the second region or speech provider cannot meet policy requirements."
+  },
+  "Azure AI Foundry & Cloud / Serverless & hosting / Azure Functions": {
+    "topic": "Azure Functions",
+    "question": "Why choose Functions for booking or account APIs?",
+    "reference_answer": "I would choose Azure Functions for small, event-driven agent tools such as retrieving available appointment slots or validating a booking request. The Function verifies identity and permissions, validates the payload and returns a structured result the agent can interpret. I would include idempotency for writes, observability and a secure gateway with actual throttling. For a continuous phone WebSocket I would use a long-lived hosting option instead, while Functions could support discrete tool calls. The production choice depends on timeout, concurrency and scaling limits.",
+    "technical_context": "An HTTP-triggered Function can implement a narrow tool endpoint with input validation, verified JWT, idempotency and auditable error codes. Hosting choices affect startup, connection reuse, scaling, execution duration and networking. Place rate limits at a real gateway and restrict direct Function ingress, with authorization enforced again inside the Function. Use managed identity for supported resource access, configure app settings through protected deployment channels and separate tool execution from model-generated argument selection. Long-lived two-way audio streaming typically warrants a persistent process rather than a short HTTP Function.",
+    "common_mistakes": [
+      "Using model-generated tool arguments as proof of customer authorization",
+      "Assuming a shared internal header implements per-user rate limiting",
+      "Hosting an indefinitely persistent WebSocket loop in a short Function request"
+    ],
+    "expected_concepts": [
+      "function",
+      "http",
+      "auth",
+      "idempotency",
+      "gateway"
+    ],
+    "project_context": "Galaxy contains source-only Function handlers for speech token, evaluation and private Vault extraction; they are not deployed or production authorized."
+  },
+  "Azure AI Foundry & Cloud / Serverless & hosting / Container Apps & WebSockets": {
+    "topic": "Container Apps & WebSockets",
+    "question": "Why use Container Apps for a voice stream?",
+    "reference_answer": "I would host a live speech WebSocket on Container Apps when I need a container with continuous connections and custom audio processing. The service would authenticate the call, assign a session identifier, buffer limited audio chunks and forward them to STT and agent services. I would handle silence, client disconnects, scale events and backend throttling, while keeping customer tool actions behind verified identity and confirmation. Functions could handle isolated booking or account operations, but the streaming gateway would manage connection state and backpressure.",
+    "technical_context": "Unlike a one-off HTTP invocation, live voice streaming requires a persistent connection, session identity, backpressure, bounded buffering and a coordinated disconnect lifecycle. A containerized gateway can accept secure WebSockets, normalize speech/audio formats and forward bounded chunks to approved STT/TTS or agent services. Plan for scale-to-zero cold starts, replica routing, connection draining and session-state recovery; sticky sessions are not always guaranteed. Enforce origin/auth checks, audio size ceilings, per-call quotas, TLS and redacted trace logging. Distinguish WebSocket transport from the provider's billing and speech models.",
+    "common_mistakes": [
+      "Assuming scale-to-zero never impacts first-call latency",
+      "Keeping only in-memory session state when a replica can disappear",
+      "Accepting arbitrary unbounded audio payloads or leaked transcript logs"
+    ],
+    "expected_concepts": [
+      "container apps",
+      "websocket",
+      "audio",
+      "backpressure",
+      "session"
+    ],
+    "project_context": "For the previously described voice-assistant architecture, Container Apps fits the streaming adapter, but actual performance and client authentication must be measured."
+  },
+  "Azure AI Foundry & Cloud / Serverless & hosting / ADLS, Key Vault & secrets": {
+    "topic": "ADLS, Key Vault & secrets",
+    "question": "What is the secure way to read AKV secrets in Databricks?",
+    "reference_answer": "I would keep application data in ADLS Gen2 and sensitive credentials in Key Vault, with workloads using managed identity where the integration supports it. For Databricks, I would configure an approved Key Vault-backed secret scope or SDK-based retrieval with least-privilege permissions. A notebook would reference the secret by name rather than store a raw password. I would also avoid printing secret values, limit who can attach to compute, rotate credentials and use separate vaults or access scopes across environments. The exact setup depends on Databricks workspace capabilities.",
+    "technical_context": "ADLS Gen2 is a scalable hierarchical-namespace data lake; Azure Key Vault manages secrets, keys and certificates. Prefer Entra managed identity and resource/data-plane RBAC over hard-coded account keys. In Databricks, supported options include a Key Vault-backed secret scope or appropriately permissioned SDK access; exact prerequisites depend on workspace and service configuration. Secret redaction in notebooks is not a complete exfiltration defense. Rotate credentials, avoid echoing values in logs and separate DEV/QA/production identities. A secret name is not the same as its value or authorization to access it.",
+    "common_mistakes": [
+      "Writing keys into notebooks or checked-in .env files",
+      "Treating notebook output masking as a substitute for access controls",
+      "Granting broad Key Vault administrator permissions to every Spark job"
+    ],
+    "expected_concepts": [
+      "adls",
+      "key vault",
+      "managed identity",
+      "databricks",
+      "secret"
+    ],
+    "project_context": "For a Databricks pipeline, describe a secret scope backed by approved Key Vault permissions; do not claim this is already configured in an unrelated workspace."
   },
   "Banking Voice Assistant / End-to-end voice call / Call entry & Azure Communication Services": {
     "topic": "Call entry & Azure Communication Services",
@@ -2422,6 +2555,63 @@
       "audit"
     ],
     "project_context": "In a banking voice assistant design, account lookup remains read-only, while creating a meeting or modifying account settings crosses a confirmation boundary."
+  },
+  "Responsible AI & Security / High-stakes actions / Audit logs & provenance": {
+    "topic": "Audit logs & provenance",
+    "question": "How would you make an answer auditable?",
+    "reference_answer": "I would make each agent request traceable using a correlation ID carried across retrieval, model generation and tool calls. I would record the model and prompt versions, authorized source document IDs, tool outcomes and relevant policy checks, but not expose customer balances or full speech transcripts in ordinary logs. Audit records help reproduce a complaint and establish what evidence was available; they do not guarantee the response was factually correct. I would restrict log access, enforce retention rules and connect failures to reviewed regression tests.",
+    "technical_context": "An auditable response can include a correlation ID, authenticated principal or pseudonymous identifier, model/deployment and prompt template versions, retrieval index snapshot, document IDs/versions, tool name/status, policy decision, latency and cost metadata. Keep trust boundaries explicit: logs are evidence of what the system processed, not proof the answer was correct. Sensitive prompts, balances, speech recordings and private documents should be redacted, access-controlled and retained only for an approved period. Correlate asynchronous tool calls with parent spans and provide a deletion/retention process.",
+    "common_mistakes": [
+      "Logging customer data and secrets in plaintext",
+      "Equating a citation in a log with a factually correct answer",
+      "Losing parent-child trace links across async calls"
+    ],
+    "expected_concepts": [
+      "audit",
+      "provenance",
+      "trace",
+      "versions",
+      "privacy"
+    ],
+    "project_context": "For a banking voice assistant, correlate WebSocket call and authorized tool request IDs without putting account numbers or full call transcripts into default logs."
+  },
+  "Responsible AI & Security / High-stakes actions / Tenant isolation & RBAC": {
+    "topic": "Tenant isolation & RBAC",
+    "question": "How do you test tenant separation?",
+    "reference_answer": "I would enforce tenant isolation in every layer, starting with JWT verification and database row-level security. Each progress, attempt and document row belongs to an authenticated user, and Storage requires matching private-path policies. An agent tool should derive the user from a verified token, never from a model-generated tenant ID. I would test two real accounts: each can access its own records, neither can read, update or delete the other's records, and signed URLs cannot bypass authorization. Mock tests are useful, but live negative tests are required before release.",
+    "technical_context": "Tenant isolation spans authentication, database RLS, private object storage, vector indexes, agent tool authorization and cached/session state. Derive the authenticated principal from cryptographically validated claims and bind authorization on every read/write, not only a frontend filter. Supabase RLS policies must constrain both reads and writes to auth.uid() for owner-scoped Galaxy tables. Storage paths under auth.uid()/ should be protected by storage policies, not trusted solely because they have a prefix. Test with two separate genuine user JWTs and negative CRUD, signed URL and cross-user reference cases.",
+    "common_mistakes": [
+      "Assuming a client-side .eq user filter is sufficient without RLS",
+      "Trusting an agent-generated user_id or file path",
+      "Testing only reads, not updates, deletes or signed-link disclosure"
+    ],
+    "expected_concepts": [
+      "tenant",
+      "rls",
+      "jwt",
+      "storage",
+      "authorization"
+    ],
+    "project_context": "For Galaxy, mocked client-isolation tests exist and live two-account RLS acceptance remains pending protected test credentials and explicit execution approval."
+  },
+  "Responsible AI & Security / High-stakes actions / Financial compliance & fallback": {
+    "topic": "Financial compliance & fallback",
+    "question": "What happens if a financial policy is unknown?",
+    "reference_answer": "I would make the assistant answer only from current, approved policy sources and verified account tools. If retrieval returns conflicting information or the policy is unknown, it should state that it cannot verify the answer and escalate to an authorized adviser rather than guessing. Financial actions need identity verification, explicit confirmation, idempotency and an auditable result. I would maintain a compliance-reviewed intent policy, test out-of-scope and failure paths and track escalations. Model confidence alone must never bypass a rule or authorize an account action.",
+    "technical_context": "Finance-domain tools require a clear policy hierarchy, current approved source versions, verified customer context and strong separation between informational responses and transactional actions. Define prohibited or regulated intents, time sensitivity, user disclosures, consent/approval boundaries and escalation destinations with compliance owners. A retrieval miss, inconsistent source, expired policy or failed account API should produce a calibrated limitation message rather than fabricated eligibility or balances. Logging and human review workflows must follow privacy and retention requirements. The assistant should not present a confidence number as legal or financial approval.",
+    "common_mistakes": [
+      "Treating language-model confidence as authorization to act",
+      "Inventing account-specific eligibility when verified data is unavailable",
+      "Hiding policy conflicts behind a fluent-sounding answer"
+    ],
+    "expected_concepts": [
+      "policy",
+      "fallback",
+      "approval",
+      "financial",
+      "escalation"
+    ],
+    "project_context": "For a finance voice assistant, enforce known policy scope and read-only balance checks; transactions require explicit separately authorized workflows."
   },
   "Responsible AI & Security / Threat modelling / Indirect prompt injection from retrieved documents": {
     "topic": "Indirect prompt injection from retrieved documents",
