@@ -1,0 +1,30 @@
+name: Galaxy two-account RLS acceptance (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Enter TEST to run scoped Galaxy-only temporary integration fixtures"
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  galaxy-live-rls:
+    if: ${{ github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'TEST' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify two existing test accounts, isolated Galaxy data and storage
+        env:
+          GALAXY_SUPABASE_URL: https://vfoghlhtnifpnbevgufa.supabase.co
+          GALAXY_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.GALAXY_SUPABASE_PUBLISHABLE_KEY }}
+          GALAXY_TEST_A_EMAIL: ${{ secrets.GALAXY_TEST_A_EMAIL }}
+          GALAXY_TEST_A_PASSWORD: ${{ secrets.GALAXY_TEST_A_PASSWORD }}
+          GALAXY_TEST_B_EMAIL: ${{ secrets.GALAXY_TEST_B_EMAIL }}
+          GALAXY_TEST_B_PASSWORD: ${{ secrets.GALAXY_TEST_B_PASSWORD }}
+        run: python tests/live_rls_check.py
