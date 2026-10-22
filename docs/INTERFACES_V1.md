@@ -33,3 +33,7 @@ The client reads Galaxy `genai_study_progress`, `genai_study_attempts`, and `gen
 ## M7b — live acceptance probe scope
 
 The optional signed-in two-account test covers owner CRUD for `genai_study_progress`, owner insert/read for `genai_study_attempts`, owner insert/read for `genai_study_documents`, and owner upload/download of `genai-study-docs/{auth.uid()}/...`. Cross-user reads, writes, deletes and storage accesses are expected to be rejected or affect zero rows. All test IDs are randomly namespaced and deleted using each authentic test user's JWT. No live pass is claimed until the protected manual Action actually succeeds.
+
+## M10 — private extractor release contract
+
+The undeployed `/api/vault/extract` route returns HTTP 503 unless the backend-only `GALAXY_VAULT_GATEWAY_RATE_LIMIT=active` marker is configured. It is an additional safety switch, **not** a verified quota enforcement mechanism. A real gateway must independently enforce authenticated per-user limits, strip/inject the trusted internal header, and block direct Azure Function ingress. Document metadata SELECT and PATCH apply both verified `user_id` and validated v4 document UUID filters, in addition to live Supabase RLS. Do not deploy until malware quarantine, secure isolation tests and owner approval are complete.
