@@ -81,6 +81,34 @@ class ReleaseGuardTests(unittest.TestCase):
         self.assertNotIn('AZURE_CLIENT_SECRET=', wf)
         self.assertNotIn('AZURE_CLIENT_SECRET=', deploy)
 
+    def test_public_runtime_has_no_known_credential_shapes(self):
+        # Narrow static check: does not scan Git history or detect all secret types.
+        public = [
+            ROOT / 'runtime-config.js', ROOT / 'app.js', ROOT / 'index.html',
+            ROOT / 'speech/azure-speech-adapter.js', ROOT / 'styles.css',
+        ]
+        credential_shapes = (
+            r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----',
+            r'ghp_[A-Za-z0-9]{36}',
+            r'sb_secret_[A-Za-z0-9_-]{16,}',
+            r'sk-proj-[A-Za-z0-9_-]{20,}',
+            r'AKIA[0-9A-Z]{16}',
+        )
+        for file in public:
+            content = file.read_text()
+            for shape in credential_shapes:
+                with self.subTest(file=str(file.relative_to(ROOT)), shape=shape):
+                    self.assertIsNone(re.search(shape, content))
+
+    def test_no_private_documents_or_live_local_settings_in_checkout(self):
+        forbidden = [
+            ROOT / '.env', ROOT / '.env.production', ROOT / 'api/local.settings.json',
+            ROOT / 'private_key.pem', ROOT / 'resume.pdf', ROOT / 'secrets.json',
+        ]
+        for path in forbidden:
+            with self.subTest(name=path.name):
+                self.assertFalse(path.exists(), 'Sensitive file must not ship in public repo')
+
     def test_source_remains_distinct_from_retail_project(self):
         self.assertTrue((ROOT / 'V3_REFERENCE.html').is_file())
         self.assertTrue((ROOT / 'data/curriculum.json').is_file())
