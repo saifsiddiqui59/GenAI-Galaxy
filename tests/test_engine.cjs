@@ -12,6 +12,8 @@ const good=e.evaluateAnswer(t,'Attention key and value tensors speed decode afte
 const bad=e.evaluateAnswer(t,'It does something smart and always produces perfect facts.');
 assert.ok(good.score>bad.score,JSON.stringify({good,bad}));
 assert.ok(good.missing.length<bad.missing.length);
+assert.equal(good.passed,false,"keyword matching must never auto-verify mastery");
+assert.equal(good.serverReviewed,false);
 assert.equal(e.questionFor(t,1),t.question);
 assert.equal(e.questionFor(t,2),lessons['KV cache'].followups[0]);
 assert.equal(curriculum.length,17);
