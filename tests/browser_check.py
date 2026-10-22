@@ -1,9 +1,9 @@
-import asyncio, json, pathlib, re, shutil
+import asyncio, json, pathlib, re
 from playwright.async_api import async_playwright
 R=pathlib.Path(__file__).resolve().parents[1]
 async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
  async with async_playwright() as p:
-  browser=await p.chromium.launch(**({'executable_path':shutil.which('chromium') or '/usr/lib/chromium/chromium'} if shutil.which('chromium') or pathlib.Path('/usr/lib/chromium/chromium').exists() else {}),headless=True,timeout=20000,args=['--no-sandbox','--disable-dev-shm-usage','--disable-background-networking'])
+  browser=await p.chromium.launch(headless=True,timeout=45000,args=['--no-sandbox','--disable-dev-shm-usage','--disable-background-networking'])
   page=await browser.new_page(viewport={'width':viewport[0],'height':viewport[1]},device_scale_factor=1)
   if reduced: await page.emulate_media(reduced_motion='reduce')
   errors=[];page.on('pageerror',lambda err:errors.append(str(err)))
