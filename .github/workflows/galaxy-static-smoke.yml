@@ -1,9 +1,6 @@
 name: Galaxy public static website HTTP smoke
-# One-time read-only HTTP check; convert to manual-only after first run is queued.
+# Manual-only read-only HTTP smoke. First run was already queued for site verification.
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/galaxy-static-smoke.yml']
   workflow_dispatch:
 permissions:
   contents: read
