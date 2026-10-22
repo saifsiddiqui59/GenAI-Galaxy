@@ -27,12 +27,23 @@ resource_id="$(az storage account show --resource-group "$GALAXY_AZ_RG" --name "
   echo 'Storage account was not verified inside the requested resource group.' >&2
   exit 2
 }
-# Requires only Azure Storage data-plane read permission. Do not enable a site here.
-website_enabled="$(az storage blob service-properties show --account-name "$GALAXY_AZ_STORAGE" --auth-mode login --query staticWebsite.enabled --output tsv)"
+# Verify static website using the ARM management plane, not a Blob data-plane call.
+# The old check raised a generic Blob authorization error before upload.
+# The existing resource-group Reader role can inspect this property.
+website_enabled="$(az storage account blob-service-properties show --account-name "$GALAXY_AZ_STORAGE" --resource-group "$GALAXY_AZ_RG" --query staticWebsite.enabled --output tsv)"
 if [[ "${website_enabled,,}" != true ]]; then
   echo 'Static website is disabled. Stop; do not auto-enable or provision.' >&2
   exit 2
 fi
+echo 'Existing Galaxy static website is enabled (verified through Azure ARM).'
+
+# Isolate storage data-plane authorization before staging/uploading any files.
+# Only the dedicated Galaxy OIDC service principal may receive this access.
+if ! az storage container show --account-name "$GALAXY_AZ_STORAGE" --auth-mode login --name '$web' --query name --output tsv >/dev/null; then
+  echo '::error::OIDC sign-in worked, but Blob data access to the Galaxy $web container was refused. Check the dev AZURE_CLIENT_ID identity, storage-scoped Storage Blob Data Contributor assignment, RBAC propagation and storage firewall. Do not switch to account keys.' >&2
+  exit 3
+fi
+echo 'Galaxy $web Blob data-plane access verified with keyless Entra authentication.'
 
 stage="$(mktemp -d)"
 trap 'rm -rf "$stage"' EXIT
