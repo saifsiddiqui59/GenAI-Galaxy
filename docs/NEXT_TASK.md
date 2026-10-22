@@ -99,3 +99,11 @@ A single coordinator can complete the remaining branch/PR/documentation tasks; t
 6. **Public-repo security review:** audit Git history as well as current files for sensitive content; rotate actual compromised secrets if found. Cost budgets/alerts need owner approval and current verified regional prices.
 
 Do not change RetailGrowthAI or WineShopPOS or conflate offline mocks with approved hosted/hardware evidence.
+
+## P4 — release execution (supersedes previously requested authoring)
+
+- **Offline:** P4 strengthens live preview SHA-256 parity checks for seven static assets and 246/246 topic coverage and updates stale README counts. Merge only on 3/3 GitHub PR checks and verify 3/3 fresh main CI.
+- **Hosted:** After this change, run the protected *manual-only* existing-site deployment and then the read-only live hosted browser workflow. These two manual runs cannot be started by the currently connected GitHub tool; do not add automatic push deployment as a workaround.
+- **Real users/hardware:** Complete the separate manually invoked Galaxy A/B RLS workflow with dedicated test credentials and live recovery email; capture physical microphone results on desktop/mobile. The shared project's RLS policy catalog is not this evidence.
+- **Backend/security:** Source-only Azure Functions still need genuine APIM quotas, private ingress, malware scanning, SKU/budget constraints, staged negative tests and key management. Record expert lesson review and real spoken-duration results for 245 unique lessons.
+- Detailed release checklist: `docs/reviews/P4_RELEASE_EXECUTION.md`.
