@@ -60,3 +60,7 @@
 ## M11 — curriculum batching and provenance
 
 - Prioritize distinct, technically specific lessons rather than auto-generating filler for 98 overview-only records. Keep an unverified editorial marker until independent fact/source and spoken-duration review. Preserve the 17 planets and original V3 topic identifiers; regenerate server-owned rubrics and topic coverage for each authored batch. Ten substantive topics are in this independent PR; after merge 88 overview-only entries remain.
+
+## M12 — source-aware security lessons
+- Introduce explicit discussion of provider-region restrictions, APIM bypass prevention, multi-layer identity permissions, two-user isolation and financial-policy abstention. Do not imply Galaxy has a deployed model gateway, a live two-account Supabase test result or SME-reviewed content.
+- Use a stacked PR based on M11 to avoid rewriting its newly expanded lessons while CI runner dispatch is blocked. Only retarget and merge after dependency and complete three-job checks pass.
