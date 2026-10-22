@@ -1,5 +1,16 @@
 # GenAI Galaxy Project State — 2026-10-22
 
+## M6 — LIVE STATIC PREVIEW (verified 2026-10-22)
+
+- All four initial development PRs (#1–#4) and preview PR #5 were merged into main. GitHub CI passed on the committed Galaxy code; earlier failed Playwright runs were addressed by pinning Ubuntu 24.04 and the Playwright-managed browser.
+- The dedicated GitHub OIDC identity signed into Azure and read the GenAI_Galaxy resource group successfully: [Azure verification #39801831000](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39801831000). Azure region confirmed centralindia; the group was initially empty.
+- Explicit owner approval permitted provisioning a single Standard_LRS GPv2 Storage account: gengalaxy1429841605, in GenAI_Galaxy. The one-time OIDC bootstrap [run #39803629502](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39803629502) succeeded and uploaded seven allowlisted public frontend files. The first immediate curl returned 404, but propagation was resolved.
+- Public website: **https://gengalaxy1429841605.z29.web.core.windows.net/**. Independent [HTTP smoke #39804008329](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39804008329) returned HTTP 200 for homepage, index.html, styles.css, app.js, runtime-config.js, both curriculum/lesson JSON files and the speech adapter.
+- Automatic bootstrap and website-smoke push triggers were removed immediately after scheduling. Future cloud workflows are manual-only. Azure resource charges apply; no production backend deployed, and no Vault private content or secrets were uploaded.
+- Static preview is **not** evidence of live Supabase sign-in/RLS safety, production grading, backend model evaluation, speech token broker or scanned-PDF ingestion. 148/246 authored curriculum entries and 98 overview-only entries remain the prior tested editorial state. Human content review remains outstanding.
+
+**Historical M3–M5 notes below are retained for provenance; their older local-only claims are superseded by M6.**
+
 **M3 LOCAL DEVELOPMENT/TESTS — NOT GITHUB-PUBLISHED OR DEPLOYED.**
 
 V3 source is preserved without modification. The 17 original chapter/planet identifiers and 230 original topic IDs remain; 16 reviewed-for-duplication discovery records yield 246 topic entries.
