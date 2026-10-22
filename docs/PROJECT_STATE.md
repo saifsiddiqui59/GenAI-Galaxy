@@ -74,3 +74,9 @@ Manual-only live-RLS harness PR [#10](https://github.com/saifsiddiqui59/GenAI-Ga
 - Added account recovery request, same-origin/path Supabase reset redirect and password update from Supabase `PASSWORD_RECOVERY` session. Password input requires eight characters for recovery; no custom password storage or elevated credentials.
 - Regression test `tests/test_auth_recovery.cjs` covers reset redirect, sign-in/sign-up compatibility, recovered session and expired-session refusal. Real reset email delivery and recovery remain unverified; hosted Auth redirect URL needs allowlisting.
 - No two-user live RLS test, hosted Supabase mutation, Azure backend or website deployment occurred. PR CI must pass before merge.
+
+## M9 — microphone lifecycle hardening (stacked feature PR)
+
+- Browser SpeechRecognition and optional Azure Speech adapter already existed. This PR adds generation-based cancellation to stop stale results/errors, prevents old recognizers ending new sessions and closes active speech on topic change, retry, sign-out and view navigation.
+- Optional token-broker startup now has a cancellable pending state; if startup finishes after cancellation its recognizer is stopped. Errors no longer discard the editable transcript.
+- Offline simulated microphone regression added; no physical permission prompt, real audio transcription, Azure broker or speech key test has run. No cloud changes.
