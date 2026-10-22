@@ -1,0 +1,64 @@
+name: Galaxy static preview bootstrap (approved one-time)
+# Push trigger only for the approved one-time bootstrap; remove after first run is queued.
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/galaxy-static-bootstrap.yml']
+  workflow_dispatch:
+    inputs:
+      confirm_bootstrap:
+        description: 'Type CREATE_STATIC_PREVIEW to create/update Galaxy static website'
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  validate:
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' &&
+      github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'push' && contains(github.event.head_commit.message, '[galaxy-bootstrap-approved]')) ||
+       (github.event_name == 'workflow_dispatch' && inputs.confirm_bootstrap == 'CREATE_STATIC_PREVIEW'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate project and bootstrap script
+        run: |
+          set -euo pipefail
+          python -m pip install pypdf==5.9.0
+          python -m unittest discover -s tests -v
+          node tests/test_engine.cjs
+          bash -n scripts/bootstrap_static_site.sh
+          node --check app.js
+          node --check runtime-config.js
+          test -f index.html
+          test -f data/curriculum.json
+          test -f data/lessons.json
+  bootstrap:
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Authenticate with Galaxy-only OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Create and upload approved Blob static preview
+        run: bash scripts/bootstrap_static_site.sh
+      - name: End Azure session
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
