@@ -2,13 +2,21 @@ import io,sys,uuid,zipfile,unittest
 from pathlib import Path
 R=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(R/'api'))
-from core import InputError,extract_text,bearer_token,document_id,topic_key,validate_review,MAX_BYTES
+from core import InputError,extract_text,bearer_token,document_id,topic_key,validate_review,verify_gateway,MAX_BYTES
 
 class ApiCoreTests(unittest.TestCase):
  def test_auth_header_required(self):
   self.assertEqual(bearer_token('Bearer abc.xyz-12'),'abc.xyz-12')
   for x in ('',None,'Basic foo','Bearer hi\nInjected: header'):
    with self.subTest(x=x),self.assertRaises(InputError):bearer_token(x)
+ def test_gateway_fail_closed(self):
+  secret='s'*48
+  verify_gateway(secret,secret)
+  for supplied in (None,'',secret[:-1],'r'*48):
+   with self.subTest(supplied=supplied),self.assertRaisesRegex(InputError,'gateway'):
+    verify_gateway(supplied,secret)
+  with self.assertRaises(RuntimeError):verify_gateway(secret,'')
+  with self.assertRaises(RuntimeError):verify_gateway(secret,'too-short')
  def test_document_id(self):
   u=str(uuid.uuid4());self.assertEqual(document_id(u),u)
   with self.assertRaises(InputError):document_id('../../other-user')
@@ -45,7 +53,10 @@ class ApiCoreTests(unittest.TestCase):
  def test_server_rubric_matches_curriculum(self):
   import json
   rubrics=json.loads((R/'api/rubrics.json').read_text())
-  self.assertEqual(len(rubrics),49)
-  self.assertTrue(all(k.count(' / ')==2 for k in rubrics))
+  self.assertEqual(len(rubrics),148)
+  catalog=json.loads((R/'data/curriculum.json').read_text())
+  lesson_titles=json.loads((R/'data/lessons.json').read_text())
+  expected={' / '.join((c['title'],g['title'],item['title'])) for c in catalog for g in c['groups'] for item in g['items'] if item['title'] in lesson_titles}
+  self.assertEqual(set(rubrics), expected)
 
 if __name__=='__main__':unittest.main()
