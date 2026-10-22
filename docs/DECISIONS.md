@@ -56,3 +56,8 @@
 - Never create production users or mine existing Supabase credentials for RLS probes. Use two different, pre-approved Galaxy test accounts passed only as protected GitHub `dev` secrets.
 - A manual workflow with explicit `TEST` confirmation tests read/write isolation in the three Galaxy tables and owner-prefixed private bucket; its random fixtures must be cleaned after execution. No secret or service-role key is shipped to JavaScript or committed to Git.
 - CI compiles and statically guards the script, but live cloud verification must be separately reported only when the manual job actually runs and succeeds.
+
+## M8 — Auth recovery decision
+
+- Keep all password changes in Supabase Auth. Send recovery emails with a redirect built only from browser `location.origin` and `location.pathname`, excluding query or fragments. Accept password updates only after an active recovery session. No email-existence disclosure in the UI and no privileged backend/password handling.
+- Offline mocks are regression evidence, not proof of real reset email delivery; dedicated Galaxy test account and allowlisted Auth redirect URL required.
