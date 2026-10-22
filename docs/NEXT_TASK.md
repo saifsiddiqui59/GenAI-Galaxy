@@ -35,3 +35,8 @@
 - PR #9 **merged**; actual main CI #39807636506 passed 3/3.
 - PR #10 **merged**; actual main CI #39808755655 passed 3/3. The manual signed-in Galaxy two-account RLS workflow is now available on main, but has **NOT** run and requires existing dedicated test accounts/secrets in the protected `dev` environment.
 - Only run the protected `Galaxy two-account RLS acceptance (manual)` workflow after dedicated A/B credentials are available; typed confirmation `TEST`. No cloud backend or other paid Azure resources approved.
+
+## M10 backend release gates
+
+- Deploying private extraction remains blocked on actual gateway quota policy and ingress restrictions, malware/quarantine scanning for private uploads, real account auth/RLS and owner approval. The env marker alone is insufficient proof of security.
+- Validate read/update owner filters and negative cross-user tests with dedicated Galaxy fixtures after approval; no hosted service has been changed by this PR.
