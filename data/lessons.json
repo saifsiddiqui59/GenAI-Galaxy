@@ -6023,5 +6023,245 @@
       "voice latency"
     ],
     "depth_status": "expanded_editorial_unverified"
+  },
+  "Runtime history & baselines": {
+    "simple": "An anomaly score needs a fair baseline of comparable pipeline runs, not a single historical average.",
+    "technical": "Segment duration history by pipeline, schedule window, workload size, cluster class and weekday seasonality. Exclude canceled runs, outages and known incident periods from a healthy baseline while keeping those events for audit. Use median and median absolute deviation for robust central tendency and spread, with a minimum sample count and fallback for near-zero MAD. Compare normalized runtime per input volume when data sizes vary, and periodically recompute thresholds without allowing persistent degradation to redefine healthy performance silently.",
+    "example": "A 35-minute month-end ETL run may be normal while the same duration for a daily 8-minute job is a critical outlier.",
+    "project": "A Databricks/ADF anomaly detector can use scheduled-run history to flag slow workloads before an RCA assistant summarizes trace evidence.",
+    "answer": "I build a runtime baseline from comparable historical runs of the same pipeline, separating daily and month-end workloads or different job cluster sizes. Median and median absolute deviation are useful when a few incidents would distort an average. I also normalize for input volume and exclude failed or incomplete runs from healthy statistics. When a new run exceeds its appropriate distribution I flag it and show the actual history. The baseline should be reviewable, not a black-box claim that every long run is broken.",
+    "workflow": [
+      "Collect scheduled and completed run metadata with source volumes",
+      "Segment cohorts by pipeline, schedule and compute class",
+      "Calculate robust baseline and review sample sufficiency",
+      "Compare new runs and preserve evidence for drift review"
+    ],
+    "mistakes": [
+      "Comparing month-end jobs with daily micro-batches",
+      "Including known outages as healthy baseline",
+      "Dividing by MAD without handling zero dispersion"
+    ],
+    "followups": [
+      "Why can a rolling mean hide chronic degradation?",
+      "How do you baseline a new pipeline with little history?"
+    ],
+    "keywords": [
+      "median",
+      "MAD",
+      "baseline",
+      "seasonality",
+      "runtime"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Normal, warning & critical": {
+    "simple": "Severity bands express business urgency, not just how many standard deviations a run differs.",
+    "technical": "Combine a robust anomaly score with hard SLA thresholds, repeated failures, dependency criticality and downstream business impact. A normal band fits expected distribution and SLO; warning may indicate elevated duration or one missing feed; critical requires breached deadline, significant evidence of blockage or safety-sensitive effect. Use hysteresis and cool-down to reduce alert flapping and maintain overrides for known maintenance periods. Keep thresholds versioned, justify why a pipeline is business-critical and display the input evidence to the operator.",
+    "example": "A noncritical nightly run two times slower becomes warning, while a payment feed missing its contractual cut-off is critical even with no historical runtime.",
+    "project": "For an agentic RCA monitor, severity dictates whether the agent only comments, opens a ticket or pages the responsible SME.",
+    "answer": "I do not map all anomalies to severity only from a Z-score. I combine duration deviation with a pipeline's SLA, number of affected retries, downstream dependencies and business consequences. A warning could be an unusual but recoverable delay, while critical means a missed deadline or impact to an important feed. I add hysteresis so noisy metrics do not flip status on every sample. Every alert should show its threshold, run ID and evidence so a support team can defend the decision.",
+    "workflow": [
+      "Define critical pipeline contracts and expected operating windows",
+      "Score duration/dependency issues with robust history",
+      "Combine with SLA and downstream impact policies",
+      "Emit stable severity with evidence and escalation owner"
+    ],
+    "mistakes": [
+      "Hardcoding identical thresholds for every pipeline",
+      "Paging for transient noise without persistence checks",
+      "Automatically downgrading a confirmed SLA breach because average is low"
+    ],
+    "followups": [
+      "What is hysteresis in alerting?",
+      "How do you justify criticality when a baseline is sparse?"
+    ],
+    "keywords": [
+      "severity",
+      "SLA",
+      "warning",
+      "critical",
+      "hysteresis"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Metadata & Supabase storage": {
+    "simple": "Store pipeline runs, anomaly evidence and triage state as separate linked records so history remains auditable.",
+    "technical": "A minimal schema includes pipeline identity, run ID, schedule window, started/ended timestamps, input volume, compute type and observed duration. Anomaly events reference the run plus baseline version, score, severity, threshold, detector version and evidence URI. RCA annotations and ticket links are separate append-only records with status transitions. Index (pipeline_id, run_start) and unique run IDs; enforce row-level tenant/owner scope if Supabase is shared, and redact raw credentials and business-sensitive fields. Prefer idempotent inserts/upserts on run ID.",
+    "example": "A run row links to a detection row with p95 deviation and a separate ticket row with assignee and investigation status.",
+    "project": "A conceptual anomaly service can persist only its own dedicated run metadata; this does not grant permission to write Galaxy or other shared Supabase tables.",
+    "answer": "I would design separate tables for pipeline definitions, completed runs, anomalies and the investigation or ticket lifecycle. A run stores start, end, status and workload details. An anomaly record stores the detector version, baseline and evidence that justified its severity. This makes it possible to reproduce decisions later. I use stable run IDs for idempotency, indexes for time-based analysis and row-level security where tenants share a database. I avoid mixing arbitrary LLM explanations into authoritative raw measurements.",
+    "workflow": [
+      "Define immutable run identifiers and metadata schema",
+      "Persist detector result with baseline and threshold version",
+      "Associate human review and ticket events separately",
+      "Enforce tenant ownership, indexes and retention policies"
+    ],
+    "mistakes": [
+      "Overwriting historical anomaly decisions without versioning",
+      "Giving the RCA agent write access to all tables",
+      "Storing secret-bearing activity payloads in general telemetry"
+    ],
+    "followups": [
+      "How would you keep run ingestion idempotent?",
+      "Why retain the anomaly model version with each result?"
+    ],
+    "keywords": [
+      "run ID",
+      "schema",
+      "Supabase",
+      "RLS",
+      "anomaly evidence"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Activity logs & dependency graph": {
+    "simple": "A slow pipeline can be traced to the activity whose delay blocks the critical downstream path.",
+    "technical": "Join parent pipeline runs to activity attempts by run ID, activity name, retry number, start/end timestamps and dependency edges. Construct a DAG from the pipeline definition and compute the longest blocking path, accounting for parallel activities and retries. Compare stage runtimes to per-stage baselines; do not sum unrelated parallel waits or blame the final activity because it finished last. Correlate ADF activity errors, integration runtime load, external service throttling and Databricks job duration before identifying a likely causal contributor.",
+    "example": "Parallel Copy A and Copy B take 8 and 25 minutes; downstream Merge waits for both, so B contributes most to the delayed critical path.",
+    "project": "An anomaly RCA assistant can present a ranked bottleneck candidate with links to ADF activity logs and Spark stage metrics.",
+    "answer": "I use the pipeline run ID to retrieve activity attempts and the configured dependency graph. Then I compare start and end times, retries and stage-level baselines to find which activity actually delayed the dependent path. When activities run in parallel, I do not simply add their durations. I also inspect whether the slow stage suffered integration-runtime saturation, source throttling or Spark skew. The output should distinguish observed bottlenecks from an unverified root-cause hypothesis.",
+    "workflow": [
+      "Load pipeline DAG and run-scoped activity attempts",
+      "Compute dependency-aware critical path and retries",
+      "Compare slow stages with stage-specific historical baseline",
+      "Attach log evidence and likely contributing conditions"
+    ],
+    "mistakes": [
+      "Summing durations of parallel stages",
+      "Selecting last completed activity as root cause without graph analysis",
+      "Ignoring retries that restart an activity"
+    ],
+    "followups": [
+      "How do you compute a critical path in a DAG?",
+      "What evidence separates Spark skew from network throttling?"
+    ],
+    "keywords": [
+      "dependency DAG",
+      "ADF activity",
+      "critical path",
+      "retry",
+      "root cause"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Materialized RCA views": {
+    "simple": "Precomputed RCA views make frequent joins of history, logs and dependency data faster and more consistent.",
+    "technical": "A materialized view persists results of a defined query for efficient repeated consumption; it needs a refresh policy, freshness indication and source lineage. Join pipeline runs, activity attempts, anomaly scores and known dependency edges into stable columns that an authorized analysis tool can query. Distinguish incremental refresh availability across engines and product versions; do not assume every Databricks declarative pipeline or SQL engine supports the same maintenance semantics. Use schema evolution gates, tenant filters and stale-view detection so an agent does not confuse yesterday's precomputed result with live status.",
+    "example": "An RCA materialized summary exposes recent p95 activity duration, failed attempts and critical-path candidate per run ID.",
+    "project": "A Databricks SQL materialized view can support an anomaly RCA agent only when freshness, authorization and refresh failures are monitored.",
+    "answer": "A materialized RCA view stores a precomputed join of pipeline history, activity logs and anomaly metadata so the assistant does not rebuild a costly query for every investigation. I define the expected refresh interval and make the last refresh visible. I also check permissions, uniqueness and source lineage. The agent must not present stale output as a live result. I would benchmark full versus incremental maintenance according to the capabilities of the actual platform and version.",
+    "workflow": [
+      "Define canonical RCA facts and join keys",
+      "Create controlled precomputed view and refresh SLA",
+      "Test row security, lineage and schema change behavior",
+      "Monitor stale refresh and fall back to authoritative sources"
+    ],
+    "mistakes": [
+      "Calling any temporary view materialized",
+      "Assuming precomputed data is always current",
+      "Allowing a model to bypass row filters through a shared view"
+    ],
+    "followups": [
+      "How do you detect stale materialized output?",
+      "When is a normal view preferable to a materialized one?"
+    ],
+    "keywords": [
+      "materialized view",
+      "refresh",
+      "RCA",
+      "lineage",
+      "freshness"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "RAG + SQL grounded RCA": {
+    "simple": "Use SQL for measured facts and RAG for explanatory procedures; neither should invent a causal diagnosis.",
+    "technical": "An RCA assistant should first retrieve authoritative run metrics, activity logs and dependency path from allowlisted SQL queries. Retrieve runbooks, ticket histories and platform documentation via ACL-filtered hybrid search; rerank and cite passages alongside exact run IDs and timestamps. The model synthesizes hypotheses with confidence and contradictory evidence rather than asserting causality. Guard against prompt injection in log messages and documents, verify tool permissions, and require human validation before operational changes or ticket escalation.",
+    "example": "SQL shows retry spikes on Copy_B while a runbook describes typical source-throttling symptoms; the assistant labels source limits as a hypothesis.",
+    "project": "The anomaly detection and agentic RCA concept combines deterministic monitoring with retrieval-backed explanation and an SME handoff.",
+    "answer": "I separate facts from interpretation. SQL tools return actual pipeline durations, error codes and dependency stages, while RAG retrieves operational runbooks and prior approved incidents. The model can combine those sources into a ranked RCA hypothesis with citations, but it must not state that a cause is confirmed without matching evidence. I validate tenant access, show run IDs and timestamps, and allow the SME to correct or reject the suggestion. Any remediation remains separately authorized.",
+    "workflow": [
+      "Fetch authorized run/activity facts through allowlisted SQL",
+      "Retrieve relevant runbook evidence with access filters",
+      "Generate cited hypotheses with contradictory signals",
+      "Get SME confirmation before changing systems"
+    ],
+    "mistakes": [
+      "Passing free-form model SQL with privileged credentials",
+      "Calling correlation definitive causation",
+      "Trusting instructions embedded in activity log text"
+    ],
+    "followups": [
+      "How do you represent low confidence in RCA?",
+      "What metrics show the agent's RCA suggestions are useful?"
+    ],
+    "keywords": [
+      "SQL",
+      "RAG",
+      "runbook",
+      "groundedness",
+      "SME"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Ticket creation & SME workflow": {
+    "simple": "Escalation should carry verifiable evidence, an accountable owner and safe deduplication.",
+    "technical": "Open a ticket only after severity rules and routing rules authorize it. Create or reuse a stable incident key from affected pipeline, window and failure signature so repeated checks do not flood support queues. Attach the run ID, SLA/deadline, activity timings, redacted log links, suspected causes labeled as hypotheses and mitigation context. Provide confirmation for impact-changing actions. Track acknowledgement, handoff, resolution time and reopen rate; learn from SME feedback without silently altering detector thresholds.",
+    "example": "A critical ADF late-feed alert produces one ticket with the failed activity and a runbook link, not ten tickets from ten polling cycles.",
+    "project": "A support agent can route anomaly RCA summaries to an SME, but human-validated root cause remains distinct from generated suggestion.",
+    "answer": "When a pipeline is genuinely critical, I create a support ticket containing the affected run, priority, measured delay, failed activity, evidence links and a suggested investigation path. I use an incident key to avoid duplicate tickets on repeated monitoring polls. The agent's explanation is labeled as a hypothesis until an SME validates it. I track response and resolution against SLA and update the ticket when new evidence appears. High-impact remediation should require human approval.",
+    "workflow": [
+      "Evaluate severity and resolve owning support group",
+      "Deduplicate on stable incident signature",
+      "Create ticket with measured evidence and hypothesis labels",
+      "Track SME validation, SLA and resolution outcome"
+    ],
+    "mistakes": [
+      "Creating a ticket for every anomaly polling event",
+      "Marking a model hypothesis as confirmed root cause",
+      "Sharing unredacted credentials in incident details"
+    ],
+    "followups": [
+      "How do you avoid duplicate tickets after a retry?",
+      "What counts as a useful SME correction?"
+    ],
+    "keywords": [
+      "incident ticket",
+      "SME",
+      "SLA",
+      "deduplication",
+      "evidence"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Data governance & business impact": {
+    "simple": "Governance defines trusted data access and accountability; impact measures whether investigations actually improve operations.",
+    "technical": "Use catalogs and lineage to identify source datasets, owners, transformations and authoritative KPIs. Apply least-privilege data access, retention, audit events and change review for RCA annotations. Quantify operational impact with pre/post baselines: mean/median time to detect, time to acknowledge, time to identify cause, SLA breach frequency and resolved incidents per on-call hour. Normalize comparisons for incident severity and volume, distinguish correlation from attribution, and avoid claiming cost savings absent controlled evidence.",
+    "example": "Anomaly alerts reduce median triage from 90 to 35 minutes over comparable incidents, while SLA compliance is tracked separately.",
+    "project": "Unity Catalog governance and an agentic RCA workflow may contribute to faster support resolution; real impact values require ticket system evidence.",
+    "answer": "I use governance to know which data sources are authoritative, who can access them and how a reported RCA can be audited. For business impact, I compare detection, investigation and resolution times against a fair pre-implementation baseline. I also measure SLA misses and false-alert burden so a faster dashboard is not automatically treated as a business win. Any claimed percentage improvement needs comparable incidents and documented ticket outcomes. The model's role is to assist investigation, not replace ownership.",
+    "workflow": [
+      "Establish governed run and incident lineage",
+      "Define baseline detection, triage and SLA metrics",
+      "Measure comparable cohorts after assisted RCA rollout",
+      "Report impact with uncertainty and alert overhead"
+    ],
+    "mistakes": [
+      "Equating ticket creation with root-cause resolution",
+      "Claiming financial savings without cost evidence",
+      "Ignoring false alarms and on-call workload"
+    ],
+    "followups": [
+      "Which KPI best represents RCA effectiveness?",
+      "How do you correct for changes in incident severity?"
+    ],
+    "keywords": [
+      "Unity Catalog",
+      "lineage",
+      "SLA",
+      "MTTR",
+      "governance"
+    ],
+    "depth_status": "expanded_editorial_unverified"
   }
 }
