@@ -85,3 +85,17 @@ The existing public static Blob preview is an older deployment and does not auto
 - **Quality/cost:** review public Git *history* for leaks (working-tree regex checks are incomplete), rotate any proven compromised credential, get SME/source review of every lesson and verify actual Azure regional prices before approving a budget alert.
 
 A single coordinator can complete the remaining branch/PR/documentation tasks; the owner does **not** need six simultaneous ChatGPT chats. Do not claim those final live acceptance gates were automatically completed.
+
+## P3 — CURRENT action list (supersedes the earlier 66-topic backlog)
+
+**Completed:** Every one of the 246 curriculum entries now has an expanded eight-section lesson; there are 245 unique lesson records and zero overview-only entries. Source PR #31 merged, and current main [run #39843350678](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39843350678) passed 3/3. No more content *authoring* remains for the original 66-topic backlog.
+
+**Still gated on external resources, explicit approval or human/device evidence:**
+1. **User-approved live Auth/RLS:** set up two consented Galaxy-only Supabase users and protected dev credentials, confirm redirect allowlist, explicitly approve the manual `TEST` workflow, verify cross-user denial, cleanup and real recovery email. No claim of real acceptance yet.
+2. **User-approved frontend-only Azure release:** back up the existing static files; verify least-privileged storage-account-scoped OIDC login; obtain explicit approval before uploading P3 `main` assets to existing `gengalaxy1429841605`; verify the actual public HTTPS content, SPA and rollback. GitHub merge alone does not deploy it.
+3. **Real microphone acceptance:** after authorized static deployment, test Chrome/mobile hardware, permission-denied/retry/rapid stop and actual STT provider paths with consented test data.
+4. **Azure backend readiness:** provision and validate JWT/authenticated APIM throttling, private Function ingress, vault malware quarantine, provider secrets/identity, monitored rollback and regional cost controls only after separately approved scope/budget. Existing backend is **source-only**.
+5. **Expert/editorial validation:** review 245 technical lessons for factual/source/version accuracy, 60-second spoken timing, safe/accurate user project claims, and golden/regression questions; structural coverage is not SME certification.
+6. **Public-repo security review:** audit Git history as well as current files for sensitive content; rotate actual compromised secrets if found. Cost budgets/alerts need owner approval and current verified regional prices.
+
+Do not change RetailGrowthAI or WineShopPOS or conflate offline mocks with approved hosted/hardware evidence.
