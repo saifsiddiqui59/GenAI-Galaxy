@@ -29,3 +29,7 @@ When `genai_study_documents.body` remains empty after an upload, a signed-in fro
 ## M7 — client session invariants
 
 The client reads Galaxy `genai_study_progress`, `genai_study_attempts`, and `genai_study_documents` through user-id-filtered requests, includes `user_id` in responses for an ownership check, and keeps private snapshot writes atomic only for the current auth generation. `SIGNED_OUT` clears private state and cancels obsolete read completions. A document metadata deletion must filter by both `id` and `user_id`; storage deletion is permitted only for `${user_id}/` paths. RLS/storage policies remain authoritative; mocked JS tests are not live isolation verification.
+
+## M7b — live acceptance probe scope
+
+The optional signed-in two-account test covers owner CRUD for `genai_study_progress`, owner insert/read for `genai_study_attempts`, owner insert/read for `genai_study_documents`, and owner upload/download of `genai-study-docs/{auth.uid()}/...`. Cross-user reads, writes, deletes and storage accesses are expected to be rejected or affect zero rows. All test IDs are randomly namespaced and deleted using each authentic test user's JWT. No live pass is claimed until the protected manual Action actually succeeds.
