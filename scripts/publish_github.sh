@@ -17,7 +17,7 @@ case "$MODE" in --check|--create-private|--publish) ;; *) usage ;; esac
 cd "$ROOT"
 command -v git >/dev/null || { echo 'Install Git first.' >&2; exit 2; }
 command -v gh >/dev/null || { echo 'Install GitHub CLI (gh) and run gh auth login first.' >&2; exit 2; }
-[[ "$(git rev-parse --show-toplevel)" == "$ROOT" ]] || { echo 'Not at the expected Galaxy project root.' >&2; exit 2; }
+[[ -z "$(git rev-parse --show-prefix)" ]] || { echo 'Not at the expected Galaxy project root.' >&2; exit 2; }
 gh auth status -h github.com >/dev/null || { echo 'Authenticate gh with github.com first.' >&2; exit 2; }
 ACCOUNT="$(gh api user --jq '.login')"
 [[ "$ACCOUNT" == 'saifsiddiqui59' ]] || { echo "Wrong GitHub account: $ACCOUNT. Expected saifsiddiqui59." >&2; exit 2; }
