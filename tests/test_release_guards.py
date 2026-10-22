@@ -19,6 +19,7 @@ class ReleaseGuardTests(unittest.TestCase):
         self.assertNotIn('RetailGrowthAI.git', script)
         self.assertNotIn('WineShopPOS.git', script)
         self.assertNotIn('gh pr merge', script)
+        self.assertIn('chore/m5-azure-actions', script)
         self.assertNotIn('--admin', script)
 
     def test_ci_read_only_and_not_deploying(self):
@@ -41,6 +42,44 @@ class ReleaseGuardTests(unittest.TestCase):
         deploy = (ROOT / 'scripts/deploy_azure_static.sh').read_text()
         self.assertIn('runtime-config.js /tmp/genai-galaxy-static/', deploy)
         self.assertIn('--approve-provisioning', deploy)
+
+    def test_azure_verification_is_manually_triggered_and_read_only(self):
+        wf = (ROOT / '.github/workflows/galaxy-azure-verify.yml').read_text()
+        self.assertIn('workflow_dispatch:', wf)
+        self.assertNotIn('pull_request:', wf)
+        self.assertNotIn('  push:', wf)
+        self.assertIn("github.ref == 'refs/heads/main'", wf)
+        self.assertIn("github.repository == 'saifsiddiqui59/GenAI-Galaxy'", wf)
+        self.assertIn('environment: dev', wf)
+        self.assertIn('id-token: write', wf)
+        self.assertIn('azure/login@v3', wf)
+        self.assertIn('GALAXY_AZ_RG: GenAI_Galaxy', wf)
+        self.assertIn('GALAXY_APP_NAME: GenAI_Galaxy', wf)
+        for forbidden in ('az group create', 'az storage account create', 'az storage blob upload', 'AZURE_CLIENT_SECRET'):
+            self.assertNotIn(forbidden, wf)
+
+    def test_deploy_requires_main_manual_ack_and_verified_existing_website(self):
+        wf = (ROOT / '.github/workflows/galaxy-static-deploy.yml').read_text()
+        deploy = (ROOT / 'scripts/deploy_existing_static.sh').read_text()
+        self.assertIn('workflow_dispatch:', wf)
+        self.assertNotIn('pull_request:', wf)
+        self.assertNotIn('  push:', wf)
+        self.assertIn("inputs.confirm_deploy == 'DEPLOY'", wf)
+        self.assertIn("github.ref == 'refs/heads/main'", wf)
+        self.assertIn('environment: dev', wf)
+        self.assertIn('GALAXY_AZ_RG: GenAI_Galaxy', wf)
+        self.assertIn('GALAXY_AZ_STORAGE: ${{ vars.GALAXY_STORAGE_ACCOUNT }}', wf)
+        self.assertIn('needs: validate', wf)
+        self.assertIn("'$web'", deploy)
+        self.assertIn('staticWebsite.enabled', deploy)
+        self.assertIn('resourceGroups/', deploy)
+        self.assertIn('runtime-config.js', deploy)
+        self.assertIn('az storage blob upload-batch', deploy)
+        for forbidden in ('az group create', 'az storage account create', '--auth-mode key'):
+            self.assertNotIn(forbidden, wf)
+            self.assertNotIn(forbidden, deploy)
+        self.assertNotIn('AZURE_CLIENT_SECRET=', wf)
+        self.assertNotIn('AZURE_CLIENT_SECRET=', deploy)
 
     def test_source_remains_distinct_from_retail_project(self):
         self.assertTrue((ROOT / 'V3_REFERENCE.html').is_file())
