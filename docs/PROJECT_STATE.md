@@ -63,6 +63,12 @@ Owner supplied `GenAI_Galaxy` for both Azure resource group and Azure applicatio
 
 Manual-only live-RLS harness PR [#10](https://github.com/saifsiddiqui59/GenAI-Galaxy/pull/10) merged to main at `0da4cea9528de267b3e1bfd1aa36665144368f9f` after its 3/3 PR jobs passed ([#39808370770](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39808370770)). Independent post-merge main CI **3/3 passed**: [#39808755655](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39808755655). The live two-account workflow has **not** been triggered; signed-in Supabase row/storage isolation is still unverified without test credentials. Cloud release and new paid resources remain unapproved.
 
+## M10 — private extraction quota and owner-scoping hardening (feature PR)
+
+- Strengthened existing undeployed Azure Function source: `vault/extract` refuses requests unless `GALAXY_VAULT_GATEWAY_RATE_LIMIT=active` is set, mirroring model-evaluation and speech-token gates. This environment marker is **not proof** the external gateway enforces user quotas.
+- Both document SELECT and PATCH include server-verified `user_id` and UUID document ID filters in addition to existing Supabase RLS. Added pure owner-filter and static route-guard regressions.
+- Production remains blocked by actual gateway quotas, direct Function ingress isolation, malware quarantine, dedicated authentication/RLS tests, owner deployment approval and CI. No cloud or hosted database action was performed.
+
 ## M8 — password reset UX (code prepared)
 
 - Added account recovery request, same-origin/path Supabase reset redirect and password update from Supabase `PASSWORD_RECOVERY` session. Password input requires eight characters for recovery; no custom password storage or elevated credentials.
