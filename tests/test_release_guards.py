@@ -75,6 +75,10 @@ class ReleaseGuardTests(unittest.TestCase):
         self.assertIn('resourceGroups/', deploy)
         self.assertIn('runtime-config.js', deploy)
         self.assertIn('az storage blob upload-batch', deploy)
+        self.assertIn('az storage account blob-service-properties show', deploy)
+        self.assertIn('az storage container show', deploy)
+        self.assertIn('Pin OIDC credential to approved Galaxy service principal', wf)
+        self.assertIn('737d67b7-4984-48bb-bb1f-5f62599f645c', wf)
         for forbidden in ('az group create', 'az storage account create', '--auth-mode key'):
             self.assertNotIn(forbidden, wf)
             self.assertNotIn(forbidden, deploy)
