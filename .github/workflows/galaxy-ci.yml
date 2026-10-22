@@ -30,6 +30,7 @@ jobs:
           node tests/test_engine.cjs
           node tests/test_auth_sync.cjs
           node tests/test_auth_recovery.cjs
+          node tests/test_mic_lifecycle.cjs
           node --check app.js
           node --check runtime-config.js
           node --check speech/azure-speech-adapter.js
