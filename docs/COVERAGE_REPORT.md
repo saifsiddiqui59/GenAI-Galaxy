@@ -14,7 +14,7 @@
 | Distinct eight-section lesson records | 245 | A shared title appears in two curriculum locations |
 | Incomplete curriculum entries | 0 | Existing topic has only short overview/interview question |
 | Duplicated chapter/group/topic keys | 0 | Checked by automated test |
-| Interview answer length 60–140 words | 226 / 245 | Approximate 30–60-second speaking range; **not timed or spoken-verified** |
+| Interview answer length 60–140 words | 245 / 245 | Approximate 30–60-second speaking range; **not timed or spoken-verified** |
 | Complete verified technical coverage | **not established** | Requires a topic-by-topic SME review |
 
 ## Gap themes discovered and added
