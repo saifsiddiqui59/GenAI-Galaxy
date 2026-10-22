@@ -85,3 +85,10 @@
 - Keep backend, client auth, microphone and content PR integration strictly sequenced with GitHub CI: actual merged replacements were #14/#18/#19/#20/#21. Close stale stacked or conflicting PRs instead of merging duplicate changes. The first three main runs passed 3/3; #20's old browser install was blocked during `--with-deps` setup, so #21 removed repeated system-package setup and demonstrated passing new browser PR CI.
 - Require the current branch's three GitHub CI jobs and the new main run before reporting a final green checkpoint. A prior run, another commit or pending Chromium installer is never green evidence.
 - Preserve no-auto-deploy rule: public visibility, GitHub CI and source-only API code do **not** authorize a new Azure static upload, live Supabase migration/test, paid Azure provisioning or private document processing.
+
+## P2 — single coordinator, six isolated GitHub branches
+
+- Six workstreams can be authored and coordinated inside one conversation using their separate GitHub branches and exclusive file ownership; no independent ChatGPT chats or background agents are required. Coordinator alone checks reviews, resolves shared-file conflicts, merges sequentially and verifies fresh main CI after each merge.
+- Merged P2 source PRs #24–#29. Keep content, Auth/RLS readiness, microphone mock tests, private extraction hardening, static deployment safety and public repository audits isolated. One PR's passing CI is not evidence of a real credentialed/hosted test.
+- The existing Azure Blob preview is never updated automatically by GitHub source merges. Approval for a frontend-only deployment is separate from backend provisioning, paid Azure resource configuration and live Supabase fixture writes.
+- Public repository scanning is a narrow guard; owners must independently audit old commit history and revoke any exposed real secrets. Lesson coverage counts represent structure, not SME/source verification.
