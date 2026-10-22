@@ -62,3 +62,9 @@ Owner supplied `GenAI_Galaxy` for both Azure resource group and Azure applicatio
 ### M7b merge verification — 2026-10-22
 
 Manual-only live-RLS harness PR [#10](https://github.com/saifsiddiqui59/GenAI-Galaxy/pull/10) merged to main at `0da4cea9528de267b3e1bfd1aa36665144368f9f` after its 3/3 PR jobs passed ([#39808370770](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39808370770)). Independent post-merge main CI **3/3 passed**: [#39808755655](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39808755655). The live two-account workflow has **not** been triggered; signed-in Supabase row/storage isolation is still unverified without test credentials. Cloud release and new paid resources remain unapproved.
+
+## M8 — password reset UX (code prepared)
+
+- Added account recovery request, same-origin/path Supabase reset redirect and password update from Supabase `PASSWORD_RECOVERY` session. Password input requires eight characters for recovery; no custom password storage or elevated credentials.
+- Regression test `tests/test_auth_recovery.cjs` covers reset redirect, sign-in/sign-up compatibility, recovered session and expired-session refusal. Real reset email delivery and recovery remain unverified; hosted Auth redirect URL needs allowlisting.
+- No two-user live RLS test, hosted Supabase mutation, Azure backend or website deployment occurred. PR CI must pass before merge.
