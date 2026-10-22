@@ -1,9 +1,6 @@
 name: Galaxy live hosted browser acceptance
-# Read-only public guest browser test. Push trigger removed after first run is queued.
+# Read-only public guest browser test. Manual-only after initial run was queued.
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/galaxy-live-browser.yml']
   workflow_dispatch:
 permissions:
   contents: read
