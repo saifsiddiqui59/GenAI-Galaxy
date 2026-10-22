@@ -1,8 +1,17 @@
 """Read-only acceptance of the LIVE public Galaxy website; guest mode only."""
 import asyncio
+import json
+from hashlib import sha256
+from pathlib import Path
 from playwright.async_api import async_playwright
 
 SITE = "https://gengalaxy1429841605.z29.web.core.windows.net/"
+ROOT = Path(__file__).resolve().parents[1]
+PUBLIC_ASSETS = (
+    "index.html", "styles.css", "app.js", "runtime-config.js",
+    "data/curriculum.json", "data/lessons.json",
+    "speech/azure-speech-adapter.js",
+)
 
 
 async def inspect(viewport, reduced=False):
@@ -22,9 +31,32 @@ async def inspect(viewport, reduced=False):
         count = await page.locator(".planet-node").count()
         assert count == 17, f"Expected 17 planets, got {count}"
 
-        for path in ("styles.css", "app.js", "data/curriculum.json", "data/lessons.json"):
+        # HTTP 200 does not prove GitHub main was deployed. Check the exact bytes
+        # of every allowlisted static asset against the checked-out release SHA.
+        hosted_curriculum = None
+        hosted_lessons = None
+        for path in PUBLIC_ASSETS:
             asset = await page.request.get(SITE + path, timeout=20000)
-            assert asset.status == 200, f"{path}: {asset.status}"
+            assert asset.status == 200, f"{path}: HTTP {asset.status}"
+            downloaded = await asset.body()
+            local = (ROOT / path).read_bytes()
+            assert sha256(downloaded).digest() == sha256(local).digest(), (
+                f"{path}: hosted bytes differ from checked-out main; "
+                "deploy this reviewed commit before claiming live acceptance"
+            )
+            if path == "data/curriculum.json":
+                hosted_curriculum = json.loads(downloaded)
+            elif path == "data/lessons.json":
+                hosted_lessons = json.loads(downloaded)
+        assert len(hosted_curriculum) == 17
+        assert len(hosted_lessons) == 245
+        mapped = sum(
+            item["title"] in hosted_lessons
+            for chapter in hosted_curriculum
+            for group in chapter["groups"]
+            for item in group["items"]
+        )
+        assert mapped == 246, f"Hosted curriculum covers {mapped}/246 topics"
 
         if reduced:
             assert await page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
