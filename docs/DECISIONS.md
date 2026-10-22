@@ -70,3 +70,7 @@
 ## M9 — speech session ownership
 
 - Treat recognition callbacks and late asynchronous token-broker starts as owned by a monotonically increasing client generation. Sign-out, navigation and retry invalidate old sessions and close recognizers; never overwrite the draft from stale callbacks. Preserve editable transcripts on microphone errors. Static mock tests are not live microphone or Azure provider validation.
+
+## M11 — curriculum batching and provenance
+
+- Prioritize distinct, technically specific lessons rather than auto-generating filler for 98 overview-only records. Keep an unverified editorial marker until independent fact/source and spoken-duration review. Preserve the 17 planets and original V3 topic identifiers; regenerate server-owned rubrics and topic coverage for each authored batch. Ten substantive topics are in this independent PR; after merge 88 overview-only entries remain.
