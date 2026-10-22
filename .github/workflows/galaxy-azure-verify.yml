@@ -1,15 +1,18 @@
 name: Galaxy Azure OIDC + resource discovery (read-only)
 
-# Manual only. NEVER runs on pull requests, provisions resources, or deploys.
+# One-time explicitly authorized read-only OIDC probe. Revert immediately after scheduling.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/galaxy-azure-verify.yml']
 
 permissions:
   contents: read
 
 jobs:
   azure-read-only:
-    if: github.ref == 'refs/heads/main' && github.repository == 'saifsiddiqui59/GenAI-Galaxy'
+    if: github.ref == 'refs/heads/main' && github.repository == 'saifsiddiqui59/GenAI-Galaxy' && (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[oidc-check]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     environment: dev
