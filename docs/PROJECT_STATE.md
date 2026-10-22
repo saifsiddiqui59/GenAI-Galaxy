@@ -122,6 +122,6 @@ The user elected to have a **single coordinator chat** own all six previously se
 
 **Content after P2 A:** 17 worlds; original 230 V3 topics preserved within 246 total; **180/246 expanded curriculum entries**, **179 distinct eight-section lessons**, **66 overview-only entries still incomplete**. Expanded does not mean SME-approved or spoken-verified.
 
-**CI:** source PRs #24–#29 each passed all three PR checks. Confirm final post-merge main run [#39838287412](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39838287412) before claiming final integrated green status. All new work is offline/source-only; old Azure static site has not been redeployed.
+**CI:** source PRs #24–#29 each passed all three PR checks. Final post-merge [main run #39838287412](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39838287412) **completed successfully with all three CI jobs green**. All new work is offline/source-only; old Azure static site has not been redeployed.
 
 **Still blocked on separate owner approval/evidence:** actual hosted two-account RLS acceptance using dedicated accounts, real password reset email flow, physical microphone and speech-provider behavior, Azure backend gateway quotas/private ingress/malware scanning, approved static site upload, SME/source review and the remaining 66 lessons. No hosted Supabase migrations, resource provisioning or cross-project actions occurred in this P2 merge.
