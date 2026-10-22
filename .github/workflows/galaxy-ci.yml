@@ -7,7 +7,7 @@ permissions:
   contents: read
 jobs:
   curriculum-and-api:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -34,7 +34,7 @@ jobs:
           python scripts/coverage_report.py
           git diff --exit-code -- docs/TOPIC_COVERAGE.csv docs/COVERAGE_REPORT.md
   browser-smoke:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
