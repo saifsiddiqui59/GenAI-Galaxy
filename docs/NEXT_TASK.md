@@ -73,3 +73,15 @@ The owner made this repository public, restoring GitHub-hosted CI execution. M8�
 5. **Operational safety:** Cost budget/alert for the approved Blob account, scoped keyless deployment role only if owner approves, review public GitHub history for sensitive/personal content, and maintain a no-secrets public source policy. Do not deploy Azure or apply hosted migrations automatically.
 
 The existing public static Blob preview is an older deployment and does not automatically reflect merged main.
+
+## P2 — updated next steps after six merged workstreams (supersedes earlier backlog totals)
+
+- **Six P2 source PRs #24–#29 are merged.** Source implementation/readiness checks are complete for those PRs, **not** hosted acceptance or deployment. Final [feature main CI #39838287412](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39838287412) **passed all 3 jobs** on integrated feature commit `18bf47f8`.
+- **66 remaining overview-only lesson topics** still need distinct, evidence-based eight-part explanations. Preserve 17 worlds, 246 entries and original V3 IDs. Run coverage/rubric generators and full curriculum regression tests after each authored batch.
+- **Auth:** owner-approve real A/B Galaxy-only test accounts and protected dev secrets, then separately authorize manual `TEST` two-user RLS workflow. Offline key validation is not proof of hosted policy correctness. Verify password recovery redirect/email delivery with a dedicated account.
+- **Mic:** owner-approve updated preview publish and use real devices to test permissions, start/stop, language recognition, transcript retention and denial fallback. Simulated CI is not hardware proof.
+- **Backend:** require independently reviewed APIM quotas, network-restricted origin, JWT/tenant negative acceptance and malware quarantine; obtain an explicit separate Azure deployment approval. Current API remains undeployed.
+- **Static preview:** existing account `gengalaxy1429841605` only. Backup and owner's **frontend-only** deployment approval first; never run upload on PR/push. Follow with real URL smoke and rollback evidence.
+- **Quality/cost:** review public Git *history* for leaks (working-tree regex checks are incomplete), rotate any proven compromised credential, get SME/source review of every lesson and verify actual Azure regional prices before approving a budget alert.
+
+A single coordinator can complete the remaining branch/PR/documentation tasks; the owner does **not** need six simultaneous ChatGPT chats. Do not claim those final live acceptance gates were automatically completed.
