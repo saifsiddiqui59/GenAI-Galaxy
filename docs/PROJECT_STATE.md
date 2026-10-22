@@ -80,3 +80,9 @@ Manual-only live-RLS harness PR [#10](https://github.com/saifsiddiqui59/GenAI-Ga
 - Browser SpeechRecognition and optional Azure Speech adapter already existed. This PR adds generation-based cancellation to stop stale results/errors, prevents old recognizers ending new sessions and closes active speech on topic change, retry, sign-out and view navigation.
 - Optional token-broker startup now has a cancellable pending state; if startup finishes after cancellation its recognizer is stopped. Errors no longer discard the editable transcript.
 - Offline simulated microphone regression added; no physical permission prompt, real audio transcription, Azure broker or speech key test has run. No cloud changes.
+
+## M11 — ten individually authored priority curriculum lessons (feature PR)
+
+- Added 10 domain-specific eight-section lessons: embedding migration, reranking, change tombstones, ReAct, Azure AI Search, APIM, DeepEval, adversarial regressions, LLM-judge cost, and human approval. Every new record includes practical workflow, mistakes, interview answer and follow-up questions.
+- Coverage advanced to **158/246 expanded topic entries, 157 distinct authored lessons, 88 overview-only entries**. The added answers are each 60–140 words; content is **editorial unverified**, not expert signoff. Original 230 V3 topic IDs and 17 planets unchanged.
+- Regenerated deterministic coverage CSV/report and server-owned rubrics (158 keys), and added topic-content assertions. No Azure deployment, Supabase data write, private document access or changes to other projects.
