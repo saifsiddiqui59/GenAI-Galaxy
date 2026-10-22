@@ -1,0 +1,592 @@
+{
+  "KV cache": {
+    "simple": "Imagine the model reading a long conversation. It keeps reusable attention calculations for earlier tokens instead of calculating all of them again at every next word.",
+    "technical": "During autoregressive decoding, transformer layers cache previously computed attention keys and values. New generated tokens add K/V entries, avoiding recomputation over prefix tokens. KV caching primarily speeds decoding; prompt prefill still processes new input. Cache footprint grows with layers, heads and sequence length, and reuse depends on the inference server/session.",
+    "example": "After the first generated token, the second token can attend to cached previous token representations.",
+    "project": "For a voice assistant, persistent conversation context can raise latency; monitor prompt prefill, decode, memory usage and KV-cache eviction separately.",
+    "answer": "KV cache stores attention key/value tensors from earlier tokens so the model can decode the next token without recomputing the entire prefix. It reduces generation cost, but does not eliminate first-token prefill time. Long prompts, cold workers or cache eviction may still make first replies slow.",
+    "workflow": [
+      "New prompt → prefill K/V for prompt tokens",
+      "Decode one token → append its K/V",
+      "Repeat token generation with cached history",
+      "Invalidate/evict on incompatible context or resource pressure"
+    ],
+    "mistakes": [
+      "Confusing KV cache with semantic response caching",
+      "Claiming it removes retrieval or prefill latency",
+      "Assuming it survives every unrelated request"
+    ],
+    "followups": [
+      "How does prefix caching differ?",
+      "What happens when context length grows?"
+    ],
+    "keywords": [
+      "attention",
+      "key",
+      "value",
+      "decode",
+      "prefill"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Chunking & overlap": {
+    "simple": "Split a large policy into manageable passages so search can retrieve just the relevant part.",
+    "technical": "Chunking determines retrieval granularity. Tune token size and overlap to document structure, embedding limits, recall, precision and answer context budget. Preserve section headers, page references, ACLs and source IDs. Overlap can protect boundary context but causes redundancy and higher index/storage costs.",
+    "example": "A 40-page credit-card policy can be divided by headings into coherent 300–600 token sections rather than embedding all 40 pages as one vector.",
+    "project": "In the banking voice assistant, retrieved FAQ or policy chunks should keep product, tenant and version metadata; otherwise a correct-looking clause can come from the wrong bank policy.",
+    "answer": "We chunk documents because a single large embedding loses topical precision and a full policy may exceed prompt budgets. I split by semantic sections with measured overlap, attach metadata and evaluate retrieval on a golden set. The chunk size is tuned using recall, precision and latency rather than a fixed guess.",
+    "workflow": [
+      "Parse & normalize policy",
+      "Split at semantic boundaries, optionally overlap",
+      "Attach source/version/ACL metadata",
+      "Embed each chunk and index",
+      "Retrieve and evaluate on held-out questions"
+    ],
+    "mistakes": [
+      "Using arbitrary character slicing across tables",
+      "Treating overlap as always beneficial",
+      "Dropping ACL and version fields"
+    ],
+    "followups": [
+      "Does user query get chunked?",
+      "How do you handle tables?"
+    ],
+    "keywords": [
+      "chunk",
+      "semantic",
+      "overlap",
+      "metadata",
+      "evaluate"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Incremental RAG ingestion": {
+    "simple": "Update only the documents that changed rather than rebuilding the whole search index every day.",
+    "technical": "Track document IDs, content checksums, version IDs, timestamps and deletions. A change triggers reparse, rechunk and reembedding for affected material; stale chunk IDs are tombstoned, index updates are idempotent, and retrieval uses an atomic version/active flag to avoid mixed policy versions.",
+    "example": "If policy 42 is revised, replace its old vector chunks and metadata; other 9,999 policies remain unchanged.",
+    "project": "For updated banking policies, a checksum/event pipeline can process the changed document, switch active version only after validation, and quarantine failed ingestions.",
+    "answer": "Incremental RAG ingestion tracks changed or deleted source documents, regenerates their chunks and embeddings, and retires stale index entries. Unlike incremental data engineering loads, we must manage embeddings, document versions and retrieval correctness—not merely load new rows.",
+    "workflow": [
+      "Detect change/delete with event, checksum or CDC",
+      "Reparse and rechunk changed source",
+      "Embed and write versioned chunks",
+      "Validate count and retrieval tests",
+      "Atomically activate version and remove stale references"
+    ],
+    "mistakes": [
+      "Only appending new vectors and leaving stale policy chunks",
+      "Ignoring source deletes",
+      "Making unvalidated content immediately searchable"
+    ],
+    "followups": [
+      "How do you avoid old and new policies mixing?",
+      "What if embedding dimensions changed?"
+    ],
+    "keywords": [
+      "change",
+      "checksum",
+      "rechunk",
+      "embed",
+      "delete",
+      "version"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Graph RAG vs standard RAG": {
+    "simple": "Normal RAG retrieves relevant passages; Graph RAG can also follow relationships between people, rules, entities and events.",
+    "technical": "Graph RAG builds or queries entity and relationship structures alongside document retrieval. It helps multi-hop questions and relationship reasoning, but requires entity extraction, graph maintenance, permission-aware traversal and extra latency. Hybrid vector+graph retrieval is often more practical than replacing vector RAG.",
+    "example": "For “Which supplier change affected delayed refinery shipments?”, graph edges between purchase order, supplier, site and delay are valuable.",
+    "project": "Banking FAQ questions mainly need grounded policy retrieval. A graph is justified only when tracing linked accounts, organizational relationships or multiple-hop RCA, and must enforce tenant authorization on every traversal.",
+    "answer": "We chose conventional RAG for policy FAQs because document search was sufficient and simpler to maintain. Graph RAG adds entity and relationship traversal for multi-hop questions, but also increases indexing, security and operational complexity. I would benchmark it against a fixed multi-hop question set before adoption.",
+    "workflow": [
+      "Parse docs and extract entities",
+      "Build permission-tagged nodes/edges",
+      "Embed passages and/or nodes",
+      "Route multi-hop queries to graph traversal",
+      "Combine grounded evidence and verify provenance"
+    ],
+    "mistakes": [
+      "Claiming graph traversal automatically prevents hallucinations",
+      "Ignoring edge-level permissions",
+      "Using a graph for simple single-policy lookups"
+    ],
+    "followups": [
+      "How do you update the graph?",
+      "Which query types justify extra complexity?"
+    ],
+    "keywords": [
+      "graph",
+      "relationship",
+      "multi-hop",
+      "vector",
+      "ACL"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Edges & conditional edges": {
+    "simple": "A LangGraph workflow is a set of steps connected by paths that decide what happens next.",
+    "technical": "Nodes are functions that read/return updates to typed shared state. Edges connect nodes, conditional edges route based on state or classifications, START defines entry, END defines termination. Checkpointers persist graph execution state and thread identifiers associate resumable conversations; looping needs iteration guards.",
+    "example": "An intent router selects an FAQ retriever for policy questions and a booking tool for appointment requests.",
+    "project": "The banking voice assistant routes recognized speech to a policy Q&A path or verified account/appointment tool, then sends a final answer to TTS.",
+    "answer": "In LangGraph, nodes perform work and edges define the flow. Conditional edges select paths based on the state, while the shared state passes messages and validated tool results across nodes. We use checkpointers when conversations must resume, and guard loops with limits to avoid runaway agent execution.",
+    "workflow": [
+      "START → identify intent",
+      "Conditional edge → RAG or account lookup",
+      "Tool node validates/calls backend",
+      "Reviewer node checks result",
+      "END → response to speech layer"
+    ],
+    "mistakes": [
+      "Putting authorization only in the router prompt",
+      "Mutating hidden globals rather than shared state",
+      "Omitting terminal/error edges"
+    ],
+    "followups": [
+      "What is shared state?",
+      "When use a subgraph or checkpointer?"
+    ],
+    "keywords": [
+      "node",
+      "edge",
+      "state",
+      "condition",
+      "checkpoint"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Tool calling lifecycle": {
+    "simple": "The model suggests a tool action, but application code decides whether it is safe and actually executes it.",
+    "technical": "LLMs emit structured tool name and arguments against a schema. The orchestrator parses and validates arguments, checks identity/policy, enforces idempotency, calls the backend, records results and returns a sanitized tool message to the model. The model does not gain direct database privileges from the prompt.",
+    "example": "“Book a meeting Friday at 11” becomes a scheduler tool proposal, then a backend slot check and confirmed booking.",
+    "project": "For balance lookup in the banking assistant, caller identity verification and ownership checks must pass server-side before any account data is returned.",
+    "answer": "Tool calling is an orchestrated sequence: the model decides which function is needed, our backend validates the arguments and authorizes the user, executes the operation, then sends the result back for a natural response. Sensitive actions require explicit confirmation and idempotent retries.",
+    "workflow": [
+      "LLM receives tool schema",
+      "LLM emits arguments",
+      "Validate schema + authorization",
+      "Get user confirmation for side effects",
+      "Execute tool with operation ID",
+      "Log, sanitize and return result"
+    ],
+    "mistakes": [
+      "Letting model-generated user_id authorize account access",
+      "Not distinguishing a proposed call from execution",
+      "Retrying payment or booking blindly"
+    ],
+    "followups": [
+      "What if a tool times out?",
+      "How do you stop data leakage between tenants?"
+    ],
+    "keywords": [
+      "schema",
+      "validate",
+      "authorize",
+      "execute",
+      "confirmation"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Golden dataset (.jsonl)": {
+    "simple": "A small set of representative questions and trusted expected evidence/answers used to test changes consistently.",
+    "technical": "Golden sets contain sample inputs, relevant sources, expected behaviours and sometimes reference answers/tool calls. Include common, ambiguous, adversarial and negative cases, keep labels versioned and measure evaluator variance. A golden set evaluates quality across regressions; it does not guarantee all production responses.",
+    "example": "A question about annual card fees includes the specific policy version and acceptable fee description.",
+    "project": "The banking assistant pipeline can block deployment when groundedness drops below the agreed threshold for reviewed banking policy prompts.",
+    "answer": "A golden dataset is a versioned collection of representative inputs and expected outputs or evidence. We run a candidate release against it and check groundedness, retrieval, task completion and safety. Failed examples are investigated before releasing, while production traces supply new cases for the set.",
+    "workflow": [
+      "Collect real and synthetic safe examples",
+      "Expert-label evidence/reference results",
+      "Run old and new prompt/model versions",
+      "Score with evaluators",
+      "Inspect failures and gate release"
+    ],
+    "mistakes": [
+      "Treating LLM-judge score as infallible",
+      "Leaking production PII into the dataset",
+      "Only testing easy happy paths"
+    ],
+    "followups": [
+      "How many samples are enough?",
+      "What about tools and agent trajectories?"
+    ],
+    "keywords": [
+      "version",
+      "reference",
+      "evaluate",
+      "threshold",
+      "regression"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Groundedness": {
+    "simple": "Checks whether the answer is supported by the evidence that was retrieved.",
+    "technical": "A groundedness evaluator judges consistency between generated claims and provided context, unlike truthfulness against external reality. High groundedness cannot detect a stale or malicious policy document; pair with retrieval quality, source freshness, human review and task success.",
+    "example": "If context states a fee is ₹500 but the assistant answers ₹700, that numerical claim is ungrounded.",
+    "project": "For banking FAQs, use context and answer traces from RAG; sample production outputs for automated evaluation and run golden batch gates in CI.",
+    "answer": "Groundedness measures whether the generated response can be justified by retrieved documents. I test it on a golden dataset in CI and sample traced production answers based on risk, rather than assuming it runs on every single user query. I also monitor context precision, recall and source freshness.",
+    "workflow": [
+      "Capture question, retrieved chunks and answer",
+      "Evaluate claim support against chunks",
+      "Check citations and contradictions",
+      "Flag and investigate low scores",
+      "Remediate retrieval, prompt or content"
+    ],
+    "mistakes": [
+      "Calling groundedness the same as factual truth",
+      "Ignoring missing evidence and low retrieval recall",
+      "Claiming evaluation is free for every response"
+    ],
+    "followups": [
+      "How is faithfulness different?",
+      "Should we sample or score every production answer?"
+    ],
+    "keywords": [
+      "evidence",
+      "retrieved",
+      "claims",
+      "evaluate",
+      "freshness"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Median & MAD": {
+    "simple": "Use the middle normal runtime and the typical absolute distance from that middle to spot unusual slow jobs.",
+    "technical": "Median absolute deviation is median(|x_i−median(x)|), robust against extreme outliers. A robust z-like score can use 0.6745(x−median)/MAD when MAD>0. Add minimum sample thresholds, segmentation by pipeline/load window and special handling for zero MAD.",
+    "example": "Durations 10,11,11,12,90 minutes give median 11; mean 26.8 is skewed by the outage.",
+    "project": "Your RCA project establishes per-pipeline duration baselines, labels warnings/critical runs and enriches anomalies using Supabase activity logs and dependency metadata.",
+    "answer": "We used median and median absolute deviation for pipeline duration anomalies because production runtimes can contain large spikes that distort mean and standard deviation. We calculated robust baselines per comparable pipeline window, classified anomalies and passed correlated logs to an RCA assistant for actionable explanations.",
+    "workflow": [
+      "Collect comparable historical runtimes",
+      "Compute median and MAD with sample safeguards",
+      "Apply stable severity thresholds",
+      "Join pipeline metadata and logs",
+      "Generate grounded RCA and ticket"
+    ],
+    "mistakes": [
+      "Claiming MAD is mean absolute deviation",
+      "Using one baseline across dissimilar pipelines",
+      "Dividing by zero when MAD=0"
+    ],
+    "followups": [
+      "How do you choose warning thresholds?",
+      "How do you address weekly seasonality?"
+    ],
+    "keywords": [
+      "median",
+      "absolute",
+      "deviation",
+      "outlier",
+      "robust"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Self-hosted integration runtime": {
+    "simple": "ADF uses a self-hosted integration runtime as a secure worker to reach on-premises or private data systems.",
+    "technical": "The runtime is a managed Windows agent that executes copy/lookup/connectivity for supported connectors while communicating outbound to Azure control services. Throughput depends on node capacity, concurrent job limits, source/sink constraints and network. Scale out nodes and monitor queues before increasing parallelism.",
+    "example": "A private SQL Server database can be read by an ADF pipeline without exposing its database port publicly.",
+    "project": "For enterprise Azure Data Factory pipelines, diagnose concurrency against both self-hosted runtime queueing and backend database pressure.",
+    "answer": "A self-hosted integration runtime is an ADF execution and connectivity bridge for private or on-premises systems. Concurrent copy activity performance depends on runtime capacity and source throughput; I monitor queued versus running jobs, CPU, memory and network, then scale or tune concurrency cautiously.",
+    "workflow": [
+      "Install and register runtime on secure machine",
+      "Configure linked service using runtime",
+      "Trigger copy activities",
+      "Monitor job queue and resource use",
+      "Scale out or tune pipeline parallelism"
+    ],
+    "mistakes": [
+      "Assuming concurrent ADF triggers equal concurrent runtime execution",
+      "Ignoring source database limits",
+      "Opening inbound internet access unnecessarily"
+    ],
+    "followups": [
+      "How does autoscaling work for SHIR?",
+      "What if node is offline?"
+    ],
+    "keywords": [
+      "adf",
+      "integration",
+      "runtime",
+      "queue",
+      "concurrency"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Azure Speech STT": {
+    "simple": "Speech-to-text converts the caller’s audio into words that the agent can understand.",
+    "technical": "Streaming recognition consumes correctly framed audio in a supported sample rate/encoding, performs VAD/endpointing, emits interim and final hypotheses, and may use phrase lists or custom speech for vocabulary. Measure word error rate and real-time latency. Authentication must be scoped and secrets stay server-side.",
+    "example": "An Indian-English caller asks to schedule a financial adviser; the transcript is routed to intent classification.",
+    "project": "Your banking voice assistant uses Azure Communication Services plus Azure Speech for incoming call transcription, then passes recognized text to a Foundry/LangGraph agent before synthesizing reply audio.",
+    "answer": "We selected Azure Speech because it integrates with Azure services, supports streaming recognition, configurable language/voice options and operational monitoring. Our application handles sample-rate conversion, turn detection and errors explicitly. We evaluate recognition on domain phrases and track latency, not only LLM answer quality.",
+    "workflow": [
+      "Phone/WebSocket audio frames",
+      "Validate PCM format and sampling",
+      "Speech recognizer emits final text",
+      "LangGraph chooses answer/tools",
+      "Azure TTS synthesizes playback"
+    ],
+    "mistakes": [
+      "Confusing audio framing problems with poor LLM reasoning",
+      "Hard-coding credentials in the web app",
+      "Ignoring speech interruption and final-result timing"
+    ],
+    "followups": [
+      "Why Azure instead of another STT engine?",
+      "How to measure WER and latency?"
+    ],
+    "keywords": [
+      "audio",
+      "stream",
+      "transcript",
+      "latency",
+      "recognizer"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Speech recognition WER & transcription evaluation": {
+    "simple": "Compare recognized words against a human-correct reference; fewer insertions, deletions and substitutions is better.",
+    "technical": "Word Error Rate = (substitutions + deletions + insertions) / reference word count. Measure by accent, environment, vocabulary and language, then correlate WER with downstream entity/intent accuracy, turn-taking errors and task completion. WER alone does not measure user experience.",
+    "example": "Reference “book an appointment at nine” versus transcript “book appointment at five” can change booking intent despite small overall WER.",
+    "project": "Record consented representative banking test utterances with names/amounts and test Azure Speech recognition separately before tuning downstream agent prompts.",
+    "answer": "I evaluate STT using word error rate on human-transcribed test speech, segmented by noise and accent. But I also test important entities like customer names, balances and appointment times, because one wrong number can be severe even if WER is low.",
+    "workflow": [
+      "Build consented audio + reference transcripts",
+      "Compute S/D/I and WER",
+      "Slice results by accent/noise/product",
+      "Check critical slots and task success",
+      "Improve speech configuration and retest"
+    ],
+    "mistakes": [
+      "Treating a low WER as proof of safe bookings",
+      "Using model outputs as the only reference",
+      "Ignoring confidence on names and financial figures"
+    ],
+    "followups": [
+      "What if WER is good but task success is poor?",
+      "When use phrase lists?"
+    ],
+    "keywords": [
+      "word",
+      "error",
+      "rate",
+      "reference",
+      "slots"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Supabase RLS vs API authorization": {
+    "simple": "A frontend filter chooses what to display; RLS controls which database rows a user is actually allowed to access.",
+    "technical": "Use auth.uid() ownership predicates on SELECT, INSERT, UPDATE (USING + WITH CHECK), DELETE, and storage.object paths. Keep service-role credentials off browsers; privileged server APIs must validate JWT and resource ownership. Verify cross-user negative tests with separate authenticated sessions.",
+    "example": "Changing `?user_id=someone_else` in a network request must never reveal that person’s uploaded resume.",
+    "project": "Your voice agent/tutor share a Supabase project; Galaxy tables and storage must be separated from call/patient tables and guarded by user-specific policies.",
+    "answer": "Supabase RLS restricts rows inside Postgres according to the authenticated identity, not the user_id sent by the browser. I create explicit policies for every operation, ensure uploads sit in private user-prefixed paths and test two-user isolation. For privileged APIs I still validate JWTs server-side.",
+    "workflow": [
+      "Supabase Auth issues user JWT",
+      "PostgREST identifies auth.uid()",
+      "RLS evaluates ownership for each operation",
+      "Private storage path enforces same UID",
+      "Cross-user tests expect zero rows/403"
+    ],
+    "mistakes": [
+      "Trusting caller-provided user_id",
+      "Creating only SELECT policies while writes need UPDATE checks",
+      "Using public storage for private resumes"
+    ],
+    "followups": [
+      "Do views bypass RLS?",
+      "How do you test two-user isolation?"
+    ],
+    "keywords": [
+      "rls",
+      "auth.uid",
+      "ownership",
+      "jwt",
+      "storage"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Wrong answers after deployment": {
+    "simple": "First work out whether the failure came from retrieving the wrong material, reasoning over it incorrectly, or sending/handling the answer incorrectly.",
+    "technical": "Use correlation traces: input normalization, authentication, index version, retrieval top-k and scores, reranker output, prompt template/model versions, completion metadata, tool arguments/results, guardrail decisions and latency. Reproduce on failing production examples with redacted data and compare to the preceding release.",
+    "example": "An agent answers an outdated overdraft policy due to stale chunks even though the model is functioning correctly.",
+    "project": "For the bank voice assistant, separately investigate STT transcript, FAQ retrieval, policy version, routing, tool output and TTS playback before changing prompt text.",
+    "answer": "When users report wrong answers, I collect redacted traces and reproduce representative failures. I compare the STT transcript, retrieved context, prompt/model version and tool logs against a known-good baseline. Then I patch the specific layer and add the failure to our golden regression suite so it does not recur.",
+    "workflow": [
+      "Triage scope and severity",
+      "Inspect end-to-end correlated traces",
+      "Compare correct vs failing examples",
+      "Fix source/retriever/prompt/tool separately",
+      "Add regression case and monitor"
+    ],
+    "mistakes": [
+      "Blindly increasing temperature or tweaking prompt",
+      "Ignoring source freshness",
+      "Skipping authorization and privacy review"
+    ],
+    "followups": [
+      "What if LLM evaluator passed but users complain?",
+      "How would you roll back safely?"
+    ],
+    "keywords": [
+      "trace",
+      "reproduce",
+      "retrieval",
+      "prompt",
+      "regression"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Revenue fell last quarter": {
+    "simple": "A useful answer needs both the size of the change and the business drivers behind it.",
+    "technical": "A semantic business agent should use approved metrics definitions, warehouse-access-controlled SQL, decomposition by product/geography/customer, contextual changelogs and analyst notes, and explicit separation of correlation from causation. Deterministic SQL computes revenue deltas; LLM narrates grounded findings.",
+    "example": "Revenue declines 12%; SQL isolates a 20% volume drop in one region, then the agent checks campaign/stockout notes.",
+    "project": "This extends your agentic RCA design: structured metric views plus incident knowledge can explain a trend with evidence rather than guessing from raw tables.",
+    "answer": "I would use a read-only SQL tool over governed metrics, compare this and previous quarters, then drill into price, volume, products and regions. I would join business-event knowledge such as stockouts, validate the findings and let the LLM explain only what the evidence supports.",
+    "workflow": [
+      "Interpret authorized metric and date semantics",
+      "Run validated read-only comparison SQL",
+      "Decompose delta by dimensions",
+      "Retrieve relevant operations notes",
+      "Generate cited explanations and caveats"
+    ],
+    "mistakes": [
+      "Letting model generate unrestricted SQL",
+      "Calling correlations proven causes",
+      "Using inconsistent time windows"
+    ],
+    "followups": [
+      "What knowledge base complements SQL?",
+      "How do you avoid data leaks across customers?"
+    ],
+    "keywords": [
+      "sql",
+      "metric",
+      "delta",
+      "dimension",
+      "evidence"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Databricks 27% savings story": {
+    "simple": "Reduce cloud compute cost by choosing right-sized clusters, job-specific resources and more efficient Spark execution.",
+    "technical": "Cost optimization combines capacity planning, ephemeral job clusters, autoscaling bounds, Photon/instance comparisons where relevant, shuffle tuning, partitioning, run-time/DBU telemetry and repeatable before/after baselines. Report savings with workload-normalized comparisons.",
+    "example": "A scheduled large join job does not need to keep a high-cost interactive cluster running all day.",
+    "project": "The earlier V3 interview catalog mentions a 27% Databricks saving, but the supplied resume does not substantiate that figure. Use it only if you can verify it against billing and workload-normalized cost records.",
+    "answer": "To reduce Databricks cost, I would first establish a workload-normalized baseline, then right-size clusters, move scheduled work to job clusters, tune costly Spark operations, and monitor reliability and DBU spend. I would quote a percentage saving only if the measured before-and-after results verify it.",
+    "workflow": [
+      "Establish usage and cost baseline",
+      "Identify idle and oversized clusters",
+      "Move scheduled workloads to right-sized job clusters",
+      "Tune Spark bottlenecks",
+      "Verify reliability and normalized savings"
+    ],
+    "mistakes": [
+      "Claiming 27% only from one configuration tweak",
+      "Ignoring data volume drift and job quality",
+      "Optimizing cost while missing SLAs"
+    ],
+    "followups": [
+      "How was 27% measured?",
+      "What were the latency trade-offs?"
+    ],
+    "keywords": [
+      "cost",
+      "job",
+      "cluster",
+      "spark",
+      "baseline"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Today's policy document changes": {
+    "simple": "A changed policy must replace stale search evidence before the assistant can answer from the new version.",
+    "technical": "Publish events trigger parsing/chunking/embedding, metadata and ACL validation, and a version switch. Preserve source timestamps, deactivate previous-version chunk IDs and run retrieval checks before production. Consider cache invalidation, reindexing latency and rollback.",
+    "example": "A mortgage fee changes on Tuesday: retrieval after publishing must cite Tuesday’s effective document rather than Monday’s cached chunk.",
+    "project": "For banking voice agents, ingestion and index freshness should be observable independently of the assistant deployment cycle.",
+    "answer": "When a policy changes I detect the source version, process only the changed document, rebuild its chunks and embeddings, then atomically activate them. I remove or retire stale entries, invalidate caches and run a retrieval regression before saying the new policy is live.",
+    "workflow": [
+      "Detect source update",
+      "Reparse/chunk/embed and validate ACLs",
+      "Stage new version",
+      "Run retrieval golden checks",
+      "Switch active index + invalidate stale cache"
+    ],
+    "mistakes": [
+      "Only updating the original PDF without indexing",
+      "Leaving conflicting versions active",
+      "Skipping tenant or document authorization"
+    ],
+    "followups": [
+      "What if update processing fails?",
+      "How do you audit effective dates?"
+    ],
+    "keywords": [
+      "version",
+      "index",
+      "embed",
+      "stale",
+      "validate"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Tool-call accuracy & task success": {
+    "simple": "An answer can sound right but still book the wrong appointment; evaluate the actual action.",
+    "technical": "Evaluate schema validity, tool selection, required/extra calls, parameter correctness, authorization, idempotency and final task state against deterministic expected outcomes. Use mock tools in CI and sandbox tools in controlled integration tests; log traces for debugging.",
+    "example": "For “schedule 2 pm with adviser Jane,” success means a verified 2 pm booking under the right customer, not just a polite confirmation.",
+    "project": "In your banking voice assistant, use synthetic account fixtures and mocked scheduler responses to test safe lookup and booking flows end to end.",
+    "answer": "I measure tool-call accuracy separately from response quality. We validate the chosen tool, structured arguments, authorization and final backend state against golden test cases. CI uses mocks for reproducible tests and controlled integration runs verify real tool contracts and idempotent behaviour.",
+    "workflow": [
+      "Define expected tool trajectory and final state",
+      "Run orchestrator with mock backend",
+      "Validate identity/schema and parameters",
+      "Check side effects exactly once",
+      "Gate failures and add incident cases"
+    ],
+    "mistakes": [
+      "Scoring only response similarity",
+      "Not testing side effects",
+      "Confusing tool call requested with tool call completed"
+    ],
+    "followups": [
+      "How do you handle asynchronous tool errors?",
+      "How do you test without exposing real banking data?"
+    ],
+    "keywords": [
+      "tool",
+      "schema",
+      "state",
+      "authorization",
+      "success"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Azure AI Evaluation SDK": {
+    "simple": "Run automated checks on a collection of prompts and answers to detect poor quality before release.",
+    "technical": "Azure AI Evaluation offers model-based evaluators and programmatic batch pipelines. Pass evaluator-required fields such as question, response, context and reference, calibrate metrics to release policy and record prompt/model/test dataset versions. An LLM judge score needs human spot-checks.",
+    "example": "Fail a candidate assistant release if average groundedness drops below 4.0/5 on an approved golden dataset.",
+    "project": "Your interview prep emphasized automated groundedness, relevance, coherence and similarity checks integrated into Azure DevOps or GitHub Actions.",
+    "answer": "We use programmatic evaluation to test a versioned golden dataset whenever prompts, models or retrieval change. Groundedness, relevance and coherence tell us different things. We set quality thresholds, inspect failures and maintain human-labeled examples to calibrate judge scores before promoting a release.",
+    "workflow": [
+      "Generate answers for frozen golden examples",
+      "Run groundedness/relevance/coherence evaluators",
+      "Aggregate scores with slice-level metrics",
+      "Inspect poor/high-risk cases",
+      "Block release and record evaluation artifact"
+    ],
+    "mistakes": [
+      "Calling coherence proof of factual correctness",
+      "Setting arbitrary thresholds without calibration",
+      "Measuring averages only and ignoring severe failures"
+    ],
+    "followups": [
+      "Can you evaluate every production response?",
+      "How do you compare with Ragas?"
+    ],
+    "keywords": [
+      "evaluator",
+      "batch",
+      "groundedness",
+      "relevance",
+      "threshold"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  }
+}

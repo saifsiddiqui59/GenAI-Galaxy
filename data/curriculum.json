@@ -1,0 +1,1697 @@
+[
+  {
+    "title": "LLM & Transformer Fundamentals",
+    "phase": "01 Foundations",
+    "summary": "How language models work, their limitations and performance",
+    "groups": [
+      {
+        "title": "Model mechanics",
+        "summary": "Explain what the LLM does internally",
+        "items": [
+          {
+            "title": "Tokens & tokenization",
+            "summary": "Text is split into tokens; cost and context capacity depend on input and output token counts.",
+            "question": "How do you estimate token cost for a conversation?"
+          },
+          {
+            "title": "Transformer architecture",
+            "summary": "Attention-based neural networks process contextual relationships between tokens.",
+            "question": "Why are transformers useful for language models?"
+          },
+          {
+            "title": "Self-attention",
+            "summary": "Attention weights help a token incorporate other relevant tokens in the context.",
+            "question": "What does attention do in a transformer?"
+          },
+          {
+            "title": "Embeddings vs model output",
+            "summary": "An embedding model produces vectors; a chat model predicts tokens and generates an answer.",
+            "question": "Why not use a chat model for similarity search?"
+          },
+          {
+            "title": "Context window",
+            "summary": "The model has a finite budget for instructions, retrieved context, history and its output.",
+            "question": "What happens when the context becomes too large?"
+          }
+        ]
+      },
+      {
+        "title": "Inference & latency",
+        "summary": "Diagnose slow first responses and large outputs",
+        "items": [
+          {
+            "title": "Inference vs training",
+            "summary": "Inference uses a trained model to predict; fine-tuning changes model weights.",
+            "question": "What is the difference between inference and fine-tuning?"
+          },
+          {
+            "title": "TTFT & total latency",
+            "summary": "Time to first token is distinct from time to complete an entire response.",
+            "question": "Why can the first message take longer?"
+          },
+          {
+            "title": "Prefill vs decoding",
+            "summary": "Prefill processes prompt context; decoding autoregressively emits new tokens.",
+            "question": "Which phase benefits most from prompt caching?"
+          },
+          {
+            "title": "KV cache",
+            "summary": "Reuses attention key-value tensors from preceding tokens during autoregressive generation.",
+            "question": "What does KV caching save, and when is it invalidated?"
+          },
+          {
+            "title": "Prompt caching",
+            "summary": "Repeated identical prompt prefixes may be reused if the model endpoint supports it.",
+            "question": "What input changes reduce cache hits?"
+          },
+          {
+            "title": "Temperature & sampling",
+            "summary": "Decoding settings influence variability, not factual grounding.",
+            "question": "Can temperature zero guarantee an accurate answer?"
+          },
+          {
+            "title": "Token, latency & cost optimization",
+            "summary": "Shorter contexts, batching, routing, caching and output limits reduce production overhead.",
+            "question": "What steps would you take to optimize latency?"
+          },
+          {
+            "title": "Prefill bottlenecks & long-context diagnostics",
+            "summary": "Separate large-context prefill cost from decoding and retriever latency.",
+            "question": "Why can first response time spike even with a KV cache?",
+            "origin": "V4 gap audit"
+          }
+        ]
+      },
+      {
+        "title": "Representation & retrieval maths",
+        "summary": "Connect foundation concepts to practical search",
+        "items": [
+          {
+            "title": "Dense float vectors",
+            "summary": "Most text embedding models generate high-dimensional floating-point vectors.",
+            "question": "What is a dense embedding?"
+          },
+          {
+            "title": "Binary embeddings & quantization",
+            "summary": "Binary or quantized representations save memory with potential fidelity trade-offs.",
+            "question": "How are binary and floating-point embeddings different?"
+          },
+          {
+            "title": "Cosine, dot product & Euclidean",
+            "summary": "Similarity choices depend on vector scaling, normalization and embedding model.",
+            "question": "Why would you choose cosine similarity?"
+          },
+          {
+            "title": "Semantic similarity",
+            "summary": "Embeddings can retrieve meaning-related passages without exact keyword overlap.",
+            "question": "Why does semantic search find synonyms?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Prompt Engineering",
+    "phase": "01 Foundations",
+    "summary": "Control LLM behaviour and produce reliable structured output",
+    "groups": [
+      {
+        "title": "Prompt patterns",
+        "summary": "Interview-level prompting methods",
+        "items": [
+          {
+            "title": "System, developer & user instructions",
+            "summary": "Different instruction roles establish application rules and user requests.",
+            "question": "Where should stable policy instructions live?"
+          },
+          {
+            "title": "Zero-shot vs few-shot",
+            "summary": "Zero-shot describes a task; few-shot adds demonstrations of expected behavior.",
+            "question": "When are examples better than longer instructions?"
+          },
+          {
+            "title": "Chain-of-thought prompting",
+            "summary": "Complex tasks may benefit from intermediate reasoning strategies, without exposing private reasoning.",
+            "question": "How do you improve reasoning reliability without displaying internal steps?"
+          },
+          {
+            "title": "Role & context grounding",
+            "summary": "Explicit role, objective, context and constraints make prompts less ambiguous.",
+            "question": "How do you design a robust system prompt?"
+          },
+          {
+            "title": "ReAct prompting",
+            "summary": "Iterates reasoning, action/tool execution, observation and a follow-up decision.",
+            "question": "How does a ReAct agent decide when to call a tool?"
+          }
+        ]
+      },
+      {
+        "title": "Reliable output",
+        "summary": "Make output machine-readable and safe",
+        "items": [
+          {
+            "title": "Structured JSON output",
+            "summary": "Enforce schemas and validate values before downstream use.",
+            "question": "Why prefer schema validation over parsing free text?"
+          },
+          {
+            "title": "Templates & variables",
+            "summary": "Separate prompt templates from runtime user data and retrieved sources.",
+            "question": "How do you prevent user text overriding instructions?"
+          },
+          {
+            "title": "Refusals & fallback prompts",
+            "summary": "Define escalation for unavailable data, denied actions or low confidence.",
+            "question": "What should the assistant do when retrieval fails?"
+          },
+          {
+            "title": "Prompt versioning & regression",
+            "summary": "Track templates and test changes on fixed examples before release.",
+            "question": "How do you detect prompt regressions?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "RAG & Knowledge Retrieval",
+    "phase": "02 Retrieval",
+    "summary": "Ingest, retrieve, rank, ground and refresh enterprise knowledge",
+    "groups": [
+      {
+        "title": "Document ingestion",
+        "summary": "Keep enterprise knowledge fresh",
+        "items": [
+          {
+            "title": "Parsing & cleaning",
+            "summary": "Extract usable text, tables and metadata from files before chunking.",
+            "question": "What can go wrong when you extract a PDF?"
+          },
+          {
+            "title": "Chunking & overlap",
+            "summary": "Smaller segments improve retrieval precision and fit model context; overlap preserves boundaries.",
+            "question": "Why not embed the whole document as one chunk?"
+          },
+          {
+            "title": "Metadata & ACL tags",
+            "summary": "Carry source, version, date and access permissions with chunks.",
+            "question": "How do you prevent cross-user data leakage in RAG?"
+          },
+          {
+            "title": "Embedding pipeline",
+            "summary": "Encode chunks consistently with a versioned embedding model.",
+            "question": "When do you need to re-embed a collection?"
+          },
+          {
+            "title": "Incremental RAG ingestion",
+            "summary": "Detect changed documents, reprocess affected chunks and upsert or delete stale vectors.",
+            "question": "What happens after today's policy document update?"
+          },
+          {
+            "title": "RAG vs DE incremental loads",
+            "summary": "RAG updates retrievable knowledge; data engineering updates operational or analytical tables.",
+            "question": "How does incremental RAG indexing differ from CDC?"
+          },
+          {
+            "title": "Versioning & stale chunks",
+            "summary": "Delete superseded chunks and retain traceability to the active source.",
+            "question": "How do you stop answers citing an obsolete policy?"
+          }
+        ]
+      },
+      {
+        "title": "Vector & hybrid search",
+        "summary": "Retrieve relevant context efficiently",
+        "items": [
+          {
+            "title": "Query embedding",
+            "summary": "Embed the user's question with a compatible model; ordinary queries usually are not chunked.",
+            "question": "Do we chunk the user question too?"
+          },
+          {
+            "title": "Vector databases",
+            "summary": "FAISS, Azure AI Search, Databricks Vector Search and pgvector index vectors.",
+            "question": "How do you choose vector storage?"
+          },
+          {
+            "title": "Dense semantic search",
+            "summary": "Rank semantic neighbours in embedding space.",
+            "question": "Why can dense retrieval miss exact identifiers?"
+          },
+          {
+            "title": "BM25 keyword retrieval",
+            "summary": "Lexical retrieval matches important words, codes and names.",
+            "question": "Where can BM25 outperform vector search?"
+          },
+          {
+            "title": "Hybrid search",
+            "summary": "Blend vector similarity and lexical ranking for broader recall.",
+            "question": "When would you use hybrid rather than pure semantic retrieval?"
+          },
+          {
+            "title": "Filters & top-k",
+            "summary": "Restrict by tenant, date and document type before selecting candidates.",
+            "question": "How does metadata filtering improve relevance?"
+          },
+          {
+            "title": "Semantic reranking",
+            "summary": "A second stage evaluates candidates in the context of the full query.",
+            "question": "How does a reranker differ from a vector index?"
+          },
+          {
+            "title": "RRF & cross-encoder",
+            "summary": "Reciprocal rank fusion combines lists; cross-encoders score query-passage pairs.",
+            "question": "What is the difference between RRF and cross-encoder ranking?"
+          }
+        ]
+      },
+      {
+        "title": "Answer generation",
+        "summary": "Turn retrieval results into grounded responses",
+        "items": [
+          {
+            "title": "Context construction",
+            "summary": "Order passages, preserve citation IDs and respect token budget.",
+            "question": "How would you construct a safe RAG prompt?"
+          },
+          {
+            "title": "Source citations",
+            "summary": "Track which documents support individual claims and surface references.",
+            "question": "Are citations alone sufficient to prove correctness?"
+          },
+          {
+            "title": "Retrieval failure handling",
+            "summary": "Clarify or abstain when evidence is absent instead of fabricating.",
+            "question": "What happens if relevant context cannot be found?"
+          },
+          {
+            "title": "Query rewriting & multi-query",
+            "summary": "Reformulate ambiguous questions to improve recall without changing intent.",
+            "question": "When do you use multi-query retrieval?"
+          },
+          {
+            "title": "Graph RAG vs standard RAG",
+            "summary": "Graph traversal helps multi-hop relationships; basic vector RAG is simpler and cheaper.",
+            "question": "Why did you not use Graph RAG in the voice assistant?"
+          },
+          {
+            "title": "Vectorless / SQL retrieval",
+            "summary": "Structured records may be better served by authorized database tools than embeddings.",
+            "question": "When would SQL be better than RAG?"
+          }
+        ]
+      },
+      {
+        "title": "RAG metrics",
+        "summary": "Evaluate each stage independently",
+        "items": [
+          {
+            "title": "Context precision",
+            "summary": "Fraction and ordering of retrieved items that are relevant to the question.",
+            "question": "What does context precision measure?"
+          },
+          {
+            "title": "Context recall",
+            "summary": "Extent to which retrieval covers information needed for a reference answer.",
+            "question": "What does low context recall suggest?"
+          },
+          {
+            "title": "Faithfulness",
+            "summary": "Degree to which answer claims are supported by supplied context.",
+            "question": "How is faithfulness different from factual accuracy?"
+          },
+          {
+            "title": "Answer relevance",
+            "summary": "Whether the response addresses the actual question.",
+            "question": "Can an answer be faithful but irrelevant?"
+          }
+        ]
+      },
+      {
+        "title": "Retrieval & ranking",
+        "summary": "Production interview extensions grounded in prior questions and projects",
+        "items": [
+          {
+            "title": "Embedding model migration & full reindex",
+            "summary": "Changing embedding dimensions or model versions usually requires a compatible reindex.",
+            "question": "What happens when embeddings change but vectors remain old?",
+            "origin": "V4 gap audit"
+          },
+          {
+            "title": "Reranker latency and recall trade-off",
+            "summary": "Stage cheap retrieval first, then rerank a bounded candidate set.",
+            "question": "Where do you put reranking and how do you measure its cost?",
+            "origin": "V4 gap audit"
+          }
+        ]
+      },
+      {
+        "title": "RAG lifecycle",
+        "summary": "Production interview extensions grounded in prior questions and projects",
+        "items": [
+          {
+            "title": "Document change detection & tombstones",
+            "summary": "Checksum and version documents; re-embed changed chunks and delete stale records.",
+            "question": "How do you handle a revised policy without leaving stale snippets?",
+            "origin": "V4 gap audit"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "LangChain & LangGraph",
+    "phase": "03 Agents",
+    "summary": "State-based execution, tool orchestration and conversation memory",
+    "groups": [
+      {
+        "title": "Core graph building blocks",
+        "summary": "Understand the LangGraph mental model",
+        "items": [
+          {
+            "title": "LangChain vs LangGraph",
+            "summary": "LangChain provides model/retrieval abstractions; LangGraph focuses on explicit stateful control flow.",
+            "question": "When would you choose LangGraph over a simple chain?"
+          },
+          {
+            "title": "Nodes",
+            "summary": "Functions or runnable units that inspect and update graph state.",
+            "question": "What does a node return?"
+          },
+          {
+            "title": "Edges & conditional edges",
+            "summary": "Edges connect steps; conditional edges dynamically route to the next step.",
+            "question": "How does routing based on user intent work?"
+          },
+          {
+            "title": "Shared state",
+            "summary": "Typed state carries messages, tool results and workflow context between nodes.",
+            "question": "What state would a bank assistant keep?"
+          },
+          {
+            "title": "START & END",
+            "summary": "Entry and termination points control when graph execution begins and finishes.",
+            "question": "When does an agent stop calling tools?"
+          }
+        ]
+      },
+      {
+        "title": "Runtime design",
+        "summary": "Production-ready graph execution",
+        "items": [
+          {
+            "title": "Tool nodes",
+            "summary": "Tool execution is separated from model planning and validates inputs/outputs.",
+            "question": "Why not let an LLM modify database rows directly?"
+          },
+          {
+            "title": "Checkpointing",
+            "summary": "Persist graph state so an interrupted run can resume consistently.",
+            "question": "How would you resume a partially completed workflow?"
+          },
+          {
+            "title": "Thread-based memory",
+            "summary": "Tie conversation history and state to a thread or session identifier.",
+            "question": "How do you maintain continuity during a call?"
+          },
+          {
+            "title": "Human-in-the-loop",
+            "summary": "Interrupt high-risk steps for approval before continuing.",
+            "question": "Which bank operations require user confirmation?"
+          },
+          {
+            "title": "Retry, timeouts & fallbacks",
+            "summary": "Handle transient API failures, idempotent retries and safe failure messages.",
+            "question": "What happens when an external booking tool times out?"
+          },
+          {
+            "title": "Streaming & events",
+            "summary": "Stream messages and progress events for responsive user experiences.",
+            "question": "How can a graph deliver voice replies faster?"
+          }
+        ]
+      },
+      {
+        "title": "Hands-on workflows",
+        "summary": "Explain practical graph state transitions",
+        "items": [
+          {
+            "title": "Intent router graph",
+            "summary": "Classify a request into FAQ/RAG, scheduling or account lookup branches.",
+            "question": "Sketch the nodes for balance lookup plus appointment scheduling."
+          },
+          {
+            "title": "Critic/reviewer node",
+            "summary": "Review output consistency, policy compliance or evidence before returning.",
+            "question": "What should a critic node check?"
+          },
+          {
+            "title": "Subgraph & multi-agent handoff",
+            "summary": "Delegate focused workflows while preserving controlled state boundaries.",
+            "question": "When is a subgraph preferable to another agent?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Agentic AI, Tools & MCP",
+    "phase": "03 Agents",
+    "summary": "Plan, call tools, delegate, validate and govern agent actions",
+    "groups": [
+      {
+        "title": "Tool use",
+        "summary": "Safe integration with real systems",
+        "items": [
+          {
+            "title": "Tool calling lifecycle",
+            "summary": "Model chooses a declared tool; application validates inputs, executes and returns result.",
+            "question": "Explain tool calling in one minute."
+          },
+          {
+            "title": "Function schema & validation",
+            "summary": "JSON schema, type checks, authorization and idempotency protect backend services.",
+            "question": "Can the model be trusted to provide valid account IDs?"
+          },
+          {
+            "title": "ReAct agent loop",
+            "summary": "Observe, choose an action and iterate until a final answer or stop condition.",
+            "question": "How do you prevent infinite loops?"
+          },
+          {
+            "title": "Stateful vs stateless agents",
+            "summary": "Stateful agents preserve task context; stateless requests remain independent.",
+            "question": "What should persist between voice turns?"
+          },
+          {
+            "title": "Bank tools",
+            "summary": "Balance lookup requires identity verification; scheduling requires availability and confirmation.",
+            "question": "How do you combine two tool actions in one request?"
+          }
+        ]
+      },
+      {
+        "title": "Multi-agent patterns",
+        "summary": "Choose coordination patterns thoughtfully",
+        "items": [
+          {
+            "title": "Router agent",
+            "summary": "Dispatches intents to specialized agents or tools.",
+            "question": "How would you separate banking FAQ from transactions?"
+          },
+          {
+            "title": "Supervisor agent",
+            "summary": "Coordinates specialist work and consolidates verified results.",
+            "question": "What is the supervisor responsible for?"
+          },
+          {
+            "title": "Handoff agent",
+            "summary": "Transfers task ownership with necessary context and safeguards.",
+            "question": "How do you avoid losing user context on handoff?"
+          },
+          {
+            "title": "Critic/validator agent",
+            "summary": "Checks reasoning outputs against evidence and business rules.",
+            "question": "Can a critic replace deterministic business validation?"
+          },
+          {
+            "title": "Agentic SQL analyst",
+            "summary": "Routes questions to governed schemas and computes KPIs from source tables.",
+            "question": "How would an agent answer why revenue dropped last quarter?"
+          }
+        ]
+      },
+      {
+        "title": "MCP & interoperability",
+        "summary": "Connect agents to reusable external capabilities",
+        "items": [
+          {
+            "title": "MCP server/client",
+            "summary": "Model Context Protocol exposes tools, resources and prompts through a standard interface.",
+            "question": "What is an MCP server?"
+          },
+          {
+            "title": "MCP tools, resources & prompts",
+            "summary": "Tools execute actions; resources expose context; prompts are reusable interaction templates.",
+            "question": "What are the three MCP primitives?"
+          },
+          {
+            "title": "Azure/GitHub MCP use",
+            "summary": "Expose permitted integrations and restrict privileges by task.",
+            "question": "How do you secure an MCP tool connection?"
+          },
+          {
+            "title": "Agent-to-Agent (A2A) overview",
+            "summary": "Protocol concepts for discovery and delegation across independent agents.",
+            "question": "When would agent-to-agent communication help?"
+          }
+        ]
+      },
+      {
+        "title": "Tool safety",
+        "summary": "Production interview extensions grounded in prior questions and projects",
+        "items": [
+          {
+            "title": "Idempotent tool execution",
+            "summary": "Assign operation IDs and verify side effects to prevent duplicate bookings.",
+            "question": "How do you handle timeouts after booking may have already succeeded?",
+            "origin": "V4 gap audit"
+          },
+          {
+            "title": "Tool authorization and least-privilege schemas",
+            "summary": "Check the actual caller identity and resource ownership in the backend before tool execution.",
+            "question": "Can a system prompt replace authorization checks?",
+            "origin": "V4 gap audit"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Azure AI Foundry & Cloud",
+    "phase": "04 Cloud & Voice",
+    "summary": "Build secure scalable Azure-hosted GenAI systems",
+    "groups": [
+      {
+        "title": "AI platform",
+        "summary": "Learn resource separation and deployment options",
+        "items": [
+          {
+            "title": "Azure AI Foundry hub vs project",
+            "summary": "Distinguish shared infrastructure/governance from project-scoped development resources.",
+            "question": "Why separate hubs and projects?"
+          },
+          {
+            "title": "Azure OpenAI model deployment",
+            "summary": "Configure model deployment, endpoint, quotas and region support.",
+            "question": "What is a deployment versus a model?"
+          },
+          {
+            "title": "Azure AI Search",
+            "summary": "Use indexing, hybrid search, semantic ranking and ACL-aware retrieval.",
+            "question": "Why combine AI Search with Azure OpenAI?"
+          },
+          {
+            "title": "Azure AI-102 exam scope",
+            "summary": "Covers Azure AI services, generative AI, search, language, vision and responsible AI.",
+            "question": "What Azure services can you explain end-to-end?"
+          },
+          {
+            "title": "PAYG vs provisioned throughput",
+            "summary": "Consumption billing suits variable load; provisioned throughput offers committed capacity.",
+            "question": "When would PTU be worth the cost?"
+          }
+        ]
+      },
+      {
+        "title": "Secure architecture",
+        "summary": "Enterprise and regulated-industry design",
+        "items": [
+          {
+            "title": "Entra ID & managed identities",
+            "summary": "Prefer workload identities over embedded credentials for service-to-service access.",
+            "question": "How does an Azure Function reach Key Vault securely?"
+          },
+          {
+            "title": "Private endpoint & VNet",
+            "summary": "Keep supported PaaS traffic on private network paths and restrict public ingress.",
+            "question": "How do you secure Azure AI services for banking?"
+          },
+          {
+            "title": "RBAC & least privilege",
+            "summary": "Grant identity-based access only to needed resources and actions.",
+            "question": "How would you scope vector index permissions?"
+          },
+          {
+            "title": "API Management gateway",
+            "summary": "Centralize API throttling, authentication, routing and observability.",
+            "question": "Why put APIM in front of LLM endpoints?"
+          },
+          {
+            "title": "Multi-region & failover",
+            "summary": "Design fallback model deployments, traffic routing and graceful degradation.",
+            "question": "What if the AI model region becomes unavailable?"
+          }
+        ]
+      },
+      {
+        "title": "Serverless & hosting",
+        "summary": "Running the application layer",
+        "items": [
+          {
+            "title": "Azure Functions",
+            "summary": "Event/HTTP endpoints host tool actions and agent orchestration logic.",
+            "question": "Why choose Functions for booking or account APIs?"
+          },
+          {
+            "title": "Container Apps & WebSockets",
+            "summary": "Containers enable long-lived sessions and streaming integration.",
+            "question": "Why use Container Apps for a voice stream?"
+          },
+          {
+            "title": "ADLS, Key Vault & secrets",
+            "summary": "Store data securely and access secrets through approved identities.",
+            "question": "What is the secure way to read AKV secrets in Databricks?"
+          },
+          {
+            "title": "AWS vs Azure comparison",
+            "summary": "Map equivalent building blocks while justifying Azure integration and governance.",
+            "question": "How would your architecture change on AWS?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Banking Voice Assistant",
+    "phase": "04 Cloud & Voice",
+    "summary": "Explain the complete voice agent architecture from call to action",
+    "groups": [
+      {
+        "title": "End-to-end voice call",
+        "summary": "Your portfolio implementation and interview narrative",
+        "items": [
+          {
+            "title": "Call entry & Azure Communication Services",
+            "summary": "Phone call transport connects the caller to a voice integration service.",
+            "question": "Explain the path from telephone to agent."
+          },
+          {
+            "title": "WebSocket audio streaming",
+            "summary": "Bidirectional audio chunks transport speech while preserving session correlation.",
+            "question": "Why does streaming help latency?"
+          },
+          {
+            "title": "Azure Speech STT",
+            "summary": "Converts spoken user audio into text for the orchestration layer.",
+            "question": "Why choose Azure Speech for speech-to-text?"
+          },
+          {
+            "title": "LangGraph/Foundry orchestration",
+            "summary": "Route transcribed intent into RAG, scheduling or secure account tools.",
+            "question": "What components decide the next tool?"
+          },
+          {
+            "title": "RAG on policies & FAQs",
+            "summary": "Retrieve authorized banking knowledge instead of inventing policy details.",
+            "question": "How do you update the bank policy knowledge base?"
+          },
+          {
+            "title": "Speech TTS & playback",
+            "summary": "Convert approved text into speech and stream it back to the caller.",
+            "question": "Where does TTS fit in your flow?"
+          }
+        ]
+      },
+      {
+        "title": "Conversation quality",
+        "summary": "Real-time and multi-turn challenges",
+        "items": [
+          {
+            "title": "Turn-taking & silence detection",
+            "summary": "End a turn after calibrated silence; guard against clipping and noise.",
+            "question": "How did you tune silence thresholds?"
+          },
+          {
+            "title": "Unique call/thread ID",
+            "summary": "Associate every call with one conversation context and trace identifier.",
+            "question": "Why use a unique thread ID per call?"
+          },
+          {
+            "title": "Greeting once & follow-ups",
+            "summary": "Keep session state so the assistant does not repeatedly greet or forget progress.",
+            "question": "How do you ensure the greeting occurs only once?"
+          },
+          {
+            "title": "STT language, voices & region",
+            "summary": "Choose accents, voice locale and supported Azure speech deployment region.",
+            "question": "Why does voice locale selection matter?"
+          },
+          {
+            "title": "Latency & barge-in",
+            "summary": "Measure full round-trip delay and decide how interruptions are handled.",
+            "question": "What are the main contributors to voice response latency?"
+          }
+        ]
+      },
+      {
+        "title": "Banking workflows",
+        "summary": "Trust, tools and privacy",
+        "items": [
+          {
+            "title": "Balance lookup & verification",
+            "summary": "Use authenticated, scoped account API calls; never guess balances from model knowledge.",
+            "question": "How do you safely answer account balance questions?"
+          },
+          {
+            "title": "Financial advisor scheduling",
+            "summary": "Validate slots, confirm details and write via a secure booking tool.",
+            "question": "What is the scheduling workflow?"
+          },
+          {
+            "title": "Tenant isolation & session safety",
+            "summary": "Partition tenant knowledge, tools, state and credentials.",
+            "question": "How would you prevent bank A data leaking to bank B?"
+          },
+          {
+            "title": "Failure recovery",
+            "summary": "Handle STT uncertainty, dropped audio, rejected tool calls and TTS failures safely.",
+            "question": "How do you debug a silent or incorrect voice response?"
+          }
+        ]
+      },
+      {
+        "title": "Speech pipeline",
+        "summary": "Production interview extensions grounded in prior questions and projects",
+        "items": [
+          {
+            "title": "Speech recognition WER & transcription evaluation",
+            "summary": "Measure word error rate with human-verified speech references and domain vocabulary.",
+            "question": "How do you evaluate transcription quality before LLM response generation?",
+            "origin": "V4 gap audit"
+          },
+          {
+            "title": "Speech recognition browser fallback",
+            "summary": "Provide editable text when Web Speech recognition is unsupported or microphone access fails.",
+            "question": "How should the UI recover from unavailable STT?",
+            "origin": "V4 gap audit"
+          },
+          {
+            "title": "Azure Speech short-lived token broker",
+            "summary": "Keep subscription credentials server-side and vend scoped short-lived tokens to trusted clients.",
+            "question": "How do you avoid placing a Speech subscription key in a static website?",
+            "origin": "V4 gap audit"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "GenAI Evaluation & Quality Gates",
+    "phase": "05 Evaluation & Safety",
+    "summary": "Offline test sets, production signals and continuous automated evaluation",
+    "groups": [
+      {
+        "title": "Offline golden dataset",
+        "summary": "Reproducible tests and release checks",
+        "items": [
+          {
+            "title": "Golden dataset (.jsonl)",
+            "summary": "Curated cases include questions, expected behavior, references and expected tool outcomes.",
+            "question": "What is a golden dataset?"
+          },
+          {
+            "title": "Azure AI Evaluation SDK",
+            "summary": "Programmatically run groundedness, relevance, coherence and similarity evaluators.",
+            "question": "How would you run an evaluation batch?"
+          },
+          {
+            "title": "Ragas evaluation",
+            "summary": "Measures faithfulness, answer relevance, context precision and recall.",
+            "question": "How does Ragas evaluate a RAG pipeline?"
+          },
+          {
+            "title": "DeepEval",
+            "summary": "A configurable framework for assertion-style LLM tests and evaluation metrics.",
+            "question": "How is DeepEval used in CI?"
+          },
+          {
+            "title": "Automated quality gates",
+            "summary": "Block release when agreed aggregate and critical-case thresholds fail.",
+            "question": "How do you fail Azure DevOps when groundedness is below 4/5?"
+          },
+          {
+            "title": "Regression & adversarial cases",
+            "summary": "Include negative retrieval, permissions, malicious instructions and tool failures.",
+            "question": "How do you guard against a regression with a new prompt?"
+          }
+        ]
+      },
+      {
+        "title": "Metric interpretation",
+        "summary": "Identify what actually failed",
+        "items": [
+          {
+            "title": "Groundedness",
+            "summary": "Checks whether answer claims follow the supplied evidence.",
+            "question": "Does groundedness need to run on every answer?"
+          },
+          {
+            "title": "Faithfulness vs truthfulness",
+            "summary": "Faithfulness refers to provided context; factual truth may require external verification.",
+            "question": "Can an answer be faithful but factually wrong?"
+          },
+          {
+            "title": "Relevance vs coherence",
+            "summary": "Relevance measures fit to question; coherence measures readable logical structure.",
+            "question": "Can a response be coherent but irrelevant?"
+          },
+          {
+            "title": "Semantic similarity",
+            "summary": "Compare answer meaning to a reference while allowing paraphrasing.",
+            "question": "Why is exact string match often too strict?"
+          },
+          {
+            "title": "Tool-call accuracy & task success",
+            "summary": "Verify action arguments and actual business outcome, not just fluent text.",
+            "question": "How do you evaluate appointment booking success?"
+          }
+        ]
+      },
+      {
+        "title": "Production evaluation",
+        "summary": "Sampling, monitoring and human review",
+        "items": [
+          {
+            "title": "Trace sampling",
+            "summary": "Evaluate representative, risk-based samples rather than assuming every request is judged.",
+            "question": "How do you select production traces?"
+          },
+          {
+            "title": "LLM-as-judge cost",
+            "summary": "Judging adds latency, tokens and evaluation-model bias.",
+            "question": "Would you evaluate every production response?"
+          },
+          {
+            "title": "Human scoring",
+            "summary": "Domain reviewers provide reference judgments and calibrate automated evaluators.",
+            "question": "What if no Azure evaluation service is available?"
+          },
+          {
+            "title": "Drift & feedback loop",
+            "summary": "Use user complaints and sampled failures to refresh cases, retrievers and prompts.",
+            "question": "Users report wrong answers: what do you debug first?"
+          },
+          {
+            "title": "Four-stage eval workflow",
+            "summary": "Dataset → component metrics → end-to-end tests → production monitoring.",
+            "question": "Describe your four-stage evaluation process."
+          }
+        ]
+      },
+      {
+        "title": "Evaluation metrics",
+        "summary": "Production interview extensions grounded in prior questions and projects",
+        "items": [
+          {
+            "title": "LLM judge calibration",
+            "summary": "Calibrate judge output against expert human labels and investigate agreement.",
+            "question": "What if LLM-as-judge scores disagree with senior reviewers?",
+            "origin": "V4 gap audit"
+          },
+          {
+            "title": "Speech + answer end-to-end evaluation",
+            "summary": "Assess transcription fidelity, grounded answer quality and task success separately.",
+            "question": "How do you isolate a voice assistant error to STT, RAG or LLM?",
+            "origin": "V4 gap audit"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Responsible AI & Security",
+    "phase": "05 Evaluation & Safety",
+    "summary": "Protect data, enforce policies and constrain unsafe actions",
+    "groups": [
+      {
+        "title": "Trust boundaries",
+        "summary": "Secure LLM and retrieved contexts",
+        "items": [
+          {
+            "title": "Prompt injection",
+            "summary": "Untrusted text attempts to override higher-priority instructions or trigger unsafe tools.",
+            "question": "How do you defend against prompt injection in a document?"
+          },
+          {
+            "title": "Hallucinations",
+            "summary": "Confident-sounding unsupported content can arise from weak retrieval or generation.",
+            "question": "How do you reduce hallucinations in RAG?"
+          },
+          {
+            "title": "PII masking & redaction",
+            "summary": "Avoid logging or exposing account numbers, contacts and sensitive identifiers.",
+            "question": "What customer data should never enter debug logs?"
+          },
+          {
+            "title": "Content filters & guardrails",
+            "summary": "Apply safety checks, policy constraints and safe responses in appropriate locations.",
+            "question": "What checks belong before and after generation?"
+          },
+          {
+            "title": "Data access authorization",
+            "summary": "Enforce row/document permission server-side, not by prompt alone.",
+            "question": "How do you prevent data leakage with vector retrieval?"
+          }
+        ]
+      },
+      {
+        "title": "High-stakes actions",
+        "summary": "Guard tool execution and compliance",
+        "items": [
+          {
+            "title": "Human approval & confirmation",
+            "summary": "Confirm external high-impact actions before committing changes.",
+            "question": "When should an agent ask for approval?"
+          },
+          {
+            "title": "Audit logs & provenance",
+            "summary": "Record version, inputs, actions and sources within privacy requirements.",
+            "question": "How would you make an answer auditable?"
+          },
+          {
+            "title": "Tenant isolation & RBAC",
+            "summary": "Filter storage, tools and memory by verified identity and tenant.",
+            "question": "How do you test tenant separation?"
+          },
+          {
+            "title": "Financial compliance & fallback",
+            "summary": "Use policy-approved actions and route unverifiable requests safely.",
+            "question": "What happens if a financial policy is unknown?"
+          }
+        ]
+      },
+      {
+        "title": "Threat modelling",
+        "summary": "Production interview extensions grounded in prior questions and projects",
+        "items": [
+          {
+            "title": "Indirect prompt injection from retrieved documents",
+            "summary": "Treat retrieved content as untrusted evidence, never as authorization to call tools.",
+            "question": "What if a policy PDF instructs the agent to leak an account balance?",
+            "origin": "V4 gap audit"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Databricks, Spark & Delta Lake",
+    "phase": "06 Data Engineering",
+    "summary": "Distributed data processing, governance and lakehouse optimization",
+    "groups": [
+      {
+        "title": "Spark & PySpark",
+        "summary": "Query plans and large-scale processing",
+        "items": [
+          {
+            "title": "Driver, executors & partitions",
+            "summary": "Spark distributes partitioned tasks from the driver to executors.",
+            "question": "Explain Spark execution at a high level."
+          },
+          {
+            "title": "Lazy evaluation & DAG",
+            "summary": "Transformations create a plan; actions trigger distributed execution.",
+            "question": "Why does a PySpark transformation not run immediately?"
+          },
+          {
+            "title": "Joins, shuffle & broadcast",
+            "summary": "Broadcast small tables and reduce expensive network shuffle where appropriate.",
+            "question": "How do you optimize a slow join?"
+          },
+          {
+            "title": "Partitioning, caching & AQE",
+            "summary": "Tune partition counts and let adaptive execution optimize runtime stages.",
+            "question": "What is adaptive query execution?"
+          },
+          {
+            "title": "Spark SQL vs PySpark",
+            "summary": "Choose declarative SQL or DataFrame API according to workloads and teams.",
+            "question": "When would you use Spark SQL instead of PySpark?"
+          }
+        ]
+      },
+      {
+        "title": "Delta Lake",
+        "summary": "Reliable lakehouse datasets",
+        "items": [
+          {
+            "title": "Delta transaction log & ACID",
+            "summary": "Transaction logs manage atomic commits and historical metadata for Delta tables.",
+            "question": "Why is Delta different from a normal relational table?"
+          },
+          {
+            "title": "Time travel & RESTORE",
+            "summary": "Read previous table versions and restore to an earlier version when retained.",
+            "question": "How do you recover a deleted Delta table version?"
+          },
+          {
+            "title": "Schema enforcement & evolution",
+            "summary": "Validate types, manage new columns and control compatible changes.",
+            "question": "How do you handle source/destination column mismatch?"
+          },
+          {
+            "title": "MERGE & incremental updates",
+            "summary": "Upsert, update and delete records using key matching and change conditions.",
+            "question": "How do you implement incremental processing in Delta?"
+          },
+          {
+            "title": "OPTIMIZE & small files",
+            "summary": "Compact files for faster scans and reduce fragmented storage.",
+            "question": "What does OPTIMIZE do?"
+          },
+          {
+            "title": "Z-ORDER vs liquid clustering",
+            "summary": "Different data layout approaches improve pruning for selective queries.",
+            "question": "How does liquid clustering differ from Z-ORDER?"
+          }
+        ]
+      },
+      {
+        "title": "Databricks operations",
+        "summary": "Workload efficiency and governance",
+        "items": [
+          {
+            "title": "Job vs all-purpose clusters",
+            "summary": "Job compute suits scheduled work; interactive compute suits development.",
+            "question": "How did your team optimize cluster spend?"
+          },
+          {
+            "title": "Static vs dynamic cluster scaling",
+            "summary": "Autoscaling changes workers; examine compute policy and autoscale settings.",
+            "question": "How can you identify whether compute autoscaling is enabled?"
+          },
+          {
+            "title": "Unity Catalog",
+            "summary": "Central governance for data permissions, lineage, catalogs and schemas.",
+            "question": "What changed during Unity Catalog migration?"
+          },
+          {
+            "title": "Lakeflow / declarative pipelines",
+            "summary": "Build managed incremental tables, streaming tables and materialized views.",
+            "question": "What is a materialized view in a Spark declarative pipeline?"
+          },
+          {
+            "title": "Databricks workflows & monitoring",
+            "summary": "Schedule jobs, inspect failures and track run metadata.",
+            "question": "How do you investigate a failed Databricks job?"
+          },
+          {
+            "title": "Capacity & cost reduction",
+            "summary": "Right-size jobs, choose job clusters and tune Spark configs; your resume talks about platform efficiency.",
+            "question": "How would you explain the 27% cost improvement?"
+          },
+          {
+            "title": "Disaster recovery",
+            "summary": "Restore data and workflows with tested recovery targets and access controls.",
+            "question": "What belongs in a Databricks DR plan?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "ADF, Data Pipelines & Modelling",
+    "phase": "06 Data Engineering",
+    "summary": "Ingest, orchestrate, transform and govern enterprise data",
+    "groups": [
+      {
+        "title": "Azure Data Factory",
+        "summary": "Platform basics and troubleshooting",
+        "items": [
+          {
+            "title": "Linked services & datasets",
+            "summary": "Linked services define connections; datasets describe data shapes and locations.",
+            "question": "What is the role of a linked service?"
+          },
+          {
+            "title": "Copy activity & mapping",
+            "summary": "Copy sources to sinks with schema, type and fault-handling checks.",
+            "question": "What if a QA linked service points to Dev?"
+          },
+          {
+            "title": "Incremental ingestion & watermark",
+            "summary": "Process only new/changed records using timestamps, keys or CDC.",
+            "question": "Explain an ADF incremental load."
+          },
+          {
+            "title": "Self-hosted integration runtime",
+            "summary": "Execute network-local connector operations with configured capacity and concurrency.",
+            "question": "How do you handle concurrent SHIR jobs?"
+          },
+          {
+            "title": "Parameterized pipelines",
+            "summary": "Reuse workflows with environment-specific values and secret references.",
+            "question": "How do you promote ADF from Dev to QA?"
+          },
+          {
+            "title": "Azure Monitor & Log Analytics",
+            "summary": "Query activity runs, latency and failure events for operational insights.",
+            "question": "How can you find ADF runs taking over 15 minutes?"
+          }
+        ]
+      },
+      {
+        "title": "Lakehouse & warehousing",
+        "summary": "Analytical modeling concepts",
+        "items": [
+          {
+            "title": "Bronze, Silver & Gold",
+            "summary": "Organize raw, cleansed and business-ready datasets in layered pipelines.",
+            "question": "What is medallion architecture?"
+          },
+          {
+            "title": "ADLS Gen2 & Synapse",
+            "summary": "Store scalable files and serve analytical workloads with enterprise governance.",
+            "question": "How do ADF, ADLS, Databricks and Synapse connect?"
+          },
+          {
+            "title": "SCD Type 2 vs Type 3",
+            "summary": "Type 2 creates historical rows; Type 3 stores limited history in columns.",
+            "question": "Compare SCD2 and SCD3."
+          },
+          {
+            "title": "Dimensional modelling",
+            "summary": "Facts store measures and dimensions store descriptive business attributes.",
+            "question": "How would you model quarterly revenue?"
+          },
+          {
+            "title": "Data quality & reconciliation",
+            "summary": "Validate counts, uniqueness, schema, control totals and lineage.",
+            "question": "How do you reconcile source and destination data?"
+          },
+          {
+            "title": "Oil refinery ETL project",
+            "summary": "ADF and Databricks ingest industrial data and publish curated Synapse views.",
+            "question": "Give the end-to-end platform architecture."
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Python, SQL & API Skills",
+    "phase": "06 Data Engineering",
+    "summary": "Write and debug the supporting code for GenAI systems",
+    "groups": [
+      {
+        "title": "SQL",
+        "summary": "Query data correctly and safely",
+        "items": [
+          {
+            "title": "Joins & anti-joins",
+            "summary": "Left anti joins find keys present in one dataset but absent from another.",
+            "question": "How do you find Hive IDs missing in SQL?"
+          },
+          {
+            "title": "Window functions",
+            "summary": "Rank, aggregate and compare rows without collapsing every group.",
+            "question": "How would you find the most recent record per account?"
+          },
+          {
+            "title": "CTEs, GROUP BY & HAVING",
+            "summary": "Structure analytical queries and aggregate transaction data.",
+            "question": "How would you compare current and previous quarter revenue?"
+          },
+          {
+            "title": "Parameterized SQL",
+            "summary": "Bind values and authorize queries to avoid injection and leakage.",
+            "question": "Why not let an agent run arbitrary SQL?"
+          },
+          {
+            "title": "Postgres & Supabase",
+            "summary": "Relational tables, RLS and SQL functions can back agent tools and metadata.",
+            "question": "How do you implement row-level security for tenants?"
+          }
+        ]
+      },
+      {
+        "title": "Python",
+        "summary": "Language and backend fundamentals",
+        "items": [
+          {
+            "title": "Lists, tuples, sets & dicts",
+            "summary": "Choose collections based on ordering, mutability and lookup behavior.",
+            "question": "When would you use a dict rather than a list?"
+          },
+          {
+            "title": "Functions, decorators & exceptions",
+            "summary": "Modularize tool logic with validation and predictable failure handling.",
+            "question": "How should a Python tool report an exception?"
+          },
+          {
+            "title": "Files, JSON & regular expressions",
+            "summary": "Parse input contracts and semi-structured file formats.",
+            "question": "How would you process a fixed-width file?"
+          },
+          {
+            "title": "REST APIs & FastAPI",
+            "summary": "Define endpoints, typed request contracts, async behavior and authentication.",
+            "question": "How do you build a callable tool API?"
+          },
+          {
+            "title": "Asynchronous calls & concurrency",
+            "summary": "Coordinate I/O without unnecessary blocking while respecting provider limits.",
+            "question": "How can you call independent services concurrently?"
+          },
+          {
+            "title": "PySpark DataFrame operations",
+            "summary": "Apply distributed transforms, windows, joins and schema-aware writes.",
+            "question": "How do you handle malformed records in Spark?"
+          }
+        ]
+      },
+      {
+        "title": "Data access",
+        "summary": "Production interview extensions grounded in prior questions and projects",
+        "items": [
+          {
+            "title": "Supabase RLS vs API authorization",
+            "summary": "Use per-user RLS for defense in depth, and verify JWT identity on privileged APIs.",
+            "question": "Why does a frontend user_id filter not provide security?",
+            "origin": "V4 gap audit"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "LLMOps, Monitoring & CI/CD",
+    "phase": "07 Production",
+    "summary": "Ship, observe, troubleshoot and continuously improve AI workflows",
+    "groups": [
+      {
+        "title": "Automation & testing",
+        "summary": "Release engineering for GenAI products",
+        "items": [
+          {
+            "title": "Git & branching strategy",
+            "summary": "Use PR reviews, feature branches, reproducible builds and conflict resolution.",
+            "question": "What must pass before an AI deployment merges?"
+          },
+          {
+            "title": "GitHub Actions / Azure DevOps",
+            "summary": "Build, test and gate release artifacts with automation.",
+            "question": "How do you invoke a RAG eval in CI?"
+          },
+          {
+            "title": "Unit, integration & golden tests",
+            "summary": "Validate tools, permissions and realistic multi-turn cases separately.",
+            "question": "What tests would you add for a new bank tool?"
+          },
+          {
+            "title": "CI/CD eval threshold",
+            "summary": "Block release on critical task failures or agreed evaluator score thresholds.",
+            "question": "How does a build fail on groundedness below 4/5?"
+          },
+          {
+            "title": "Configuration & Key Vault",
+            "summary": "Separate environment configuration and runtime secrets from source code.",
+            "question": "How do you handle service keys in multiple environments?"
+          }
+        ]
+      },
+      {
+        "title": "Runtime monitoring",
+        "summary": "Know what the assistant did",
+        "items": [
+          {
+            "title": "Distributed tracing",
+            "summary": "Correlate LLM, retrieval and tool spans using trace/call IDs.",
+            "question": "How do you trace a bad voice interaction?"
+          },
+          {
+            "title": "Token & cost telemetry",
+            "summary": "Measure prompt/completion tokens, cache use and spend by feature.",
+            "question": "How do you monitor token usage?"
+          },
+          {
+            "title": "Latency breakdown",
+            "summary": "Measure STT, retrieval, model, tool, TTS and client network timings.",
+            "question": "Why can the first chat response be slow?"
+          },
+          {
+            "title": "Failed tool calls & fallback",
+            "summary": "Inspect status codes, validation errors, retries and user-facing recovery.",
+            "question": "How do you diagnose a booking tool failure?"
+          },
+          {
+            "title": "Observability dashboards & alerts",
+            "summary": "Create SLO-style alerts for error rate, latency, groundedness and task success.",
+            "question": "What production dashboard would you build?"
+          },
+          {
+            "title": "Production feedback triage",
+            "summary": "Reproduce complaint, inspect sources and tracing, update fix and regression set.",
+            "question": "A user says the answer is wrong: what are your steps?"
+          }
+        ]
+      },
+      {
+        "title": "Production operations",
+        "summary": "Production interview extensions grounded in prior questions and projects",
+        "items": [
+          {
+            "title": "Correlated voice and tool tracing",
+            "summary": "Carry correlation IDs across WebSocket, STT, retrieval, tools and TTS.",
+            "question": "How do you debug a slow banking call end to end?",
+            "origin": "V4 gap audit"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Anomaly Detection & Agentic RCA",
+    "phase": "08 Project Deep Dives",
+    "summary": "Explain your AI-powered pipeline anomaly and root cause assistant",
+    "groups": [
+      {
+        "title": "Statistical detection",
+        "summary": "Detect meaningful operational anomalies",
+        "items": [
+          {
+            "title": "Runtime history & baselines",
+            "summary": "Compare recent pipeline durations against an appropriate historical baseline.",
+            "question": "What baseline do you use for pipeline runtime?"
+          },
+          {
+            "title": "Median & MAD",
+            "summary": "Use median absolute deviation for robust dispersion when outliers are common.",
+            "question": "Why use MAD instead of standard deviation?"
+          },
+          {
+            "title": "Normal, warning & critical",
+            "summary": "Translate deviations into configured severity bands with investigation priority.",
+            "question": "How do you decide if a run is critical?"
+          },
+          {
+            "title": "Metadata & Supabase storage",
+            "summary": "Store durations, activities and anomaly classifications in queryable tables.",
+            "question": "What schema would you create for anomalies?"
+          }
+        ]
+      },
+      {
+        "title": "Root-cause assistant",
+        "summary": "Connect evidence with natural-language answers",
+        "items": [
+          {
+            "title": "Activity logs & dependency graph",
+            "summary": "Join pipeline-run, activity and dependency context to narrow likely causes.",
+            "question": "Which activity made a pipeline slow?"
+          },
+          {
+            "title": "Materialized RCA views",
+            "summary": "Prejoin histories, logs and relationships to support trusted query access.",
+            "question": "What is the value of a materialized RCA view?"
+          },
+          {
+            "title": "RAG + SQL grounded RCA",
+            "summary": "Use structured signals plus reference knowledge to explain abnormal events.",
+            "question": "How does an RCA assistant avoid inventing causes?"
+          },
+          {
+            "title": "Ticket creation & SME workflow",
+            "summary": "Create support tickets or escalate with run IDs, evidence and suggested actions.",
+            "question": "How do you shorten time to root cause?"
+          },
+          {
+            "title": "Data governance & business impact",
+            "summary": "Explain operational reliability, faster investigations and SLA adherence.",
+            "question": "How would you quantify business impact?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Enterprise File Processing AI",
+    "phase": "08 Project Deep Dives",
+    "summary": "Configuration-driven inspection, transformation and validation",
+    "groups": [
+      {
+        "title": "File parsing framework",
+        "summary": "Support many file types without hard-coded branches",
+        "items": [
+          {
+            "title": "Fixed-width & delimited formats",
+            "summary": "Parse records using configured positions, delimiters and record types.",
+            "question": "How can one ingestion engine support many formats?"
+          },
+          {
+            "title": "Regex, field offsets & rules",
+            "summary": "Store mapping/validation rules in metadata rather than code.",
+            "question": "How would you add a new file format?"
+          },
+          {
+            "title": "Header/detail/trailer checks",
+            "summary": "Reconcile row counts and total fields against actual records.",
+            "question": "What happens when a trailer count is wrong?"
+          },
+          {
+            "title": "Transformation & reconstruction",
+            "summary": "Normalize validated data, then rebuild required output and trailer values.",
+            "question": "How do you prove the output file is correct?"
+          }
+        ]
+      },
+      {
+        "title": "Agent-assisted orchestration",
+        "summary": "Explain why AI augments deterministic logic",
+        "items": [
+          {
+            "title": "LangGraph orchestration",
+            "summary": "Use states and conditional paths for inspect, validate, repair and compare.",
+            "question": "Sketch the processing graph."
+          },
+          {
+            "title": "Rule learning from reference files",
+            "summary": "Propose extraction rules but require validation before production application.",
+            "question": "How do you safely infer a parsing rule?"
+          },
+          {
+            "title": "File comparison & regression",
+            "summary": "Compare source, output and golden fixtures at field and control-total level.",
+            "question": "What are your regression tests?"
+          },
+          {
+            "title": "Data integrity & compliance",
+            "summary": "Keep auditability, validation outcomes and exception reporting.",
+            "question": "Why must deterministic checks remain primary?"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Architecture & System Design Cases",
+    "phase": "08 Project Deep Dives",
+    "summary": "Practice full engineering answers to realistic interview scenarios",
+    "groups": [
+      {
+        "title": "RAG & analytics cases",
+        "summary": "Decide the right retrieval or query method",
+        "items": [
+          {
+            "title": "Today's policy document changes",
+            "summary": "Event/change detection → parse/chunk → embed/update index → verify version → test answer.",
+            "question": "Walk through updating policy documents in production."
+          },
+          {
+            "title": "Wrong answers after deployment",
+            "summary": "Check prompt, intent, retrieval coverage, stale docs, reranking, model output and logs.",
+            "question": "What would you debug first and why?"
+          },
+          {
+            "title": "Revenue fell last quarter",
+            "summary": "Query governed metrics, compare segments, explain drivers and cite tables.",
+            "question": "Design a multi-agent financial analyst."
+          },
+          {
+            "title": "Enterprise semantic search",
+            "summary": "Access-filtered indexing, hybrid search, reranking, grounded answers and citations.",
+            "question": "Design enterprise search for thousands of PDFs."
+          },
+          {
+            "title": "Graph RAG decision",
+            "summary": "Choose knowledge graph for multi-hop entities and simple RAG for straightforward FAQs.",
+            "question": "When does Graph RAG justify its complexity?"
+          }
+        ]
+      },
+      {
+        "title": "Action-taking agents",
+        "summary": "Build accountable tools and workflows",
+        "items": [
+          {
+            "title": "Account balance + meeting booking",
+            "summary": "Verify identity → balance API → scheduling tool → confirm → summarize.",
+            "question": "Which parts must not rely on an LLM guess?"
+          },
+          {
+            "title": "Banking data isolation",
+            "summary": "Verify auth → enforce tenant RLS and filter retrieval → audit tool calls.",
+            "question": "How would you test data isolation for two customers?"
+          },
+          {
+            "title": "Safe tool retries",
+            "summary": "Prevent repeated financial operations with idempotency keys and approval points.",
+            "question": "What if the client times out after booking succeeded?"
+          },
+          {
+            "title": "Agent SQL security",
+            "summary": "Use semantic layer, allowlisted read-only tools, row access and query limits.",
+            "question": "How do you stop an agent reading unauthorized tables?"
+          },
+          {
+            "title": "Voice AI failover",
+            "summary": "Handle STT uncertainty, model throttling, tool failure and recovery prompt.",
+            "question": "What happens when one Azure service is down?"
+          }
+        ]
+      },
+      {
+        "title": "System trade-offs",
+        "summary": "Explain production design choices",
+        "items": [
+          {
+            "title": "Latency vs accuracy",
+            "summary": "Balance top-k, rerank depth, evaluator sampling, tools and model routing.",
+            "question": "How would you meet a strict voice latency target?"
+          },
+          {
+            "title": "Memory vs stateless scaling",
+            "summary": "Persist essential session state externally while keeping workers replaceable.",
+            "question": "How do you scale a multi-turn agent horizontally?"
+          },
+          {
+            "title": "Structured vs unstructured data",
+            "summary": "SQL for authoritative facts, RAG for documents, agent decides the right path.",
+            "question": "When would you not use embeddings?"
+          },
+          {
+            "title": "Human fallback & escalation",
+            "summary": "Escalate unresolved high-impact cases while preserving audit context.",
+            "question": "When should an AI agent transfer to a human?"
+          }
+        ]
+      },
+      {
+        "title": "Document systems",
+        "summary": "Production interview extensions grounded in prior questions and projects",
+        "items": [
+          {
+            "title": "Secure resume upload, extraction & lifecycle",
+            "summary": "Enforce file limits, private user paths, scanning, deletion and server-side parsing.",
+            "question": "How would you safely ingest a candidate resume into an interview tutor?",
+            "origin": "V4 gap audit"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "title": "Interview, Resume & Career Stories",
+    "phase": "09 Interview Mastery",
+    "summary": "Convert hands-on concepts into confident short explanations",
+    "groups": [
+      {
+        "title": "Interview opening",
+        "summary": "Clear career and architecture narrative",
+        "items": [
+          {
+            "title": "60-second GenAI introduction",
+            "summary": "Summarize years of cloud/data experience, recent agentic AI leadership and strongest wins.",
+            "question": "Tell me about yourself."
+          },
+          {
+            "title": "Banking voice assistant project story",
+            "summary": "Describe problem, architecture, security, challenges and outcome in a concise sequence.",
+            "question": "Explain your best recent GenAI project."
+          },
+          {
+            "title": "Anomaly RCA project story",
+            "summary": "Show robust detection, enriched root-cause explanations and governance outcome.",
+            "question": "What AI problem did you solve beyond a chatbot?"
+          },
+          {
+            "title": "File processor project story",
+            "summary": "Explain configuration-driven design, deterministic validation and agent orchestration.",
+            "question": "Why use an agent in file processing?"
+          },
+          {
+            "title": "Databricks 27% savings story",
+            "summary": "Explain right-sizing, job clusters, Spark tuning and measurable change.",
+            "question": "How did you reduce Databricks cost?"
+          }
+        ]
+      },
+      {
+        "title": "Interview depth",
+        "summary": "Practice likely technical and leadership questions",
+        "items": [
+          {
+            "title": "Three-layer Q&A method",
+            "summary": "Answer fundamentals, architecture detail and production/debugging follow-ups.",
+            "question": "How deep can you explain your project?"
+          },
+          {
+            "title": "Techno-managerial design",
+            "summary": "Discuss trade-offs, coordination, implementation and business outcomes.",
+            "question": "How would you lead a multi-agent implementation?"
+          },
+          {
+            "title": "Team leadership & AI adoption",
+            "summary": "Speak about prioritization, governance, mentoring and cross-team delivery.",
+            "question": "How do you lead a team of four?"
+          },
+          {
+            "title": "Why leaving & role fit",
+            "summary": "Give forward-looking career motivation anchored in GenAI engineering goals.",
+            "question": "Why are you leaving your present company?"
+          },
+          {
+            "title": "STAR impact storytelling",
+            "summary": "Use situation, task, action and result for difficult behavioural questions.",
+            "question": "Describe a production incident you resolved."
+          },
+          {
+            "title": "Round-two architecture defense",
+            "summary": "Justify Azure, LangGraph, RAG, latency, quality and operational security decisions.",
+            "question": "Why did you choose each major platform component?"
+          }
+        ]
+      },
+      {
+        "title": "Professional materials",
+        "summary": "Present skills clearly and credibly",
+        "items": [
+          {
+            "title": "ATS-friendly resume",
+            "summary": "Match role terminology to verified experience, measurable work and readable structure.",
+            "question": "Which three projects best demonstrate GenAI ownership?"
+          },
+          {
+            "title": "Azure AI Engineer Associate",
+            "summary": "Explain Azure AI-102 certification topics through practical service examples.",
+            "question": "How have you applied your Azure certification knowledge?"
+          },
+          {
+            "title": "Job descriptions & gap analysis",
+            "summary": "Map requirements to strengths, gaps and focused practice tasks.",
+            "question": "How does your profile match a senior AI engineer role?"
+          },
+          {
+            "title": "Interview cheat sheet",
+            "summary": "Keep one-line answers for definitions and two-minute architecture stories.",
+            "question": "Can you answer without reading a long script?"
+          }
+        ]
+      },
+      {
+        "title": "Career narratives",
+        "summary": "Production interview extensions grounded in prior questions and projects",
+        "items": [
+          {
+            "title": "Explain project ownership versus proof",
+            "summary": "Differentiate personally implemented features, team contributions, and proposed improvements.",
+            "question": "Which parts of your banking voice agent did you build yourself?",
+            "origin": "V4 gap audit"
+          }
+        ]
+      }
+    ]
+  }
+]
