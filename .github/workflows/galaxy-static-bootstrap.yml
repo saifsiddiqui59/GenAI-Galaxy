@@ -1,9 +1,6 @@
 name: Galaxy static preview bootstrap (approved one-time)
-# Push trigger only for the approved one-time bootstrap; remove after first run is queued.
+# Manual only. First explicitly authorized bootstrap run was queued by approved merge.
 on:
-  push:
-    branches: [main]
-    paths: ['.github/workflows/galaxy-static-bootstrap.yml']
   workflow_dispatch:
     inputs:
       confirm_bootstrap:
@@ -17,8 +14,7 @@ jobs:
     if: >-
       github.repository == 'saifsiddiqui59/GenAI-Galaxy' &&
       github.ref == 'refs/heads/main' &&
-      ((github.event_name == 'push' && contains(github.event.head_commit.message, '[galaxy-bootstrap-approved]')) ||
-       (github.event_name == 'workflow_dispatch' && inputs.confirm_bootstrap == 'CREATE_STATIC_PREVIEW'))
+      github.event_name == 'workflow_dispatch' && inputs.confirm_bootstrap == 'CREATE_STATIC_PREVIEW'
     runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
