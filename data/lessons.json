@@ -6503,5 +6503,365 @@
       "approval"
     ],
     "depth_status": "expanded_editorial_unverified"
+  },
+  "Enterprise semantic search": {
+    "simple": "Enterprise search must rank relevant documents while enforcing the requester's permissions before any answer is generated.",
+    "technical": "Build an ingestion process that extracts approved PDF/text content, detects version changes, partitions into traceable chunks and stores document IDs, page numbers, ACLs and content hashes alongside embeddings. Use hybrid lexical/vector retrieval for entity names and natural questions; apply access filtering before top-k/reranking and cite exact source chunks in answers. Evaluate recall@k, context precision, groundedness and forbidden document disclosure with multi-tenant test accounts. Incremental updates need tombstones and deletion propagation; scanned PDFs need an authorized OCR stage.",
+    "example": "A user may retrieve an HR policy section and its page citation but must never see another department's restricted salary memo.",
+    "project": "The proposed Galaxy knowledge Vault would require a secured extraction backend and per-user access filters before offering enterprise-style document search.",
+    "answer": "I would ingest and version approved PDFs, extract text or OCR when authorized, chunk it with document and page metadata, and index it for hybrid keyword and vector search. User permissions are applied before retrieval and again at the document source, not after the model has seen text. I rerank a bounded candidate set and ask the model to cite the chunks it uses. I evaluate retrieval recall, answer grounding and cross-user isolation, including document updates and deletion.",
+    "workflow": [
+      "Ingest signed-off documents with hash, version, ACL and page metadata",
+      "Extract, chunk and index with deletion/tombstone handling",
+      "Retrieve hybrid candidates under the actual user's permissions",
+      "Rerank, cite evidence and test cross-tenant negative cases"
+    ],
+    "mistakes": [
+      "Filtering ACLs only after reranking documents",
+      "Not removing stale chunks after document deletion",
+      "Claiming a citation proves the cited passage supports an answer"
+    ],
+    "followups": [
+      "Why combine BM25 with vector similarity?",
+      "How do you remove embeddings for a deleted document?"
+    ],
+    "keywords": [
+      "hybrid search",
+      "ACL",
+      "embeddings",
+      "citation",
+      "tombstone"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Graph RAG decision": {
+    "simple": "Graph RAG helps when questions require multi-hop relationships; simple document questions usually need a smaller retrieval system.",
+    "technical": "A graph layer models entities, edges, provenance and time validity, allowing traversal across contracts, counterparties, systems and dependencies. Graph construction brings entity resolution, schema governance and update costs; factual edges must link to verified source evidence. For direct FAQ-style queries, hybrid RAG with chunk citations is often sufficient and easier to measure. Choose Graph RAG only when benchmarks show that relationship hops or structured traversal solve failures that standard retrieval cannot, while preserving entity and edge ACLs.",
+    "example": "Finding which suppliers depend indirectly on a failed component may need relationship traversal across supplier and contract nodes.",
+    "project": "For a straightforward clinic FAQ or booking voice agent, a tenant-scoped document index plus transactional tools can be simpler than a knowledge graph.",
+    "answer": "I would use regular hybrid RAG for straightforward policy, FAQ and document questions where a small number of passages directly supports the answer. I would consider Graph RAG when the question repeatedly requires navigating relationships, such as entities connected through multiple contracts or dependencies. A graph adds entity extraction, deduplication, edge provenance, permission filters and maintenance overhead. I would benchmark the hard multi-hop questions before deciding it improves answer accuracy enough to justify that complexity.",
+    "workflow": [
+      "Collect failure cases and identify actual multi-hop reasoning needs",
+      "Prototype entities and evidence-backed edges with ACLs",
+      "Compare retrieval metrics against simpler hybrid RAG",
+      "Assess update complexity, latency and governance before adoption"
+    ],
+    "mistakes": [
+      "Assuming a graph automatically eliminates hallucinations",
+      "Building edges from unsupported model guesses",
+      "Forgetting tenant permissions on graph neighbors"
+    ],
+    "followups": [
+      "What is entity resolution?",
+      "How can stale graph edges produce incorrect answers?"
+    ],
+    "keywords": [
+      "Graph RAG",
+      "multi-hop",
+      "entities",
+      "edges",
+      "provenance"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Account balance + meeting booking": {
+    "simple": "An assistant must fetch balances from authenticated banking APIs and confirm meeting details through a separate authorized scheduling tool.",
+    "technical": "Route user intent into distinct verified read and write operations. Identity verification and account authorization precede the balance API; the model cannot derive a live balance from RAG or user text. Advisor availability comes from a scheduling API with timezone-safe slots; before creation, read back selected slot, location and purpose and request clear user confirmation. Use an idempotency key for booking and reconcile unknown outcomes after timeouts. Keep logs redacted and return explicit states for denied balance, unavailable slot and completed appointment.",
+    "example": "The assistant reads account balance after authentication, proposes two verified advisor times, asks which to reserve and books only after confirmation.",
+    "project": "A banking voice architecture can orchestrate tool calls; Galaxy has no live banking APIs or appointment booking authorization.",
+    "answer": "I would first authenticate the customer and verify that the requested account belongs to them. A backend balance tool returns the authoritative current figure; the language model never guesses that value. To schedule an advisor meeting I request available slots, present them to the customer and get explicit confirmation before calling the booking tool. I use an idempotency key and verify the appointment ID before announcing success. Authorization failures and provider timeouts get a transparent fallback rather than a fabricated response.",
+    "workflow": [
+      "Classify balance read and appointment write as separate intents",
+      "Authenticate customer and authorize account scope",
+      "Fetch live balance and available slots from approved APIs",
+      "Confirm choice, book idempotently and verify result"
+    ],
+    "mistakes": [
+      "Answering a live balance from a static knowledge base",
+      "Booking an appointment before user confirmation",
+      "Retrying a timed-out write without reconciliation"
+    ],
+    "followups": [
+      "What if the user asks for someone else's account?",
+      "How do you handle timezone changes when booking?"
+    ],
+    "keywords": [
+      "authentication",
+      "balance API",
+      "slot",
+      "confirmation",
+      "idempotency"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Banking data isolation": {
+    "simple": "Every customer request must be scoped by verified identity across database queries, retrieval and tool calls.",
+    "technical": "Enforce authentication at ingress and recheck authorization in each downstream balance, transaction, search and scheduling service. Tenant/user IDs supplied by a prompt are untrusted; derive scope from validated session claims and use database RLS or tenant-aware query guards. Index documents with ACL metadata and prevent unauthorized chunks from entering model context. Test at least two users including forged IDs, cross-user reads, inserts, upserts, storage paths, cached responses and shared conversation threads. Audit denied operations without logging sensitive balances or tokens.",
+    "example": "User B requests account A's transaction history; the API returns forbidden/zero records even if the model sends a forged A ID.",
+    "project": "Galaxy's two-account RLS acceptance test is manual and has not been run with real Supabase accounts; mock isolation alone is insufficient.",
+    "answer": "For banking tenant isolation I authenticate every request, derive the customer identity from a verified token and enforce authorization at each backend tool. SQL queries and document retrieval must filter the same identity before data is returned to the model. I test two real customer-like accounts for denied cross-user reads, forged identifiers, unauthorized writes and cache leakage. A frontend user_id filter helps but cannot replace database RLS. I audit attempts and use least-privilege service credentials.",
+    "workflow": [
+      "Verify identity and bind immutable user/tenant scope",
+      "Enforce RLS and tool-level authorization independently",
+      "Restrict retrieved passages and cache keys by scope",
+      "Run real negative cross-user tests with dedicated fixtures"
+    ],
+    "mistakes": [
+      "Trusting the user ID in an LLM tool argument",
+      "Sharing one retrieval cache between tenants without ACL keying",
+      "Mistaking frontend filtering for secure RLS enforcement"
+    ],
+    "followups": [
+      "How would you test a leaked embedding cache?",
+      "What changes if a user has access to two accounts?"
+    ],
+    "keywords": [
+      "tenant isolation",
+      "RLS",
+      "JWT",
+      "ACL",
+      "cache"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Safe tool retries": {
+    "simple": "Idempotency lets a client repeat a request without repeating the underlying side effect.",
+    "technical": "For state-changing operations, accept a caller-scoped idempotency key tied to the semantic action and persist an atomic record of pending/completed outcome and payload fingerprint. On retry, return the original result if identical, reject key reuse with different payload, and reconcile with the downstream provider if the initial outcome is uncertain. Set TTLs based on provider contract and use database uniqueness or transaction fencing for concurrent workers. Reads may retry with backoff, but confirmations and authorization must still be current.",
+    "example": "A booking POST times out after the provider commits; the retry's identical key returns the first appointment reference instead of scheduling a duplicate.",
+    "project": "A voice agent's appointment or transaction tool should never rely on an in-memory retry counter as durable idempotency.",
+    "answer": "If the client times out after submitting a booking, I cannot know whether the provider committed it. I assign an idempotency key to the intended action and store its request fingerprint and result in durable storage. If the same request retries, the service either returns the original appointment ID or checks the provider for its current status. I reject reuse of the key for a different booking. Bounded retries and clear user messaging prevent duplicate state changes.",
+    "workflow": [
+      "Generate a durable key scoped to customer and intent",
+      "Atomically register request fingerprint before side effect",
+      "Execute/reconcile provider action and persist result",
+      "Return saved outcome on matching retry or reject conflict"
+    ],
+    "mistakes": [
+      "Generating a fresh idempotency key on every automatic retry",
+      "Caching keys only in an in-memory Python dict",
+      "Treating a timed-out write as definitely failed"
+    ],
+    "followups": [
+      "How do you handle two simultaneous identical requests?",
+      "What must a persisted idempotency record contain?"
+    ],
+    "keywords": [
+      "idempotency",
+      "atomicity",
+      "booking",
+      "retry",
+      "fencing"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Agent SQL security": {
+    "simple": "Give an AI agent a narrow semantic query interface, not an unrestricted database connection.",
+    "technical": "Map user intents to approved metrics or allowlisted parameterized read-only query templates with verified tenant filters. Use an isolated database role without schema modification, high-risk functions or access to unrelated tables. Validate requested identifier names separately from bound value parameters, enforce row/column security, query-time and result-size limits, and log template IDs rather than PII. For open-ended analytics, parse and inspect query AST plus dry-run budgets before executing, but never treat model reasoning as authorization. Require explicit human signoff for writes.",
+    "example": "An agent may request quarterly net sales for an approved business unit but cannot execute arbitrary SELECT * FROM payroll.",
+    "project": "A management assistant answering quarter-on-quarter revenue should query governed facts through an approved semantic layer, not the raw production catalog.",
+    "answer": "I prevent an agent from running arbitrary SQL by giving it read-only tools with approved queries or a constrained semantic layer. The user and tenant scope come from backend authentication, not from text generated by the model. Data values are bound as parameters, tables and columns are allowlisted, and database RLS remains active. I also set query timeout and maximum results. For updates or destructive operations I require a separate permission and confirmation workflow.",
+    "workflow": [
+      "Classify question into an authorized metric/query template",
+      "Validate identity, allowed dimensions and bound values",
+      "Enforce database row/column access and resource quotas",
+      "Return limited results with source provenance and audit metadata"
+    ],
+    "mistakes": [
+      "Assuming a system prompt prevents dangerous SQL",
+      "Letting a read-only model call a write-capable service role",
+      "Using parameter binding to justify arbitrary table names"
+    ],
+    "followups": [
+      "Why does SQL AST validation not replace database privileges?",
+      "How do you handle row limits in aggregate queries?"
+    ],
+    "keywords": [
+      "semantic layer",
+      "SQL allowlist",
+      "RLS",
+      "parameterized",
+      "read-only"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Voice AI failover": {
+    "simple": "A voice agent needs a different fallback for failed speech recognition, throttled models, failed tools and lost connections.",
+    "technical": "Design independent timeouts and availability policies across telephony/WebSocket, STT, retrieval, model inference, authorized tools and TTS. STT low-confidence or unsupported language should ask a clarifying question; model 429s need bounded backoff, possible approved region/model fallback and safe state retention; tool write uncertainty requires reconciliation, not blind retry; TTS failure can return a textual or operator fallback. Persist minimal call/turn state externally and gate retries by request generation to suppress stale responses. Respect residency and data confidentiality before cross-region failover.",
+    "example": "During an STT outage, the assistant transfers a caller or requests keypad assistance rather than repeatedly hallucinating an answer.",
+    "project": "A banking voice prototype can simulate failover states, but real provider latency/region resilience needs a deployed broker and tests.",
+    "answer": "I identify which service failed before deciding how to recover. For speech recognition uncertainty I ask the customer to repeat or offer a non-voice path. For model throttling I use bounded retry and possibly an approved fallback deployment. For booking or balance tools I preserve authentication and do not invent a result; uncertain writes are reconciled. I persist turn state so reconnections do not lose context and avoid cross-region routing without checking residency and access policy.",
+    "workflow": [
+      "Apply per-stage timeouts and classify failures",
+      "Preserve authenticated call/turn state and cancellation generation",
+      "Use bounded provider fallback or explicit user clarification",
+      "Escalate unresolved high-impact cases with redacted context"
+    ],
+    "mistakes": [
+      "Blindly retrying state-changing financial tools",
+      "Failing over to a region that violates data policy",
+      "Reading a success reply when STT confidence is poor"
+    ],
+    "followups": [
+      "How does an STT failover differ from a tool-write failover?",
+      "What state must persist across WebSocket reconnect?"
+    ],
+    "keywords": [
+      "STT",
+      "failover",
+      "429",
+      "TTS",
+      "recovery"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Latency vs accuracy": {
+    "simple": "A voice assistant must balance retrieval depth and model quality against human-perceived first-audio delay.",
+    "technical": "Break the pipeline into endpointing, STT, retrieval, reranking, prompt prefill, generation, tool calls and TTS. Set budgets per component and optimize critical-path p95, not only average model inference. Increase candidate recall to a reliable level before reducing reranker k or chunk size; benchmark answer groundedness and retrieval accuracy on a golden set with difficult queries. Choose small/large model routing based on intent risk, cache safe static instructions and stream partial audio only where it will not misstate an unverified tool outcome.",
+    "example": "For a simple FAQ, skip expensive reranking under a validated quality threshold, but for a balance transfer wait for authoritative tool confirmation.",
+    "project": "In a banking voice assistant, silence endpointing and TTS first-audio latency may matter more than a minor vector-search speedup.",
+    "answer": "I first measure first-audio and p95 end-to-end latency, including STT endpointing, retrieval, model and tool calls. I avoid improving speed by blindly removing context because that may damage answer grounding. Instead I test smaller candidate counts, bounded reranking and model routing on a labeled question set. Low-risk FAQs can use faster paths, while sensitive banking actions require accurate authentication and confirmation even if they take longer. I optimize measured bottlenecks and keep a safe fallback.",
+    "workflow": [
+      "Establish response-time budget and high-risk task classes",
+      "Measure critical path and baseline answer quality",
+      "Benchmark retrieval/rerank/model variants on golden cases",
+      "Ship guarded routing with p95, quality and error monitoring"
+    ],
+    "mistakes": [
+      "Optimizing average token time while ignoring endpointing",
+      "Trading away authorization checks for latency",
+      "Streaming a booking confirmation before write succeeds"
+    ],
+    "followups": [
+      "What is first-audio latency?",
+      "How can you tune reranker depth safely?"
+    ],
+    "keywords": [
+      "p95",
+      "retrieval recall",
+      "reranker",
+      "first audio",
+      "accuracy"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Memory vs stateless scaling": {
+    "simple": "Stateless workers scale horizontally when conversation state and durable side effects live in reliable external stores.",
+    "technical": "Persist a minimal session record keyed by scoped conversation ID containing user/tenant identity, turn version, pending tool intent, relevant context references and expiration policy. Pass immutable state snapshots to workers and use compare-and-set/version fencing to prevent stale concurrent turns from overwriting newer ones. Use a separate durable idempotency ledger for financial writes; short-lived cache is not the authoritative transaction state. Encrypt sensitive values, enforce per-tenant access, trim context by policy and design reconnect/resume semantics across WebSocket endpoints.",
+    "example": "After a container restart, a call reconnects to another worker and retrieves its current turn state without repeating a previously confirmed appointment booking.",
+    "project": "A multi-tenant voice assistant may use a persistent conversation ID per call, but that alone does not guarantee safe concurrent ownership.",
+    "answer": "I keep compute workers stateless and move important session state into an external store so any healthy instance can handle the next turn. I scope every session by authenticated customer and conversation ID, preserve pending tool operations, and version state to reject stale writes from earlier turns. For booking actions I also keep a durable idempotency record. I limit retention and private context according to policy, so horizontal scaling does not accidentally leak conversations across tenants.",
+    "workflow": [
+      "Define minimal external call/session and turn state",
+      "Version updates to fence concurrent stale workers",
+      "Persist idempotency and audit separately from cache",
+      "Test restart, reconnect, parallel turns and tenant isolation"
+    ],
+    "mistakes": [
+      "Saving all state only in container memory",
+      "Using a shared cache key without tenant context",
+      "Letting a canceled turn overwrite newer state"
+    ],
+    "followups": [
+      "How does compare-and-set prevent lost updates?",
+      "What state can be recomputed rather than persisted?"
+    ],
+    "keywords": [
+      "stateless",
+      "session store",
+      "version fencing",
+      "idempotency",
+      "horizontal scaling"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Structured vs unstructured data": {
+    "simple": "Use a database for exact current facts and retrieval for document explanations; an agent selects the appropriate authorized tool.",
+    "technical": "Structured facts such as balances, revenue and inventory belong in transactional or analytical tables with typed schemas, constraints and clear temporal semantics. Unstructured policies and manuals benefit from access-filtered keyword/vector retrieval with citations and version-aware freshness. Agent routing classifies intent and chooses SQL/API versus RAG, with dual paths only when a question needs both factual numbers and explanatory policy text. Never replace authoritative financial tool results with vector similarity or allow model-generated SQL to bypass access controls.",
+    "example": "For 'why did Q3 revenue fall?', retrieve verified quarterly totals through a semantic SQL tool and use cited business context documents as possible explanations.",
+    "project": "A bank balance should come from an authorized API while a bank's general credit policy can come from a trusted document index.",
+    "answer": "I would not use embeddings for exact account balance, invoice totals or a current order status. Those need authorized APIs or structured SQL because they must be precise and fresh. I use RAG for long policies, FAQs and reports where finding supporting passages matters. A routing agent can combine both paths when a question asks for a number and an explanation, but it must retain source provenance and keep database tenant checks in force. Similarity search never becomes the source of truth.",
+    "workflow": [
+      "Classify request as transactional, analytic, document or mixed",
+      "Authorize structured API/SQL or ACL-filtered document retrieval",
+      "Retrieve evidence with timestamps and provenance",
+      "Synthesize only supported facts and label uncertain explanations"
+    ],
+    "mistakes": [
+      "Estimating live balance from embeddings",
+      "Running unrestricted SQL for 'why' questions",
+      "Treating a retrieved narrative as proof of causation"
+    ],
+    "followups": [
+      "When would you combine a semantic layer with RAG?",
+      "How do freshness requirements affect routing?"
+    ],
+    "keywords": [
+      "structured data",
+      "unstructured data",
+      "SQL",
+      "RAG",
+      "source of truth"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Human fallback & escalation": {
+    "simple": "Escalate when an automated system cannot safely resolve a request or the user needs accountable human judgment.",
+    "technical": "Set policy triggers for identity uncertainty, low-confidence STT, incomplete evidence, sensitive advice, payment/booking ambiguity, repeated tool failures, fraud flags and explicit customer request. Transfer a short redacted summary of validated intent, completed/uncertain actions, relevant case IDs and evidence links to the next operator without exposing credentials or speculative diagnoses. Preserve conversation consent and audit handoff; measure escalation rate, resolution and false transfers rather than just automated containment. Never allow the model to quietly override escalation rules.",
+    "example": "A customer disputes a charge while verification fails; the assistant stops account disclosure and transfers to a human with only a safe case reference.",
+    "project": "A banking voice agent design needs transparent handoff for financial ambiguity and failed transactional tools; Galaxy itself has no call-center integration.",
+    "answer": "I set clear escalation rules for sensitive or uncertain situations: failed identity checks, financial disputes, repeated tool failures, missing evidence and customer requests to speak with a person. The agent should explain what it can and cannot complete, preserve a redacted case summary and route to an authorized operator. It must not invent a confirmed transaction or reveal private data just to avoid escalation. I track both successful handoffs and unnecessary transfers to improve the policy.",
+    "workflow": [
+      "Detect explicit user request or policy-triggered uncertainty",
+      "Stop unsafe tool actions and record verified state",
+      "Create privacy-safe case summary and handoff reference",
+      "Audit acknowledgment and final resolution outcome"
+    ],
+    "mistakes": [
+      "Treating human handoff as a failure to be avoided at all costs",
+      "Passing raw account credentials into a support ticket",
+      "Continuing automated financial actions after identity denial"
+    ],
+    "followups": [
+      "What information is safe to send to an agent?",
+      "How would you evaluate escalation quality?"
+    ],
+    "keywords": [
+      "human handoff",
+      "escalation",
+      "uncertainty",
+      "policy",
+      "audit"
+    ],
+    "depth_status": "expanded_editorial_unverified"
+  },
+  "Secure resume upload, extraction & lifecycle": {
+    "simple": "A candidate resume is private user data that needs bounded upload, scanning, access control and a clear deletion lifecycle.",
+    "technical": "Validate file size, extension, MIME and magic bytes and store raw uploads under an authenticated user-owned path in private object storage. Quarantine and malware-scan before server-side PDF/DOCX extraction, cap pages/expanded ZIP size and treat extracted text as untrusted data including embedded prompt instructions. Keep metadata/RLS owner-scoped, log only safe processing status, and record retention, deletion and vector tombstones for all derived chunks. Deny direct client access to service-role credentials and avoid injecting resume content into public curriculum assets.",
+    "example": "A user uploads a DOCX resume; the backend stores it privately, scans it, extracts safe text and indexes only the owner's permitted chunks.",
+    "project": "Galaxy's Knowledge Vault has private storage and undeployed extraction code, but lacks approved live scanning, gateway and hosted end-to-end acceptance.",
+    "answer": "I would authenticate the candidate, restrict upload size and file types, and save the resume only in a private user-scoped bucket. A backend scans the file before extraction, validates the PDF or DOCX structure and applies strict decompression and text limits. The extracted text remains untrusted and is never allowed to change system instructions. I enforce ownership on metadata, retrieval and deletion, and remove derived embeddings when the document is deleted. Live backend deployment and scanning need approval.",
+    "workflow": [
+      "Authenticate owner and enforce upload MIME/size contracts",
+      "Store privately and quarantine for malware scanning",
+      "Parse bounded document text under strict ownership",
+      "Manage ACL-filtered indexing, retention and deletion tombstones"
+    ],
+    "mistakes": [
+      "Sending a resume directly to public Blob storage",
+      "Executing instructions embedded inside a document",
+      "Deleting raw file but leaving its embeddings searchable"
+    ],
+    "followups": [
+      "How do you protect against DOCX ZIP bombs?",
+      "What does complete deletion require across indexes?"
+    ],
+    "keywords": [
+      "resume",
+      "private bucket",
+      "malware scan",
+      "RLS",
+      "deletion"
+    ],
+    "depth_status": "expanded_editorial_unverified"
   }
 }
