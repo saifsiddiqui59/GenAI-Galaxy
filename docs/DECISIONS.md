@@ -50,3 +50,9 @@
 - Reject mismatched owner/path records; fail closed before replacing private state. A monotonically increasing auth epoch invalidates pending reads on sign-out or account switch to prevent stale results reappearing.
 - Scope document metadata deletes by both UUID and the current user, and validate storage path prefix before removal.
 - Develop/test entirely via GitHub with mock identities. Do not create real Supabase users, mutate the shared database, configure paid Azure services or assert real two-user isolation from mocks.
+
+## M7b — real-user RLS gate is explicit, isolated and optional
+
+- Never create production users or mine existing Supabase credentials for RLS probes. Use two different, pre-approved Galaxy test accounts passed only as protected GitHub `dev` secrets.
+- A manual workflow with explicit `TEST` confirmation tests read/write isolation in the three Galaxy tables and owner-prefixed private bucket; its random fixtures must be cleaned after execution. No secret or service-role key is shipped to JavaScript or committed to Git.
+- CI compiles and statically guards the script, but live cloud verification must be separately reported only when the manual job actually runs and succeeds.

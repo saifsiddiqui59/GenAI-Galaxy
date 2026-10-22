@@ -26,3 +26,7 @@ Content is expanded to 147 unique eight-part lessons covering 148 of 246 entries
 ## M7 — browser-side cloud session safety (feature PR)
 
 Auth transitions increment a client-local epoch. Each async Supabase progress/attempt/document load captures the epoch and verified user ID, uses explicit `eq('user_id', userId)` filters, and refuses to commit a result once a newer identity transition occurs. Sign-out immediately clears private data and restores guest-only state. Document removal additionally requires an owned document with a path inside the current user's storage prefix. These are defense-in-depth client protections; server-side RLS must independently enforce ownership, and fully authenticated network testing remains a release gate.
+
+## M7b — opt-in two-account RLS acceptance
+
+`tests/live_rls_check.py` is a separate GitHub Actions manual-only workflow with protected `dev` environment, exact `TEST` acknowledgement and credentials for two existing consented Galaxy auth identities. Uses publishable key + per-user Supabase JWT only. Exercises scoped progress, attempts, metadata and private Storage with randomized temporary fixtures and own-user cleanup. No service-role escalation, new accounts, non-Galaxy tables, Azure backend or automatic PR/push cloud operations.

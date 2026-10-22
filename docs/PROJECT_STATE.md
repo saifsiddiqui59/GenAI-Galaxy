@@ -52,3 +52,9 @@ Owner supplied `GenAI_Galaxy` for both Azure resource group and Azure applicatio
 - Frontend patch explicitly scopes Galaxy progress, attempts and document reads to the signed-in user ID, rejects unexpected owner/path rows, scrubs private state on sign-out/account switch and invalidates slow reads from old sessions. Private document delete is scoped by both document ID and owner ID.
 - Added deterministic two-account mock regression checks for account switching, foreign-row rejection and sign-out race, wired into GitHub Actions. These are not real authenticated two-user network/RLS tests; no Supabase records were created or modified, and no Azure backend deployed.
 - PR #9 carries the fix and unit/CI verification; hosted two-user Supabase network verification remains a separate release gate.
+
+## M7 verified merge and M7b live-isolation acceptance preparation
+
+- Auth hardening PR #9 squash-merged to main at `479ba930` after code-bearing commit `592e4f14` passed all three CI jobs; commits after that passing run modified documentation only. Post-merge main Galaxy CI [#39807636506](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39807636506) **3/3 passed**.
+- M7b adds an optional manually triggered, protected GitHub `dev` acceptance workflow using two existing, distinct Galaxy test accounts. It creates small random temporary fixtures only in `genai_study_*` tables and `genai-study-docs`, tests positive and negative user isolation and attempts cleanup. It does not create accounts or use privileged Supabase keys.
+- **Not yet run live:** two real test account credentials and the publishable key must be configured securely in the protected GitHub `dev` environment. Passing static guard tests alone must not be recorded as a live RLS pass. No Azure service/provisioning change or Supabase mutation from this feature PR.
