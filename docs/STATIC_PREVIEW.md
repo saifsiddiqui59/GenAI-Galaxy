@@ -9,3 +9,6 @@ The dedicated GitHub OIDC principal has Contributor on GenAI_Galaxy, but not Sto
 The one-time job requires Galaxy main, the exact merge commit marker [galaxy-bootstrap-approved], and the protected dev GitHub environment, with unit and JS checks before it runs. Remove its automatic push trigger once scheduled, leaving only manual invocation with typed confirmation.
 
 This is a **static frontend preview**, not the production backend. Model evaluation, Speech broker, authenticated document extraction, real multi-user Supabase isolation, and 98 incomplete lessons remain pending.
+## Published and verified
+
+Bootstrap #39803629502 succeeded, seven files were uploaded, and the follow-on HTTP smoke #39804008329 verified all eight routes as HTTP 200. Website: https://gengalaxy1429841605.z29.web.core.windows.net/. The first immediate HTTP 404 was temporary. Both transient push triggers have been removed, leaving manual-only workflows.
