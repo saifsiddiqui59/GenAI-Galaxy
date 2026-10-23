@@ -21,8 +21,8 @@ export function chooseSkeletonClip(phase,names=[]){
     ||names.find(name=>/idle/i.test(name))||names[0]||null;
 }
 export function advanceSkeletonX(phase,elapsed,smallScreen=false){
-  const start=smallScreen?-2.0:-3.0;
-  const end=smallScreen?-.9:-1.95;
+  const start=smallScreen?-1.8:-3.0;
+  const end=smallScreen?-.5:-1.95;
   if(phase!=='arriving')return end;
   return Math.min(end,start+Math.max(0,elapsed)*1.65);
 }
@@ -132,7 +132,7 @@ function SkeletonModel({phase='idle',rigPoseRef}){
  });
  // FBX can have drastically different authoring scale; geometry comes from the
  // external asset and is not replaced by a custom mesh.
- return <group ref={holder} position={[narrow?-2.0:-3.0,narrow?-1.95:-2.35,4.2]} scale={narrow?.65:1}>
+ return <group ref={holder} position={[narrow?-1.8:-3.0,narrow?-1.55:-2.35,4.2]} scale={narrow?.58:1}>
    <primitive object={instance}/>
    <pointLight position={[1,2.9,2.3]} intensity={15} color="#fff2db" distance={7}/>
    <pointLight position={[-1.4,1.7,-.9]} intensity={16} color="#a56ffe" distance={6}/>
