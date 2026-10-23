@@ -1,6 +1,7 @@
 import React,{useMemo,useRef} from 'react';
 import {useFrame,useThree} from '@react-three/fiber';
 import * as THREE from 'three';
+import {planetSurfaceTexture} from './PlanetSurface.js';
 
 export const PLANET_COUNT=17;
 export const COLORS=['#88d5ff','#ae9cff','#e5b6ff','#ffb39f','#72e8e2','#ffc98d','#a4d48a','#c2acff','#fa96cc','#ffdb9a','#91aeff','#b3f4da','#fdd4c8','#a5befa','#ffd591','#88e4ee','#f39aca'];
@@ -66,12 +67,14 @@ function Planet({world,mastered,recommended,selected,onSelect,reducedMotion,lowP
   group.current.position.y=world.y+Math.sin(state.clock.elapsedTime*.7+world.index)*.045;
  });
  const color=COLORS[world.index];
+ const surface=useMemo(()=>planetSurfaceTexture(world.index,color,lowPower),[world.index,color,lowPower]);
+ React.useEffect(()=>()=>surface.dispose(),[surface]);
  return <group ref={group} position={[world.x,world.y,world.z]}>
     <mesh onClick={e=>{e.stopPropagation();onSelect?.(world.index);}}
       onPointerOver={()=>{document.body.style.cursor='pointer';}}
       onPointerOut={()=>{document.body.style.cursor='';}}>
      <sphereGeometry args={[world.scale,32,22]}/>
-     <meshStandardMaterial color={color} emissive={color} emissiveIntensity={recommended?1.9:selected?1.35:1.05} roughness={.45} metalness={.15} toneMapped={false}/>
+     <meshStandardMaterial map={surface} color="#ffffff" emissive={color} emissiveIntensity={recommended?.49:selected?.34:.20} roughness={.75} metalness={.05}/>
     </mesh>
     {!lowPower&&<mesh scale={1.08}>
       <sphereGeometry args={[world.scale,28,20]}/>
