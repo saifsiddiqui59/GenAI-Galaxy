@@ -1,0 +1,28 @@
+name: Galaxy P23 hosted V5 read-only Chromium verification
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  hosted-v5-browser:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install playwright==1.57.0
+      - run: python -m playwright install chromium
+      - name: Test actual hosted Azure V5 desktop/mobile/reduced motion and lesson warp
+        run: python tests/p23_hosted_v5_browser.py
+      - name: Retain hosted snapshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galaxy-p23-hosted-v5-chromium
+          path: artifacts/p23-hosted-v5/*.png
+          retention-days: 7
+          if-no-files-found: ignore
