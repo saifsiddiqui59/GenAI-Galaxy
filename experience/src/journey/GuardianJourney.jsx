@@ -2,7 +2,7 @@ import React,{useEffect,useMemo,useState} from 'react';
 import {phaseAt} from './story.js';
 import './journey.css';
 const MAX_COLLECTION_DISPLAY=17;
-export default function GuardianJourney({completed=[],nextIndex=0,nextName='',onAccept,onSelectCompleted,onPhase,reducedMotion=false}){
+export default function GuardianJourney({completed=[],nextIndex=0,nextName='',onAccept,onSelectCompleted,onPhase,reducedMotion=false,openSackSignal=0,onReplay}){
  const [start,setStart]=useState(0);
  const [elapsed,setElapsed]=useState(0);
  const [skipped,setSkipped]=useState(false);
@@ -16,6 +16,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
   return ()=>clearInterval(handle);
  },[start,reducedMotion,skipped]);
  useEffect(()=>onPhase?.(view.phase),[view.phase,onPhase]);
+ useEffect(()=>{if(openSackSignal>0)setSackOpen(true)},[openSackSignal]);
  const visual=completed.slice(0,view.visible);
  return <div className="guardian-journey" aria-label="Your Galaxy Guardian">
     <div className="guardian-journey-top">
@@ -51,7 +52,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
     </div>
     {!reducedMotion&&!skipped&&view.phase!=='offering'&&
       <button type="button" className="guardian-skip" onClick={()=>setSkipped(true)}>Skip introduction</button>}
-    <button type="button" className="guardian-replay" onClick={()=>{setStart(performance.now());setElapsed(0);setSkipped(false)}}>
+    <button type="button" className="guardian-replay" onClick={()=>{setStart(performance.now());setElapsed(0);setSkipped(false);onReplay?.()}}>
       Replay guardian entrance
     </button>
  </div>;
