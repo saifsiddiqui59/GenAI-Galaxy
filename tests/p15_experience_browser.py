@@ -31,10 +31,21 @@ async def inspect(browser,origin,viewport,reduced=False):
 
  # Capture actual render during entrance, pickup and final presentation.
  label="mobile" if viewport["width"]<600 else "reduced" if reduced else "desktop"
+ # Restart *after* the GLB has loaded so timed visual assertions cannot miss
+ # the pickup while slow CI machines are decoding the 4.7MB rig.
+ if not reduced:
+  await page.get_by_role("button",name="Replay guardian entrance").click()
+  await page.wait_for_function("""() => window.__galaxySkeletonDiagnostics?.currentPhase === 'arriving'""",timeout=8000)
  await page.screenshot(path=str(ROOT/("preview-p19-"+label+"-entrance.png")),timeout=20000)
  if not reduced:
-  await page.wait_for_timeout(2600)
+  await page.wait_for_function("""() => (window.__galaxySkeletonDiagnostics?.pickupLog || []).some(p => p.index === 0 && p.clip === 'PickUp')""",timeout=12000)
+  started=0
+  print('P23 VERIFIED PER-WORLD KAYKIT PICKUP',started)
+  # Snapshot mid-reach rather than only the collection phase's first frame.
+  await page.wait_for_timeout(420)
   await page.screenshot(path=str(ROOT/("preview-p19-"+label+"-pickup.png")),timeout=20000)
+  await page.wait_for_function("""() => (window.__galaxySkeletonDiagnostics?.pickupLog || []).some(p => p.index === 1 && p.clip === 'PickUp')""",timeout=12000)
+  await page.screenshot(path=str(ROOT/("preview-p23-"+label+"-satchel-deposit.png")),timeout=20000)
  await page.wait_for_timeout(5100 if not reduced else 350)
  if not reduced:
   await page.locator(".guardian-skip").wait_for(state="hidden",timeout=20000)
@@ -49,6 +60,10 @@ async def inspect(browser,origin,viewport,reduced=False):
  if diagnostics.get("rig",{}).get("canCarry"):
   assert isinstance(diagnostics.get("waistPosition"),list) and len(diagnostics["waistPosition"])==3
  if not reduced:
+  pickup_log=await page.evaluate("window.__galaxySkeletonDiagnostics?.pickupLog || []")
+  assert [entry["index"] for entry in pickup_log][:3]==[0,1,2],pickup_log
+  assert all(entry["clip"]=="PickUp" for entry in pickup_log[:3]),pickup_log
+  print('P23 VERIFIED EACH REAL PICKUP CLIP',pickup_log)
   pose=await page.evaluate("window.__galaxySkeletonDiagnostics")
   print('P19 ACTUAL OFFERING IK:',pose.get('ikError'),pose.get('hasArmIK'))
   assert pose.get('hasArmIK') is True,'FBX real-arm CCD chain must exist'

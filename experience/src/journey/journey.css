@@ -41,3 +41,9 @@
 
 /* P21 real-device: keep the mastered-world inspector off the guardian's face. */
 @media(max-width:700px){.guardian-mission{top:29%;right:10px}.guardian-sack{padding:9px 12px;font-size:12px;border-radius:12px}.guardian-sack-panel{top:44px;right:0;max-height:44vh}}
+
+/* P23 visual QA at 390px: controls must not collide with each other or the heading. */
+@media(max-width:700px){
+ .guardian-replay{top:100px;right:12px;left:auto}
+ .guardian-skip{top:132px;right:12px;left:auto}
+}

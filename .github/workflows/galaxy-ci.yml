@@ -90,6 +90,7 @@ jobs:
           path: |
             preview-p15-*.png
             preview-p19-*.png
+            preview-p23-*.png
           retention-days: 7
           if-no-files-found: ignore
   release-safety:

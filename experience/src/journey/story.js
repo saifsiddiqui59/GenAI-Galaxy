@@ -22,11 +22,16 @@ export function recommendedWorld({topics,progress,now=Date.now()}={}){
  });
  return (due||topics.find(t=>progress?.[worldKey(t)]?.status!==2)||topics[0]).branchIndex;
 }
+export const COLLECT_START_MS=1700;
+export const PER_WORLD_MS=1050;
 export function phaseAt(ms,completedCount,reducedMotion=false){
- if(reducedMotion)return {phase:'offering',visible:completedCount};
- if(ms<1700)return {phase:'arriving',visible:0};
- const count=Math.min(completedCount,Math.floor((ms-1700)/1050));
- if(count<completedCount)return {phase:'collecting',visible:count};
- if(ms<1700+completedCount*1050+550)return {phase:'collecting',visible:completedCount};
- return {phase:'offering',visible:completedCount};
+ const count=Math.max(0,Math.min(TOTAL_WORLDS,Math.floor(completedCount)));
+ if(reducedMotion)return {phase:'offering',visible:count,activeIndex:-1};
+ if(ms<COLLECT_START_MS)return {phase:'arriving',visible:0,activeIndex:-1};
+ const since=Math.max(0,ms-COLLECT_START_MS);
+ const deposited=Math.min(count,Math.floor(since/PER_WORLD_MS));
+ if(deposited<count)return {phase:'collecting',visible:deposited,activeIndex:deposited};
+ if(ms<COLLECT_START_MS+count*PER_WORLD_MS+550)
+  return {phase:'collecting',visible:count,activeIndex:-1};
+ return {phase:'offering',visible:count,activeIndex:-1};
 }

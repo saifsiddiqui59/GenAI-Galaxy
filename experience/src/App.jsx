@@ -51,6 +51,8 @@ export default function App(){
  const [animationEnabled,setAnimationEnabled]=useState(!reduced);
  const [modelPhase,setModelPhase]=useState('arriving');
  const rigPoseRef=useRef(null);
+ const choreographyRef=useRef({ms:0,skipped:false,reducedMotion:false});
+ const [sequence,setSequence]=useState({activeIndex:-1,visible:0,skipped:false});
  const [selected,setSelected]=useState(null);
  const [warp,setWarp]=useState(null);
  const [menuOpen,setMenuOpen]=useState(false);
@@ -69,6 +71,8 @@ export default function App(){
  const nextIndex=useMemo(()=>activeOwner?
    recommendedWorld({topics:TOPICS,progress:activeProgress}):0,[activeOwner,activeProgress]);
  const phaseUpdate=useCallback(next=>setModelPhase(next),[]);
+ const sequenceUpdate=useCallback(next=>setSequence(old=>old.activeIndex===next.activeIndex&&old.visible===next.visible&&old.skipped===next.skipped?old:next),[]);
+ const clockUpdate=useCallback(next=>{choreographyRef.current=next},[]);
  const select=useCallback(index=>{
   if(!validWorld(index)||warp)return;
   setSelected(index);
@@ -81,9 +85,10 @@ export default function App(){
        gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}>
        <GalaxyScene masteredWorlds={collected} selectedIndex={selected} recommendedIndex={nextIndex}
          onSelect={select} reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
-       <Guardian phase={animationEnabled?modelPhase:'idle'} rigPoseRef={rigPoseRef} reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
+       <Guardian phase={animationEnabled?modelPhase:'idle'} collectionIndex={sequence.activeIndex} rigPoseRef={rigPoseRef} reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced||budget.lowPower}
          epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
+         collectedCount={sequence.visible} clockRef={choreographyRef}
          onOpenSack={()=>setSackOpenFrom3D(x=>x+1)} rigPoseRef={rigPoseRef}/>
      </Canvas>
    </div>}
@@ -101,6 +106,7 @@ export default function App(){
    <GalaxyAuth demo={SHOW_SAMPLE} topicKeys={TOPIC_KEYS} onSnapshot={receiveAuth}/>
    <GuardianJourney completed={collected} nextIndex={nextIndex} nextName={LABELS[nextIndex]}
      onSelectCompleted={select} onAccept={select} onPhase={phaseUpdate}
+     onSequence={sequenceUpdate} onClock={clockUpdate}
      openSackSignal={sackOpenFrom3D} onReplay={()=>setEffectsEpoch(x=>x+1)}
      reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
    <div className="galaxy-view-actions">
