@@ -32,6 +32,7 @@ jobs:
           node tests/test_auth_recovery.cjs
           node tests/test_mic_lifecycle.cjs
           node --check app.js
+          node --check genie/guide.js
           node --check runtime-config.js
           node --check speech/azure-speech-adapter.js
           python -m py_compile api/core.py api/function_app.py tests/live_rls_check.py
