@@ -141,10 +141,6 @@ def evaluate(req:func.HttpRequest)->func.HttpResponse:
     if pending:return pending
     try:
         token,user_id,base,public_key=authenticate(req)
-        if backend_profile()==DIRECT:
-            enforce_eval_quota(token=token,base=base,public_key=public_key,request_json=request_json)
-        elif os.environ.get('GALAXY_EVAL_GATEWAY_RATE_LIMIT')!='active':
-            return make_response(req,{'error':'Evaluation quota gateway is not configured'},503)
         body=req.get_json()
         if not isinstance(body,dict):raise InputError('Invalid request JSON')
         k=topic_key(body.get('topic_key'),set(RUBRICS))
@@ -154,6 +150,12 @@ def evaluate(req:func.HttpRequest)->func.HttpResponse:
             raise InputError('Answer must be between 15 and 2000 characters')
         if not isinstance(question,str) or not 1<=len(question)<=500:
             raise InputError('Question is too long or missing')
+        # Validate input BEFORE reserving a paid-call allowance; a rejected
+        # malformed request must not consume a legitimate user's budget.
+        if backend_profile()==DIRECT:
+            enforce_eval_quota(token=token,base=base,public_key=public_key,request_json=request_json)
+        elif os.environ.get('GALAXY_EVAL_GATEWAY_RATE_LIMIT')!='active':
+            return make_response(req,{'error':'Evaluation quota gateway is not configured'},503)
         review=model_review(RUBRICS[k],question,response)
         return make_response(req,review)
     except QuotaExceeded:return make_response(req,{'error':'Daily evaluation limit reached'},429)
