@@ -30,3 +30,7 @@ Auth transitions increment a client-local epoch. Each async Supabase progress/at
 ## M7b — opt-in two-account RLS acceptance
 
 `tests/live_rls_check.py` is a separate GitHub Actions manual-only workflow with protected `dev` environment, exact `TEST` acknowledgement and credentials for two existing consented Galaxy auth identities. Uses publishable key + per-user Supabase JWT only. Exercises scoped progress, attempts, metadata and private Storage with randomized temporary fixtures and own-user cleanup. No service-role escalation, new accounts, non-Galaxy tables, Azure backend or automatic PR/push cloud operations.
+
+## Isolated V6 review build
+
+Draft #131 hosts the R3F scene on its own source branch; production source remains unchanged. A main-only protected publisher builds an immutable pin and stages the scene plus current public nested lesson assets under a V6 prefix on existing storage. One frame-ordered clock governs original clips, real palm IK, attached miniature, open satchel and next-world reveal. No backend/data interface changes.
