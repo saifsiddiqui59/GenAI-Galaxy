@@ -81,13 +81,16 @@ function SkeletonModel({phase='idle',rigPoseRef}){
       node.receiveShadow=true;
       if(node.material){
         const mats=Array.isArray(node.material)?node.material:[node.material];
+        if(import.meta.env.DEV||new URLSearchParams(window.location.search).has('demo')){
+          window.__galaxyMaterialQA=mats.map(mat=>({name:mat.name,type:mat.type,hasDiffuseTexture:!!mat.map,color:mat.color?.getHexString(),roughness:mat.roughness,metalness:mat.metalness}));
+        }
         for(const material of mats){
           // FBX winding can differ across authoring exporters; avoid culling bones.
           material.side=THREE.DoubleSide;
           material.transparent=false;
           material.opacity=1;
-          if(material.color)material.color.set('#f2e3d2');
-          if(material.emissive){material.emissive.set('#9d7f73');material.emissiveIntensity=.47;}
+          if(material.color)material.color.set('#fff3dd');
+          if(material.emissive){material.emissive.set('#d7bda9');material.emissiveIntensity=.62;}
           material.needsUpdate=true;
         }
       }
@@ -118,7 +121,7 @@ function SkeletonModel({phase='idle',rigPoseRef}){
       holder.current.position.x=THREE.MathUtils.damp(holder.current.position.x,targetX,5,dt);
       smoothedPosition.current.copy(holder.current.position);
     }
-    holder.current.rotation.y=THREE.MathUtils.damp(holder.current.rotation.y,-.17,4,dt);
+    holder.current.rotation.y=THREE.MathUtils.damp(holder.current.rotation.y,Math.PI-.12,4,dt);
     // Capture actual animated bone positions for visual QA; no fake IK claims.
     instance.updateMatrixWorld(true);
     const ik=phase==='offering'?poseTwoHandOffering(chains,rig.waist,narrow?12:7,narrow?.58:1):null;
@@ -139,8 +142,8 @@ function SkeletonModel({phase='idle',rigPoseRef}){
  // external asset and is not replaced by a custom mesh.
  return <group ref={holder} position={[narrow?-1.8:-3.0,narrow?-1.55:-2.35,4.2]} scale={narrow?.58:1}>
    <primitive object={instance}/>
-   <pointLight position={[1,2.9,2.3]} intensity={15} color="#fff2db" distance={7}/>
-   <pointLight position={[-1.4,1.7,-.9]} intensity={16} color="#a56ffe" distance={6}/>
+   <pointLight position={[0,2.2,4.8]} intensity={95} color="#fff0d2" distance={12}/>
+   <pointLight position={[-2,1.7,-.9]} intensity={30} color="#ad9bff" distance={9}/>
  </group>;
 }
 export default function SkeletonGuardian({phase='idle',rigPoseRef}){
