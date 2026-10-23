@@ -210,9 +210,30 @@ function authOpen(mode='signin'){
 function authClose(){DOM('auth-modal').classList.add('is-hidden');setAuthMode('signin')}
 let authEpoch=0; // Invalidates any in-flight reads when identity changes.
 function resetAuthToGuest(){
+ window.GalaxyGenieGuide?.dismiss();
  stopVoice();authEpoch++;
  state.user=null;state.isGuest=true;state.documents=[];
  loadGuest();render();
+}
+// Only progress rows returned under the authenticated user's owner-scoped query
+// can contribute to the genie bag. A chapter is collected only if ALL topics
+// have genuinely attained status 2; provisional offline scores do not count.
+function showGenieForSignedInUser(){
+ const user=state.user,next=pickNext();
+ if(!user?.id||state.isGuest||!next||!window.GalaxyGenieGuide)return;
+ const masteredWorlds=state.subjects.flatMap((chapter,index)=>{
+  const topics=chapterTopics(index);
+  return topics.length&&topics.every(t=>getP(t).status===2)?
+    [{index,name:chapter.title}]:[];
+ });
+ state.current=next;
+ window.GalaxyGenieGuide.show({
+  userId:user.id,masteredWorlds,
+  next:{index:next.branchIndex,title:next.branch,
+   isReview:!!(getP(next).next_review_at&&Date.parse(getP(next).next_review_at)<=Date.now())},
+  motion:state.motion,
+  onContinue:()=>{state.chapter=next.branchIndex;chooseTopic(next)}
+ });
 }
 async function signedIn(user){
  if(!user?.id||!state.client)return;
@@ -221,6 +242,7 @@ async function signedIn(user){
  const current=()=>authEpoch===epoch;
  // Never display an earlier account's private records during a user switch.
  if(state.user?.id&&state.user.id!==userId){
+  window.GalaxyGenieGuide?.dismiss();
   state.user=null;state.isGuest=true;state.documents=[];loadGuest();render();
  }
  try{
@@ -246,6 +268,7 @@ async function signedIn(user){
   state.attempts=hist.data||[];state.documents=docs.data||[];
   state.user=user;state.isGuest=false;
   if(authMode!=='recovery')authClose();render();notify('Signed in · private study data loaded');
+  if(authMode!=='recovery')showGenieForSignedInUser();
  }catch(err){if(current())notify('Private sync unavailable: '+(err.message||'unknown error'))}
 }
 async function initAuth(){
