@@ -4,19 +4,28 @@ import * as THREE from 'three';
 import {layoutWorlds,COLORS} from '../space/DeepGalaxy.jsx';
 import './collection.css';
 export const COLLECT_START_MS=1700;
-export const PER_WORLD_MS=560;
+export const PER_WORLD_MS=1050;
 export const BAG_POSITION=[-2.65,-.85,3.35];
-export function collectPosition(world,index,time,disabled=false,bagPosition=BAG_POSITION){
+export function collectPosition(world,index,time,disabled=false,bagPosition=BAG_POSITION,handPosition=null){
  const to=new THREE.Vector3(...bagPosition);
  const start=new THREE.Vector3(world.x,world.y,world.z+.35);
  if(disabled)return {point:to,arrived:true};
  const elapsed=time-(COLLECT_START_MS+index*PER_WORLD_MS);
- const t=THREE.MathUtils.clamp(elapsed/Math.min(520,PER_WORLD_MS),0,1);
- const eased=t*t*(3-2*t);
- const point=start.lerp(to,eased);
- point.y+=Math.sin(Math.PI*t)*1.1;
- point.z+=Math.sin(Math.PI*t)*.75;
- return {point,arrived:t>=1};
+ const t=THREE.MathUtils.clamp(elapsed/PER_WORLD_MS,0,1);
+ const ease=x=>x*x*(3-2*x);
+ const pickup=handPosition?new THREE.Vector3(...handPosition):null;
+ let point;
+ if(pickup&&t<.48){
+   const u=ease(t/.48);
+   point=start.clone().lerp(pickup,u);
+   point.y+=Math.sin(Math.PI*u)*.24;
+ }else if(pickup){
+   point=pickup.clone().lerp(to,ease((t-.48)/.52));
+ }else{
+   point=start.clone().lerp(to,ease(t));
+   point.y+=Math.sin(Math.PI*t)*.6;
+ }
+ return {point,arrived:t>=1,atHand:Boolean(pickup&&t>=.44&&t<.52)};
 }
 function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPoseRef}){
  const mesh=useRef(),halo=useRef();
@@ -28,7 +37,8 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
   const time=clock.elapsedTime*1000-begin.current.start;
   const dynamicBag=rigPoseRef?.current?.hip;
   const position=dynamicBag?dynamicBag.toArray().map((v,i)=>v+([.24,-.32,.12][i])):bagPosition;
-  const {point,arrived}=collectPosition(worldLayout,order,time,reducedMotion,position);
+  const hand=rigPoseRef?.current?.hand?.toArray()||null;
+  const {point,arrived}=collectPosition(worldLayout,order,time,reducedMotion,position,hand);
   const sackOffset=new THREE.Vector3((order%4-1.5)*.115,Math.floor(order/4)*.08,order*.007);
   if(arrived)point.add(sackOffset);
   mesh.current.position.copy(point);
