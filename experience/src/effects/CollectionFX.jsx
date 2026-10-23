@@ -84,6 +84,7 @@ function OfferingOrb({worldIndex,phase,bagPosition,rigPoseRef}){
   orb.current.rotation.z+=Math.min(.04,dt)*.18;
   // The world-space location comes from the two real hand bones rather than a prop sphere.
   const hand=rigPoseRef?.current?.hand;
+  orb.current.visible=Boolean(hand);
   if(hand)orb.current.position.copy(hand);
   orb.current.rotation.y+=Math.min(.04,dt)*.15;
  });
