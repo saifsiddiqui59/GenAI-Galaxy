@@ -1,0 +1,9 @@
+/* Coordinator loads after baseline PR #47; no external fonts, shaders or scripts. */
+.galaxy-planet-flight {
+ position:fixed;z-index:70;left:0;top:0;transform:translate(-50%,-50%);
+ border-radius:50%;pointer-events:none;contain:paint;will-change:transform,opacity;
+ background:radial-gradient(circle at 29% 24%,#fffefa,#bddafa 18%,#7a8de7 42%,#4c388e 79%,#141444);
+ box-shadow:inset -11px -9px 22px rgba(2,4,20,.6),0 0 38px 12px rgba(141,121,248,.48);
+}
+.galaxy-planet-flight::after{content:"";position:absolute;inset:-15%;border:2px solid rgba(190,201,255,.55);border-radius:50%;transform:rotate(-25deg) scaleY(.36)}
+@media(prefers-reduced-motion:reduce){.galaxy-planet-flight{display:none!important}}
