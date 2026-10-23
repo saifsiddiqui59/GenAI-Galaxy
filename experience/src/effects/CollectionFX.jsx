@@ -1,13 +1,13 @@
 import React,{useRef} from 'react';
-import {useFrame} from '@react-three/fiber';
+import {useFrame,useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import {layoutWorlds,COLORS} from '../space/DeepGalaxy.jsx';
 import './collection.css';
 export const COLLECT_START_MS=1700;
 export const PER_WORLD_MS=560;
-export const BAG_POSITION=[-2.05,-.57,1.1];
-export function collectPosition(world,index,time,disabled=false){
- const to=new THREE.Vector3(...BAG_POSITION);
+export const BAG_POSITION=[-2.65,-.85,3.35];
+export function collectPosition(world,index,time,disabled=false,bagPosition=BAG_POSITION){
+ const to=new THREE.Vector3(...bagPosition);
  const start=new THREE.Vector3(world.x,world.y,world.z+.35);
  if(disabled)return {point:to,arrived:true};
  const elapsed=time-(COLLECT_START_MS+index*PER_WORLD_MS);
@@ -18,7 +18,7 @@ export function collectPosition(world,index,time,disabled=false){
  point.z+=Math.sin(Math.PI*t)*.75;
  return {point,arrived:t>=1};
 }
-function CollectedOrb({world,order,reducedMotion,epoch,ready}){
+function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition}){
  const mesh=useRef(),halo=useRef();
  const worldLayout=layoutWorlds()[world.index];
  const begin=useRef(null);
@@ -26,7 +26,7 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready}){
   if(!mesh.current||!worldLayout)return;
   if(begin.current?.epoch!==epoch)begin.current={epoch,start:clock.elapsedTime*1000};
   const time=clock.elapsedTime*1000-begin.current.start;
-  const {point,arrived}=collectPosition(worldLayout,order,time,reducedMotion);
+  const {point,arrived}=collectPosition(worldLayout,order,time,reducedMotion,bagPosition);
   const sackOffset=new THREE.Vector3((order%4-1.5)*.115,Math.floor(order/4)*.08,order*.007);
   if(arrived)point.add(sackOffset);
   mesh.current.position.copy(point);
@@ -48,12 +48,12 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready}){
    </mesh>
  </group>;
 }
-function Satchel({onOpenSack,count}){
+function Satchel({onOpenSack,count,bagPosition}){
  const bag=useRef();
  useFrame((state)=>{
   if(bag.current)bag.current.rotation.z=Math.sin(state.clock.elapsedTime*1.7)*.035;
  });
- return <group ref={bag} position={BAG_POSITION}
+ return <group ref={bag} position={bagPosition}
   onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
    <mesh scale={[.55,.4,.3]}>
       <sphereGeometry args={[1,28,22]}/>
@@ -71,10 +71,12 @@ function Satchel({onOpenSack,count}){
  </group>;
 }
 export default function CollectionFX({completed=[],reducedMotion=false,epoch=0,onOpenSack}){
+ const size=useThree(state=>state.size);
+ const bagPosition=size.width<700?[-1.4,-1.1,3.7]:BAG_POSITION;
  return <>
-   <Satchel onOpenSack={onOpenSack} count={completed.length}/>
+   <Satchel onOpenSack={onOpenSack} count={completed.length} bagPosition={bagPosition}/>
    {completed.filter(w=>Number.isInteger(w.index)&&w.index>=0&&w.index<17).slice(0,17).map((world,order)=>
      <CollectedOrb key={world.index} world={world} order={order}
-      epoch={epoch} reducedMotion={reducedMotion} ready={true}/>)}
+      epoch={epoch} reducedMotion={reducedMotion} ready={true} bagPosition={bagPosition}/>)}
  </>;
 }
