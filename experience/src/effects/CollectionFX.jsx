@@ -36,7 +36,7 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
   if(begin.current?.epoch!==epoch)begin.current={epoch,start:clock.elapsedTime*1000};
   const time=clock.elapsedTime*1000-begin.current.start;
   const dynamicBag=rigPoseRef?.current?.hip;
-  const position=dynamicBag?dynamicBag.toArray().map((v,i)=>v+([.24,-.32,.12][i])):bagPosition;
+  const position=dynamicBag?dynamicBag.toArray().map((v,i)=>v+([.38,-.25,.16][i])):bagPosition;
   const hand=rigPoseRef?.current?.hand?.toArray()||null;
   const {point,arrived}=collectPosition(worldLayout,order,time,reducedMotion,position,hand);
   const sackOffset=new THREE.Vector3((order%4-1.5)*.115,Math.floor(order/4)*.08,order*.007);
@@ -65,23 +65,24 @@ function Satchel({onOpenSack,count,bagPosition,rigPoseRef}){
  useFrame((state)=>{
   if(!bag.current)return;
   const hip=rigPoseRef?.current?.hip;
-  if(hip)bag.current.position.copy(hip).add(new THREE.Vector3(.24,-.32,.12));
+  if(hip)bag.current.position.copy(hip).add(new THREE.Vector3(.38,-.25,.16));
   bag.current.rotation.z=Math.sin(state.clock.elapsedTime*1.7)*.035;
  });
  return <group ref={bag} position={bagPosition}
   onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
-   <mesh scale={[.55,.4,.3]}>
+   <mesh scale={[.37,.30,.24]}>
       <sphereGeometry args={[1,28,22]}/>
       <meshStandardMaterial color="#aa6f59" roughness={.84} metalness={.05}/>
    </mesh>
-   <mesh position={[0,.32,0]} rotation={[Math.PI/2,0,0]}>
-      <torusGeometry args={[.22,.05,8,28]}/>
+   <mesh position={[0,.24,0]} rotation={[Math.PI/2,0,0]}>
+      <torusGeometry args={[.195,.034,8,28]}/>
       <meshStandardMaterial color="#e8b77c" roughness={.44} metalness={.26}/>
    </mesh>
-   <mesh position={[0,.08,.28]} scale={[.17,.16,.06]}>
+   <mesh position={[0,.06,.23]} scale={[.10,.10,.04]}>
       <sphereGeometry args={[1,16,16]}/>
       <meshStandardMaterial color={count>0?"#f7d99e":"#6d4b5c"} emissive="#a77bbf" emissiveIntensity={count>0?.8:.05}/>
    </mesh>
+   <mesh position={[0,.17,.20]} scale={[.37,.115,.08]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color="#755044" roughness={.87}/></mesh>
    <pointLight color="#dfb5ff" intensity={count>0?1.5:.25} distance={3}/>
  </group>;
 }
