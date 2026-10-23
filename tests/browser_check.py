@@ -15,8 +15,13 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
   await page.evaluate('''() => { window.SpeechRecognition = class {start(){window.__fake_recognition=this;} stop(){this.onend?.();}} }''')
   await page.add_script_tag(content=(R/'app.js').read_text())
   await page.wait_for_selector('.planet-node',timeout=7000)
+  # Login-first experience; choose explicit free guest preview for existing learner smoke.
+  assert await page.locator('#entry-gate').is_visible()
+  assert await page.locator('#entry-login').count()==1
+  await page.locator('#entry-guest').click()
+  assert not await page.locator('#entry-gate').is_visible()
   count=await page.locator('.planet-node').count();assert count==17,count
-  assert await page.locator('h1').inner_text()
+  assert await page.locator('#root h1').inner_text()
   if reduced:
    assert not await page.locator('#motion-toggle').is_checked()
    assert await page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
