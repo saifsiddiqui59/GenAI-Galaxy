@@ -14,6 +14,7 @@ class P3ReleasePolicyTests(unittest.TestCase):
                      "gengalaxy-p3-1429841605", "gengalaxyp31429841605",
                      "--flexconsumption-location", "--maximum-instance-count 2",
                      "--instance-memory 512", "--disable-app-insights true",
+                     "list-flexconsumption-locations",
                      "--allow-blob-public-access false", "azure/login@v3"):
             self.assertIn(must, s)
         for forbidden in ("pull_request:", "  push:", "az group create",
@@ -26,7 +27,7 @@ class P3ReleasePolicyTests(unittest.TestCase):
                      "environment: dev", "refs/heads/main", "functionapp show",
                      "GALAXY_BACKEND_PROFILE=direct-consumption",
                      "GALAXY_AZURE_OPENAI_API_KEY", "GALAXY_SUPABASE_PUBLISHABLE_KEY",
-                     "Azure/functions-action@v1", "package: api",
+                     "Azure/functions-action@v1", "package: api", "remote-build: true",
                      "gengalaxy-p3-1429841605"):
             self.assertIn(must, s)
         for forbidden in ("pull_request:", "  push:", "az functionapp create",
