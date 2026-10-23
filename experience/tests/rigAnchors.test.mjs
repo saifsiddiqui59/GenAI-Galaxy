@@ -21,3 +21,11 @@ test('invalid coordinates cannot produce a bogus grip',()=>{
  const rig=discoverRigAnchors(root([bone('leftHand',[NaN,0,0]),bone('rightHand',[1,0,0])]));
  assert.equal(gripMidpoint(rig,Vec),null);
 });
+
+test('verified Quaternius FBX .001 limb end-bones serve as wrist proxies',()=>{
+ const rig=discoverRigAnchors(root([bone('L.DownLeg.001_end',[1,2,3]),bone('R.DownLeg.001_end',[3,2,3]),bone('Hips',[0,1,0])]));
+ assert.equal(rig.readyToOffer,true);
+ assert.equal(rig.leftHand.name,'L.DownLeg.001_end');
+ assert.equal(rig.rightHand.name,'R.DownLeg.001_end');
+ assert.deepEqual(gripMidpoint(rig,Vec),new Vec(2,2,3));
+});
