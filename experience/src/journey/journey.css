@@ -38,3 +38,6 @@
  .guardian-replay{top:101px;bottom:auto;right:12px;font-size:10px;padding:8px 10px}
  .guardian-skip{top:101px;bottom:auto;left:12px;right:auto;font-size:10px;padding:8px 10px}
 }
+
+/* P21 real-device: keep the mastered-world inspector off the guardian's face. */
+@media(max-width:700px){.guardian-mission{top:29%;right:10px}.guardian-sack{padding:9px 12px;font-size:12px;border-radius:12px}.guardian-sack-panel{top:44px;right:0;max-height:44vh}}
