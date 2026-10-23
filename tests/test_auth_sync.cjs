@@ -6,7 +6,7 @@ const path=require('node:path');
 const vm=require('node:vm');
 const source=fs.readFileSync(path.join(__dirname,'..','app.js'),'utf8').replace(/\nstart\(\);\s*$/,'\n');
 function harness(records={},options={}){
- const calls=[],notices=[],data=structuredClone(records),pending=options.pending||{};
+ const calls=[],notices=[],guides=[],dismissals=[],data=structuredClone(records),pending=options.pending||{};
  const client={
   from(table){
    const filters={};const call={table,filters};calls.push(call);
@@ -24,7 +24,7 @@ function harness(records={},options={}){
   }
  };
  const store=new Map();
- const ctx=vm.createContext({console,window:{},matchMedia:()=>({matches:false}),
+ const ctx=vm.createContext({console,window:{GalaxyGenieGuide:{show:d=>guides.push(d),dismiss:()=>dismissals.push(true)}},matchMedia:()=>({matches:false}),
   document:{getElementById:()=>({classList:{add(){},remove(){}},textContent:''})},
   localStorage:{getItem:key=>store.get(key)||null,setItem:(k,v)=>store.set(k,v)},
   setTimeout,clearTimeout,Date,Math,JSON,URL,performance:{now:()=>0},
@@ -32,7 +32,7 @@ function harness(records={},options={}){
  vm.runInContext(source,ctx,{filename:'app.js'});
  ctx.__client=client;ctx.__notices=notices;
  vm.runInContext('state.client=__client; render=()=>{}; authClose=()=>{}; notify=s=>__notices.push(s)',ctx);
- return {ctx,calls,notices,state:vm.runInContext('state',ctx),
+ return {ctx,calls,notices,guides,dismissals,state:vm.runInContext('state',ctx),
   signIn:user=>{ctx.__user=user;return vm.runInContext('signedIn(__user)',ctx)},
   signOut:()=>vm.runInContext('resetAuthToGuest()',ctx)};
 }
@@ -89,6 +89,32 @@ async function run(){
  assert.equal(race.state.user,null);
  assert.equal(race.state.documents.length,0);
  assert.equal(race.calls.length,1);
+ // A genie welcome is shown only after successful, owner-scoped cloud sync.
+ // Full mastery is required for a whole planet to enter the sack.
+ const worldA={branchIndex:0,branch:'RAG',group:'Retrieval',title:'Chunking'};
+ const worldB={branchIndex:1,branch:'LangGraph',group:'Orchestration',title:'Nodes'};
+ const progressKey='RAG / Retrieval / Chunking';
+ const ready=harness({genai_study_progress:[
+  {user_id:'alice',topic_key:progressKey,status:2,confidence:5}
+ ]});
+ ready.state.subjects=[{title:'RAG'},{title:'LangGraph'}];
+ ready.state.topics=[worldA,worldB];
+ await ready.signIn({id:'alice',email:'a@test.invalid'});
+ assert.equal(ready.guides.length,1);
+ assert.equal(ready.guides[0].masteredWorlds.length,1);
+ assert.equal(ready.guides[0].masteredWorlds[0].name,'RAG');
+ assert.equal(ready.guides[0].next.title,'LangGraph');
+ assert.equal(typeof ready.guides[0].onContinue,'function');
+ ready.signOut();
+ assert.equal(ready.dismissals.length,1);
+ // Even when a misconfigured query returns foreign rows, no guide is shown.
+ const broken=harness({genai_study_progress:[
+  {user_id:'bob',topic_key:progressKey,status:2,confidence:5}
+ ]},{ignoreFilters:true});
+ broken.state.subjects=[{title:'RAG'},{title:'LangGraph'}];
+ broken.state.topics=[worldA,worldB];
+ await broken.signIn({id:'alice'});
+ assert.equal(broken.guides.length,0);
  console.log('Auth sync: owner scoping, account switch, sign-out race and foreign-row rejection PASS');
 }
 run().catch(e=>{console.error(e);process.exitCode=1});
