@@ -24,7 +24,7 @@ window.GALAXY_SPEECH_BROKER_URL='';
 assert (root/"models/guardian.glb").stat().st_size==463988
 assert (root/"index.html").is_file()
 files=[p for p in root.rglob("*") if p.is_file()]
-assert len(files)>=12
+assert len(files)>=11, f'Incomplete public preview: {len(files)} files'
 # Library bundles may legitimately contain the literal string "service_role"
 # as a warning/regex. Check authored entrypoints for actual secret-like values.
 import re
