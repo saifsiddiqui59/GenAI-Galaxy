@@ -42,7 +42,7 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
   // Actual mastered miniatures line up at the guardian's feet for pickup.
   // Original full-size learning planets remain intact and clickable.
   const hip=rigPoseRef?.current?.hip;
-  if(!spawn.current&&hip)spawn.current={
+  if(!spawn.current&&hip&&time>=COLLECT_START_MS-120)spawn.current={
     ...worldLayout,
     x:hip.x+((order%4)-1.5)*.38,y:hip.y-.72,
     z:hip.z+.43+Math.floor(order/4)*.15
@@ -60,15 +60,15 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
     halo.current.material.opacity=shine;
     halo.current.scale.setScalar(arrived?1.1:1.25);
   }
-  mesh.current.visible=ready&&Boolean(hip);
+  mesh.current.visible=ready&&Boolean(spawn.current);
  });
  if(!worldLayout)return null;
  return <group ref={mesh} position={[worldLayout.x,worldLayout.y,worldLayout.z]}>
    <mesh><icosahedronGeometry args={[.22,2]}/><meshStandardMaterial color={COLORS[world.index]}
      emissive={COLORS[world.index]} emissiveIntensity={.7} metalness={.25} roughness={.25}/></mesh>
    <mesh ref={halo}>
-    <sphereGeometry args={[.29,16,16]}/>
-    <meshBasicMaterial color={COLORS[world.index]} transparent opacity={.3} wireframe depthWrite={false}/>
+    <sphereGeometry args={[.245,12,12]}/>
+    <meshBasicMaterial color={COLORS[world.index]} transparent opacity={.16} wireframe depthWrite={false}/>
    </mesh>
  </group>;
 }
