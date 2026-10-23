@@ -25,8 +25,8 @@ export function recommendedWorld({topics,progress,now=Date.now()}={}){
 export function phaseAt(ms,completedCount,reducedMotion=false){
  if(reducedMotion)return {phase:'offering',visible:completedCount};
  if(ms<1700)return {phase:'arriving',visible:0};
- const count=Math.min(completedCount,Math.floor((ms-1700)/560));
+ const count=Math.min(completedCount,Math.floor((ms-1700)/1050));
  if(count<completedCount)return {phase:'collecting',visible:count};
- if(ms<1700+completedCount*560+550)return {phase:'collecting',visible:completedCount};
+ if(ms<1700+completedCount*1050+550)return {phase:'collecting',visible:completedCount};
  return {phase:'offering',visible:completedCount};
 }
