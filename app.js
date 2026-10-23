@@ -475,10 +475,16 @@ function authOpen(mode='signin'){
 }
 function authClose(){DOM('auth-modal').classList.add('is-hidden');setAuthMode('signin')}
 let authEpoch=0; // Invalidates any in-flight reads when identity changes.
+function setEntryVisible(visible){
+ const gate=DOM('entry-gate');if(!gate)return;
+ gate.classList.toggle('is-hidden',!visible);
+ if(!visible)gate.setAttribute('aria-hidden','true');
+ else gate.removeAttribute('aria-hidden');
+}
 function resetAuthToGuest(){
  stopVoice();authEpoch++;
  state.user=null;state.isGuest=true;state.documents=[];state.planInfo=null;state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];state.approvalInfo=null;
- loadGuest();render();
+ loadGuest();render();setEntryVisible(true);
 }
 async function signedIn(user){
  if(!user?.id||!state.client)return;
@@ -512,6 +518,7 @@ async function signedIn(user){
   state.attempts=hist.data||[];state.documents=docs.data||[];
   state.user=user;state.isGuest=false;
   state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];state.approvalInfo=null;
+  setEntryVisible(false);
   if(authMode!=='recovery')authClose();render();notify('Signed in · private study data loaded');
   void refreshPlan();
   void platformRefresh();
@@ -565,6 +572,10 @@ async function authSubmit(e){
  }catch(err){DOM('auth-message').textContent=err.message||'Authentication failed'}
  finally{button.disabled=false;DOM('auth-password').value=''}
 }
-async function start(){try{const [cr,lr]=await Promise.all([fetch('data/curriculum.json'),fetch('data/lessons.json')]);if(!cr.ok||!lr.ok)throw Error('Could not load study data');state.subjects=await cr.json();state.lessons=await lr.json();state.subjects.forEach((ch,ci)=>ch.groups.forEach(group=>group.items.forEach(t=>state.topics.push({...t,branch:ch.title,group:group.title,phase:ch.phase,branchIndex:ci}))));if(state.subjects.length!==17||state.topics.length<230)throw Error('V3 curriculum integrity check failed');loadGuest();state.current=pickNext();DOM('motion-toggle').checked=state.motion;DOM('motion-toggle').onchange=e=>{state.motion=e.target.checked;paintStars(performance.now());positionPlanets(performance.now())};DOM('signin-btn').onclick=async()=>{if(state.isGuest)authOpen();else if(window.confirm('Sign out of your study account?')){const {error}=await state.client.auth.signOut();if(error)notify(error.message)}};DOM('auth-form').onsubmit=authSubmit;DOM('auth-switch').onclick=()=>setAuthMode(authMode==='signin'?'signup':'signin');DOM('auth-forgot').onclick=()=>authOpen('forgot');DOM('close-modal').onclick=authClose;DOM('auth-modal').onclick=e=>{if(e.target===DOM('auth-modal'))authClose()};addEventListener('resize',()=>{drawStars();positionPlanets(performance.now())});drawStars();setView('galaxy');state.galaxyFrame=requestAnimationFrame(cycle);initAuth()}catch(err){DOM('root').innerHTML=`<section class="panel"><h2>Unable to initialize study data</h2><p>${escapeHtml(err.message)}</p><p>Serve this folder over HTTP: <code>python -m http.server 8000</code>. Do not open index.html via file://.</p></section>`;console.error(err)}}
+async function start(){try{const [cr,lr]=await Promise.all([fetch('data/curriculum.json'),fetch('data/lessons.json')]);if(!cr.ok||!lr.ok)throw Error('Could not load study data');state.subjects=await cr.json();state.lessons=await lr.json();state.subjects.forEach((ch,ci)=>ch.groups.forEach(group=>group.items.forEach(t=>state.topics.push({...t,branch:ch.title,group:group.title,phase:ch.phase,branchIndex:ci}))));if(state.subjects.length!==17||state.topics.length<230)throw Error('V3 curriculum integrity check failed');loadGuest();state.current=pickNext();DOM('motion-toggle').checked=state.motion;DOM('motion-toggle').onchange=e=>{state.motion=e.target.checked;paintStars(performance.now());positionPlanets(performance.now())};DOM('signin-btn').onclick=async()=>{if(state.isGuest)authOpen();else if(window.confirm('Sign out of your study account?')){const {error}=await state.client.auth.signOut();if(error)notify(error.message)}};DOM('auth-form').onsubmit=authSubmit;DOM('auth-switch').onclick=()=>setAuthMode(authMode==='signin'?'signup':'signin');DOM('auth-forgot').onclick=()=>authOpen('forgot');DOM('close-modal').onclick=authClose;DOM('auth-modal').onclick=e=>{if(e.target===DOM('auth-modal'))authClose()};
+ if(DOM('entry-login'))DOM('entry-login').onclick=()=>authOpen('signin');
+ if(DOM('entry-signup'))DOM('entry-signup').onclick=()=>authOpen('signup');
+ if(DOM('entry-guest'))DOM('entry-guest').onclick=()=>setEntryVisible(false);
+ addEventListener('resize',()=>{drawStars();positionPlanets(performance.now())});drawStars();setView('galaxy');state.galaxyFrame=requestAnimationFrame(cycle);initAuth()}catch(err){DOM('root').innerHTML=`<section class="panel"><h2>Unable to initialize study data</h2><p>${escapeHtml(err.message)}</p><p>Serve this folder over HTTP: <code>python -m http.server 8000</code>. Do not open index.html via file://.</p></section>`;console.error(err)}}
 window.GenAIGalaxyTest={evaluateAnswer,adaptiveQuestion,questionFor,key,getStats,positionPlanets,isUncertainAnswer,topicAfter};
 start();
