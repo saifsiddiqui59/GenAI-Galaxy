@@ -197,3 +197,10 @@ Applied Galaxy-only migration `20261023110022_galaxy_freemium_subscriptions_v1` 
 - Hosted protected Actions verification: six runs **all success** — #39952220136 (Auth), #39952291427 (South India model), #39952527715 (Flex), #39952768305 (API), #39952989858 (one previously authorized real model smoke), #39953104627 (static AI_READY release).
 - User explicitly rejected adding a payment gateway, new paid AI model, fine-tuning or paid evaluation. P13 only modifies read-only acceptance/offline tests and supporting docs; does **not** repeat any model calls, spend on new Azure resources or invoke paid golden checks.
 - Site runtime URL intentionally injected during protected staging; fixed public asset acceptance to compare only the exact approved change while requiring exact byte-parity elsewhere. Manual human mic/password reset and independent lesson fact-checking remain open. See P13 acceptance record.
+
+
+## P21 KayKit V4 interactive review preview — 2026-10-23 (verified)
+
+- The visually rejected P17/P19 skeleton was replaced **in an isolated, unmerged feature branch** by KayKit CC0 textured Mage (95 clips, 41 bones), with real hand/pelvis attachments and low-cost procedural planet materials; PR #96 remains draft.
+- Versioned public interactive review: https://gengalaxy1429841605.z29.web.core.windows.net/previews/galaxy-3d-v4/index.html?demo=1 — Azure protected deployment [#40008968388](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/40008968388) SUCCESS, exactly 14 hosted staged asset files verified byte-for-byte by SHA256. Root site untouched.
+- Exact review build `9eb442613278f0eea3d5e57f63c832ef13f0ec4c` passed 3/3 CI jobs (runs #40008306320 and #40008299990) and Chromium desktop/mobile/reduced-motion acceptance. Owner-scoped progress unchanged; ?demo=1 explicitly synthetic. Art approval and hosted authenticated RLS remain incomplete.
