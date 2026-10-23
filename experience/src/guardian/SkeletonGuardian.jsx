@@ -26,7 +26,7 @@ export function advanceSkeletonX(phase,elapsed,smallScreen=false){
   if(phase!=='arriving')return end;
   return Math.min(end,start+Math.max(0,elapsed)*1.65);
 }
-function SkeletonModel({phase='idle'}){
+function SkeletonModel({phase='idle',rigPoseRef}){
  const source=import.meta.env.BASE_URL+'models/skeleton/Skeleton.fbx';
  const rootFBX=useLoader(FBXLoader,source);
  const instance=useMemo(()=>{
@@ -118,8 +118,13 @@ function SkeletonModel({phase='idle'}){
     }
     holder.current.rotation.y=THREE.MathUtils.damp(holder.current.rotation.y,-.17,4,dt);
     // Capture actual animated bone positions for visual QA; no fake IK claims.
+    instance.updateMatrixWorld(true);
+    if(rigPoseRef){
+      const hand=gripMidpoint(rig,THREE.Vector3);
+      const hip=waistPosition(rig,THREE.Vector3);
+      rigPoseRef.current={hand,hip,rigReady:rig.readyToOffer,waistReady:rig.readyForSatchel};
+    }
     if(import.meta.env.DEV&&window.__galaxySkeletonDiagnostics){
-      instance.updateMatrixWorld(true);
       window.__galaxySkeletonDiagnostics.gripMidpoint=gripMidpoint(rig,THREE.Vector3)?.toArray()||null;
       window.__galaxySkeletonDiagnostics.waistPosition=waistPosition(rig,THREE.Vector3)?.toArray()||null;
     }
@@ -132,6 +137,6 @@ function SkeletonModel({phase='idle'}){
    <pointLight position={[0,120,120]} intensity={8} color="#e9d2ff" distance={400}/>
  </group>;
 }
-export default function SkeletonGuardian({phase='idle'}){
- return <Suspense fallback={null}><SkeletonModel phase={phase}/></Suspense>;
+export default function SkeletonGuardian({phase='idle',rigPoseRef}){
+ return <Suspense fallback={null}><SkeletonModel phase={phase} rigPoseRef={rigPoseRef}/></Suspense>;
 }
