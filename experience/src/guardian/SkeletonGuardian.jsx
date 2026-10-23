@@ -38,6 +38,8 @@ function SkeletonModel({phase='idle'}){
    // Normalize by actual skinned geometry bounds, never a guessed .012.
    const height=Number.isFinite(size.y)&&size.y>0.01?size.y:170;
    const factor=3.2/height;
+   model.userData.sourceDimensions={height,width:size.x,depth:size.z,factor,
+       min:[bounds.min.x,bounds.min.y,bounds.min.z],max:[bounds.max.x,bounds.max.y,bounds.max.z]};
    model.scale.setScalar(factor);
    model.position.set(-center.x*factor,-bounds.min.y*factor,-center.z*factor);
    return model;
@@ -56,7 +58,9 @@ function SkeletonModel({phase='idle'}){
   if(!meshes)throw Error('Loaded CC0 Skeleton FBX has no drawable mesh');
   // Synthetic-browser acceptance instrumentation only: never include private data.
   if(import.meta.env.DEV||new URLSearchParams(window.location.search).has('demo'))
-    window.__galaxySkeletonDiagnostics={meshes,bones,clips:names.length};
+    window.__galaxySkeletonDiagnostics={meshes,bones,clips:names.length,
+       sourceDimensions:instance.userData.sourceDimensions,
+       worldPosition:instance.getWorldPosition(new THREE.Vector3()).toArray()};
  },[instance,names]);
  useEffect(()=>{
   instance.traverse(node=>{
