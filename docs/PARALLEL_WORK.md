@@ -39,3 +39,16 @@ This section supersedes the original broad assignments below. **Repo:** `saifsid
 - QA/CI: `tests/**`, `.github/workflows/**`, `scripts/checkpoint.sh`.
 
 Only coordinator edits shared `app.js`/interfaces and merges PRs; workers create branches and report blockers. All GitHub work stays isolated from RetailGrowthAI/WineShopPOS.
+
+
+## P14 Genie Guardian — separate 2026-10-23 workstreams
+These assignments are **in addition to** historical P2 boundaries and are restricted to Genie experience. All branches were created independently from main; only coordinator owns integration into shared app source after baseline PR #47.
+
+| Stream | Branch / PR | Exclusive paths |
+| --- | --- | --- |
+| A visual | `feat/galaxy-genie-visual-polish` / #52 | `genie/effects/**`, `tests/genie-visual/**`, `tests/test_genie_visual_workstream.py`, `docs/acceptance/GENIE_VISUAL_A.md` |
+| B handoff | `feat/galaxy-genie-planet-handoff` / #53 | `galaxy/handoff/**`, `tests/handoff/**`, `tests/test_genie_handoff_workstream.py`, `docs/acceptance/GENIE_HANDOFF_B.md` |
+| C story | `feat/galaxy-genie-progress-story` / #54 | `genie/progress/**`, `tests/progress-story/**`, `tests/test_genie_progress_workstream.py`, `docs/acceptance/GENIE_PROGRESS_C.md` |
+| D QA | `test/galaxy-genie-experience-qa` / #55 | `tests/experience/**`, `tests/test_genie_experience_policy.py`, `docs/acceptance/GENIE_QA_D.md` |
+
+Coordinator only: `feat/galaxy-genie-combined-preview` / #58 (stacked on #47), owns shared `app.js`, `index.html`, `styles.css`, `genie/guide.js`, CI/deploy scripts/tests and canonical docs. Require independent 3/3, net diff review, main post-merge CI, owner-approved static hosting release; never deploy on pull-request push.
