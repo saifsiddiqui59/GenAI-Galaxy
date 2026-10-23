@@ -31,10 +31,10 @@ export function collectPosition(world,index,time,disabled=false,bagPosition=BAG_
 function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPoseRef,compact,clockRef}){
  const mesh=useRef(),halo=useRef();
  const worldLayout=layoutWorlds()[world.index];
- const begin=useRef(null);
+ const begin=useRef(null),spawn=useRef(null);
  useFrame(({clock},delta)=>{
   if(!mesh.current||!worldLayout)return;
-  if(begin.current?.epoch!==epoch)begin.current={epoch,start:clock.elapsedTime*1000};
+  if(begin.current?.epoch!==epoch){begin.current={epoch,start:clock.elapsedTime*1000};spawn.current=null;}
   const time=clockRef?.current?.ms??(clock.elapsedTime*1000-begin.current.start);
   const dynamicBag=rigPoseRef?.current?.hip;
   const position=dynamicBag?dynamicBag.toArray().map((v,i)=>v+([.38,-.25,.16][i])):bagPosition;
@@ -42,9 +42,14 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
   // Actual mastered miniatures line up at the guardian's feet for pickup.
   // Original full-size learning planets remain intact and clickable.
   const hip=rigPoseRef?.current?.hip;
-  const sourceWorld=hip?
-    {...worldLayout,x:hip.x+((order%4)-1.5)*.38,y:hip.y-.72,z:hip.z+.43+Math.floor(order/4)*.15}:
-    compact?{...worldLayout,x:worldLayout.x*.48,y:worldLayout.y*.73+.4,z:worldLayout.z*.8-1.8}:worldLayout;
+  if(!spawn.current&&hip)spawn.current={
+    ...worldLayout,
+    x:hip.x+((order%4)-1.5)*.38,y:hip.y-.72,
+    z:hip.z+.43+Math.floor(order/4)*.15
+  };
+  const sourceWorld=spawn.current||(
+    compact?{...worldLayout,x:worldLayout.x*.48,y:worldLayout.y*.73+.4,z:worldLayout.z*.8-1.8}:worldLayout
+  );
   const {point,arrived}=collectPosition(sourceWorld,order,time,reducedMotion,position,hand);
   const sackOffset=new THREE.Vector3((order%4-1.5)*.115,Math.floor(order/4)*.08,order*.007);
   if(arrived)point.add(sackOffset);
@@ -55,7 +60,7 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
     halo.current.material.opacity=shine;
     halo.current.scale.setScalar(arrived?1.1:1.25);
   }
-  mesh.current.visible=ready;
+  mesh.current.visible=ready&&Boolean(hip);
  });
  if(!worldLayout)return null;
  return <group ref={mesh} position={[worldLayout.x,worldLayout.y,worldLayout.z]}>
