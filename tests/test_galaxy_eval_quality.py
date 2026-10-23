@@ -101,7 +101,7 @@ class GalaxyEvaluationQualityTests(unittest.TestCase):
         self.assertIn("usage_counters(out)", code)
         self.assertIn("quota='reserved'", code)
         self.assertIn("except QuotaExceeded", code)
-        self.assertIn("model_review(RUBRICS[k],question,response)", code)
+        self.assertIn("model_review(RUBRICS[k],question,response,history=history)", code)
 
 
 if __name__ == "__main__":

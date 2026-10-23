@@ -169,7 +169,7 @@ function modelAvailability(){
  if(typeof endpoint!=='string'||!endpoint.startsWith('https://'))return {ready:false,message:'The AI endpoint configuration is invalid. Only the free local check is available.'};
  if(!state.user||state.isGuest)return {ready:false,message:'Guest mode uses a free keyword check, not an LLM. Sign in to request model-based feedback.'};
  if(!state.client)return {ready:false,message:'Account sign-in is not ready. Only local checking is available; no model was called.'};
- return {ready:true,message:'Signed in: AI evaluation uses the existing pay-as-you-go model and one daily evaluation allowance. Or choose the free local check.'};
+ return {ready:true,message:'Signed in: AI evaluation uses one existing quota-controlled model call per answer. In mock mode, up to four previous model-reviewed replies are also sent for continuity. Free local checks send nothing.'};
 }
 function modelFailureMessage(status){
  if(status===401||status===403)return 'AI review was not authorized. Sign in again; no valid model review was returned.';
@@ -268,7 +268,7 @@ function buildCoachReport(){
  state.coachInsights=api.summarize({attempts:state.attempts,progress:state.progress,session:state.sessionReport});render();
 }
 function startMockSession(){
- state.studyMode='mock';state.session={done:0,limit:5,topics:[],rounds:[],asked:[],startedAt:Date.now()};
+ state.studyMode='mock';state.session={done:0,limit:5,topics:[],rounds:[],asked:[],history:[],startedAt:Date.now()};
  state.sessionReport=null;beginPracticeTopic(nextRoleTopic(state.current||pickNext()));render();
 }
 function finishMockSession(){
@@ -426,7 +426,8 @@ async function submitAnswer(e,localOnly=false){
    const req=await fetch(window.GALAXY_EVALUATOR_URL,{
     method:'POST',
     headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},
-    body:JSON.stringify({topic_key:key(t),question:state.attemptQuestion,response:answer,rubric_version:'v4-m2'})
+    body:JSON.stringify({topic_key:key(t),question:state.attemptQuestion,response:answer,rubric_version:'v4-m2',
+     history:(state.session?.history||[]).slice(-4)})
    });
    if(!req.ok)throw Error('HTTP_'+req.status);
    const result=await req.json();
@@ -446,6 +447,14 @@ async function submitAnswer(e,localOnly=false){
    else if(/^HTTP_\d{3}$/.test(error))score.localReason=modelFailureMessage(Number(error.slice(5)));
    else score.localReason='AI request could not be completed (network or browser access). This is only a local keyword result.';
   }
+ }
+ // Only previously AI-reviewed turns become conversational context, and only after
+ // a deliberate model request. Free/local answers are never sent later as history.
+ if(state.session&&score.serverReviewed===true){
+  const past=Array.isArray(state.session.history)?state.session.history:[];
+  past.push({question:String(state.attemptQuestion||'').slice(0,300),
+   response:answer.slice(0,650)});
+  state.session.history=past.slice(-4);
  }
  state.feedback=score;
  const p=getP(t);

@@ -175,3 +175,29 @@ def validate_review(response: dict) -> dict:
             'missing_concepts':missing, 'has_factual_errors':factual,
             'feedback':feedback[:1400],'improved_answer':improved[:2000], 'followup':followup[:400],
             'rubric_version':'v4-m2'}
+
+def validate_interview_history(value: object) -> list[dict[str, str]]:
+    """Validate optional in-session context before an authenticated, quota-controlled model call.
+
+    Previous messages are UNTRUSTED candidate text, not instructions or approved facts.
+    This function does not read from or write to any persistent storage.
+    """
+    if value is None:
+        return []
+    if not isinstance(value, list) or len(value) > 4:
+        raise InputError('Invalid interview history')
+    clean = []
+    total = 0
+    for row in value:
+        if not isinstance(row, dict) or set(row) != {'question', 'response'}:
+            raise InputError('Invalid interview history')
+        q, ans = row.get('question'), row.get('response')
+        if (not isinstance(q, str) or not isinstance(ans, str)
+            or not 1 <= len(q.strip()) <= 300 or not 15 <= len(ans.strip()) <= 650
+            or any(ord(char) < 32 and char not in '\\n\\t' for char in q + ans)):
+            raise InputError('Invalid interview history')
+        total += len(q) + len(ans)
+        if total > 3500:
+            raise InputError('Interview history is too long')
+        clean.append({'question': q.strip(), 'response': ans.strip()})
+    return clean
