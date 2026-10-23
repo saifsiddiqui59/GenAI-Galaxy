@@ -151,3 +151,11 @@ Before P4, main `accdecd9` [run #39845004927](https://github.com/saifsiddiqui59/
 - **Backend:** existing source-only evaluator, Speech broker and private Vault now reject redirects carrying credentials and disallow non-Galaxy Supabase project URLs. Actual private/secured Functions/APIM ingress, user-level quotas, provider credentials, malware quarantine and production end-to-end evaluation are not provisioned or deployed.
 - **Lessons:** deterministic audit reviewed structure of all 245 reference lesson records and flagged language for version/accuracy/evidence review; domain-expert factual certification and actual spoken answer timing remain outstanding.
 - **Frontend:** previously confirmed Azure static deploy run #39858392869 succeeded. No backend deployed or hosted Galaxy frontend republish was performed by P7.
+
+## P8 — P3 consumption-first backend source (2026-10-23)
+
+Owner requested minimum or consumption-based backend infrastructure instead of always-on APIM or paid dedicated plans. Added `GALAXY_BACKEND_PROFILE=direct-consumption` for authenticated, daily-quota-gated evaluator, pinned to the exact Galaxy Supabase project; shared `managed-gateway` mode remains fail-closed. The proposed SQL implements **5 model evaluations per user / 50 total per UTC day**, with transactional reservations before Azure model calls. Vault extraction and Azure Speech bearer token minting return 503 in direct mode; browser STT remains separate. No false claim of malware scanning or real model scoring.
+
+Two GitHub `dev` main-only manual workflows prepare exactly one small Flex Consumption Function (512 MiB, 2 maximum on-demand instances, 0 always-ready) plus one private Standard_LRS host-storage account, then deploy code to that existing Function after `PROVISION` / `DEPLOY` confirmations. **Code/PR/CI are not cloud deployment.** Existing Galaxy OIDC identity currently needs appropriate narrowly scoped management permissions to create new backend resources, and provider keys and a real Azure OpenAI model deployment must be supplied as protected `dev` secrets. Proposed Supabase quota SQL has **not** been applied to the shared project. See `docs/acceptance/P3_MINIMUM_CONSUMPTION.md`.
+
+Exclude owner-declined P4 monitoring; don't touch other projects or reactivate browser/mic acceptance.
