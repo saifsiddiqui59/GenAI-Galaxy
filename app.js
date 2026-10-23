@@ -505,6 +505,7 @@ async function signedIn(user){
   state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];
   if(authMode!=='recovery')authClose();render();notify('Signed in · private study data loaded');
   void refreshPlan();
+  void platformRefresh();
  }catch(err){if(current())notify('Private sync unavailable: '+(err.message||'unknown error'))}
 }
 async function initAuth(){
