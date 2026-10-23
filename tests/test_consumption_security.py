@@ -68,7 +68,7 @@ class DirectConsumptionSecurityTests(unittest.TestCase):
         src = (ROOT / "api/function_app.py").read_text()
         evaluation = src.split("def evaluate(", 1)[1].split("@app.route(route='vault/extract'",1)[0]
         self.assertIn("enforce_eval_quota(", evaluation)
-        self.assertLess(evaluation.index("enforce_eval_quota("), evaluation.index("review=model_review"))
+        self.assertLess(evaluation.index("enforce_eval_quota("), evaluation.index("review,usage=model_review"))
         self.assertIn("except QuotaExceeded", evaluation)
         self.assertIn("429", evaluation)
         vault = src.split("def vault_extract(",1)[1].split("@app.route(route='speech/token'",1)[0]
