@@ -17,7 +17,6 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
  },[start,reducedMotion,skipped]);
  useEffect(()=>onPhase?.(view.phase),[view.phase,onPhase]);
  useEffect(()=>{if(openSackSignal>0)setSackOpen(true)},[openSackSignal]);
- const visual=completed.slice(0,view.visible);
  return <div className="guardian-journey" aria-label="Your Galaxy Guardian">
     <div className="guardian-journey-top">
       <p className="guardian-eyebrow">YOUR COSMIC COMPANION</p>
@@ -38,10 +37,6 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
           </button>
         </li>)}</ul>:<p>No fully mastered worlds yet. Your collection starts here.</p>}
       </div>}
-    </div>
-    <div className="guardian-collected" aria-hidden="true">
-      {visual.map((w,i)=><span key={w.index} className="guardian-mini-world"
-        style={{'--collect-i':i,'--hue':i*28}}/>)}
     </div>
     <div className="guardian-next">
       <span className="guardian-label">YOUR NEXT MISSION</span>
