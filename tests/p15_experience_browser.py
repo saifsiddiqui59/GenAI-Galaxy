@@ -27,6 +27,7 @@ async def inspect(browser,origin,viewport,reduced=False):
  model=await page.request.get(origin+"/models/skeleton/Skeleton.fbx")
  assert model.status==200 and len(await model.body())==433820, "Expected verified CC0 Quaternius Skeleton FBX"
  await page.wait_for_function("""() => window.__galaxySkeletonDiagnostics?.meshes > 0 && window.__galaxySkeletonDiagnostics?.bones > 0""",timeout=15000)
+ print("P17 skeleton diagnostics:",await page.evaluate("window.__galaxySkeletonDiagnostics"))
 
  # Let the walking, collection and two-handed offering visual sequence finish.
  await page.wait_for_timeout(4200)
