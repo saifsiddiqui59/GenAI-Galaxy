@@ -8,7 +8,7 @@ SOURCE = (ROOT / "app.js").read_text(encoding="utf-8")
 class AdaptiveLearningUpgradeTests(unittest.TestCase):
     def test_primary_controls_exist_before_scoring(self):
         question = SOURCE.index('id="top-teach"')
-        scoring = SOURCE.index('class="score-panel"')
+        scoring = SOURCE.index('LOCAL CONCEPT CHECK · NOT A FACTUAL GRADE')
         self.assertLess(question, scoring)
         for button in ['id="top-skip"', 'id="top-hint"', 'id="adaptive-next-topic"',
                        'id="lesson-next"', 'id="lesson-teach"']:
