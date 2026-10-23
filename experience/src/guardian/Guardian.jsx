@@ -40,14 +40,14 @@ function GuardianModel({phase, onPosition}){
  useFrame((_,dt)=>{
    if(previousPhase.current!==phase){previousPhase.current=phase;elapsed.current=0;}
    elapsed.current+=Math.min(dt,.08);
-   const x=phaseX(phase,elapsed.current,narrow?-3.2:-6,narrow?-1.15:-2.85);
+   const x=phaseX(phase,elapsed.current,narrow?-3.2:-6,narrow?-.52:-2.85);
    if(character.current){
       character.current.position.x=THREE.MathUtils.damp(character.current.position.x,x,5,dt);
       character.current.rotation.y=.14;
       onPosition?.(character.current.position.x);
    }
  });
- return <group ref={character} position={[-5,-2.15,3.15]} scale={.98}>
+ return <group ref={character} position={[-5,narrow?-1.32:-2.15,3.15]} scale={narrow?.56:.90}>
    <primitive object={scene} rotation={[0,Math.PI*.18,0]}/>
  </group>;
 }
