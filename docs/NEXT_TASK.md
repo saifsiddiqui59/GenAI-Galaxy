@@ -177,3 +177,11 @@ In VS Code Git Bash, from the Galaxy main branch run bash scripts/galaxy_p3_one_
 - P13 source work: pure, free hosted asset parity verifier accepts only the explicitly staged public evaluator endpoint; all other public files must match exactly. Offline Python checks assert no payment provider, no paid workflows in push CI, and 10 golden-question topic coverage without an independent model call.
 - **Human-only remaining**: actual microphone hardware/browser permission checks, real password-reset email, SME factual reviews of 245 lessons. Optional manual *read-only guest* website browser test incurs no LLM call. Vault extraction and paid Speech broker stay disabled until separately planned.
 - See `docs/reviews/P13_ZERO_COST_ACCEPTANCE.md`. No payment integration planned.
+
+
+## P21 V4 preview — follow-up acceptance gates
+
+1. Review the real [isolated KayKit preview](https://gengalaxy1429841605.z29.web.core.windows.net/previews/galaxy-3d-v4/index.html?demo=1) at 1440x900 and 390x844 on physical devices; do not call stylized low-poly art photoreal.
+2. Validate natural character turning, repeated miniature planet pickup and sack deposit, exact hand alignment and mobile GPU frame rate with manual screen recording before merging source PR #96.
+3. Use consented Galaxy test accounts for authentic progress and two-user isolation validation; demo progress is not authentic mastery.
+4. Keep root $web/index.html unchanged; release future approved revisions under a new preview prefix with an immutable tested SHA.
