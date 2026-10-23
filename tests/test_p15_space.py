@@ -9,7 +9,7 @@ class DeepGalaxyTests(unittest.TestCase):
   self.assertIn('Starfield',code)
   self.assertIn('NebulaCloud',code)
   self.assertIn('onSelect?.(world.index)',code)
-  self.assertIn('lowPower=size.width<680',code)
+  self.assertIn('lowPower=size.width<700',code)
   self.assertIn('reducedMotion',code)
   self.assertNotIn('fetch(',code)
   self.assertNotIn('Math.random(',code)

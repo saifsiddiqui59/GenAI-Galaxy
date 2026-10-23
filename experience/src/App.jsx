@@ -1,4 +1,5 @@
-import React,{useCallback,useMemo,useRef,useState} from 'react';
+import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
+import JourneyTimeline from './journey/JourneyTimeline.jsx';
 import GalaxyAuth from './auth/GalaxyAuth.jsx';
 import CollectionFX from './effects/CollectionFX.jsx';
 import WorldDock from './navigation/WorldDock.jsx';
@@ -51,7 +52,11 @@ export default function App(){
  const [animationEnabled,setAnimationEnabled]=useState(!reduced);
  const [modelPhase,setModelPhase]=useState('arriving');
  const rigPoseRef=useRef(null);
- const choreographyRef=useRef({ms:0,skipped:false,reducedMotion:false});
+ const choreographyRef=useRef({ms:0,epoch:0,hold:false});
+ const invalidateRef=useRef(()=>{});
+ const [modelReady,setModelReady]=useState(false);
+ const [visible,setVisible]=useState(!document.hidden);
+ const ready=useCallback(()=>setModelReady(true),[]);
  const [sequence,setSequence]=useState({activeIndex:-1,visible:0,skipped:false});
  const [selected,setSelected]=useState(null);
  const [warp,setWarp]=useState(null);
@@ -72,7 +77,21 @@ export default function App(){
    recommendedWorld({topics:TOPICS,progress:activeProgress}):0,[activeOwner,activeProgress]);
  const phaseUpdate=useCallback(next=>setModelPhase(next),[]);
  const sequenceUpdate=useCallback(next=>setSequence(old=>old.activeIndex===next.activeIndex&&old.visible===next.visible&&old.skipped===next.skipped?old:next),[]);
- const clockUpdate=useCallback(next=>{choreographyRef.current=next},[]);
+ const resetClock=useCallback(()=>{
+  choreographyRef.current={ms:0,epoch:choreographyRef.current.epoch+1,hold:false};
+  setEffectsEpoch(x=>x+1);invalidateRef.current();
+ },[]);
+ useEffect(()=>{resetClock()},[activeOwner,collected.length,nextIndex,resetClock]);
+ useEffect(()=>{const handler=()=>setVisible(!document.hidden);document.addEventListener('visibilitychange',handler);return()=>document.removeEventListener('visibilitychange',handler)},[]);
+ useEffect(()=>{
+  if(!SHOW_SAMPLE)return;
+  window.__galaxyV6={
+   seek(ms){if(!Number.isFinite(ms)||ms<0||ms>60000)throw Error('Invalid preview time');choreographyRef.current.ms=ms;choreographyRef.current.hold=true;invalidateRef.current()},
+   resume(){choreographyRef.current.hold=false;invalidateRef.current()},
+   reset:resetClock
+  };
+  return()=>{delete window.__galaxyV6};
+ },[resetClock]);
  const select=useCallback(index=>{
   if(!validWorld(index)||warp)return;
   setSelected(index);
@@ -81,16 +100,21 @@ export default function App(){
  const enterLesson=useCallback(index=>{window.location.assign(studyLink(index))},[]);
  return <div className="galaxy-experience">
    {available3D&&<div className="galaxy-canvas" aria-label="Animated 3D galaxy with 17 planets">
-     <Canvas camera={{position:[0,0,11.5],fov:57}} dpr={[1,1.5]}
-       gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}>
+     <Canvas camera={{position:[0,.3,12.5],fov:48}} dpr={[1,1.5]} frameloop="demand"
+       onCreated={state=>{invalidateRef.current=state.invalidate;state.gl.setClearColor('#050916');state.gl.toneMappingExposure=1.18}}
+       gl={{antialias:true,alpha:false,powerPreference:'default'}}>
+       <JourneyTimeline clockRef={choreographyRef} count={collected.length} ready={modelReady}
+         reducedMotion={!animationEnabled||reduced} active={visible}/>
        <GalaxyScene masteredWorlds={collected} selectedIndex={selected} recommendedIndex={nextIndex}
-         onSelect={select} reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
-       <Guardian phase={animationEnabled?modelPhase:'idle'} collectionIndex={sequence.activeIndex} rigPoseRef={rigPoseRef} reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
-       <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced||budget.lowPower}
+         onSelect={select} reducedMotion={!animationEnabled||reduced} clockRef={choreographyRef}/>
+       <Guardian rigPoseRef={rigPoseRef} clockRef={choreographyRef} completedCount={collected.length}
+         onReady={ready} reducedMotion={!animationEnabled||reduced}/>
+       <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced}
          epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
          collectedCount={sequence.visible} clockRef={choreographyRef}
          onOpenSack={()=>setSackOpenFrom3D(x=>x+1)} rigPoseRef={rigPoseRef}/>
      </Canvas>
+     {!modelReady&&<div className="guardian-loading" role="status">Preparing your galaxy<span>Loading the companion and learning worlds</span></div>}
    </div>}
    {!available3D&&<div className="galaxy-no-webgl" role="status">
       <h2>3D graphics unavailable on this device</h2>
@@ -98,7 +122,7 @@ export default function App(){
     </div>}
    <div className="galaxy-brand" aria-label="GenAI Galaxy">
      <span aria-hidden="true" className="galaxy-brand-orb">✦</span>
-     <span><strong>GENAI GALAXY</strong><small>17 KNOWLEDGE WORLDS</small></span>
+     <span><strong>GENAI GALAXY</strong><small>THE LEARNING EXPEDITION</small></span>
    </div>
    <div className="galaxy-mode-tag">{SHOW_SAMPLE?
     'VISUAL DEMO · 3 SAMPLE MASTERED WORLDS · NO ACCOUNT DATA':
@@ -106,9 +130,10 @@ export default function App(){
    <GalaxyAuth demo={SHOW_SAMPLE} topicKeys={TOPIC_KEYS} onSnapshot={receiveAuth}/>
    <GuardianJourney completed={collected} nextIndex={nextIndex} nextName={LABELS[nextIndex]}
      onSelectCompleted={select} onAccept={select} onPhase={phaseUpdate}
-     onSequence={sequenceUpdate} onClock={clockUpdate}
-     openSackSignal={sackOpenFrom3D} onReplay={()=>setEffectsEpoch(x=>x+1)}
-     reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
+     onSequence={sequenceUpdate} clockRef={choreographyRef} ready={modelReady}
+     openSackSignal={sackOpenFrom3D} onReplay={resetClock}
+     reducedMotion={!animationEnabled||reduced}/>
+   <div className="galaxy-atlas-label" aria-hidden="true"><span>THE LEARNING ATLAS</span><p>Seventeen worlds. Infinite connections.</p></div>
    <div className="galaxy-view-actions">
      <button type="button" aria-expanded={menuOpen} aria-controls="galaxy-world-menu"
        onClick={()=>setMenuOpen(v=>!v)}>Explore all 17 worlds</button>

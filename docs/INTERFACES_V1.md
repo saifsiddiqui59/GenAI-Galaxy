@@ -37,3 +37,7 @@ The optional signed-in two-account test covers owner CRUD for `genai_study_progr
 ## M10 — private extractor release contract
 
 The undeployed `/api/vault/extract` route returns HTTP 503 unless the backend-only `GALAXY_VAULT_GATEWAY_RATE_LIMIT=active` marker is configured. It is an additional safety switch, **not** a verified quota enforcement mechanism. A real gateway must independently enforce authenticated per-user limits, strip/inject the trusted internal header, and block direct Azure Function ingress. Document metadata SELECT and PATCH apply both verified `user_id` and validated v4 document UUID filters, in addition to live Supabase RLS. Do not deploy until malware quarantine, secure isolation tests and owner approval are complete.
+
+## V6 presentation-only clock
+
+`clockRef.current={ms,epoch,hold,view}` is ephemeral presentation state. `phaseAt` remains bounded to 17 worlds; `pickupAt` distinguishes waiting/reach/lift/carry/deposit/release/stored. `rigPoseRef` contains real world-space palm, hip, satchel mouth, staging and offer coordinates. Demo-only `window.__galaxyV6.seek(ms)` changes animation time only and never grants/persists mastery. Lesson handoff continues to accept only an integer chapter index 0–16, without identity/progress in the URL.

@@ -22,16 +22,16 @@ export function recommendedWorld({topics,progress,now=Date.now()}={}){
  });
  return (due||topics.find(t=>progress?.[worldKey(t)]?.status!==2)||topics[0]).branchIndex;
 }
-export const COLLECT_START_MS=1700;
-export const PER_WORLD_MS=1050;
+import {COLLECT_START_MS,PER_WORLD_MS,OFFER_SETTLE_MS,finiteCount} from './choreography.js';
+export {COLLECT_START_MS,PER_WORLD_MS};
 export function phaseAt(ms,completedCount,reducedMotion=false){
- const count=Math.max(0,Math.min(TOTAL_WORLDS,Math.floor(completedCount)));
+ const count=finiteCount(completedCount);
  if(reducedMotion)return {phase:'offering',visible:count,activeIndex:-1};
  if(ms<COLLECT_START_MS)return {phase:'arriving',visible:0,activeIndex:-1};
  const since=Math.max(0,ms-COLLECT_START_MS);
  const deposited=Math.min(count,Math.floor(since/PER_WORLD_MS));
  if(deposited<count)return {phase:'collecting',visible:deposited,activeIndex:deposited};
- if(ms<COLLECT_START_MS+count*PER_WORLD_MS+550)
+ if(ms<COLLECT_START_MS+count*PER_WORLD_MS+OFFER_SETTLE_MS)
   return {phase:'collecting',visible:count,activeIndex:-1};
  return {phase:'offering',visible:count,activeIndex:-1};
 }

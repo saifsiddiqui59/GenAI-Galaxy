@@ -211,3 +211,12 @@ Applied Galaxy-only migration `20261023110022_galaxy_freemium_subscriptions_v1` 
 - Original Quaternius FBX 17-bone names inspected from immutable archive. Actual arm terminal bones are the unusually named LDownLeg001_end/RDownLeg001_end. Rig diagnostic must confirm two arms, pelvis and finite CCD contact distance.
 - Read-only synthetic Chromium takes 1440x900/390x844/reduced-motion entrance, pickup, offer screenshots and checks intact 17 worlds and nested lesson routing. A passing browser script is not a human visual acceptance pass. Visual review found flat shading and poor mobile composition; refinement in progress.
 - No authenticated mastery was fabricated; three sample mastered worlds exist only with ?demo=1. No cloud deployment, Supabase write or live homepage change from P19.
+## P21 KayKit V4 interactive review preview — 2026-10-23 (verified)
+
+- The visually rejected P17/P19 skeleton was replaced **in an isolated, unmerged feature branch** by KayKit CC0 textured Mage (95 clips, 41 bones), with real hand/pelvis attachments and low-cost procedural planet materials; PR #96 remains draft.
+- Versioned public interactive review: https://gengalaxy1429841605.z29.web.core.windows.net/previews/galaxy-3d-v4/index.html?demo=1 — Azure protected deployment [#40008968388](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/40008968388) SUCCESS, exactly 14 hosted staged asset files verified byte-for-byte by SHA256. Root site untouched.
+- Exact review build `9eb442613278f0eea3d5e57f63c832ef13f0ec4c` passed 3/3 CI jobs (runs #40008306320 and #40008299990) and Chromium desktop/mobile/reduced-motion acceptance. Owner-scoped progress unchanged; ?demo=1 explicitly synthetic. Art approval and hosted authenticated RLS remain incomplete.
+
+## V6 cinematic experience — 24 October 2026
+
+New isolated branch `feat/p35-v6-cinematic` preserves V5 ancestry and integrates verified main `01fb515`. Shared clip/IK/prop clock, real right-palm pickup and open satchel release, two-hand offering, new procedural surfaces/lighting/nebula and responsive UI. Local Chromium screenshots were opened and iterated; production homepage unchanged. Release/CI/hosted evidence must be recorded before claiming a public V6 deployment. See `docs/experience/P35_V6_CINEMATIC.md`.

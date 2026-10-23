@@ -1,124 +1,105 @@
-import React,{useMemo,useRef} from 'react';
+import React,{useMemo,useRef,useEffect,useState} from 'react';
 import {useFrame,useThree} from '@react-three/fiber';
+import {Html} from '@react-three/drei';
 import * as THREE from 'three';
 import {planetSurfaceTexture} from './PlanetSurface.js';
-
+import curriculum from '../../../data/curriculum.json';
 export const PLANET_COUNT=17;
-export const COLORS=['#88d5ff','#ae9cff','#e5b6ff','#ffb39f','#72e8e2','#ffc98d','#a4d48a','#c2acff','#fa96cc','#ffdb9a','#91aeff','#b3f4da','#fdd4c8','#a5befa','#ffd591','#88e4ee','#f39aca'];
+export const COLORS=['#74cce5','#b7a0e9','#e4b57c','#a8dfed','#7dceb3','#dfb77e','#c78d73','#91b4eb','#a7ca9c','#d3b1f0','#78b8dc','#deb28d','#9ad0c1','#b9a3e5','#e2bb8e','#83b8d6','#c894bf'];
 export function layoutWorlds(count=PLANET_COUNT){
  return Array.from({length:count},(_,index)=>{
-   const arm=index%3,band=Math.floor(index/3),a=arm*2.094+band*.72;
-   const radius=2.5+band*.68;
-   return {index,x:Math.sin(a)*radius,y:Math.cos(a)*radius*.45,z:-band*.44,scale:.29+(index%4)*.095};
+  const a=index*2.399963,radius=.7+Math.sqrt(index)*.69;
+  return {index,x:3.5+Math.cos(a)*radius*1.43,y:.35+Math.sin(a)*radius*.87,z:-2.6-(index%3)*.40,scale:.27+(index%4)*.065};
  });
 }
 export function starData(count=920){
- const positions=new Float32Array(count*3);
- let seed=314159265;
+ const positions=new Float32Array(count*3);let seed=314159265;
  const rand=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
  for(let i=0;i<count;i++){
-  const theta=rand()*Math.PI*2,dist=12+rand()*30;
-  positions[i*3]=Math.cos(theta)*dist;
-  positions[i*3+1]=(rand()-.5)*25;
-  positions[i*3+2]=-8-rand()*35;
+  positions[i*3]=(rand()-.5)*65;positions[i*3+1]=(rand()-.5)*38;positions[i*3+2]=-9-rand()*35;
  }
  return positions;
 }
 function Starfield({lowPower}){
- const geo=useMemo(()=>{
-  const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.BufferAttribute(starData(lowPower?330:1150),3));
-  return g;
- },[lowPower]);
- return <points geometry={geo}>
-  <pointsMaterial color="#b9bbff" size={lowPower?.07:.05} sizeAttenuation transparent opacity={.78} depthWrite={false}/>
- </points>;
+ const geo=useMemo(()=>{const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(starData(lowPower?420:1300),3));return g},[lowPower]);
+ useEffect(()=>()=>geo.dispose(),[geo]);
+ return <points geometry={geo}><pointsMaterial color="#c6d3ed" size={.035} transparent opacity={.75} depthWrite={false}/></points>;
 }
-const cloudVertex='varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}';
-const cloudFragment=[
- 'precision mediump float;varying vec2 vUv;uniform float time;uniform float uLow;',
- 'float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453123);}',
- 'float n(vec2 p){vec2 i=floor(p);vec2 f=fract(p);f=f*f*(3.-2.*f);',
- 'return mix(mix(h(i),h(i+vec2(1.,0.)),f.x),mix(h(i+vec2(0.,1.)),h(i+vec2(1.)),f.x),f.y);}',
- 'void main(){vec2 q=(vUv-.5)*vec2(2.,1.25);float swirl=atan(q.y,q.x)+length(q)*1.5;',
- 'float clouds=n(q*3.+vec2(cos(swirl),sin(swirl))*1.4+time*.009);',
- 'float wisps=n(q*8.+clouds*2.3+time*.004);float glow=exp(-length(q*vec2(1.25,1.4))*2.6);',
- 'vec3 color=mix(vec3(.006,.012,.05),vec3(.25,.12,.52),clamp(clouds*glow*2.,0.,1.));',
- 'color+=vec3(.045,.16,.35)*pow(wisps*glow,2.)*2.3;',
- 'float edge=1.-smoothstep(.58,.98,max(abs(vUv.x-.5),abs(vUv.y-.5))*2.);',
- 'gl_FragColor=vec4(color,(uLow>.5?.47:.72)*edge);}'
-].join(' ');
-function NebulaCloud({lowPower}){
- const mat=useRef();
- const uniforms=useMemo(()=>({time:{value:0},uLow:{value:lowPower?1:0}}),[lowPower]);
- useFrame((state)=>{
-  if(mat.current&&!lowPower)mat.current.uniforms.time.value=Math.min(120000,state.clock.elapsedTime);
- });
- return <mesh position={[0,0,-36]} scale={[115,78,1]} renderOrder={-10}>
-  <planeGeometry args={[1,1]}/>
-  <shaderMaterial ref={mat} vertexShader={cloudVertex} fragmentShader={cloudFragment}
-     uniforms={uniforms} transparent depthWrite={false} depthTest={false}/>
+const vertex='varying vec2 vUv;void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}';
+const fragment=`precision highp float;varying vec2 vUv;uniform float time;
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(hash(i),hash(i+vec2(1.,0.)),f.x),mix(hash(i+vec2(0.,1.)),hash(i+vec2(1.)),f.x),f.y);}
+void main(){
+ vec2 p=vUv*5.;p.x+=time*.002;
+ float f=.52*noise(p)+.27*noise(p*2.1+4.)+.13*noise(p*4.3+7.);
+ float band=exp(-pow((vUv.y-.42)-(vUv.x-.5)*.38,2.)*24.);
+ float veil=smoothstep(.25,.86,f)*band;
+ vec3 violet=vec3(.082,.035,.17),blue=vec3(.015,.10,.17);
+ vec3 col=mix(violet,blue,smoothstep(.2,.9,vUv.x));
+ col*=veil*1.45;
+ col+=vec3(.12,.074,.12)*pow(veil,3.)*1.8;
+ gl_FragColor=vec4(col,1.);
+ #include <tonemapping_fragment>
+ #include <colorspace_fragment>
+}`;
+function NebulaCloud({reducedMotion,clockRef}){
+ const mat=useRef();const uniforms=useMemo(()=>({time:{value:0}}),[]);
+ useFrame(()=>{if(mat.current&&!reducedMotion)mat.current.uniforms.time.value=clockRef.current.ms*.001});
+ return <mesh position={[0,0,-36]} scale={[95,62,1]} renderOrder={-10}>
+  <planeGeometry/><shaderMaterial ref={mat} vertexShader={vertex} fragmentShader={fragment} uniforms={uniforms} depthWrite={false}/>
  </mesh>;
 }
-function Planet({world,mastered,recommended,selected,onSelect,reducedMotion,lowPower}){
- const group=useRef();
- useFrame((state,delta)=>{
-  if(!group.current||reducedMotion)return;
-  group.current.rotation.y+=Math.min(delta,.05)*(.15+world.index%3*.035);
-  group.current.position.y=world.y+Math.sin(state.clock.elapsedTime*.7+world.index)*.045;
- });
+function Planet({world,mastered,recommended,selected,onSelect,reducedMotion,lowPower,clockRef}){
+ const group=useRef(),[hover,setHover]=useState(false);
  const color=COLORS[world.index];
  const surface=useMemo(()=>planetSurfaceTexture(world.index,color,lowPower),[world.index,color,lowPower]);
- React.useEffect(()=>()=>surface.dispose(),[surface]);
- return <group ref={group} position={[world.x,world.y,world.z]}>
-    <mesh onClick={e=>{e.stopPropagation();onSelect?.(world.index);}}
-      onPointerOver={()=>{document.body.style.cursor='pointer';}}
-      onPointerOut={()=>{document.body.style.cursor='';}}>
-     <sphereGeometry args={[world.scale,32,22]}/>
-     <meshStandardMaterial map={surface} color="#ffffff" emissive={color} emissiveIntensity={recommended?.49:selected?.34:.20} roughness={.75} metalness={.05}/>
-    </mesh>
-    {!lowPower&&<mesh scale={1.08}>
-      <sphereGeometry args={[world.scale,28,20]}/>
-      <meshBasicMaterial color={color} transparent opacity={.095} blending={THREE.AdditiveBlending}
-        depthWrite={false} side={THREE.BackSide}/>
-    </mesh>}
-    {!lowPower&&Array.from({length:5},(_,i)=>{
-      const phi=(i*2.399963229728653+world.index*.61),theta=.62+(i%3)*.74;
-      const rr=world.scale*1.008;
-      return <mesh key={i} position={[Math.sin(theta)*Math.cos(phi)*rr,Math.cos(theta)*rr,Math.sin(theta)*Math.sin(phi)*rr]}
-        rotation={[theta,0,phi]} scale={[.12+.025*(i%2),.045,.012]}>
-        <sphereGeometry args={[world.scale,9,7]}/>
-        <meshStandardMaterial color={i%2?'#10283b':'#30213c'} transparent opacity={.58} roughness={.9}/>
-      </mesh>;
-    })}
-    {mastered&&<mesh rotation={[.48,.2,.55]}>
-      <torusGeometry args={[world.scale*1.35,.022,8,64]}/>
-      <meshBasicMaterial color="#efc878"/>
-    </mesh>}
-    {recommended&&<mesh rotation={[.2,0,.45]}>
-      <torusGeometry args={[world.scale*1.62,.012,6,64]}/>
-      <meshBasicMaterial color="#c0faff" transparent opacity={.86}/>
-    </mesh>}
+ useEffect(()=>()=>surface.dispose(),[surface]);
+ useFrame(()=>{if(group.current&&!reducedMotion)group.current.rotation.y=clockRef.current.ms*.000045+world.index});
+ return <group position={[world.x,world.y,world.z]}>
+  <group ref={group}>
+   <mesh onClick={e=>{e.stopPropagation();onSelect?.(world.index)}}
+    onPointerOver={()=>{setHover(true);document.body.style.cursor='pointer'}} onPointerOut={()=>{setHover(false);document.body.style.cursor=''}}>
+    <sphereGeometry args={[world.scale,lowPower?28:40,lowPower?20:28]}/>
+    <meshStandardMaterial map={surface} bumpMap={surface} bumpScale={.012} roughness={world.index%3===0?.54:.82} metalness={.02} emissive={color} emissiveIntensity={.025}/>
+   </mesh>
+  </group>
+  <mesh scale={1.085}><sphereGeometry args={[world.scale,24,16]}/><meshBasicMaterial color={color} transparent opacity={hover?.23:.12} depthWrite={false} side={THREE.BackSide}/></mesh>
+  {(mastered||recommended||world.index%6===5)&&<mesh rotation={[1.15,.16,.35]}>
+   <ringGeometry args={[world.scale*1.32,world.scale*(recommended?1.41:1.72),64]}/>
+   <meshBasicMaterial color={mastered?'#dfbc75':color} side={THREE.DoubleSide} transparent opacity={mastered?.8:.4} depthWrite={false}/>
+  </mesh>}
+  {(hover||recommended)&&!lowPower&&<Html center position={[0,-world.scale-.18,0]} style={{pointerEvents:'none',whiteSpace:'nowrap'}}>
+   <div className="planet-caption"><span>{String(world.index+1).padStart(2,'0')}</span>{curriculum[world.index].title}</div>
+  </Html>}
  </group>;
 }
-export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=null,onSelect,reducedMotion=false}){
- const {size}=useThree();
- const lowPower=size.width<680;
+function Observatory({compact,short}){
+ const x=compact?-.48:-2.05,y=compact?(short?-.96:-1.59):-2.26,scale=compact?(short?.68:.77):1;
+ return <group position={[x,y,3.2]} scale={scale}>
+  <mesh rotation={[-Math.PI/2,0,0]}><circleGeometry args={[1.4,64]}/><meshStandardMaterial color="#152139" metalness={.5} roughness={.7} transparent opacity={.8}/></mesh>
+  <mesh rotation={[-Math.PI/2,0,0]} position={[0,.005,0]}><ringGeometry args={[1.35,1.365,80]}/><meshBasicMaterial color="#8bb2c9" transparent opacity={.4}/></mesh>
+  <mesh rotation={[-Math.PI/2,0,0]} position={[0,.009,0]} scale={[1,.65,1]}><circleGeometry args={[.72,48]}/><meshBasicMaterial color="#010510" transparent opacity={.52}/></mesh>
+  <mesh position={[-.68,.02,.72]} rotation={[-Math.PI/2,0,0]}><ringGeometry args={[.20,.215,40]}/><meshBasicMaterial color="#e5c68a" transparent opacity={.7}/></mesh>
+ </group>;
+}
+export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=null,onSelect,reducedMotion=false,clockRef}){
+ const {size,camera}=useThree();const lowPower=size.width<700,short=size.height<780;
  const set=new Set(masteredWorlds.map(x=>typeof x==='number'?x:x?.index).filter(Number.isInteger));
+ useEffect(()=>{camera.lookAt(0,lowPower?.05:.15,0);camera.updateProjectionMatrix()},[camera,lowPower]);
  return <>
-  <color attach="background" args={['#030817']}/>
-  <ambientLight intensity={1.7}/>
-  <hemisphereLight color="#d0f5ff" groundColor="#413166" intensity={2.1}/>
-  <spotLight position={[-2,5,9]} color="#fff0d8" intensity={115} angle={.65} penumbra={.8} distance={22}/>
-  <pointLight position={[0,3,5]} color="#a6c2ff" intensity={65} distance={24}/>
-  <pointLight position={[-4,-3,1]} color="#8662dc" intensity={35} distance={24}/>
-  <pointLight position={[-2.4,1.3,7.3]} color="#fff1dc" intensity={56} distance={12}/>
-  <NebulaCloud lowPower={lowPower||reducedMotion}/>
+  <color attach="background" args={['#050916']}/>
+  <ambientLight intensity={.6}/>
+  <hemisphereLight color="#d4e4ff" groundColor="#29243f" intensity={1.4}/>
+  <directionalLight position={[-3,5,8]} color="#fff0d7" intensity={3.6}/>
+  <directionalLight position={[3,2,-3]} color="#849fee" intensity={2.1}/>
+  <pointLight position={[-2.6,.4,6.5]} color="#ffdfba" intensity={15} distance={9}/>
+  <NebulaCloud reducedMotion={reducedMotion} clockRef={clockRef}/>
   <Starfield lowPower={lowPower}/>
-  <group position={lowPower?[0,.4,-1.8]:[0,0,0]} scale={lowPower?[.48,.73,.8]:[1,1,1]}>
-  {layoutWorlds().map(world=><Planet key={world.index} world={world} mastered={set.has(world.index)}
-   recommended={world.index===recommendedIndex} selected={world.index===selectedIndex}
-   onSelect={onSelect} reducedMotion={reducedMotion} lowPower={lowPower}/>)}
+  <Observatory compact={lowPower} short={short}/>
+  <group position={lowPower?[-1.8,short?.75:1.15,-2]:[0,0,0]} scale={lowPower?[.58,.58,.7]:[1,1,1]}>
+   {layoutWorlds().map(world=><Planet key={world.index} world={world} mastered={set.has(world.index)}
+    recommended={world.index===recommendedIndex} selected={world.index===selectedIndex} onSelect={onSelect}
+    reducedMotion={reducedMotion} lowPower={lowPower} clockRef={clockRef}/>)}
   </group>
  </>;
 }

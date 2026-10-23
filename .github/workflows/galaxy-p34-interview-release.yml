@@ -1,0 +1,116 @@
+name: Galaxy P34 existing-site interview workflow release
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type PUBLISH_GALAXY_P34 to publish the two pinned reviewed JS files'
+        required: true
+        type: string
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  validate:
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'PUBLISH_GALAXY_P34') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 129 &&
+        github.event.comment.user.id == 80577424 && github.event.comment.body == 'PUBLISH_GALAXY_P34'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check pinned source and offline interview regressions
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git hash-object app.js)" == '6819145bdb37c83b95c0e9efa1c5b2160d9c5f41' ]] || exit 1
+          [[ "$(git hash-object features/conversation-coach.js)" == '98147954df8f61bf5090b505c6d821f872cbcaa4' ]] || exit 1
+          node --check app.js
+          node --check features/conversation-coach.js
+          node tests/test_engine.cjs
+          node tests/test_p34_mock.cjs
+          python -m unittest discover -s tests -p 'test_p34_mock.py' -v
+          ! grep -Eq 'SUPABASE_SERVICE_ROLE_KEY|AZURE_SPEECH_KEY' app.js features/conversation-coach.js
+  publish:
+    needs: validate
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'PUBLISH_GALAXY_P34') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 129 &&
+        github.event.comment.user.id == 80577424 && github.event.comment.body == 'PUBLISH_GALAXY_P34'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: galaxy-p34-static-release
+      cancel-in-progress: false
+    env:
+      ACCOUNT: ${{ vars.GALAXY_STORAGE_ACCOUNT }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify account, identity, and pinned content
+        shell: bash
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          TENANT: ${{ secrets.AZURE_TENANT_ID }}
+          SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$ACCOUNT" == 'gengalaxy1429841605' ]] || exit 1
+          [[ "${CLIENT,,}" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || exit 1
+          [[ -n "$TENANT" && -n "$SUBSCRIPTION" ]] || exit 1
+          [[ "$(git hash-object app.js)" == '6819145bdb37c83b95c0e9efa1c5b2160d9c5f41' ]] || exit 1
+          [[ "$(git hash-object features/conversation-coach.js)" == '98147954df8f61bf5090b505c6d821f872cbcaa4' ]] || exit 1
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Back up, upload exactly two JS files, and verify remote parity
+        shell: bash
+        run: |
+          set -euo pipefail
+          rg='GenAI_Galaxy'; account='gengalaxy1429841605'
+          id="$(az storage account show -g "$rg" -n "$account" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Storage/storageAccounts/gengalaxy1429841605 ]] || exit 1
+          enabled="$(az storage account blob-service-properties show -g "$rg" --account-name "$account" --query staticWebsite.enabled -o tsv)"
+          [[ "${enabled,,}" == true ]] || exit 1
+          dir="$(mktemp -d)"
+          mkdir -p "$dir/old/features" "$dir/verified/features"
+          files=(features/conversation-coach.js app.js)
+          for file in "${files[@]}"; do
+            az storage blob download --account-name "$account" --auth-mode login --container-name '$web' --name "$file" --file "$dir/old/$file" --overwrite true --only-show-errors >/dev/null
+          done
+          success=0
+          cleanup() {
+            if [[ "$success" != 1 ]]; then
+              for file in "${files[@]}"; do
+                az storage blob upload --account-name "$account" --auth-mode login --container-name '$web' --name "$file" --file "$dir/old/$file" --overwrite true --content-type application/javascript --content-cache-control 'no-cache,max-age=0' --only-show-errors >/dev/null || true
+              done
+              echo '::error::P34 release failed; rollback attempted'
+            fi
+            rm -rf "$dir"
+          }
+          trap cleanup EXIT
+          for file in "${files[@]}"; do
+            az storage blob upload --account-name "$account" --auth-mode login --container-name '$web' --name "$file" --file "$file" --overwrite true --content-type application/javascript --content-cache-control 'no-cache,max-age=0' --only-show-errors >/dev/null
+            az storage blob download --account-name "$account" --auth-mode login --container-name '$web' --name "$file" --file "$dir/verified/$file" --overwrite true --only-show-errors >/dev/null
+            cmp "$file" "$dir/verified/$file"
+          done
+          success=1
+          echo 'P34 two JavaScript files uploaded and independently read-back verified.'
+          echo 'Website: https://gengalaxy1429841605.z29.web.core.windows.net/' >> "$GITHUB_STEP_SUMMARY"
+      - name: End Azure session
+        if: always()
+        run: az logout >/dev/null 2>&1 || true

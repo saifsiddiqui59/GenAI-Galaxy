@@ -1,168 +1,160 @@
 import React,{Suspense,useEffect,useMemo,useRef} from 'react';
 import {useFrame,useThree} from '@react-three/fiber';
-import {useAnimations,useGLTF} from '@react-three/drei';
+import {useGLTF} from '@react-three/drei';
+import {clone} from 'three/examples/jsm/utils/SkeletonUtils.js';
 import * as THREE from 'three';
-import {discoverRigAnchors,gripMidpoint,waistPosition} from './rigAnchors.js';
+import {discoverRigAnchors,gripMidpoint} from './rigAnchors.js';
 import {moveWrist} from './handIK.js';
-
+import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS} from '../journey/choreography.js';
+import {phaseAt} from '../journey/story.js';
 const ASSET=import.meta.env.BASE_URL+'models/kaykit/Skeleton_Mage.glb';
-const eye=new THREE.Vector3();
 const observed=()=>import.meta.env.DEV||new URLSearchParams(window.location.search).get('demo')==='1';
-
-// Existing CC0 character and original animation clips; NOT a procedural skeleton.
 export function chooseKayKitAnimation(phase,names=[]){
- const wants={
-  arriving:[/walk/i,/run/i,/move/i],
-  collecting:[/^PickUp$/i,/interact/i,/grab/i,/cast/i,/attack/i],
-  offering:[/^Unarmed_Idle$/i,/^2H_Melee_Idle$/i,/^Idle$/i,/Spellcast_Summon/i],
-  idle:[/idle/i,/breath/i,/stand/i],
-  celebrating:[/cheer/i,/dance/i,/victory/i,/idle/i]
- };
- const expressions=wants[phase]||wants.idle;
- for(const re of expressions){const name=names.find(x=>re.test(x));if(name)return name}
- return names[0]||null;
+ const preferred=phase==='arriving'?'Walking_A':phase==='collecting'?'PickUp':'Unarmed_Idle';
+ return names.includes(preferred)?preferred:names.find(n=>/^Idle$/i.test(n))||names[0];
 }
 function armChain(hand){
- if(!hand)return null;
- let parent=hand;
- let lower=null,upper=null;
- while(parent&&parent.isBone){
-  const label=parent.name.toLowerCase().replace(/[^a-z0-9]/g,'');
-  if(label.startsWith('lowerarm')||label.startsWith('forearm'))lower=parent;
-  if(label.startsWith('upperarm')){upper=parent;break}
-  parent=parent.parent;
+ let node=hand,lower=null,upper=null;
+ while(node?.isBone){
+  const name=node.name.toLowerCase().replace(/[^a-z0-9]/g,'');
+  if(name.startsWith('lowerarm'))lower=node;
+  if(name.startsWith('upperarm')){upper=node;break}
+  node=node.parent;
  }
- return upper&&lower?[upper,lower,hand]:null;
+ return upper&&lower&&hand?[upper,lower,hand]:null;
 }
-export function characterEntranceX(phase,t,compact){
- const start=compact?-1.8:-3.2;
- const stop=compact?-.55:-1.98;
- return phase==='arriving'?Math.min(stop,start+Math.max(0,t)*1.14):stop;
+function solveBlended(chain,target,weight){
+ if(!chain||!target)return Infinity;
+ const before=chain.slice(0,2).map(b=>b.quaternion.clone());
+ moveWrist(chain,target,12);
+ chain.slice(0,2).forEach((b,i)=>b.quaternion.copy(before[i].slerp(b.quaternion,weight)));
+ chain[0].updateWorldMatrix(true,true);
+ return chain[2].getWorldPosition(new THREE.Vector3()).distanceTo(target);
 }
-function Model({phase,rigPoseRef,reducedMotion=false,collectionIndex=-1}){
+function Model({rigPoseRef,clockRef,completedCount=0,reducedMotion=false,onReady}){
  const {scene,animations}=useGLTF(ASSET);
  const narrow=useThree(state=>state.size.width<700);
- const holder=useRef(),t=useRef(0),was=useRef(phase);
- const smoothed=useRef(new THREE.Vector3());
+ const short=useThree(state=>state.size.height<780);
+ const root=useRef(),lastIndex=useRef(-1),lastEpoch=useRef(-1),contactLocal=useRef(null);
  const source=useMemo(()=>{
-  scene.updateMatrixWorld(true);
-  const box=new THREE.Box3().setFromObject(scene);
-  const measure=box.getSize(new THREE.Vector3());
-  const height=Math.max(.001,measure.y);
-  const factor=3.35/height;
-  scene.scale.setScalar(factor);
-  scene.position.set(-box.getCenter(new THREE.Vector3()).x*factor,-box.min.y*factor,-box.getCenter(new THREE.Vector3()).z*factor);
-  scene.userData.geometryHeight=height;
-  scene.traverse(node=>{
-   if(node.isMesh||node.isSkinnedMesh){
-    node.castShadow=true;
-    node.receiveShadow=true;
-    // Keep the original KayKit CC0 1024 atlas map, gradient and GLB material intact.
-    // Previous P19 code overwrote every bone with flat cream, destroying all artwork.
-    const materials=Array.isArray(node.material)?node.material:[node.material];
-    for(const material of materials){
-      if(material?.name==='Glow'&&material.emissive){
-        material.emissive.set('#ffc76e');material.emissiveIntensity=1.6;
-        material.toneMapped=false;material.needsUpdate=true;
-      }
+  const object=clone(scene);object.updateMatrixWorld(true);
+  const box=new THREE.Box3().setFromObject(object),height=box.getSize(new THREE.Vector3()).y;
+  const factor=3.6/Math.max(.001,height);
+  object.scale.setScalar(factor);
+  object.position.set(-box.getCenter(new THREE.Vector3()).x*factor,-box.min.y*factor,-box.getCenter(new THREE.Vector3()).z*factor);
+  object.userData.geometryHeight=height;
+  object.traverse(n=>{
+   if(n.isMesh){
+    n.frustumCulled=false;n.material=n.material.clone();
+    if(n.material.name==='Glow'){
+     n.material.emissive.set('#ffe5aa');n.material.emissiveIntensity=2;n.material.toneMapped=false;
     }
    }
   });
-  return scene;
+  return object;
  },[scene]);
- const {actions,names}=useAnimations(animations,source);
  const rig=useMemo(()=>discoverRigAnchors(source),[source]);
  const arms=useMemo(()=>({left:armChain(rig.leftHand),right:armChain(rig.rightHand)}),[rig]);
+ const mixer=useMemo(()=>new THREE.AnimationMixer(source),[source]);
+ const actions=useMemo(()=>Object.fromEntries(animations.map(clip=>{
+  const action=mixer.clipAction(clip);action.play();action.paused=true;action.setEffectiveWeight(0);
+  return [clip.name,action];
+ })),[animations,mixer]);
  useEffect(()=>{
-  const clip=chooseKayKitAnimation(phase,names);
-  if(!clip||!actions[clip])return;
-  actions[clip].reset().fadeIn(.26).play();
-  for(const [name,action] of Object.entries(actions))if(name!==clip)action?.fadeOut(.26);
-  return ()=>actions[clip]?.fadeOut(.20);
- },[phase,collectionIndex,actions,names]);
- useEffect(()=>{
-  if(!observed())return;
-  const bones=[],materials=[];
-  let meshes=0;
-  source.traverse(node=>{
-   if(node.isBone)bones.push(node.name);
-   if(node.isMesh||node.isSkinnedMesh){
-     meshes++;
-     (Array.isArray(node.material)?node.material:[node.material]).forEach(material=>{
-       if(material)materials.push({name:material.name,map:!!material.map,color:material.color?.getHexString()});
-     });
-   }
-  });
-  window.__galaxySkeletonDiagnostics={
-   asset:'KayKit CC0 Skeleton_Mage.glb',meshes,bones:bones.length,clips:names.length,
-   animationNames:names,boneNames:bones,materials,
-   rig:{detectedBones:bones.length,left:rig.leftHand?.name||null,right:rig.rightHand?.name||null,
-       waist:rig.waist?.name||null,canOffer:rig.readyToOffer,canCarry:rig.readyForSatchel},
-   sourceDimensions:{height:source.userData.geometryHeight}
-  };
- },[source,rig,names]);
- useEffect(()=>{
-  // Visual QA records actual clip handoffs, not fabricated completion.
-  if(!observed())return;
-  const diagnostics=window.__galaxySkeletonDiagnostics;
-  if(!diagnostics)return;
-  if(phase==='arriving'){diagnostics.pickupLog=[];return}
-  if(phase!=='collecting'||collectionIndex<0)return;
-  const log=diagnostics.pickupLog||(diagnostics.pickupLog=[]);
-  if(log[log.length-1]?.index!==collectionIndex)
-    log.push({index:collectionIndex,clip:chooseKayKitAnimation(phase,names)});
- },[phase,collectionIndex,names]);
- useFrame((state,dt)=>{
-  const delta=Math.min(dt,.05);
-  if(was.current!==phase){was.current=phase;t.current=0}
-  t.current+=delta;
-  const root=holder.current;
-  if(!root)return;
-  // Each genuine mastered world starts a fresh KayKit PickUp clip and a small
-  // approaching step. The full-size learning planets stay untouched.
-  const pickupStep=phase==='collecting'&&collectionIndex>=0
-    ?(collectionIndex%3-1)*(narrow?.13:.20):0;
-  const x=characterEntranceX(reducedMotion?'idle':phase,t.current,narrow)+pickupStep;
-  root.position.x=THREE.MathUtils.damp(root.position.x,x,narrow?6:4.5,delta);
-  // MIT 3merillon CharacterController approach: damp position/heading,
-  // never teleport a moving animated character between keyframes.
-  root.rotation.y=THREE.MathUtils.damp(root.rotation.y,phase==='arriving'?.34:0,5,delta);
-  smoothed.current.copy(root.position);
-  source.updateMatrixWorld(true);
-  let maxError=null;
-  if(phase==='offering'&&rig.readyToOffer&&rig.waist&&arms.left&&arms.right){
-   const hip=rig.waist.getWorldPosition(new THREE.Vector3());
-   const width=narrow?.76:1;
-   const centre=hip.add(new THREE.Vector3(0,.77*width,.46*width));
-   const left=centre.clone().add(new THREE.Vector3(-.24*width,-.04*width,0));
-   const right=centre.clone().add(new THREE.Vector3(.24*width,-.04*width,0));
-   maxError=Math.max(moveWrist(arms.left,left,8),moveWrist(arms.right,right,8));
+  Object.values(actions).forEach(a=>a.play());
+  onReady?.();
+  if(observed()){
+   const materials=[];let meshes=0;
+   source.traverse(n=>{if(n.isMesh){meshes++;materials.push({name:n.material.name,map:!!n.material.map})}});
+   window.__galaxySkeletonDiagnostics={asset:'KayKit CC0 Skeleton_Mage.glb',bones:rig.detectedBones,clips:animations.length,
+    animationNames:animations.map(a=>a.name),meshes,materials,pickupLog:[],
+    rig:{detectedBones:rig.detectedBones,canOffer:rig.readyToOffer,canCarry:rig.readyForSatchel},
+    sourceDimensions:{height:source.userData.geometryHeight}};
   }
-  source.updateMatrixWorld(true);
+  return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source)};
+ },[source,rig,mixer,animations,onReady]);
+ useFrame((state,dt)=>{
+  if(!root.current)return;
+  const c=clockRef.current,ms=c.ms,view=phaseAt(ms,completedCount,reducedMotion);
+  const compactScale=narrow?(short?.68:.77):1,body=root.current;
+  const entrance=entranceAt(reducedMotion?99999:ms,narrow);
+  body.position.set(entrance.x,narrow?(short?-.95:-1.58):-2.25,3.2);
+  body.scale.setScalar(compactScale);
+  const pickup=view.activeIndex>=0?pickupAt(ms,view.activeIndex):null;
+  const turn=pickup?Math.sin(smooth((pickup.t-.46)/.4)*Math.PI)*-.20:0;
+  body.rotation.y=entrance.yaw+turn;
+  Object.values(actions).forEach(a=>a.setEffectiveWeight(0));
+  function sample(name,time,weight){const a=actions[name];if(!a)return;a.enabled=true;a.time=Math.max(0,Math.min(a.getClip().duration-.00001,time));a.setEffectiveWeight(weight)}
+  if(!contactLocal.current&&rig.rightHand){
+   // Stage the miniature at the exact source clip's palm contact, not a guessed waypoint.
+   sample('PickUp',CONTACT/.49*1.3,1);mixer.update(0);body.updateWorldMatrix(true,true);
+   contactLocal.current=body.worldToLocal(rig.rightHand.localToWorld(new THREE.Vector3(0,.045,.035)));
+   Object.values(actions).forEach(a=>a.setEffectiveWeight(0));
+  }
+  let pickupWeight=0;
+  if(pickup)pickupWeight=smooth(pickup.t/.10)*(1-smooth((pickup.t-.49)/.17));
+  const walk=view.phase==='arriving'?entrance.walkWeight:0;
+  const travelled=entrance.x-entranceAt(0,narrow).x;
+  sample('Walking_A',(travelled/.78*1.0666667)%1.0666667,walk);
+  sample('PickUp',pickup?Math.min(1,pickup.t/.49)*1.3:0,pickupWeight);
+  sample('Unarmed_Idle',(ms/1000)%1.0666667,Math.max(0,1-walk-pickupWeight));
+  // Unlike useAnimations' independent delta, sample clips on the prop clock.
+  // Weighted sampling replaces fadeIn/fadeOut without restarting PickUp at contact.
+  mixer.update(0);body.updateWorldMatrix(true,true);
+  const hip=rig.waist?.getWorldPosition(new THREE.Vector3());
+  if(!hip)return;
+  const scale=compactScale;
+  const bag=hip.clone().add(new THREE.Vector3(-.61*scale,.12*scale,.10*scale));
+  const mouth=bag.clone().add(new THREE.Vector3(0,.255*scale,.015*scale));
+  const staging=contactLocal.current.clone().multiplyScalar(scale).add(new THREE.Vector3(entranceAt(99999,narrow).x,body.position.y,3.2));
+  let error=null,palmTarget=null;
+  if(pickup&&arms.right){
+   const lift=hip.clone().add(new THREE.Vector3(-.57*scale,.45*scale,.43*scale));
+   const above=mouth.clone().add(new THREE.Vector3(0,.24*scale,.12*scale));
+   palmTarget=staging.clone();
+   if(pickup.t>=CONTACT&&pickup.t<.49)palmTarget.lerp(lift,smooth((pickup.t-CONTACT)/.19));
+   else if(pickup.t>=.49&&pickup.t<.68)palmTarget.copy(lift).lerp(above,smooth((pickup.t-.49)/.19));
+   else if(pickup.t>=.68)palmTarget.copy(above).lerp(mouth,smooth((pickup.t-.68)/.16));
+   const weight=smooth((pickup.t-.08)/.18)*(1-smooth((pickup.t-RELEASE)/.12));
+   const before=arms.right.slice(0,2).map(b=>b.quaternion.clone());
+   for(let pass=0;pass<3;pass++){
+    const gripOffset=rig.rightHand.localToWorld(new THREE.Vector3(0,.045,.035)).sub(rig.rightHand.getWorldPosition(new THREE.Vector3()));
+    error=moveWrist(arms.right,palmTarget.clone().sub(gripOffset),12);
+   }
+   arms.right.slice(0,2).forEach((b,i)=>b.quaternion.copy(before[i].slerp(b.quaternion,weight)));
+  }
+  const offer=hip.clone().add(new THREE.Vector3(0,.78*scale,.70*scale));
+  const offerReveal=reducedMotion?1:smooth((ms-(COLLECT_START_MS+completedCount*PER_WORLD_MS))/650);
+  if(offerReveal>0&&view.activeIndex<0&&arms.left&&arms.right){
+   const influence=offerReveal;
+   const left=offer.clone().add(new THREE.Vector3(.225*scale,-.15*scale,-.025*scale));
+   const right=offer.clone().add(new THREE.Vector3(-.225*scale,-.15*scale,-.025*scale));
+   error=Math.max(solveBlended(arms.left,left,influence),solveBlended(arms.right,right,influence));
+  }
+  source.updateWorldMatrix(true,true);
+  const rightHand=rig.rightHand?.getWorldPosition(new THREE.Vector3());
+  const grip=rig.rightHand?.localToWorld(new THREE.Vector3(0,.045,.035));
   const hand=gripMidpoint(rig,THREE.Vector3);
-  const hip=waistPosition(rig,THREE.Vector3);
-  if(rigPoseRef)rigPoseRef.current={hand,hip,rigReady:rig.readyToOffer,
-     waistReady:rig.readyForSatchel,ikError:maxError};
+  rigPoseRef.current={hand,hip,bag,mouth,staging,grip,rightHand,offer,offerReveal,scale,
+   rigReady:rig.readyToOffer,waistReady:rig.readyForSatchel,ikError:error,phase:view.phase};
   if(observed()&&window.__galaxySkeletonDiagnostics){
    const d=window.__galaxySkeletonDiagnostics;
-   d.gripMidpoint=hand?.toArray()||null;
-   d.waistPosition=hip?.toArray()||null;
-   d.ikError=maxError;
-   d.hasArmIK=!!(arms.left&&arms.right);
-   d.worldPosition=root.getWorldPosition(eye).toArray();
-   d.currentPhase=phase;
-   d.currentClip=chooseKayKitAnimation(phase,names);
-   d.currentPickupIndex=collectionIndex;
+   if(lastEpoch.current!==c.epoch){lastEpoch.current=c.epoch;lastIndex.current=-1;d.pickupLog=[];}
+   if(view.activeIndex>=0&&view.activeIndex!==lastIndex.current){
+    lastIndex.current=view.activeIndex;d.pickupLog.push({index:view.activeIndex,clip:'PickUp'});
+   }
+   Object.assign(d,{currentPhase:view.phase,currentClip:chooseKayKitAnimation(view.phase,animations.map(a=>a.name)),
+    currentPickupIndex:view.activeIndex,pickupStage:pickup?.stage||view.phase,time:ms,
+    ikError:error,hasArmIK:!!(arms.left&&arms.right),gripMidpoint:hand?.toArray(),
+    pickupTargetError:pickup&&grip?grip.distanceTo(palmTarget):null,staging:staging.toArray(),
+    rightGrip:grip?.toArray(),waistPosition:hip.toArray(),bagMouth:mouth.toArray(),
+    worldPosition:body.position.toArray(),offeringCenter:offer.toArray()});
+   const top=body.position.clone().add(new THREE.Vector3(0,3.6*scale,0)).project(state.camera);
+   const bottom=body.position.clone().project(state.camera);
+   d.screenBody={top:(1-top.y)*state.size.height/2,bottom:(1-bottom.y)*state.size.height/2};
   }
- });
- return <group ref={holder} position={[narrow?-1.8:-3.2,narrow?-1.55:-2.20,4.3]}
-    scale={narrow?.76:1.04}>
-   <primitive object={source}/>
-   <pointLight position={[.35,2.5,3.7]} intensity={26} color="#ffdeb6" distance={9}/>
-   <pointLight position={[-1.3,2.8,-1.8]} intensity={22} color="#a18aff" distance={10}/>
- </group>;
+ },-2);
+ return <group ref={root}><primitive object={source}/></group>;
 }
-export default function KayKitGuardian({phase='idle',collectionIndex=-1,rigPoseRef,reducedMotion=false}){
- return <Suspense fallback={null}><Model phase={phase} collectionIndex={collectionIndex} rigPoseRef={rigPoseRef} reducedMotion={reducedMotion}/></Suspense>;
-}
+export default function KayKitGuardian(props){return <Suspense fallback={null}><Model {...props}/></Suspense>}
 useGLTF.preload(ASSET);
