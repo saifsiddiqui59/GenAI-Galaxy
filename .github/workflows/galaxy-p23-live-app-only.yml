@@ -36,7 +36,7 @@ jobs:
           echo 'Pinned P23 app, syntax, and learning tests verified.'
   publish:
     needs: verify
-    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'PUBLISH_P23_APP_ONLY') || (github.event_name == 'issue_comment' && github.event.issue.number == 100 && github.event.comment.user.id == 80577424 && github.event.comment.body == 'PUBLISH_P23_APP_ONLY'))
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'PUBLISH_P23_APP_ONLY') || (github.event_name == 'issue_comment' && github.event.issue.number == 103 && github.event.comment.user.id == 80577424 && github.event.comment.body == 'PUBLISH_P23_APP_ONLY'))
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     environment: dev
