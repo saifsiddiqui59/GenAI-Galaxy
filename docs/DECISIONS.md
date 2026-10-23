@@ -136,3 +136,8 @@
 ## P12 — provisioning before configuration and India regional processing
 - Provision a dedicated `gengalaxy-ai-sin-1429841605` OpenAI S0 account in South India under existing `GenAI_Galaxy` RG, with `gpt-4.1-mini` version `2025-04-14`, regional Standard capacity 5; never select a global processing SKU or provisioned PTU silently. Prefer this dedicated resource over sharing WineShopPOS Foundry model/tenant and logs. Abort on insufficient quota rather than forging endpoints.
 - Resolve Azure OpenAI endpoint and key inside a protected GitHub OIDC job after the model is actually created; set only backend Azure Function private app settings. Eliminate all GitHub credential prompts for model keys and avoid putting model secrets in the static app. GitHub Actions remain manual-only.
+
+## P13 — explicit zero-cost QA / no-payment boundary (2026-10-23)
+- Owner explicitly prohibits adding any payment gateway, automated charging, Stripe/Razorpay checkout, new paid AI model, fine-tuning, and paid evaluation calls for this workstream. Existing FREE/PLUS/PRO codes remain internal server-owned entitlements only with null price, no end-user upgrades, and no checkout.
+- Existing P12 Azure AI PAYG deployment is allowed to remain; P13 does **not** invoke it for QA, provision new cloud resources or claim paid model operations are free.
+- Use offline/mocked regression, rubric inventory, release parity, read-only guest browser checks and human/device acceptance; no paid live golden judge or repeated live AI smoke. See `docs/reviews/P13_ZERO_COST_ACCEPTANCE.md`.
