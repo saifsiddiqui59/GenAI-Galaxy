@@ -26,6 +26,8 @@ async def inspect(browser,origin,viewport,reduced=False):
  # Verify the staged model is served locally rather than requested via runtime CDN.
  model=await page.request.get(origin+"/models/guardian.glb")
  assert model.status==200 and len(await model.body())==463988
+ # Let the walking, collection and two-handed offering visual sequence finish.
+ await page.wait_for_timeout(4200)
  await page.screenshot(path=str(ROOT/("preview-p15-"+("mobile" if viewport["width"]<600 else "reduced" if reduced else "desktop")+".png")),timeout=20000,animations="disabled")
  await page.locator(".guardian-accept").click()
  await page.locator(".galaxy-portal").wait_for(timeout=6000)
