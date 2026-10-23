@@ -60,10 +60,14 @@ last_run() {
   gh run list -R "$REPO" --workflow "$1" --branch main --event workflow_dispatch --limit 30 --json databaseId -q '[.[].databaseId] | max // 0'
 }
 run_workflow() {
-  local wf="$1" key="$2" val="$3" prev id tries
+  local wf="$1" key="$2" val="$3" extra="${4-}" prev id tries
   prev="$(last_run "$wf")" || fail "Cannot inspect $wf"
   echo "START: $wf"
-  gh workflow run "$wf" -R "$REPO" --ref main -f "$key=$val" || fail "Cannot dispatch $wf"
+  if [[ -n "$extra" ]]; then
+    gh workflow run "$wf" -R "$REPO" --ref main -f "$key=$val" -f "$extra" || fail "Cannot dispatch $wf"
+  else
+    gh workflow run "$wf" -R "$REPO" --ref main -f "$key=$val" || fail "Cannot dispatch $wf"
+  fi
   id=0
   for ((tries=1;tries<=60;tries++)); do
     id="$(last_run "$wf")" || fail "Cannot inspect run of $wf"
@@ -83,6 +87,6 @@ run_workflow galaxy-ephemeral-rls.yml confirm TEST
 run_workflow galaxy-p3-flex-provision.yml confirm PROVISION
 run_workflow galaxy-p3-flex-deploy.yml confirm DEPLOY
 run_workflow galaxy-ephemeral-live-ai.yml confirm TEST
-run_workflow galaxy-static-deploy.yml confirm_deploy DEPLOY
+run_workflow galaxy-static-deploy.yml confirm_deploy DEPLOY enable_evaluator=AI_READY
 echo 'SUCCESS: Supabase Auth tests, Flex backend, real AI, and static frontend Actions all passed.'
 echo 'https://gengalaxy1429841605.z29.web.core.windows.net/'
