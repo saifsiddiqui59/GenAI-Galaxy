@@ -50,6 +50,10 @@ jobs:
           set -euo pipefail
           region="$(az group show -n "$RG" --query location -o tsv)"
           [[ "${region,,}" == "$LOCATION" ]] || { echo '::error::Galaxy RG region mismatch'; exit 1; }
+          # Verify that Flex Consumption is supported in this exact region
+          # BEFORE creating any billable storage account.
+          flex_region="$(az functionapp list-flexconsumption-locations --query "[?name=='$LOCATION'].name | [0]" -o tsv)"
+          [[ "$flex_region" == "$LOCATION" ]] || { echo '::error::Flex Consumption unavailable in the requested Galaxy region'; exit 1; }
           if ! az storage account show -g "$RG" -n "$STORAGE_NAME" --query id -o tsv >/dev/null 2>&1; then
             az storage account create -g "$RG" -n "$STORAGE_NAME" -l "$LOCATION" \
               --sku Standard_LRS --kind StorageV2 --https-only true \
