@@ -30,6 +30,7 @@ jobs:
           set -euo pipefail
           [[ "$(git hash-object api/core.py)" == 'd3edd5b2574933f2c5ef5ecaed80598266d5efd4' ]] || exit 1
           [[ "$(git hash-object api/function_app.py)" == '09b27c79684c7b73c5a162d6d30eb71ddc3b7a13' ]] || exit 1
+          python -m pip install pypdf==5.9.0
           python -m unittest discover -s tests -p 'test_p36_interview_history.py' -v
           python -m unittest discover -s tests -p 'test_consumption_security.py' -v
           python -m unittest discover -s tests -p 'test_api_core.py' -v
