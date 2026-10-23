@@ -2,7 +2,7 @@ name: Galaxy P18 offline adaptive learning preview
 # Read-only bundle build. No Azure, Supabase, paid model or deployment credentials.
 on:
   push:
-    branches: [feat/p18-adaptive-learning-flow]
+    branches: [feat/p18-adaptive-learning-flow, fix/p18-uncertain-answer-anywhere]
   workflow_dispatch:
 permissions:
   contents: read
