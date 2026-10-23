@@ -1,0 +1,14 @@
+const assert=require('node:assert/strict'),p=require('../features/evaluation-evidence.js');
+const local=p.classify({serverReviewed:false,score:100,passed:true});
+assert.equal(local.masteryEligible,false);assert.equal(local.verified,false);
+assert.equal(p.nextReview({evidence:local,history:30}).days,1);
+const full={serverReviewed:true,accuracy:90,clarity:85,missing:[],passed:true};
+assert.equal(p.classify(full).masteryEligible,true);
+assert.equal(p.nextReview({evidence:full,history:0}).masteryCredit,false);
+assert.equal(p.nextReview({evidence:full,history:2}).days,7);
+assert.equal(p.nextReview({evidence:full,history:2}).masteryCredit,true);
+assert.equal(p.classify({...full,accuracy:20}).masteryEligible,false);
+assert.equal(p.classify({...full,missing:['grounding']}).masteryEligible,false);
+assert.equal(p.classify({...full,accuracy:NaN}).kind,'invalid');
+assert.equal(p.nextReview({evidence:full,skipped:true}).masteryCredit,false);
+console.log('P35 P1 evidence policy: verified 9 safety assertions without network calls');
