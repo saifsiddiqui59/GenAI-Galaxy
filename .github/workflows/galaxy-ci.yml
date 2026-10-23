@@ -32,6 +32,7 @@ jobs:
           node tests/test_auth_recovery.cjs
           node tests/test_mic_lifecycle.cjs
           node --check app.js
+          node --check genie/guide.js
           node --check runtime-config.js
           node --check speech/azure-speech-adapter.js
           python -m py_compile api/core.py api/function_app.py tests/live_rls_check.py
@@ -58,6 +59,14 @@ jobs:
       - run: python -m playwright install chromium
       - name: Desktop/mobile/reduced-motion and simulated mic
         run: python tests/browser_check.py
+      - name: Upload synthetic Genie welcome previews (no account data)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galaxy-genie-previews
+          path: genie-galaxy-*.png
+          if-no-files-found: ignore
+          retention-days: 7
   release-safety:
     runs-on: ubuntu-24.04
     timeout-minutes: 5

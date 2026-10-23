@@ -8,6 +8,7 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
   if reduced: await page.emulate_media(reduced_motion='reduce')
   errors=[];page.on('pageerror',lambda err:errors.append(str(err)))
   html=(R/'index.html').read_text();html=re.sub(r'<link rel="stylesheet" href="styles.css">','',html);html=html.replace('<script src="app.js" defer></script>','')
+  html=html.replace('<script src="genie/guide.js" defer></script>','')
   await page.set_content(html,wait_until='domcontentloaded')
   await page.add_style_tag(content=(R/'styles.css').read_text())
   await page.evaluate('''({subjects,lessons})=>{window.fetch=async (url)=>({ok:true,json:async()=>String(url).includes('curriculum')?subjects:lessons})}''',{'subjects':json.loads((R/'data/curriculum.json').read_text()),'lessons':json.loads((R/'data/lessons.json').read_text())})
@@ -23,6 +24,34 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
    await page.wait_for_timeout(100)
    assert not await page.locator('#motion-toggle').is_checked()
   await page.screenshot(path=str(R/path),full_page=True,animations='disabled',timeout=7000)
+  # Login-guide UI acceptance is mocked locally; it does not create an Auth user.
+  await page.add_script_tag(content=(R/'genie/guide.js').read_text())
+  shown=await page.evaluate("""() => window.GalaxyGenieGuide.show({
+    userId:'browser-demo-a',
+    masteredWorlds:[{index:0,name:'LLM Fundamentals'}],
+    next:{index:2,title:'RAG & Retrieval',isReview:false},
+    motion:true,onContinue:()=>{window.__genieContinued=true}
+  })""")
+  assert shown
+  assert await page.locator('#genie-guide').is_visible()
+  assert await page.locator('#genie-collected-count').inner_text()=='1 of 17 worlds mastered'
+  assert await page.locator('#genie-collected-orbs circle').count()==1
+  assert await page.locator('#genie-world-name').inner_text()=='RAG & Retrieval'
+  assert await page.evaluate("document.activeElement?.id === 'genie-skip'")
+  if reduced:
+   assert 'no-motion' in (await page.locator('#genie-guide').get_attribute('class'))
+  await page.screenshot(path=str(R/('genie-'+path)),animations='disabled',timeout=7000)
+  await page.locator('#genie-continue').click()
+  assert await page.evaluate('window.__genieContinued===true')
+  assert not await page.locator('#genie-guide').is_visible()
+  assert not await page.evaluate("""() => window.GalaxyGenieGuide.show({
+    userId:'browser-demo-a',next:{title:'Do not repeat'}})""")
+  await page.evaluate("""() => window.GalaxyGenieGuide.show({
+    userId:'browser-demo-b',
+    masteredWorlds:[],next:{title:'Next world',index:1}})""")
+  assert await page.locator('#genie-collected-count').inner_text()=='0 of 17 worlds mastered'
+  await page.keyboard.press('Escape')
+  assert not await page.locator('#genie-guide').is_visible()
   await page.locator('[data-chapter="3"]').click(force=True)
   await page.wait_for_timeout(50)
   assert await page.locator('#chapter-panel h2').inner_text()=='LangChain & LangGraph'

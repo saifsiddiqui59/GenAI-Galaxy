@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PUBLIC_ASSETS = (
     "index.html", "styles.css", "app.js", "runtime-config.js",
     "data/curriculum.json", "data/lessons.json",
-    "speech/azure-speech-adapter.js",
+    "speech/azure-speech-adapter.js", "genie/guide.js",
 )
 
 

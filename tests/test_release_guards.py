@@ -90,6 +90,7 @@ class ReleaseGuardTests(unittest.TestCase):
         public = [
             ROOT / 'runtime-config.js', ROOT / 'app.js', ROOT / 'index.html',
             ROOT / 'speech/azure-speech-adapter.js', ROOT / 'styles.css',
+            ROOT / 'genie/guide.js',
         ]
         credential_shapes = (
             r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----',

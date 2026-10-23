@@ -177,3 +177,9 @@ In VS Code Git Bash, from the Galaxy main branch run bash scripts/galaxy_p3_one_
 - P13 source work: pure, free hosted asset parity verifier accepts only the explicitly staged public evaluator endpoint; all other public files must match exactly. Offline Python checks assert no payment provider, no paid workflows in push CI, and 10 golden-question topic coverage without an independent model call.
 - **Human-only remaining**: actual microphone hardware/browser permission checks, real password-reset email, SME factual reviews of 245 lessons. Optional manual *read-only guest* website browser test incurs no LLM call. Vault extraction and paid Speech broker stay disabled until separately planned.
 - See `docs/reviews/P13_ZERO_COST_ACCEPTANCE.md`. No payment integration planned.
+
+
+## P14 — Genie Guardian UX review gate
+- Review draft [PR #47](https://github.com/saifsiddiqui59/GenAI-Galaxy/pull/47) and verify all 3 CI jobs on its final head commit.
+- After approval, merge with coordinator ownership and verify post-merge main CI. Review 2D genie art style and normal/mobile/reduced-motion visual timing.
+- An **additional explicit manual Azure static deployment approval** is required to update the hosted URL; subsequent release must include `genie/guide.js` in its exact public-asset byte-parity verification. Live sign-in acceptance requires a dedicated consented Galaxy test account; mock tests alone do not establish it.

@@ -47,9 +47,9 @@ echo 'Galaxy $web Blob data-plane access verified with keyless Entra authenticat
 
 stage="$(mktemp -d)"
 trap 'rm -rf "$stage"' EXIT
-mkdir -p "$stage/data" "$stage/speech"
+mkdir -p "$stage/data" "$stage/speech" "$stage/genie"
 # Explicit list: never copy the V3 reference, resume, .git, .env, SQL or server source.
-for file in index.html styles.css app.js runtime-config.js data/curriculum.json data/lessons.json speech/azure-speech-adapter.js; do
+for file in index.html styles.css app.js runtime-config.js data/curriculum.json data/lessons.json speech/azure-speech-adapter.js genie/guide.js; do
   [[ -f "$ROOT/$file" ]] || { echo "Missing public asset: $file" >&2; exit 2; }
   install -m 0644 "$ROOT/$file" "$stage/$file"
 done
