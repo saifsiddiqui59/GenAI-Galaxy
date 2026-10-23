@@ -141,3 +141,9 @@
 - Owner explicitly prohibits adding any payment gateway, automated charging, Stripe/Razorpay checkout, new paid AI model, fine-tuning, and paid evaluation calls for this workstream. Existing FREE/PLUS/PRO codes remain internal server-owned entitlements only with null price, no end-user upgrades, and no checkout.
 - Existing P12 Azure AI PAYG deployment is allowed to remain; P13 does **not** invoke it for QA, provision new cloud resources or claim paid model operations are free.
 - Use offline/mocked regression, rubric inventory, release parity, read-only guest browser checks and human/device acceptance; no paid live golden judge or repeated live AI smoke. See `docs/reviews/P13_ZERO_COST_ACCEPTANCE.md`.
+
+
+## P14 — first login animation remains static/isolated (2026-10-23)
+- Use an original grouped 2D SVG Genie character and native browser keyframes inspired by MIT Tween.js/easing and public SVG animation concepts, not copied assets, CDNs, new runtimes, or paid AI generation. Animation UI only; preserve existing 17 worlds/topic keys, provider credentials and study data boundaries.
+- Only full-chapter status-2 mastery adds a mini planet to the genie sack; source is the verified signed-in progress snapshot. The recommended chapter is presented for the next eligible study topic; no mastery claims from provisional scoring. User can skip, use Escape, and disable animation via motion/reduced-motion settings.
+- Feature branch and PR review do not authorize production website deployment, Supabase writes, or Azure provisioning; existing manually approved `dev` gates remain.
