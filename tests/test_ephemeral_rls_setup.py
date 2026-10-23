@@ -78,8 +78,8 @@ class EphemeralAuthTests(unittest.TestCase):
             "GALAXY_SUPABASE_URL": tool.URL,
             "GALAXY_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_fake",
             "GALAXY_SUPABASE_ADMIN_KEY": "sb_secret_fake",
-        }, clear=True), patch.object(tool, 'create_test_user', side_effect=created), \\
-             patch.object(tool, 'admin_request', side_effect=admin), \\
+        }, clear=True), patch.object(tool, 'create_test_user', side_effect=created), \
+             patch.object(tool, 'admin_request', side_effect=admin), \
              patch.object(tool, 'run_rls', side_effect=lambda: tool._cancellation_requested(None,None)):
             with self.assertRaisesRegex(tool.CheckFailed, "cancellation"):
                 tool.run()
