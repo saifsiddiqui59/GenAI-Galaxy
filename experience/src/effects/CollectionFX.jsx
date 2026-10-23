@@ -27,7 +27,7 @@ export function collectPosition(world,index,time,disabled=false,bagPosition=BAG_
  }
  return {point,arrived:t>=1,atHand:Boolean(pickup&&t>=.44&&t<.52)};
 }
-function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPoseRef}){
+function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPoseRef,compact}){
  const mesh=useRef(),halo=useRef();
  const worldLayout=layoutWorlds()[world.index];
  const begin=useRef(null);
@@ -38,7 +38,8 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
   const dynamicBag=rigPoseRef?.current?.hip;
   const position=dynamicBag?dynamicBag.toArray().map((v,i)=>v+([.38,-.25,.16][i])):bagPosition;
   const hand=rigPoseRef?.current?.hand?.toArray()||null;
-  const {point,arrived}=collectPosition(worldLayout,order,time,reducedMotion,position,hand);
+  const sourceWorld=compact?{...worldLayout,x:worldLayout.x*.48,y:worldLayout.y*.73+.4,z:worldLayout.z*.8-1.8}:worldLayout;
+  const {point,arrived}=collectPosition(sourceWorld,order,time,reducedMotion,position,hand);
   const sackOffset=new THREE.Vector3((order%4-1.5)*.115,Math.floor(order/4)*.08,order*.007);
   if(arrived)point.add(sackOffset);
   mesh.current.position.copy(point);
@@ -87,7 +88,7 @@ function Satchel({onOpenSack,count,bagPosition,rigPoseRef}){
  </group>;
 }
 
-function OfferingOrb({worldIndex,phase,bagPosition,rigPoseRef}){
+function OfferingOrb({worldIndex,phase,bagPosition,rigPoseRef,compact}){
  const orb=useRef();
  useFrame((state,dt)=>{
   if(!orb.current)return;
@@ -102,7 +103,7 @@ function OfferingOrb({worldIndex,phase,bagPosition,rigPoseRef}){
  if(phase!=='offering')return null;
  const color=COLORS[worldIndex%COLORS.length]||'#a6c3ff';
  return <group>
-   <group ref={orb}>
+   <group ref={orb} scale={compact?.72:1}>
      <mesh><sphereGeometry args={[.42,42,32]}/>
        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.1}
           metalness={.22} roughness={.35} toneMapped={false}/></mesh>
@@ -122,9 +123,9 @@ export default function CollectionFX({completed=[],reducedMotion=false,epoch=0,o
  const bagPosition=size.width<700?[-.75,-.82,3.7]:BAG_POSITION;
  return <>
    <Satchel onOpenSack={onOpenSack} count={completed.length} bagPosition={bagPosition} rigPoseRef={rigPoseRef}/>
-   <OfferingOrb phase={phase} worldIndex={nextWorldIndex} bagPosition={bagPosition} rigPoseRef={rigPoseRef}/>
+   <OfferingOrb phase={phase} worldIndex={nextWorldIndex} bagPosition={bagPosition} rigPoseRef={rigPoseRef} compact={size.width<680}/>
    {completed.filter(w=>Number.isInteger(w.index)&&w.index>=0&&w.index<17).slice(0,17).map((world,order)=>
      <CollectedOrb key={world.index} world={world} order={order}
-      epoch={epoch} reducedMotion={reducedMotion} ready={true} bagPosition={bagPosition} rigPoseRef={rigPoseRef}/>)}
+      epoch={epoch} reducedMotion={reducedMotion} ready={true} bagPosition={bagPosition} rigPoseRef={rigPoseRef} compact={size.width<680}/>)}
  </>;
 }
