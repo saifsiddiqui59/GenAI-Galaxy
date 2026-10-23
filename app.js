@@ -76,7 +76,7 @@ function plansMarkup(){
  `<div class="panel" style="margin-top:16px;overflow-x:auto"><h2>Capability comparison</h2><table style="width:100%;text-align:left"><thead><tr><th>Feature</th><th>FREE</th><th>PLUS</th><th>PRO</th></tr></thead><tbody>${PLAN_FEATURES.map(row=>`<tr>${row.map(cell=>`<td style="padding:10px;border-bottom:1px solid rgba(150,170,210,.18)">${cell===true?'✓':escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table><p class="footnote">Planned features are not currently included in any tier. Entitlements cannot be granted from browser JavaScript.</p></div>`;
 }
 async function refreshPlan(){
- if(state.isGuest||!state.client){state.planInfo=null;render();return}
+ if(state.isGuest||typeof state.client?.rpc!=='function'){state.planInfo=null;render();return}
  const currentUser=state.user?.id;
  const result=await state.client.rpc('genai_study_my_subscription');
  if(state.isGuest||state.user?.id!==currentUser)return;
@@ -96,7 +96,7 @@ function platformMarkup(){
  `<section class="panel" style="margin-top:16px"><h2>Manage account entitlements</h2><p class="footnote">Plan assignments are authorized and validated by the database, never by hidden frontend roles.</p><form id="platform-plan-form"><label>Registered account ID<input id="platform-target" type="text" required placeholder="User UUID"/></label><label>Plan<select id="platform-plan"><option>FREE</option><option>PLUS</option><option>PRO</option></select></label><label>Duration in days<input id="platform-days" type="number" min="1" max="365" value="30" required /></label><label>Reason<input id="platform-reason" type="text" minlength="10" maxlength="300" required placeholder="Why this plan is assigned"/></label><button class="btn accent" type="submit">Assign plan</button></form></section>`;
 }
 async function requestGalaxyAccess(){
- if(state.isGuest||!state.client)return;
+ if(state.isGuest||typeof state.client?.rpc!=='function')return;
  const userId=state.user?.id;
  const response=await state.client.rpc('galaxy_request_access');
  if(state.isGuest||state.user?.id!==userId)return;
@@ -105,7 +105,7 @@ async function requestGalaxyAccess(){
  if(state.view==='plans')render();
 }
 async function platformRefresh(){
- if(state.isGuest||!state.client)return;
+ if(state.isGuest||typeof state.client?.rpc!=='function')return;
  const identity=state.user?.id;
  const result=await state.client.rpc('galaxy_platform_summary');
  if(state.user?.id!==identity)return;
