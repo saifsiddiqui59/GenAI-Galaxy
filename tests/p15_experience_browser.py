@@ -29,7 +29,7 @@ async def inspect(browser,origin,viewport,reduced=False):
  await page.screenshot(path=str(ROOT/("preview-p15-"+("mobile" if viewport["width"]<600 else "reduced" if reduced else "desktop")+".png")),timeout=20000,animations="disabled")
  await page.locator(".guardian-accept").click()
  await page.locator(".galaxy-portal").wait_for(timeout=6000)
- await page.wait_for_url("**/*galaxyWorld=1*",timeout=12000) if False else await page.wait_for_url("**/*galaxyWorld=1*",timeout=12000)
+ await page.wait_for_url("**/*galaxyWorld=1*",timeout=12000)
  # Demo completed chapters 0/2/4; recommended world is chapter index 1.
  assert "galaxyWorld=1" in page.url, page.url
  assert not errors,errors
