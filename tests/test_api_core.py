@@ -5,6 +5,14 @@ sys.path.insert(0,str(R/'api'))
 from core import InputError,extract_text,bearer_token,document_id,topic_key,validate_review,verify_gateway,owner_document_filters,owned_storage_path,MAX_BYTES
 
 class ApiCoreTests(unittest.TestCase):
+ def test_backend_project_and_redirect_safety(self):
+  source=(R/'api/function_app.py').read_text()
+  self.assertIn("url != 'https://vfoghlhtnifpnbevgufa.supabase.co'",source)
+  self.assertIn('class _NoRedirect(HTTPRedirectHandler):',source)
+  self.assertIn('return None',source.split('def redirect_request(',1)[1].split('def _no_redirect_open(',1)[0])
+  self.assertIn('_no_redirect_open(Request(download',source)
+  self.assertIn("_no_redirect_open(Request(url,data=b'',method='POST'",source)
+
  def test_auth_header_required(self):
   self.assertEqual(bearer_token('Bearer abc.xyz-12'),'abc.xyz-12')
   for x in ('',None,'Basic foo','Bearer hi\nInjected: header'):
