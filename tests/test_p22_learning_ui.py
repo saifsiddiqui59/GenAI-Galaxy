@@ -16,7 +16,7 @@ class AdaptiveLearningUpgradeTests(unittest.TestCase):
 
     def test_modes_and_mock_limits(self):
         for token in ["'learn','practice','mock'", "limit:5", "function finishMockSession()",
-                      "function trackMockQuestion()", "Question ${Math.min(state.session.done+1,state.session.limit)}"]:
+                      "function trackMockQuestion(", "Question ${Math.min(state.session.done+1,state.session.limit)}"]:
             self.assertIn(token.replace('\\$', '$'), SOURCE)
 
     def test_no_false_score_or_paid_auto_advance(self):
