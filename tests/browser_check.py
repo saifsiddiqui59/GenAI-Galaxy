@@ -40,6 +40,7 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
   assert await page.evaluate("document.activeElement?.id === 'genie-skip'")
   if reduced:
    assert 'no-motion' in (await page.locator('#genie-guide').get_attribute('class'))
+  await page.screenshot(path=str(R/('genie-'+path)),animations='disabled',timeout=7000)
   await page.locator('#genie-continue').click()
   assert await page.evaluate('window.__genieContinued===true')
   assert not await page.locator('#genie-guide').is_visible()
