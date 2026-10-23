@@ -4,6 +4,7 @@ import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import {useAnimations} from '@react-three/drei';
 import * as THREE from 'three';
 import {discoverRigAnchors,gripMidpoint,waistPosition} from './rigAnchors.js';
+import {identifyArmChains,poseTwoHandOffering} from './handIK.js';
 // The scene uses one character, so keep FBXLoader's original skinned mesh and bindings.
 
 // Real Quaternius 2018 CC0 skeletal FBX, not generated placeholder geometry.
@@ -52,6 +53,7 @@ function SkeletonModel({phase='idle',rigPoseRef}){
  },[rootFBX]);
  const {actions,names}=useAnimations(rootFBX.animations,instance);
  const rig=useMemo(()=>discoverRigAnchors(instance),[instance]);
+ const chains=useMemo(()=>identifyArmChains(instance),[instance]);
  const holder=useRef(null),elapsed=useRef(0),previous=useRef(phase);
  // Adapted from MIT-licensed 3merillon CharacterController mobile smoothing.
  // https://github.com/3merillon/React-Three-Fiber-Character-Controller/blob/main/src/components/CharacterController.tsx
@@ -119,14 +121,17 @@ function SkeletonModel({phase='idle',rigPoseRef}){
     holder.current.rotation.y=THREE.MathUtils.damp(holder.current.rotation.y,-.17,4,dt);
     // Capture actual animated bone positions for visual QA; no fake IK claims.
     instance.updateMatrixWorld(true);
+    const ik=phase==='offering'?poseTwoHandOffering(chains,rig.waist,narrow?3:5):null;
     if(rigPoseRef){
       const hand=gripMidpoint(rig,THREE.Vector3);
       const hip=waistPosition(rig,THREE.Vector3);
-      rigPoseRef.current={hand,hip,rigReady:rig.readyToOffer,waistReady:rig.readyForSatchel};
+      rigPoseRef.current={hand,hip,rigReady:rig.readyToOffer,waistReady:rig.readyForSatchel,ikError:ik?Math.max(ik.errorLeft,ik.errorRight):null};
     }
     if((import.meta.env.DEV||new URLSearchParams(window.location.search).has('demo'))&&window.__galaxySkeletonDiagnostics){
       window.__galaxySkeletonDiagnostics.gripMidpoint=gripMidpoint(rig,THREE.Vector3)?.toArray()||null;
       window.__galaxySkeletonDiagnostics.waistPosition=waistPosition(rig,THREE.Vector3)?.toArray()||null;
+      window.__galaxySkeletonDiagnostics.ikError=ik?Math.max(ik.errorLeft,ik.errorRight):null;
+      window.__galaxySkeletonDiagnostics.hasArmIK=Boolean(chains.left&&chains.right);
     }
   }
  });
