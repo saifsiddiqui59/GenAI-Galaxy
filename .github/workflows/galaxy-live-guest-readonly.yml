@@ -1,0 +1,33 @@
+name: Galaxy zero-paid live Playwright guest verification
+# One-off hosted test branch; no push/deploy from main, no secrets or AI calls.
+on:
+  push:
+    branches:
+      - test/live-guest-readonly-20261023
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  live-guest-browser:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Playwright and cached runner Chromium
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install chromium
+      - name: Browser-test actual Azure website without user login or model requests
+        run: python tests/live_guest_readonly_e2e.py
+      - name: Upload nonprivate guest-only Playwright screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galaxy-live-guest-readonly-${{ github.run_id }}
+          path: artifacts/galaxy-live-*.png
+          if-no-files-found: warn
+          retention-days: 2
