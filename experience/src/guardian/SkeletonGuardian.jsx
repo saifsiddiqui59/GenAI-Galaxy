@@ -51,6 +51,14 @@ function SkeletonModel({phase='idle'}){
  const isInitialized=useRef(false);
  const narrow=useThree(state=>state.size.width<700);
  useEffect(()=>{
+  let meshes=0,bones=0;
+  instance.traverse(node=>{if(node.isMesh||node.isSkinnedMesh)meshes++;if(node.isBone)bones++;});
+  if(!meshes)throw Error('Loaded CC0 Skeleton FBX has no drawable mesh');
+  // Synthetic-browser acceptance instrumentation only: never include private data.
+  if(import.meta.env.DEV||new URLSearchParams(window.location.search).has('demo'))
+    window.__galaxySkeletonDiagnostics={meshes,bones,clips:names.length};
+ },[instance,names]);
+ useEffect(()=>{
   instance.traverse(node=>{
     if(node.isSkinnedMesh||node.isMesh){
       node.castShadow=true;
