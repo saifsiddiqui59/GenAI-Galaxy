@@ -72,6 +72,23 @@ jobs:
       - run: python -m playwright install chromium
       - name: Desktop/mobile/reduced-motion and simulated mic
         run: python tests/browser_check.py
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build real 3D preview for Chromium acceptance
+        run: |
+          npm install --prefix experience --no-audit --no-fund
+          npm run --prefix experience build
+      - name: Test live Chromium 3D character, satchel and warp (synthetic only)
+        run: python tests/p15_experience_browser.py
+      - name: Attach synthetic deep-space screenshots for review
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galaxy-p15-3d-screenshots
+          path: preview-p15-*.png
+          retention-days: 7
+          if-no-files-found: ignore
   release-safety:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
