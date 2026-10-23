@@ -14,7 +14,7 @@ export function chooseKayKitAnimation(phase,names=[]){
  const wants={
   arriving:[/walk/i,/run/i,/move/i],
   collecting:[/^PickUp$/i,/interact/i,/grab/i,/cast/i,/attack/i],
-  offering:[/Spellcast_Summon/i,/Spellcast_Raise/i,/spell/i,/cast/i,/idle/i],
+  offering:[/^Unarmed_Idle$/i,/^2H_Melee_Idle$/i,/^Idle$/i,/Spellcast_Summon/i],
   idle:[/idle/i,/breath/i,/stand/i],
   celebrating:[/cheer/i,/dance/i,/victory/i,/idle/i]
  };
@@ -59,6 +59,13 @@ function Model({phase,rigPoseRef,reducedMotion=false}){
     node.receiveShadow=true;
     // Keep the original KayKit CC0 1024 atlas map, gradient and GLB material intact.
     // Previous P19 code overwrote every bone with flat cream, destroying all artwork.
+    const materials=Array.isArray(node.material)?node.material:[node.material];
+    for(const material of materials){
+      if(material?.name==='Glow'&&material.emissive){
+        material.emissive.set('#ffc76e');material.emissiveIntensity=1.6;
+        material.toneMapped=false;material.needsUpdate=true;
+      }
+    }
    }
   });
   return scene;
