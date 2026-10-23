@@ -1,0 +1,138 @@
+name: Galaxy Genie storage preview (manual, isolated)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_preview:
+        description: 'Type DEPLOY_PREVIEW to upload only the isolated Genie preview path'
+        required: true
+        type: string
+permissions:
+  contents: read
+
+jobs:
+  publish-preview:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm_preview == 'DEPLOY_PREVIEW'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      GALAXY_AZ_RG: GenAI_Galaxy
+      GALAXY_AZ_STORAGE: gengalaxy1429841605
+      PREFIX: previews/genie-0ca9cc80
+      SOURCE_SHA: 0ca9cc809b86cec07a2a640ffc01a2df39953b89
+      SITE: https://gengalaxy1429841605.z29.web.core.windows.net
+    steps:
+      - name: Checkout approved publisher from main
+        uses: actions/checkout@v4
+        with:
+          path: publisher
+          persist-credentials: false
+      - name: Checkout CI-tested combined Genie commit (immutable)
+        uses: actions/checkout@v4
+        with:
+          ref: 0ca9cc809b86cec07a2a640ffc01a2df39953b89
+          path: galaxy
+          persist-credentials: false
+      - name: Validate source, staging list and no secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git -C galaxy rev-parse HEAD)" == "$SOURCE_SHA" ]] || {
+            echo '::error::Combined source SHA mismatched approved immutable commit'; exit 1;
+          }
+          node --check publisher/scripts/genie-preview-demo.js
+          node --check galaxy/app.js
+          node --check galaxy/genie/guide.js
+          node --check galaxy/genie/progress/story.js
+          node --check galaxy/genie/effects/cosmic-polish.js
+          node --check galaxy/galaxy/handoff/planet-flight.js
+          stage="$RUNNER_TEMP/galaxy-genie-preview"
+          mkdir -p "$stage"
+          public_files=(
+            index.html styles.css app.js runtime-config.js
+            data/curriculum.json data/lessons.json
+            speech/azure-speech-adapter.js
+            genie/guide.js genie/progress/story.js
+            genie/effects/cosmic-polish.js genie/effects/cosmic-polish.css
+            galaxy/handoff/planet-flight.js galaxy/handoff/planet-flight.css
+          )
+          for file in "${public_files[@]}"; do
+            [[ -f "galaxy/$file" ]] || { echo "::error::Missing $file"; exit 1; }
+            mkdir -p "$stage/$(dirname "$file")"
+            install -m 0644 "galaxy/$file" "$stage/$file"
+          done
+          cp publisher/scripts/genie-preview-demo.js "$stage/genie-preview-demo.js"
+          python - <<'PY'
+          from pathlib import Path
+          import os
+          stage=Path(os.environ["RUNNER_TEMP"])/"galaxy-genie-preview"
+          index=stage/"index.html"
+          text=index.read_text()
+          assert text.count("</body>")==1
+          index.write_text(text.replace("</body>", '<script src="genie-preview-demo.js" defer></script>\n</body>'))
+          config=(stage/"runtime-config.js").read_text()
+          for forbidden in ("sb_secret_", "service_role", "AZURE_CLIENT_SECRET", "AZURE_SPEECH_KEY"):
+              assert forbidden.lower() not in config.lower()
+          assert "window.GALAXY_EVALUATOR_URL='';" in config, "Public demo must not invoke paid evaluator"
+          PY
+          echo "STAGE=$stage" >> "$GITHUB_ENV"
+          printf 'Prepared %s approved public assets; existing $web root untouched.\n' "${#public_files[@]}"
+      - name: Verify pinned existing Azure identity
+        shell: bash
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ -n "$AZURE_CLIENT_ID" && -n "$AZURE_TENANT_ID" && -n "$AZURE_SUBSCRIPTION_ID" ]] || exit 1
+          [[ "${AZURE_CLIENT_ID,,}" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || {
+            echo '::error::Not the approved GenAI_Galaxy OIDC application'; exit 1;
+          }
+      - name: Login Azure with dedicated OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Upload ONLY the isolated preview prefix (never root)
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GALAXY_AZ_RG" == GenAI_Galaxy && "$GALAXY_AZ_STORAGE" == gengalaxy1429841605 ]] || exit 2
+          [[ "$PREFIX" == 'previews/genie-0ca9cc80' ]] || exit 2
+          id="$(az storage account show --resource-group "$GALAXY_AZ_RG" --name "$GALAXY_AZ_STORAGE" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Storage/storageAccounts/gengalaxy1429841605 ]] || exit 2
+          enabled="$(az storage account blob-service-properties show --account-name "$GALAXY_AZ_STORAGE" --resource-group "$GALAXY_AZ_RG" --query staticWebsite.enabled -o tsv)"
+          [[ "${enabled,,}" == true ]] || exit 2
+          az storage container show --account-name "$GALAXY_AZ_STORAGE" --auth-mode login --name '$web' --query name -o tsv >/dev/null
+          az storage blob upload-batch --account-name "$GALAXY_AZ_STORAGE" --auth-mode login \
+            --destination '$web' --destination-path "$PREFIX" --source "$STAGE" \
+            --overwrite true --content-cache-control no-store --only-show-errors
+          az storage blob upload --account-name "$GALAXY_AZ_STORAGE" --auth-mode login \
+            --container-name '$web' --name "$PREFIX/index.html" --file "$STAGE/index.html" \
+            --overwrite true --content-type 'text/html; charset=utf-8' --only-show-errors
+      - name: Verify exact hosted files and print clickable URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in index.html genie-preview-demo.js app.js genie/guide.js galaxy/handoff/planet-flight.js; do
+            local_sha="$(sha256sum "$STAGE/$file" | cut -d' ' -f1)"
+            hosted_sha="$(curl --fail --silent --show-error --retry 3 --retry-delay 2 "$SITE/$PREFIX/$file" | sha256sum | cut -d' ' -f1)"
+            [[ "$local_sha" == "$hosted_sha" ]] || {
+              echo "::error::Hosted asset mismatch: $file"; exit 1;
+            }
+          done
+          url="$SITE/$PREFIX/index.html?demo=genie"
+          echo "Verified Genie preview URL: $url"
+          echo "### Genie hosted preview" >> "$GITHUB_STEP_SUMMARY"
+          echo "Verified SHA $SOURCE_SHA at isolated $PREFIX. Existing website root was untouched." >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "[Open animated Genie demo]($url)" >> "$GITHUB_STEP_SUMMARY"
+      - name: Log out Azure
+        if: always()
+        shell: bash
+        run: az logout >/dev/null 2>&1 || true
