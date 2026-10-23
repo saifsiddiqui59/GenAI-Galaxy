@@ -37,3 +37,7 @@ The optional signed-in two-account test covers owner CRUD for `genai_study_progr
 ## M10 — private extractor release contract
 
 The undeployed `/api/vault/extract` route returns HTTP 503 unless the backend-only `GALAXY_VAULT_GATEWAY_RATE_LIMIT=active` marker is configured. It is an additional safety switch, **not** a verified quota enforcement mechanism. A real gateway must independently enforce authenticated per-user limits, strip/inject the trusted internal header, and block direct Azure Function ingress. Document metadata SELECT and PATCH apply both verified `user_id` and validated v4 document UUID filters, in addition to live Supabase RLS. Do not deploy until malware quarantine, secure isolation tests and owner approval are complete.
+
+## V6 preview release contract
+
+Release command `PUBLISH_V6_REVIEWED_6614f79` is bound to owner 80577424, PR #131 and full source SHA `6614f7903c52b81f471083321a49f8870b5becdc`. Preview handoff carries only chapter index 0–16 to its isolated nested lesson document. The demo seek interface changes ephemeral presentation time only; authentic mastery is never fabricated.

@@ -39,3 +39,7 @@ This section supersedes the original broad assignments below. **Repo:** `saifsid
 - QA/CI: `tests/**`, `.github/workflows/**`, `scripts/checkpoint.sh`.
 
 Only coordinator edits shared `app.js`/interfaces and merges PRs; workers create branches and report blockers. All GitHub work stays isolated from RetailGrowthAI/WineShopPOS.
+
+## V6 integration boundary
+
+`feat/p35-v6-cinematic` / draft #131 owns isolated motion, scene/materials and visual QA; `feat/p35-v6-preview-release` is based on latest main and owns only protected publisher, its boundary tests and canonical release state. Keep visual source draft. Coordinator reviews source CI/screenshots and publisher independently; deploy only the new V6 prefix and verify hosted results.

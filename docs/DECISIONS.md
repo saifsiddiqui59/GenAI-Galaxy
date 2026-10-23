@@ -141,3 +141,7 @@
 - Owner explicitly prohibits adding any payment gateway, automated charging, Stripe/Razorpay checkout, new paid AI model, fine-tuning, and paid evaluation calls for this workstream. Existing FREE/PLUS/PRO codes remain internal server-owned entitlements only with null price, no end-user upgrades, and no checkout.
 - Existing P12 Azure AI PAYG deployment is allowed to remain; P13 does **not** invoke it for QA, provision new cloud resources or claim paid model operations are free.
 - Use offline/mocked regression, rubric inventory, release parity, read-only guest browser checks and human/device acceptance; no paid live golden judge or repeated live AI smoke. See `docs/reviews/P13_ZERO_COST_ACCEPTANCE.md`.
+
+## V6 publisher boundary
+
+The new main-based publisher may release immutable V6 source `6614f79` only to `previews/galaxy-3d-v6` in existing `gengalaxy1429841605`. Require owner ID 80577424 and an exact command on #131 (or explicit manual input), protected dev OIDC, all three exact-source CI jobs, every staged-file SHA256, unchanged root homepage hash and hosted Chromium. No push-triggered cloud action, account/IAM provisioning or visual merge into production.

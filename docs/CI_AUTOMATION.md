@@ -15,3 +15,7 @@ Based on the RetailGrowthAI coordinator's verified process, the Galaxy workflow 
 ## M5 GitHub Azure workflows (separate from CI)
 
 `galaxy-azure-verify.yml` is a **manual** main-only `dev` OIDC read-only resource group inventory check. `galaxy-static-deploy.yml` is a **manual**, main-only, explicit DEPLOY + protected `dev` environment static upload to a verified existing Storage website. Neither workflow uses PR secrets, automatic cloud changes, account keys or provisioning. See `docs/AZURE_GITHUB_OIDC.md`. Both are **prepared locally only**, no GitHub Action run ID or Azure resource verification.
+
+## V6 pinned preview acceptance
+
+The separate V6 publisher reads exact-source Actions results, requires successful curriculum-and-api/browser-smoke/release-safety jobs, then uses protected dev OIDC for only the fixed existing-storage prefix. It compares every staged hosted SHA256 and the before/after root index hash. Hosted Chromium PNG/JSON/manifest evidence is retained for 14 days as `galaxy-v6-hosted-evidence`. No cloud execution on PR/push.

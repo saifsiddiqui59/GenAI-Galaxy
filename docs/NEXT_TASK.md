@@ -185,3 +185,7 @@ In VS Code Git Bash, from the Galaxy main branch run bash scripts/galaxy_p3_one_
 2. Validate natural character turning, repeated miniature planet pickup and sack deposit, exact hand alignment and mobile GPU frame rate with manual screen recording before merging source PR #96.
 3. Use consented Galaxy test accounts for authentic progress and two-user isolation validation; demo progress is not authentic mastery.
 4. Keep root $web/index.html unchanged; release future approved revisions under a new preview prefix with an immutable tested SHA.
+
+## Current V6 release action
+
+Require all three exact-source CI jobs for #131 and review its screenshot artifact. Merge only the independent fixed-prefix V6 publisher after main-based CI; use its owner command on #131, inspect actual hosted byte-parity/browser results and open the downloaded desktop/mobile images. Record verified run/link evidence afterward. Keep #96/#105/#131 draft; physical-device GPU rates and signed-in V6 journeys remain unverified.

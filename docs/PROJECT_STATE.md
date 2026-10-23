@@ -204,3 +204,9 @@ Applied Galaxy-only migration `20261023110022_galaxy_freemium_subscriptions_v1` 
 - The visually rejected P17/P19 skeleton was replaced **in an isolated, unmerged feature branch** by KayKit CC0 textured Mage (95 clips, 41 bones), with real hand/pelvis attachments and low-cost procedural planet materials; PR #96 remains draft.
 - Versioned public interactive review: https://gengalaxy1429841605.z29.web.core.windows.net/previews/galaxy-3d-v4/index.html?demo=1 — Azure protected deployment [#40008968388](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/40008968388) SUCCESS, exactly 14 hosted staged asset files verified byte-for-byte by SHA256. Root site untouched.
 - Exact review build `9eb442613278f0eea3d5e57f63c832ef13f0ec4c` passed 3/3 CI jobs (runs #40008306320 and #40008299990) and Chromium desktop/mobile/reduced-motion acceptance. Owner-scoped progress unchanged; ?demo=1 explicitly synthetic. Art approval and hosted authenticated RLS remain incomplete.
+
+## V6 isolated preview release preparation — 24 October 2026
+
+Visual source PR #131 remains draft, stacked on V5 #105; source pin `6614f7903c52b81f471083321a49f8870b5becdc` includes current main through P34 `de5b3a8`. Local Chromium screenshots were opened at 1440x900, 390x844, 360x740 and reduced motion. 131 local Python and 11 rig tests passed; no fake authenticated mastery. A separate owner-command publisher stages this immutable source only under the existing V6 prefix, checks exact-source CI and byte parity, then runs hosted Chromium. Deployment success is not claimed until that protected workflow succeeds. Production 3D source remains unmerged.
+
+**Exact V6 source CI verified:** #40021350132 completed all three jobs successfully at `6614f7903c52b81f471083321a49f8870b5becdc`; actual Chromium logs report all four viewport/motion variants passed, including the natural three-planet sequence. Screenshot artifact #12529669941 retained for review.
