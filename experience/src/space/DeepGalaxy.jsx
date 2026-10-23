@@ -110,7 +110,7 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
   <pointLight position={[-4,-3,1]} color="#8662dc" intensity={35} distance={24}/>
   <NebulaCloud lowPower={lowPower||reducedMotion}/>
   <Starfield lowPower={lowPower}/>
-  <group scale={lowPower?[.65,.93,.9]:[1,1,1]}>
+  <group position={lowPower?[0,.4,-1.8]:[0,0,0]} scale={lowPower?[.48,.73,.8]:[1,1,1]}>
   {layoutWorlds().map(world=><Planet key={world.index} world={world} mastered={set.has(world.index)}
    recommended={world.index===recommendedIndex} selected={world.index===selectedIndex}
    onSelect={onSelect} reducedMotion={reducedMotion} lowPower={lowPower}/>)}
