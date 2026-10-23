@@ -49,7 +49,8 @@
       particle.style.setProperty('--gsize', pos.size + 'px');
       layer.appendChild(particle);
     }
-    host.appendChild(layer);
+    const stage = typeof host.querySelector === 'function' ? host.querySelector('.genie-stage') || host : host;
+    stage.appendChild(layer);
     current = {host, layer};
     return true;
   }
