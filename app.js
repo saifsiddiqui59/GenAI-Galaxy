@@ -16,7 +16,7 @@ const PALETTES=[
  ['#c5d3f6','#667ec8','#31326f','#adc1f6'],['#fbc2bd','#bd7677','#623045','#d88d94'],['#c1f2c1','#659d86','#224b53','#8bd9c4'],
  ['#eec3fa','#a15cbd','#402863','#d48ef0'],['#b3f6ff','#648add','#21346c','#7fbfff']
 ];
-const state={subjects:[],topics:[],lessons:{},current:null,chapter:0,view:'galaxy',progress:{},attempts:[],documents:[],user:null,client:null,isGuest:true,query:'',attemptQuestion:'',level:1,answerDraft:'',feedback:null,guideOpen:false,studyMode:'practice',targetRole:'GenAI Engineer',session:null,sessionReport:null,jobFocus:'',planInfo:null,planCatalog:[],platformSummary:null,platformPending:[],platformAuthorized:false,platformError:'',motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,voice:null,recording:false,voicePending:false,starFrame:0,stars:[],galaxyFrame:0,lastFrame:0};
+const state={subjects:[],topics:[],lessons:{},current:null,chapter:0,view:'galaxy',progress:{},attempts:[],documents:[],user:null,client:null,isGuest:true,query:'',attemptQuestion:'',level:1,answerDraft:'',feedback:null,guideOpen:false,studyMode:'practice',targetRole:'GenAI Engineer',session:null,sessionReport:null,jobFocus:'',planInfo:null,planCatalog:[],platformSummary:null,platformPending:[],platformAuthorized:false,platformError:'',approvalInfo:null,motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,voice:null,recording:false,voicePending:false,starFrame:0,stars:[],galaxyFrame:0,lastFrame:0};
 const total=()=>state.topics.length;
 const getP=t=>state.progress[key(t)]||{status:0,confidence:0,note:'',last_reviewed_at:null,next_review_at:null};
 const chapterTopics=c=>state.topics.filter(t=>t.branchIndex===c);
@@ -71,7 +71,7 @@ function plansMarkup(){
  const cap=state.planInfo?.allowed===false?'Access restricted':`${limit} model evaluations per UTC day`;
  const tiers=['FREE','PLUS','PRO'];
  return intro('ACCOUNT & CAPABILITIES','Your <span class="gradient-text">Galaxy plan.</span>','A transparent feature matrix. No payments or self-service upgrades are enabled; daily AI usage is enforced by the secure backend.')+
- `<div class="panel"><h2>${state.isGuest?'Guest preview':escapeHtml(state.user?.email||'Account')}</h2><p>Current entitlement: <strong>${escapeHtml(code)}</strong> · ${escapeHtml(cap)}</p><p class="footnote">${state.isGuest?'Sign in to load your account entitlement.':'This is your server-owned subscription status, never a browser-controlled plan.'}</p><button class="btn accent" id="plan-refresh">Refresh plan</button>${state.isGuest?'<button class="btn ghost" id="plan-signin">Sign in</button>':''}</div>`+
+ `<div class="panel"><h2>${state.isGuest?'Guest preview':escapeHtml(state.user?.email||'Account')}</h2><p>Current entitlement: <strong>${escapeHtml(code)}</strong> · ${escapeHtml(cap)}</p><p>Galaxy onboarding: <strong>${escapeHtml(state.approvalInfo?.status||'Not checked')}</strong></p><p class="footnote">${state.isGuest?'Sign in to load your account entitlement.':'This is your server-owned subscription status, never a browser-controlled plan.'}</p><button class="btn accent" id="plan-refresh">Refresh plan</button>${state.isGuest?'<button class="btn ghost" id="plan-signin">Sign in</button>':''}</div>`+
  `<div class="grid-two" style="margin-top:16px">${tiers.map((tier,i)=>`<section class="panel"><span class="eyebrow">${tier}</span><h2>${tier==='FREE'?'Free study':tier==='PLUS'?'Expanded practice':'Highest daily allowance'}</h2><p>${[5,10,20][i]} AI evaluations per day, subject to existing global quota</p><p class="footnote">${tier===code?'Your current plan':tier==='FREE'?'No payment needed':'No purchase or upgrade available yet'}</p></section>`).join('')}</div>`+
  `<div class="panel" style="margin-top:16px;overflow-x:auto"><h2>Capability comparison</h2><table style="width:100%;text-align:left"><thead><tr><th>Feature</th><th>FREE</th><th>PLUS</th><th>PRO</th></tr></thead><tbody>${PLAN_FEATURES.map(row=>`<tr>${row.map(cell=>`<td style="padding:10px;border-bottom:1px solid rgba(150,170,210,.18)">${cell===true?'✓':escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table><p class="footnote">Planned features are not currently included in any tier. Entitlements cannot be granted from browser JavaScript.</p></div>`;
 }
@@ -94,6 +94,15 @@ function platformMarkup(){
  `<div class="cards">${[['Accounts',sum.accounts],['Pending review',sum.pending],['Active subscriptions',sum.active_subscriptions],['Suspended',sum.suspended]].map(([label,value])=>`<div class="panel metric"><span class="eyebrow">${escapeHtml(label)}</span><strong>${value??'—'}</strong></div>`).join('')}</div>`+
  `<section class="panel" style="margin-top:16px"><h2>Pending accounts</h2><button id="platform-refresh" class="btn">Refresh</button><p class="footnote">Approvals require an administrator decision. Email confirmation and account approval are separate.</p>${state.platformPending.length?state.platformPending.map(x=>`<div class="panel" style="margin-top:12px"><strong>${escapeHtml(x.email||'Account')}</strong><p class="footnote">${escapeHtml(x.user_id)}</p><div class="practice-actions"><button class="btn accent" data-platform-approve="${escapeHtml(x.user_id)}">Approve</button><button class="btn ghost" data-platform-reject="${escapeHtml(x.user_id)}">Reject</button></div></div>`).join(''):'<p>No pending requests.</p>'}</section>`+
  `<section class="panel" style="margin-top:16px"><h2>Manage account entitlements</h2><p class="footnote">Plan assignments are authorized and validated by the database, never by hidden frontend roles.</p><form id="platform-plan-form"><label>Registered account ID<input id="platform-target" type="text" required placeholder="User UUID"/></label><label>Plan<select id="platform-plan"><option>FREE</option><option>PLUS</option><option>PRO</option></select></label><label>Duration in days<input id="platform-days" type="number" min="1" max="365" value="30" required /></label><label>Reason<input id="platform-reason" type="text" minlength="10" maxlength="300" required placeholder="Why this plan is assigned"/></label><button class="btn accent" type="submit">Assign plan</button></form></section>`;
+}
+async function requestGalaxyAccess(){
+ if(state.isGuest||!state.client)return;
+ const userId=state.user?.id;
+ const response=await state.client.rpc('galaxy_request_access');
+ if(state.isGuest||state.user?.id!==userId)return;
+ if(response.error){state.approvalInfo=null;return}
+ state.approvalInfo=response.data;
+ if(state.view==='plans')render();
 }
 async function platformRefresh(){
  if(state.isGuest||!state.client)return;
@@ -468,7 +477,7 @@ function authClose(){DOM('auth-modal').classList.add('is-hidden');setAuthMode('s
 let authEpoch=0; // Invalidates any in-flight reads when identity changes.
 function resetAuthToGuest(){
  stopVoice();authEpoch++;
- state.user=null;state.isGuest=true;state.documents=[];state.planInfo=null;state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];
+ state.user=null;state.isGuest=true;state.documents=[];state.planInfo=null;state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];state.approvalInfo=null;
  loadGuest();render();
 }
 async function signedIn(user){
@@ -502,10 +511,11 @@ async function signedIn(user){
   state.progress=Object.fromEntries((data||[]).map(p=>[p.topic_key,p]));
   state.attempts=hist.data||[];state.documents=docs.data||[];
   state.user=user;state.isGuest=false;
-  state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];
+  state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];state.approvalInfo=null;
   if(authMode!=='recovery')authClose();render();notify('Signed in · private study data loaded');
   void refreshPlan();
   void platformRefresh();
+  void requestGalaxyAccess();
  }catch(err){if(current())notify('Private sync unavailable: '+(err.message||'unknown error'))}
 }
 async function initAuth(){
