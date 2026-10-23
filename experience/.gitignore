@@ -2,3 +2,5 @@ node_modules/
 dist/
 public/models/guardian.glb
 *.log
+
+public/models/skeleton/

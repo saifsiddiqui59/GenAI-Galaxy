@@ -4,7 +4,7 @@ import CollectionFX from './effects/CollectionFX.jsx';
 import WorldDock from './navigation/WorldDock.jsx';
 import {lessonHref,powerBudget,validWorld} from './navigation/navigation.js';
 import {Canvas} from '@react-three/fiber';
-import Guardian from './guardian/Guardian.jsx';
+import Guardian from './guardian/SkeletonGuardian.jsx';
 import {GalaxyScene} from './space/DeepGalaxy.jsx';
 import GuardianJourney from './journey/GuardianJourney.jsx';
 import {completedWorlds,recommendedWorld,worldKey} from './journey/story.js';
