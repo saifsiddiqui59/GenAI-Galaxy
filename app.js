@@ -476,10 +476,10 @@ function authOpen(mode='signin'){
 function authClose(){DOM('auth-modal').classList.add('is-hidden');setAuthMode('signin')}
 let authEpoch=0; // Invalidates any in-flight reads when identity changes.
 function setEntryVisible(visible){
- const gate=DOM('entry-gate');if(!gate)return;
+ const gate=DOM('entry-gate');if(!gate||typeof gate.classList?.toggle!=='function')return;
  gate.classList.toggle('is-hidden',!visible);
- if(!visible)gate.setAttribute('aria-hidden','true');
- else gate.removeAttribute('aria-hidden');
+ if(!visible)gate.setAttribute?.('aria-hidden','true');
+ else gate.removeAttribute?.('aria-hidden');
 }
 function resetAuthToGuest(){
  stopVoice();authEpoch++;
