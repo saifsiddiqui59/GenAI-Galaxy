@@ -39,7 +39,7 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
   assert 'Simple explanation' in await page.locator('#adaptive-guide').inner_text()
   await page.locator('#adaptive-guided-try').click()
   assert 'In your own words' in await page.locator('.practice-question').inner_text()
-  await page.locator('#spoken-answer').fill("I don't know the answer yet")
+  await page.locator('#spoken-answer').fill("this something i dont know yet may its related to ai foundry projects")
   await page.locator('#evaluate-btn').click()
   assert await page.locator('#adaptive-guide').count()==1
   assert await page.locator('.score-panel').count()==0
