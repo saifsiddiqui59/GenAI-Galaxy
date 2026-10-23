@@ -28,7 +28,7 @@ class FrontendOnlyAIReadyTests(unittest.TestCase):
         js=(ROOT/'app.js').read_text()
         self.assertIn("function modelAvailability()",js)
         self.assertIn("function modelFailureMessage(status)",js)
-        self.assertIn("'Local check (free)'",js)
+        self.assertIn("Local check (free)",js)
         self.assertIn("localReason",js)
         self.assertIn("role=\"status\"",js)
         self.assertIn("async function submitAnswer(e,localOnly=false)",js)
