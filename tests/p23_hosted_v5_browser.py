@@ -37,6 +37,11 @@ async def visit(browser, name, viewport, reduced=False):
     assert diag["rig"]["canOffer"] and diag["rig"]["canCarry"]
     assert any(x.get("map") for x in diag["materials"])
     if not reduced:
+      # GLB decoding may finish after the first natural entrance. Replay only
+      # when the button exists, so 3 real PickUp transitions are observable.
+      replay=page.get_by_role("button",name="Replay guardian entrance")
+      await replay.wait_for(state="visible",timeout=25000)
+      await replay.click()
       # Full 3 mastered world sequence: read-only, synthetic only.
       await page.wait_for_function(
         "() => (window.__galaxySkeletonDiagnostics?.pickupLog || []).length >= 3",
