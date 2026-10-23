@@ -14,7 +14,7 @@ SCRIPT = ROOT / 'scripts' / 'deploy_existing_static.sh'
 PUBLIC = {
     'index.html', 'styles.css', 'app.js', 'runtime-config.js',
     'data/curriculum.json', 'data/lessons.json',
-    'speech/azure-speech-adapter.js',
+    'speech/azure-speech-adapter.js', 'genie/guide.js',
 }
 
 FAKE_AZ = '''#!/usr/bin/env python3
