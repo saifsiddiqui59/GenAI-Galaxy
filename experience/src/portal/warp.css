@@ -27,3 +27,20 @@
  .galaxy-portal,.galaxy-portal *{animation:none!important;transition:none!important}
  .galaxy-portal-rings{display:none}
 }
+
+/* Motion-aware parallax tunnel: decorative CSS only, no new downloads or shaders. */
+.galaxy-portal.is-warping::before{content:"";position:absolute;inset:-40%;pointer-events:none;
+ background:repeating-conic-gradient(from 8deg at 50% 50%,transparent 0deg 8deg,#8bbcff28 9deg,transparent 10deg 19deg);
+ mask-image:radial-gradient(circle,transparent 0 12%,#000 38%,transparent 72%);
+ animation:galaxy-tunnel-spin 1.05s ease-in both}
+.galaxy-portal.is-warping::after{content:"";position:absolute;width:4px;height:4px;top:50%;left:50%;
+ border-radius:50%;background:#fff;box-shadow:0 0 60px 18px #c5eaff,0 0 190px 65px #674cff88;
+ animation:galaxy-portal-flash 1.05s ease-in both;pointer-events:none}
+@keyframes galaxy-tunnel-spin{0%{transform:rotate(-19deg) scale(.7);opacity:.2}
+ 70%{opacity:.9}100%{transform:rotate(38deg) scale(2.1);opacity:0}}
+@keyframes galaxy-portal-flash{0%,55%{transform:scale(.5);opacity:0}
+ 80%{opacity:.8}100%{transform:scale(35);opacity:0}}
+@media(max-width:680px){.galaxy-portal-label{bottom:23%;width:min(86vw,360px);min-width:0}
+ .galaxy-portal-label strong{font-size:clamp(17px,5vw,25px);letter-spacing:.08em}
+ .galaxy-portal-rings i{width:52vmin;height:52vmin;margin:-26vmin}}
+@media(prefers-reduced-motion:reduce){.galaxy-portal::before,.galaxy-portal::after{display:none!important}}
