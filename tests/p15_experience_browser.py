@@ -33,8 +33,11 @@ async def inspect(browser,origin,viewport,reduced=False):
  label="mobile" if viewport["width"]<600 else "reduced" if reduced else "desktop"
  await page.screenshot(path=str(ROOT/("preview-p19-"+label+"-entrance.png")),timeout=20000)
  if not reduced:
-  await page.wait_for_timeout(2600)
+  await page.wait_for_function("""() => window.__galaxySkeletonDiagnostics?.currentPhase === 'collecting' && window.__galaxySkeletonDiagnostics?.currentClip === 'PickUp' && Number.isInteger(window.__galaxySkeletonDiagnostics?.currentPickupIndex) && window.__galaxySkeletonDiagnostics.currentPickupIndex >= 0""",timeout=9000)
+  started=await page.evaluate("window.__galaxySkeletonDiagnostics.currentPickupIndex")
+  print('P23 VERIFIED PER-WORLD KAYKIT PICKUP',started)
   await page.screenshot(path=str(ROOT/("preview-p19-"+label+"-pickup.png")),timeout=20000)
+  await page.wait_for_function("""index => window.__galaxySkeletonDiagnostics?.currentPickupIndex !== index || window.__galaxySkeletonDiagnostics?.currentPhase === 'offering'""",arg=started,timeout=9000)
  await page.wait_for_timeout(5100 if not reduced else 350)
  if not reduced:
   await page.locator(".guardian-skip").wait_for(state="hidden",timeout=20000)
