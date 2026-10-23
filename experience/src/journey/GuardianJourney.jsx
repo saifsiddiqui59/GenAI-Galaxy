@@ -49,8 +49,8 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
     </div>
     {!reducedMotion&&!skipped&&view.phase!=='offering'&&
       <button type="button" className="guardian-skip" onClick={()=>setSkipped(true)}>Skip introduction</button>}
-    <button type="button" className="guardian-replay" onClick={()=>{setStart(performance.now());setElapsed(0);setSkipped(false);onReplay?.()}}>
+    {!reducedMotion&&view.phase==='offering'&&<button type="button" className="guardian-replay" onClick={()=>{setStart(performance.now());setElapsed(0);setSkipped(false);onReplay?.()}}>
       Replay guardian entrance
-    </button>
+    </button>}
  </div>;
 }
