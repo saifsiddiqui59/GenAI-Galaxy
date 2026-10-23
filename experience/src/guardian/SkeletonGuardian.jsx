@@ -3,7 +3,7 @@ import {useFrame,useLoader,useThree} from '@react-three/fiber';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import {useAnimations} from '@react-three/drei';
 import * as THREE from 'three';
-import {clone as cloneSkinnedSkeleton} from 'three/addons/utils/SkeletonUtils.js';
+// The scene uses one character, so keep FBXLoader's original skinned mesh and bindings.
 
 // Real Quaternius 2018 CC0 skeletal FBX, not generated placeholder geometry.
 // Animation names from the original asset are detected and logged on load.
@@ -29,7 +29,7 @@ function SkeletonModel({phase='idle'}){
  const source=import.meta.env.BASE_URL+'models/skeleton/Skeleton.fbx';
  const rootFBX=useLoader(FBXLoader,source);
  const instance=useMemo(()=>{
-   const model=cloneSkinnedSkeleton(rootFBX);
+   const model=rootFBX;
    model.updateMatrixWorld(true);
    const bounds=new THREE.Box3().setFromObject(model);
    const size=bounds.getSize(new THREE.Vector3());
@@ -74,7 +74,15 @@ function SkeletonModel({phase='idle'}){
       node.receiveShadow=true;
       if(node.material){
         const mats=Array.isArray(node.material)?node.material:[node.material];
-        for(const material of mats){material.side=THREE.FrontSide;material.needsUpdate=true;}
+        for(const material of mats){
+          // FBX winding can differ across authoring exporters; avoid culling bones.
+          material.side=THREE.DoubleSide;
+          material.transparent=false;
+          material.opacity=1;
+          if(material.color)material.color.set('#e7ddcb');
+          if(material.emissive){material.emissive.set('#443160');material.emissiveIntensity=.35;}
+          material.needsUpdate=true;
+        }
       }
     }
   });
