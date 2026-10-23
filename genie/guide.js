@@ -68,7 +68,12 @@
     host.classList.remove('playing','no-motion');
     document.body.classList.remove('genie-open');
     host.setAttribute('aria-hidden','true');
-    if (previousFocus && previousFocus.isConnected) previousFocus.focus();
+    // Sign-in may have closed its modal before the guide appeared.
+    // Never return keyboard focus to a hidden auth form.
+    var previousIsVisible = previousFocus && previousFocus.isConnected &&
+      !previousFocus.closest('.is-hidden');
+    var focusTarget = previousIsVisible ? previousFocus : document.getElementById('signin-btn');
+    if (focusTarget) focusTarget.focus();
     previousFocus=null;
   }
   function show(details) {
