@@ -118,3 +118,10 @@
 - Limit backend implementation to source hardening without separate Azure provisioning consent; project-pin all user Auth calls, reject bearer/API-key redirects, preserve fail-closed gateway and private Vault requirements. No assertion that simple environment flags prove live user-level quotas or malware protection.
 - Prioritize editorial risk triage without mutating 245 authored lessons or pretending regex/version flags are domain-expert signoff.
 - Drop optional P4 monitoring and cost-alert implementation from the current task plan per owner request. Browser and physical microphone acceptance intentionally deferred, not marked passed.
+
+## P8 — low-idle-cost AI backend rather than APIM Consumption
+
+- Pick on-demand Azure Functions **Flex Consumption** with zero Always Ready, 512 MiB instances and maximum two on-demand workers plus existing pay-per-token Azure OpenAI. Keep current Azure static frontend and existing Supabase Auth/bucket; use browser STT first.
+- API Management Consumption is not an acceptable substitute for true user-scoped quotas because `rate-limit-by-key`/`quota-by-key` are unavailable there. Implement a transactional Supabase Galaxy-only quota function (5 per user / 50 globally per UTC day) and only enable public Function-origin evaluator access when real JWT validation and this quota exist. Any database failure must **fail closed** before paid model usage.
+- Do not treat SQL draft as applied; no live shared-Supabase DDL without separately reviewed owner approval. Do not deploy direct-mode Speech tokens (a token can be reused for paid audio) or private Vault extraction without malware quarantine.
+- Keep paid provisioning and code deployment in two typed, protected, manually invoked GitHub workflows; no broad subscription IAM or unrelated Azure resource creations, GitHub push auto-deploy, extra monthly monitoring or always-on service.

@@ -1,0 +1,73 @@
+name: Galaxy P3 Flex Consumption provision (manual, billed resources)
+# Never provision on push or pull request. User chooses PROVISION after reviewing price.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type PROVISION to create ONE on-demand Functions app and ONE private Standard_LRS storage account'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-p3-paid-provision
+  cancel-in-progress: false
+
+jobs:
+  provision:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'PROVISION'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: dev
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      RG: GenAI_Galaxy
+      FUNCTION_NAME: gengalaxy-p3-1429841605
+      STORAGE_NAME: gengalaxyp31429841605
+      LOCATION: centralindia
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify pinned Galaxy subscription and scoped developer identity
+        shell: bash
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || { echo '::error::Wrong Galaxy OIDC application'; exit 1; }
+          [[ "$SUBSCRIPTION" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || { echo '::error::Wrong Galaxy Azure subscription'; exit 1; }
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Validate existing target RG; create only named resources
+        shell: bash
+        run: |
+          set -euo pipefail
+          region="$(az group show -n "$RG" --query location -o tsv)"
+          [[ "${region,,}" == "$LOCATION" ]] || { echo '::error::Galaxy RG region mismatch'; exit 1; }
+          if ! az storage account show -g "$RG" -n "$STORAGE_NAME" --query id -o tsv >/dev/null 2>&1; then
+            az storage account create -g "$RG" -n "$STORAGE_NAME" -l "$LOCATION" \
+              --sku Standard_LRS --kind StorageV2 --https-only true \
+              --allow-blob-public-access false --min-tls-version TLS1_2 -o none
+          fi
+          storage_id="$(az storage account show -g "$RG" -n "$STORAGE_NAME" --query id -o tsv)"
+          [[ "$storage_id" == */resourceGroups/"$RG"/providers/Microsoft.Storage/storageAccounts/"$STORAGE_NAME" ]] || exit 1
+          existing="$(az functionapp show -g "$RG" -n "$FUNCTION_NAME" --query id -o tsv 2>/dev/null || true)"
+          if [[ -z "$existing" ]]; then
+            az functionapp create -g "$RG" -n "$FUNCTION_NAME" --storage-account "$STORAGE_NAME" \
+              --flexconsumption-location "$LOCATION" --runtime python --runtime-version 3.11 \
+              --maximum-instance-count 2 --instance-memory 512 \
+              --disable-app-insights true -o none
+          else
+            [[ "$existing" == */resourceGroups/"$RG"/providers/Microsoft.Web/sites/"$FUNCTION_NAME" ]] || exit 1
+          fi
+          az functionapp scale config set -g "$RG" -n "$FUNCTION_NAME" --maximum-instance-count 2 --instance-memory 512 -o none
+          echo "Only isolated Galaxy pay-per-use backend resources are provisioned; no Always Ready instances were requested."
+      - name: Log out of Azure
+        if: always()
+        run: az logout >/dev/null 2>&1 || true

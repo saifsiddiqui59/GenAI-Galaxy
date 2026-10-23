@@ -13,6 +13,7 @@ import uuid
 import re
 import azure.functions as func
 from core import InputError, bearer_token, document_id, topic_key, extract_text, validate_review, verify_gateway, owner_document_filters, owned_storage_path, MAX_BYTES
+from consumption_security import backend_profile, enforce_eval_quota, QuotaExceeded, QuotaUnavailable, DIRECT, GATEWAY
 
 app=func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 RUBRICS=json.loads((Path(__file__).parent/'rubrics.json').read_text())
@@ -85,7 +86,11 @@ def env_config():
 def authenticate(req):
     # APIM must strip any client-provided internal header, inject its own shared
     # secret, enforce JWT-scoped quotas, and restrict direct Function ingress.
-    verify_gateway(req.headers.get('X-Galaxy-Internal-Token'), os.environ.get('GALAXY_GATEWAY_SHARED_SECRET'))
+    profile=backend_profile()
+    if profile==GATEWAY:
+        verify_gateway(req.headers.get('X-Galaxy-Internal-Token'), os.environ.get('GALAXY_GATEWAY_SHARED_SECRET'))
+    # DIRECT is safe only for the evaluation endpoint, which reserves an atomic
+    # per-user AND global daily quota before reaching Azure OpenAI.
     token=bearer_token(req.headers.get('Authorization'))
     base,public_key=env_config()
     try:
@@ -136,8 +141,6 @@ def evaluate(req:func.HttpRequest)->func.HttpResponse:
     if pending:return pending
     try:
         token,user_id,base,public_key=authenticate(req)
-        if os.environ.get('GALAXY_EVAL_GATEWAY_RATE_LIMIT')!='active':
-            return make_response(req,{'error':'Evaluation quota gateway is not configured'},503)
         body=req.get_json()
         if not isinstance(body,dict):raise InputError('Invalid request JSON')
         k=topic_key(body.get('topic_key'),set(RUBRICS))
@@ -147,8 +150,15 @@ def evaluate(req:func.HttpRequest)->func.HttpResponse:
             raise InputError('Answer must be between 15 and 2000 characters')
         if not isinstance(question,str) or not 1<=len(question)<=500:
             raise InputError('Question is too long or missing')
+        # Validate input BEFORE reserving a paid-call allowance; a rejected
+        # malformed request must not consume a legitimate user's budget.
+        if backend_profile()==DIRECT:
+            enforce_eval_quota(token=token,base=base,public_key=public_key,request_json=request_json)
+        elif os.environ.get('GALAXY_EVAL_GATEWAY_RATE_LIMIT')!='active':
+            return make_response(req,{'error':'Evaluation quota gateway is not configured'},503)
         review=model_review(RUBRICS[k],question,response)
         return make_response(req,review)
+    except QuotaExceeded:return make_response(req,{'error':'Daily evaluation limit reached'},429)
     except InputError as ex:return make_response(req,{'error':str(ex)},403 if str(ex)=='Trusted gateway required' else (401 if str(ex)=='Bearer authentication required' else 400))
     except (RuntimeError,UpstreamError):return make_response(req,{'error':'Evaluator service is unavailable'},503)
 
@@ -157,6 +167,13 @@ def evaluate(req:func.HttpRequest)->func.HttpResponse:
 def vault_extract(req:func.HttpRequest)->func.HttpResponse:
     pending=preflight(req)
     if pending:return pending
+    # Minimum-cost profile disables unscanned document extraction entirely.
+    # Never grant access to private documents until malware quarantine exists.
+    try:
+        if backend_profile()==DIRECT:
+            return make_response(req,{'error':'Vault extraction is disabled until malware scanning is deployed'},503)
+    except QuotaUnavailable:
+        return make_response(req,{'error':'Backend profile is not configured'},503)
     try:
         token,user_id,base,public_key=authenticate(req)
         # External gateway must enforce authenticated per-user vault quotas.
@@ -192,6 +209,13 @@ def speech_token(req:func.HttpRequest)->func.HttpResponse:
     """Issue short-lived Speech SDK tokens. Only a verified user can request one."""
     pending=preflight(req)
     if pending:return pending
+    # Speech bearer tokens may be reused for many minutes of paid audio:
+    # a per-request quota alone is not a credible speech consumption cap.
+    try:
+        if backend_profile()==DIRECT:
+            return make_response(req,{'error':'Azure Speech tokens are disabled in consumption MVP'},503)
+    except QuotaUnavailable:
+        return make_response(req,{'error':'Backend profile is not configured'},503)
     try:
         _token,_user_id,_base,_public_key=authenticate(req)
         if os.environ.get('GALAXY_SPEECH_GATEWAY_RATE_LIMIT')!='active':

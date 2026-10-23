@@ -1,0 +1,98 @@
+name: Galaxy P3 deploy evaluator to existing Flex app (manual)
+# Deploys code only to the named existing backend; never creates resources.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type DEPLOY after approving the Galaxy-only quota SQL migration and Azure model configuration'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-p3-paid-deploy
+  cancel-in-progress: false
+jobs:
+  validate:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'DEPLOY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Run offline quota security tests
+        run: |
+          python -m unittest discover -s tests -p 'test_consumption_security.py' -v
+          python -m py_compile api/core.py api/consumption_security.py api/function_app.py
+  deploy:
+    needs: validate
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'DEPLOY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: dev
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      RG: GenAI_Galaxy
+      FUNCTION_NAME: gengalaxy-p3-1429841605
+      SUPABASE_PROJECT_URL: https://vfoghlhtnifpnbevgufa.supabase.co
+      GALAXY_PUBLIC_SITE: https://gengalaxy1429841605.z29.web.core.windows.net
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require all model credentials in protected dev secrets
+        shell: bash
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          SUPABASE_PUBLISHABLE: ${{ secrets.GALAXY_SUPABASE_PUBLISHABLE_KEY }}
+          OPENAI_ENDPOINT: ${{ secrets.GALAXY_AZURE_OPENAI_ENDPOINT }}
+          OPENAI_DEPLOYMENT: ${{ secrets.GALAXY_AZURE_OPENAI_DEPLOYMENT }}
+          OPENAI_API_KEY: ${{ secrets.GALAXY_AZURE_OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || exit 1
+          [[ "$SUBSCRIPTION" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || exit 1
+          for var in SUPABASE_PUBLISHABLE OPENAI_ENDPOINT OPENAI_DEPLOYMENT OPENAI_API_KEY; do
+            [[ -n "${!var}" ]] || { echo "::error::Missing protected dev secret $var"; exit 1; }
+          done
+          [[ "$SUPABASE_PUBLISHABLE" == sb_publishable_* || "$SUPABASE_PUBLISHABLE" == eyJ* ]] || exit 1
+          [[ "$OPENAI_ENDPOINT" == https://*.openai.azure.com || "$OPENAI_ENDPOINT" == https://*.services.ai.azure.com ]] || exit 1
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Refuse non-existing or always-ready backend and install private settings
+        shell: bash
+        env:
+          SUPABASE_PUBLISHABLE: ${{ secrets.GALAXY_SUPABASE_PUBLISHABLE_KEY }}
+          OPENAI_ENDPOINT: ${{ secrets.GALAXY_AZURE_OPENAI_ENDPOINT }}
+          OPENAI_DEPLOYMENT: ${{ secrets.GALAXY_AZURE_OPENAI_DEPLOYMENT }}
+          OPENAI_API_KEY: ${{ secrets.GALAXY_AZURE_OPENAI_API_KEY }}
+        run: |
+          set -euo pipefail
+          app_id="$(az functionapp show -g "$RG" -n "$FUNCTION_NAME" --query id -o tsv)"
+          [[ "$app_id" == */resourceGroups/"$RG"/providers/Microsoft.Web/sites/"$FUNCTION_NAME" ]] || exit 1
+          # Require explicit no-always-ready setting, to avoid idle compute.
+          count="$(az resource show -g "$RG" -n "$FUNCTION_NAME" --resource-type Microsoft.Web/sites --query 'properties.functionAppConfig.scaleAndConcurrency.alwaysReady | length(@)' -o tsv)"
+          [[ "$count" == '0' || "$count" == 'None' ]] || { echo '::error::Always Ready found; refusing pay-per-use deploy'; exit 1; }
+          az functionapp config appsettings set -g "$RG" -n "$FUNCTION_NAME" -o none --settings \
+            GALAXY_BACKEND_PROFILE=direct-consumption \
+            GALAXY_ALLOWED_ORIGIN="$GALAXY_PUBLIC_SITE" \
+            SUPABASE_URL="$SUPABASE_PROJECT_URL" \
+            SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE" \
+            AZURE_OPENAI_ENDPOINT="$OPENAI_ENDPOINT" \
+            AZURE_OPENAI_DEPLOYMENT="$OPENAI_DEPLOYMENT" \
+            AZURE_OPENAI_API_KEY="$OPENAI_API_KEY"
+      - name: Deploy only Galaxy backend source, without publish profile
+        uses: Azure/functions-action@v1
+        with:
+          app-name: gengalaxy-p3-1429841605
+          package: api
+      - name: Log out of Azure
+        if: always()
+        run: az logout >/dev/null 2>&1 || true

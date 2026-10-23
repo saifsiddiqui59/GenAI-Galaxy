@@ -131,3 +131,11 @@ Do not change RetailGrowthAI or WineShopPOS or conflate offline mocks with appro
 3. Expert-review all 245 lesson records with source/version proof and spoken timing; use `docs/reviews/P7_EDITORIAL_TRIAGE.md` for initial risk grouping. Heuristic flags are not a passing domain audit.
 
 **Intentionally excluded by owner:** P4 spending/monitoring work. Browser and physical microphone tests deferred. Basic authentication, authorization and API security remain mandatory for safe backend deployment. Do not alter clinic or other shared Supabase tables or other repositories.
+
+## P8 — cost-first P3 backend actions (2026-10-23)
+
+**Implemented in source:** direct-consumption evaluator guard; atomic per-user AND global daily paid-call cap; 503 on absent quota, 429 on exhausted limit; disabled Speech token and unscanned Vault in cheap mode; reviewed SQL draft; manual `PROVISION` and `DEPLOY` Actions, zero Always Ready, no APIM.
+
+**Hosted prerequisites:** Approve/apply the **Galaxy-only** quota SQL to the already shared Supabase project; configure protected `dev` publishable/model secrets; validate an actual existing Azure OpenAI pay-as-you-go deployment and Central India Flex availability; grant narrowly scoped Azure RG management permissions to the known Galaxy OIDC principal. Then manually run the new workflows in GitHub Actions with `PROVISION` and `DEPLOY`. These workflows are not run by PRs or pushes; the GitHub connector cannot dispatch them.
+
+**Remaining after backend release:** Negative real JWT tests, actual quota 429/503 tests, consented two-user Supabase RLS workflow, and a separately reviewed frontend runtime URL change. Browser/physical mic tests deferred and P4 monitoring excluded at owner's request. No backend cloud provisioning or database migration has yet occurred.
