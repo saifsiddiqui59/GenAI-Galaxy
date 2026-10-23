@@ -8,6 +8,7 @@ import base64
 import json
 import os
 import secrets
+import signal
 import sys
 import uuid
 from urllib.error import HTTPError, URLError
@@ -77,6 +78,12 @@ def create_test_user(secret, address, password):
     return user_id
 
 
+def _cancellation_requested(signum, frame):
+    # GitHub sends SIGTERM before forcibly killing a timed-out/cancelled job.
+    # Convert the signal to a normal exception so the existing finally runs.
+    raise CheckFailed("GitHub Actions cancellation requested; cleaning up temporary Auth users")
+
+
 def run():
     if os.getenv("GITHUB_REPOSITORY") != "saifsiddiqui59/GenAI-Galaxy" or os.getenv("GITHUB_REF") != "refs/heads/main":
         raise CheckFailed("Refusing to run outside Galaxy GitHub main")
@@ -89,6 +96,9 @@ def run():
     if key == admin_key:
         raise CheckFailed("Privileged Auth admin and public test key must be different")
 
+    # Signal handler can only help graceful cancellation, not SIGKILL/runner loss.
+    prior_termination = signal.getsignal(signal.SIGTERM)
+    signal.signal(signal.SIGTERM, _cancellation_requested)
     created = []
     failed_deletions = []
     original = {name: os.environ.get(name) for name in (
@@ -124,6 +134,7 @@ def run():
             # Print count only; do not emit email addresses, secrets or JWTs.
             raise CheckFailed(str(len(failed_deletions)) +
                               " temporary test account(s) could not be deleted; inspect Supabase Auth users")
+        signal.signal(signal.SIGTERM, prior_termination)
         if created:
             print("Temporary Galaxy Auth users deleted via Admin API.")
 
