@@ -11,9 +11,11 @@ from urllib.request import Request, urlopen, build_opener, HTTPRedirectHandler
 from urllib.error import HTTPError, URLError
 import uuid
 import re
+import time
 import azure.functions as func
 from core import InputError, bearer_token, document_id, topic_key, extract_text, validate_review, verify_gateway, owner_document_filters, owned_storage_path, MAX_BYTES
 from consumption_security import backend_profile, enforce_eval_quota, QuotaExceeded, QuotaUnavailable, DIRECT, GATEWAY
+from eval_observability import new_trace_id, record_evaluation, usage_counters
 
 app=func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
 RUBRICS=json.loads((Path(__file__).parent/'rubrics.json').read_text())
@@ -58,8 +60,11 @@ def site_origin():
     return origin
 
 
-def make_response(req, data, status=200):
+def make_response(req, data, status=200, trace_id=None):
     headers={'Cache-Control':'no-store','X-Content-Type-Options':'nosniff'}
+    if trace_id:
+        headers['X-Galaxy-Trace-Id']=trace_id
+        headers['Access-Control-Expose-Headers']='X-Galaxy-Trace-Id'
     origin=req.headers.get('Origin','')
     if origin and origin==site_origin():
         headers.update({'Access-Control-Allow-Origin':origin,'Vary':'Origin',
@@ -132,15 +137,31 @@ def model_review(rubric, question, response):
         result=json.loads(out['choices'][0]['message']['content'])
     except (KeyError,ValueError,TypeError,IndexError):
         raise UpstreamError('Model review output did not match schema') from None
-    return validate_review(result)
+    return validate_review(result), usage_counters(out)
 
 
 @app.route(route='practice/evaluate',methods=['POST','OPTIONS'])
 def evaluate(req:func.HttpRequest)->func.HttpResponse:
     pending=preflight(req)
     if pending:return pending
+    # Generated server-side. Never accept caller-supplied correlation IDs as trusted.
+    trace_id=new_trace_id()
+    started_at=time.monotonic()
+    stage='auth'
+    status=503
+    quota='none'
+    usage={}
+    accuracy=None
+    clarity=None
+
+    def result(payload, code):
+        nonlocal status
+        status=code
+        return make_response(req,payload,code,trace_id=trace_id)
+
     try:
         token,user_id,base,public_key=authenticate(req)
+        stage='validation'
         body=req.get_json()
         if not isinstance(body,dict):raise InputError('Invalid request JSON')
         k=topic_key(body.get('topic_key'),set(RUBRICS))
@@ -150,17 +171,34 @@ def evaluate(req:func.HttpRequest)->func.HttpResponse:
             raise InputError('Answer must be between 15 and 2000 characters')
         if not isinstance(question,str) or not 1<=len(question)<=500:
             raise InputError('Question is too long or missing')
-        # Validate input BEFORE reserving a paid-call allowance; a rejected
-        # malformed request must not consume a legitimate user's budget.
+        # No billed LLM call before valid JWT, valid inputs, AND quota reservation.
+        stage='quota'
         if backend_profile()==DIRECT:
             enforce_eval_quota(token=token,base=base,public_key=public_key,request_json=request_json)
+            quota='reserved'
         elif os.environ.get('GALAXY_EVAL_GATEWAY_RATE_LIMIT')!='active':
-            return make_response(req,{'error':'Evaluation quota gateway is not configured'},503)
-        review=model_review(RUBRICS[k],question,response)
-        return make_response(req,review)
-    except QuotaExceeded:return make_response(req,{'error':'Daily evaluation limit reached'},429)
-    except InputError as ex:return make_response(req,{'error':str(ex)},403 if str(ex)=='Trusted gateway required' else (401 if str(ex)=='Bearer authentication required' else 400))
-    except (RuntimeError,UpstreamError):return make_response(req,{'error':'Evaluator service is unavailable'},503)
+            return result({'error':'Evaluation quota gateway is not configured'},503)
+        stage='model'
+        review,usage=model_review(RUBRICS[k],question,response)
+        accuracy=review.get('accuracy')
+        clarity=review.get('clarity')
+        stage='completed'
+        return result(review,200)
+    except QuotaExceeded:
+        quota='denied'
+        return result({'error':'Daily evaluation limit reached'},429)
+    except InputError as ex:
+        code=403 if str(ex)=='Trusted gateway required' else (401 if str(ex)=='Bearer authentication required' else 400)
+        return result({'error':str(ex)},code)
+    except (RuntimeError,UpstreamError):
+        if stage=='quota':
+            quota='unavailable'
+        return result({'error':'Evaluator service is unavailable'},503)
+    finally:
+        # Small, allowlisted, non-PII record: one trace per request.
+        record_evaluation(trace_id=trace_id,status=status,stage=stage,
+                          started_at=started_at,quota_result=quota,
+                          usage=usage,accuracy=accuracy,clarity=clarity)
 
 
 @app.route(route='vault/extract',methods=['POST','OPTIONS'])
