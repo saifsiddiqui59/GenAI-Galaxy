@@ -203,3 +203,11 @@ Applied Galaxy-only migration `20261023110022_galaxy_freemium_subscriptions_v1` 
 - Reconsidered visual goal: independent React Three Fiber deep-space experience with real GLB character instead of further basic SVG polish. Pin official Three.js RobotExpressive CC0 model by Tomás Laulhé, modified by Don McCurdy, with build-time byte/sha256 verification (463,988 bytes); real skeletal clips Idle, Walking, Wave, ThumbsUp. No rights asserted in unrelated demo's character mesh.
 - All four independent workstreams #64–#67 passed 3/3 Galaxy GitHub Actions. Combined PR #69 contains React/Vite bundle, 17 canonical planets, clickable mastered-world sack, skip/replay, generated original portal warp, keyboard world list, demo-only synthetic progress and original lesson page bridge by bounded index. Existing learning data/auth remain unmodified.
 - Combined Actions #39973163920 PASSED 3/3; Vite built with verified GLB, actual Chromium desktop 1440x900 / mobile 390x844 / reduced motion tests all passed. Synthetic screenshots and built static bundle are retained as GitHub Actions artifacts. NOT merged to main or deployed. Exact finger IK and real signed-in Supabase session sync not implemented. No paid calls.
+
+
+## P19 — Cinematic 3D V3 integration (2026-10-23, UNRELEASED)
+
+- Stacked draft integration PR #91 combines skeleton pose mapping (#86), real hand-waypoint/satchel collection (#90), planet textures and mobile scenes (#88), portal polish (#89), and original-bone CCD IK from #92. P15/P16/P17 remain draft and unmerged; this is not the live homepage.
+- Original Quaternius FBX 17-bone names inspected from immutable archive. Actual arm terminal bones are the unusually named LDownLeg001_end/RDownLeg001_end. Rig diagnostic must confirm two arms, pelvis and finite CCD contact distance.
+- Read-only synthetic Chromium takes 1440x900/390x844/reduced-motion entrance, pickup, offer screenshots and checks intact 17 worlds and nested lesson routing. A passing browser script is not a human visual acceptance pass. Visual review found flat shading and poor mobile composition; refinement in progress.
+- No authenticated mastery was fabricated; three sample mastered worlds exist only with ?demo=1. No cloud deployment, Supabase write or live homepage change from P19.
