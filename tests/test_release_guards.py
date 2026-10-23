@@ -91,6 +91,9 @@ class ReleaseGuardTests(unittest.TestCase):
             ROOT / 'runtime-config.js', ROOT / 'app.js', ROOT / 'index.html',
             ROOT / 'speech/azure-speech-adapter.js', ROOT / 'styles.css',
             ROOT / 'genie/guide.js',
+            ROOT / 'genie/progress/story.js', ROOT / 'genie/effects/cosmic-polish.js',
+            ROOT / 'genie/effects/cosmic-polish.css', ROOT / 'galaxy/handoff/planet-flight.js',
+            ROOT / 'galaxy/handoff/planet-flight.css',
         ]
         credential_shapes = (
             r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----',

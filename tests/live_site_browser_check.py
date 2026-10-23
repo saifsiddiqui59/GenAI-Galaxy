@@ -11,6 +11,9 @@ PUBLIC_ASSETS = (
     "index.html", "styles.css", "app.js", "runtime-config.js",
     "data/curriculum.json", "data/lessons.json",
     "speech/azure-speech-adapter.js", "genie/guide.js",
+    "genie/progress/story.js", "genie/effects/cosmic-polish.js",
+    "genie/effects/cosmic-polish.css", "galaxy/handoff/planet-flight.js",
+    "galaxy/handoff/planet-flight.css",
 )
 
 

@@ -203,3 +203,8 @@ Applied Galaxy-only migration `20261023110022_galaxy_freemium_subscriptions_v1` 
 - Source branch `feat/galaxy-genie-login-guide` adds original 2D SVG Genie Guardian and CSS animation, with completed-chapter sack and two-handed next-planet presentation. It reads only already-loaded owner-scoped progress after authenticated sign-in; `status=2` on every chapter topic is required to show a mastered planet.
 - Mobile/reduced-motion, Skip/Escape and daily replay behavior are covered in mock browser tests. CI on commit `4da1ff72` passed all 3 jobs; subsequent auth-test/doc commits require their own fresh CI checks.
 - Draft PR only; NOT merged into main, not hosted on Azure Blob, and not verified on a real signed-in account. No new cloud resources or external animation CDN.
+
+
+## P14 Genie Guardian parallel integration (2026-10-23; draft, not released)
+- Created independent issues #48–#51, PRs #52–#55: visual particle polish, handoff animation, owner-validated progress storytelling and 14-case QA, each passed actual Galaxy 3/3 CI.
+- Coordinator integration draft PR #58 targets baseline Genie PR #47; combined synthetic GitHub CI run #39963863799 passed all 3 jobs. No PR in this batch was merged into main, no Azure static deployment or Supabase mutation occurred. Inspect PR #58 design screenshots and actual merged-main tests before claiming hosted release.

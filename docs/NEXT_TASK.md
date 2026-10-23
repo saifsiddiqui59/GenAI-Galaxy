@@ -183,3 +183,9 @@ In VS Code Git Bash, from the Galaxy main branch run bash scripts/galaxy_p3_one_
 - Review draft [PR #47](https://github.com/saifsiddiqui59/GenAI-Galaxy/pull/47) and verify all 3 CI jobs on its final head commit.
 - After approval, merge with coordinator ownership and verify post-merge main CI. Review 2D genie art style and normal/mobile/reduced-motion visual timing.
 - An **additional explicit manual Azure static deployment approval** is required to update the hosted URL; subsequent release must include `genie/guide.js` in its exact public-asset byte-parity verification. Live sign-in acceptance requires a dedicated consented Galaxy test account; mock tests alone do not establish it.
+
+
+## P14 Genie parallel animation integration — pending review
+- Review [baseline #47](https://github.com/saifsiddiqui59/GenAI-Galaxy/pull/47), then independent draft PRs #52–#55 and combined draft PR #58. Check output screenshots from run #39963863799 before visual acceptance.
+- Merge intentionally in controlled order; avoid duplicate file additions when independent PRs and combined PR contain the same modules. Coordinator alone resolves shared UI/static deployment changes. Re-run 3/3 after integration into main.
+- No real Supabase test-user login, public Azure deployment or new paid AI calls were performed for this animation. These are separate later gates.

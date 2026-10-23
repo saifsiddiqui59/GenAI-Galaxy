@@ -97,14 +97,19 @@
     host.setAttribute('aria-hidden','false');
     document.body.classList.add('genie-open');
     markSeen(accountKey); // Don't replay on every refresh, even after Skip.
+    // Cosmetic enhancement only: errors must not impact the study session.
+    try { window.GalaxyGenieCosmicPolish?.mount({host:host,count:18}); }
+    catch (e) { console.warn('Genie effects disabled',e); }
     skip.focus();
     return true;
   }
   skip.addEventListener('click',dismiss);
   continueButton.addEventListener('click',function(){
     var callback=action;
+    // Snapshot the gift's bounding box before hiding its dialog.
+    var sourceRect=gift.getBoundingClientRect?.()||null;
     dismiss();
-    if (callback) callback();
+    if (callback) callback({sourceRect:sourceRect});
   });
   host.addEventListener('keydown',function(e){
     if (!active) return;
