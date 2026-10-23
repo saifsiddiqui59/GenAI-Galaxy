@@ -4,7 +4,7 @@ import CollectionFX from './effects/CollectionFX.jsx';
 import WorldDock from './navigation/WorldDock.jsx';
 import {lessonHref,powerBudget,validWorld} from './navigation/navigation.js';
 import {Canvas} from '@react-three/fiber';
-import Guardian from './guardian/SkeletonGuardian.jsx';
+import Guardian from './guardian/KayKitGuardian.jsx';
 import {GalaxyScene} from './space/DeepGalaxy.jsx';
 import GuardianJourney from './journey/GuardianJourney.jsx';
 import {completedWorlds,recommendedWorld,worldKey} from './journey/story.js';
@@ -81,7 +81,7 @@ export default function App(){
        gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}>
        <GalaxyScene masteredWorlds={collected} selectedIndex={selected} recommendedIndex={nextIndex}
          onSelect={select} reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
-       <Guardian phase={animationEnabled?modelPhase:'idle'} rigPoseRef={rigPoseRef}/>
+       <Guardian phase={animationEnabled?modelPhase:'idle'} rigPoseRef={rigPoseRef} reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced||budget.lowPower}
          epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
          onOpenSack={()=>setSackOpenFrom3D(x=>x+1)} rigPoseRef={rigPoseRef}/>
