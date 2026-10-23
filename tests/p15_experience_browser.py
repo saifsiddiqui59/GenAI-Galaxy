@@ -31,6 +31,11 @@ async def inspect(browser,origin,viewport,reduced=False):
 
  # Capture actual render during entrance, pickup and final presentation.
  label="mobile" if viewport["width"]<600 else "reduced" if reduced else "desktop"
+ # Restart *after* the GLB has loaded so timed visual assertions cannot miss
+ # the pickup while slow CI machines are decoding the 4.7MB rig.
+ if not reduced:
+  await page.get_by_role("button",name="Replay guardian entrance").click()
+  await page.wait_for_function("""() => window.__galaxySkeletonDiagnostics?.currentPhase === 'arriving'""",timeout=8000)
  await page.screenshot(path=str(ROOT/("preview-p19-"+label+"-entrance.png")),timeout=20000)
  if not reduced:
   await page.wait_for_function("""() => window.__galaxySkeletonDiagnostics?.currentPhase === 'collecting' && window.__galaxySkeletonDiagnostics?.currentClip === 'PickUp' && Number.isInteger(window.__galaxySkeletonDiagnostics?.currentPickupIndex) && window.__galaxySkeletonDiagnostics.currentPickupIndex >= 0""",timeout=9000)
