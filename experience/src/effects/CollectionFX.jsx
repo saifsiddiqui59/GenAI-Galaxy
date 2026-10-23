@@ -44,8 +44,8 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
   const hip=rigPoseRef?.current?.hip;
   if(!spawn.current&&hip&&time>=COLLECT_START_MS-120)spawn.current={
     ...worldLayout,
-    x:hip.x+((order%4)-1.5)*.38,y:hip.y-.72,
-    z:hip.z+.43+Math.floor(order/4)*.15
+    x:hip.x+((order%4)-1.5)*.22,y:hip.y-.38,
+    z:hip.z+.48+Math.floor(order/4)*.12
   };
   const sourceWorld=spawn.current||(
     compact?{...worldLayout,x:worldLayout.x*.48,y:worldLayout.y*.73+.4,z:worldLayout.z*.8-1.8}:worldLayout
@@ -54,7 +54,7 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
   const sackOffset=new THREE.Vector3((order%4-1.5)*.115,Math.floor(order/4)*.08,order*.007);
   if(arrived)point.add(sackOffset);
   mesh.current.position.copy(point);
-  mesh.current.scale.setScalar(arrived?.42:.56);
+  mesh.current.scale.setScalar(arrived?.38:.68);
   if(halo.current){
     const shine=arrived?.45:.8+Math.sin(time*.012)*.22;
     halo.current.material.opacity=shine;
@@ -67,8 +67,8 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
    <mesh><icosahedronGeometry args={[.22,2]}/><meshStandardMaterial color={COLORS[world.index]}
      emissive={COLORS[world.index]} emissiveIntensity={.7} metalness={.25} roughness={.25}/></mesh>
    <mesh ref={halo}>
-    <sphereGeometry args={[.245,12,12]}/>
-    <meshBasicMaterial color={COLORS[world.index]} transparent opacity={.16} wireframe depthWrite={false}/>
+    <sphereGeometry args={[.185,12,12]}/>
+    <meshBasicMaterial color={COLORS[world.index]} transparent opacity={.10} depthWrite={false}/>
    </mesh>
  </group>;
 }
