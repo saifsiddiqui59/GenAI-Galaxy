@@ -1,0 +1,107 @@
+name: Galaxy P32 existing-site adaptive learning app-only release
+# Manual protected release only. Does not deploy a new website, model, backend or other site files.
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type PUBLISH_P32_APP_ONLY to replace only the existing Galaxy $web/app.js'
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'PUBLISH_P32_APP_ONLY') || (github.event_name == 'issue_comment' && github.event.issue.number == 123 && github.event.comment.user.id == 80577424 && github.event.comment.body == 'PUBLISH_P32_APP_ONLY'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify immutable reviewed P32 app and no-cost learning tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(git hash-object app.js)"
+          expected='5e33e9278f87be66f2ca665e396f26e45b363b79'
+          [[ "$actual" == "$expected" ]] || { echo "::error::Main app.js changed since reviewed P32; review a new SHA"; exit 1; }
+          node --check app.js
+          node tests/test_engine.cjs
+          node tests/test_auth_sync.cjs
+          node tests/test_auth_recovery.cjs
+          ! grep -Eq 'service_role|AZURE_SPEECH_KEY|SUPABASE_SERVICE_ROLE_KEY' app.js
+          echo 'Pinned P32 app, syntax, and learning tests verified.'
+  publish:
+    needs: verify
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'PUBLISH_P32_APP_ONLY') || (github.event_name == 'issue_comment' && github.event.issue.number == 123 && github.event.comment.user.id == 80577424 && github.event.comment.body == 'PUBLISH_P32_APP_ONLY'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: galaxy-p32-live-app-only
+      cancel-in-progress: false
+    env:
+      ACCOUNT: ${{ vars.GALAXY_STORAGE_ACCOUNT }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify exact source and existing Azure destination
+        shell: bash
+        env:
+          CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$(git hash-object app.js)" == '5e33e9278f87be66f2ca665e396f26e45b363b79' ]] || exit 1
+          [[ "$ACCOUNT" == 'gengalaxy1429841605' ]] || exit 1
+          [[ "${CLIENT_ID,,}" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || exit 1
+          [[ -n "$TENANT_ID" && -n "$SUBSCRIPTION_ID" ]] || exit 1
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Publish ONLY the reviewed app.js, verify remote bytes and preserve rollback copy
+        shell: bash
+        run: |
+          set -euo pipefail
+          rg='GenAI_Galaxy'
+          account='gengalaxy1429841605'
+          arm="$(az storage account show --resource-group "$rg" --name "$account" --query id -o tsv)"
+          [[ "$arm" == */resourceGroups/"$rg"/providers/Microsoft.Storage/storageAccounts/"$account" ]] || exit 1
+          enabled="$(az storage account blob-service-properties show --resource-group "$rg" --account-name "$account" --query staticWebsite.enabled -o tsv)"
+          [[ "${enabled,,}" == 'true' ]] || { echo '::error::Static website not enabled'; exit 1; }
+          dir="$(mktemp -d)"
+          trap 'rm -rf "$dir"' EXIT
+          az storage blob download --account-name "$account" --auth-mode login --container-name '$web' \
+            --name app.js --file "$dir/old-app.js" --overwrite true --only-show-errors >/dev/null
+          old_sha="$(sha256sum "$dir/old-app.js" | cut -d' ' -f1)"
+          new_sha="$(sha256sum app.js | cut -d' ' -f1)"
+          echo "Existing app SHA256: $old_sha"
+          echo "Approved P32 SHA256: $new_sha"
+          if [[ "$old_sha" != "$new_sha" ]]; then
+            az storage blob upload --account-name "$account" --auth-mode login --container-name '$web' \
+              --name app.js --file app.js --overwrite true --content-type application/javascript \
+              --content-cache-control 'no-cache, max-age=0' --only-show-errors >/dev/null
+          fi
+          az storage blob download --account-name "$account" --auth-mode login --container-name '$web' \
+            --name app.js --file "$dir/verified-app.js" --overwrite true --only-show-errors >/dev/null
+          cmp app.js "$dir/verified-app.js" || { echo '::error::Remote app mismatch; rolling back'; \
+            az storage blob upload --account-name "$account" --auth-mode login --container-name '$web' \
+              --name app.js --file "$dir/old-app.js" --overwrite true --content-type application/javascript \
+              --content-cache-control 'no-cache, max-age=0' --only-show-errors >/dev/null; exit 1; }
+          echo 'Only $web/app.js has been updated and read-back verified.'
+          endpoint="$(az storage account show --resource-group "$rg" --name "$account" --query 'primaryEndpoints.web' -o tsv)"
+          [[ "$endpoint" == https://*.web.core.windows.net/ ]] || { echo '::error::Unexpected static endpoint'; exit 1; }
+          echo "Website: $endpoint"
+          echo "Website: $endpoint" >> "$GITHUB_STEP_SUMMARY"
+          echo "Published app.js SHA256: $new_sha" >> "$GITHUB_STEP_SUMMARY"
+      - name: End Azure session
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
