@@ -508,8 +508,12 @@ function setEntryVisible(visible){
  if(!visible)gate.setAttribute?.('aria-hidden','true');
  else gate.removeAttribute?.('aria-hidden');
 }
+function clearPrivateCoachState(){
+ state.coachResume='';state.coachJob='';state.coachPlan=null;state.coachInsights=null;state.jobFocus='';
+ state.session=null;state.sessionReport=null;state.answerDraft='';state.feedback=null;
+}
 function resetAuthToGuest(){
- stopVoice();authEpoch++;
+ stopVoice();authEpoch++;clearPrivateCoachState();
  state.user=null;state.isGuest=true;state.documents=[];state.planInfo=null;state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];state.approvalInfo=null;
  loadGuest();render();setEntryVisible(true);
 }
@@ -520,7 +524,7 @@ async function signedIn(user){
  const current=()=>authEpoch===epoch;
  // Never display an earlier account's private records during a user switch.
  if(state.user?.id&&state.user.id!==userId){
-  state.user=null;state.isGuest=true;state.documents=[];loadGuest();render();
+  clearPrivateCoachState();state.user=null;state.isGuest=true;state.documents=[];loadGuest();render();
  }
  try{
   const {data,error}=await state.client.from('genai_study_progress')
