@@ -70,11 +70,42 @@ function Satchel({onOpenSack,count,bagPosition}){
    <pointLight color="#dfb5ff" intensity={count>0?1.5:.25} distance={3}/>
  </group>;
 }
-export default function CollectionFX({completed=[],reducedMotion=false,epoch=0,onOpenSack}){
+
+function OfferingOrb({worldIndex,phase,bagPosition}){
+ const orb=useRef();
+ useFrame((state,dt)=>{
+  if(!orb.current)return;
+  orb.current.rotation.y+=Math.min(.04,dt)*.36;
+  orb.current.rotation.z+=Math.min(.04,dt)*.18;
+  orb.current.position.y=.12+Math.sin(state.clock.elapsedTime*1.65)*.075;
+ });
+ if(phase!=='offering')return null;
+ const color=COLORS[worldIndex%COLORS.length]||'#a6c3ff';
+ const x=bagPosition[0]+.72;
+ const y=bagPosition[1]+.95;
+ const z=bagPosition[2]+.15;
+ return <group position={[x,y,z]}>
+   <group ref={orb}>
+     <mesh><sphereGeometry args={[.42,42,32]}/>
+       <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.1}
+          metalness={.22} roughness={.35} toneMapped={false}/></mesh>
+     <mesh rotation={[1.2,.2,.6]}>
+       <torusGeometry args={[.57,.017,8,64]}/>
+       <meshBasicMaterial color="#fbe7a8" transparent opacity={.9}/></mesh>
+     <mesh rotation={[-.8,.6,1.1]}>
+       <torusGeometry args={[.65,.012,7,64]}/>
+       <meshBasicMaterial color="#b1f1ff" transparent opacity={.75}/></mesh>
+     <pointLight intensity={8} color={color} distance={5}/>
+   </group>
+ </group>;
+}
+
+export default function CollectionFX({completed=[],reducedMotion=false,epoch=0,onOpenSack,phase='idle',nextWorldIndex=0}){
  const size=useThree(state=>state.size);
  const bagPosition=size.width<700?[-1.4,-1.1,3.7]:BAG_POSITION;
  return <>
    <Satchel onOpenSack={onOpenSack} count={completed.length} bagPosition={bagPosition}/>
+   <OfferingOrb phase={phase} worldIndex={nextWorldIndex} bagPosition={bagPosition}/>
    {completed.filter(w=>Number.isInteger(w.index)&&w.index>=0&&w.index<17).slice(0,17).map((world,order)=>
      <CollectedOrb key={world.index} world={world} order={order}
       epoch={epoch} reducedMotion={reducedMotion} ready={true} bagPosition={bagPosition}/>)}
