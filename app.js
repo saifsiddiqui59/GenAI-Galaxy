@@ -65,7 +65,7 @@ function modelFailureMessage(status){
 function isUncertainAnswer(response){
  const str=String(response||'').trim();
  if(str.split(/\s+/).length>24)return false;
- return /^(?:i\s+)?(?:do\s*not|don't|dont)\s+know\b|^(?:i(?:'m| am)?\s+)?not\s+sure\b|^no\s+idea\b|^i\s+have\s+no\s+idea\b/i.test(str);
+ return /\b(?:i\s+)?(?:do\s*not|don't|dont)\s+know\b|\b(?:i(?:'m| am)?\s+)?not\s+sure\b|\bno\s+idea\b|\bi\s+have\s+no\s+idea\b/i.test(str);
 }
 function topicAfter(current){
  const topics=state.topics;
