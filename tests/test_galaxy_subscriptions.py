@@ -55,6 +55,15 @@ class GalaxySubscriptionTests(unittest.TestCase):
         self.assertIn("GALAXY_RUN_AI_SMOKE: '1'",wf)
         self.assertIn("GALAXY_SUPABASE_ADMIN_KEY:",wf)
 
+    def test_static_ai_gate_uses_real_github_token(self):
+        wf=(ROOT/".github/workflows/galaxy-static-deploy.yml").read_text()
+        self.assertIn("GH_TOKEN: $" + "{{ github.token }}",wf)
+        self.assertIn("RELEASE_SHA: $" + "{{ github.sha }}",wf)
+        self.assertNotIn("GH_TOKEN: " + chr(92) + "$",wf)
+        self.assertIn("actions: read",wf)
+        self.assertIn("inputs.enable_evaluator == 'AI_READY'",wf)
+        self.assertIn("galaxy-ephemeral-live-ai.yml",wf)
+
     def test_signed_in_free_plan_no_cross_user_or_self_upgrade(self):
         calls=[]
         ids={"a@example.com":("aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa","token-a"),
