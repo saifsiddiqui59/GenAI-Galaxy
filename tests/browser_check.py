@@ -9,11 +9,19 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
   errors=[];page.on('pageerror',lambda err:errors.append(str(err)))
   html=(R/'index.html').read_text();html=re.sub(r'<link rel="stylesheet" href="styles.css">','',html);html=html.replace('<script src="app.js" defer></script>','')
   html=html.replace('<script src="genie/guide.js" defer></script>','')
+  for asset in ('genie/progress/story.js','genie/effects/cosmic-polish.js','galaxy/handoff/planet-flight.js'):
+   html=html.replace('<script src="'+asset+'" defer></script>','')
+  for asset in ('genie/effects/cosmic-polish.css','galaxy/handoff/planet-flight.css'):
+   html=html.replace('<link rel="stylesheet" href="'+asset+'">','')
   await page.set_content(html,wait_until='domcontentloaded')
   await page.add_style_tag(content=(R/'styles.css').read_text())
+  for asset in ('genie/effects/cosmic-polish.css','galaxy/handoff/planet-flight.css'):
+   await page.add_style_tag(content=(R/asset).read_text())
   await page.evaluate('''({subjects,lessons})=>{window.fetch=async (url)=>({ok:true,json:async()=>String(url).includes('curriculum')?subjects:lessons})}''',{'subjects':json.loads((R/'data/curriculum.json').read_text()),'lessons':json.loads((R/'data/lessons.json').read_text())})
   # Simulated browser STT; no microphone is accessed in CI.
   await page.evaluate('''() => { window.SpeechRecognition = class {start(){window.__fake_recognition=this;} stop(){this.onend?.();}} }''')
+  for asset in ('genie/progress/story.js','genie/effects/cosmic-polish.js','galaxy/handoff/planet-flight.js'):
+   await page.add_script_tag(content=(R/asset).read_text())
   await page.add_script_tag(content=(R/'app.js').read_text())
   await page.wait_for_selector('.planet-node',timeout=7000)
   count=await page.locator('.planet-node').count();assert count==17,count
@@ -36,6 +44,7 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
   assert await page.locator('#genie-guide').is_visible()
   assert await page.locator('#genie-collected-count').inner_text()=='1 of 17 worlds mastered'
   assert await page.locator('#genie-collected-orbs circle').count()==1
+  assert await page.locator('#genie-guide .genie-cosmic-particle').count()==18
   assert await page.locator('#genie-world-name').inner_text()=='RAG & Retrieval'
   assert await page.evaluate("document.activeElement?.id === 'genie-skip'")
   if reduced:
@@ -43,6 +52,18 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
   await page.screenshot(path=str(R/('genie-'+path)),animations='disabled',timeout=7000)
   await page.locator('#genie-continue').click()
   assert await page.evaluate('window.__genieContinued===true')
+  flight=await page.evaluate("""async () => {
+   let nav=0;
+   const result=await window.GalaxyPlanetHandoff.run({
+     sourceRect:{left:300,top:180,width:72,height:72},
+     targetRect:{left:600,top:370,width:58,height:58},
+     motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,
+     duration:140,onNavigate:()=>nav++
+   });
+   return {nav,animated:result.animated,reason:result.reason};
+  }""")
+  assert flight['nav']==1
+  assert flight['reason']==('reduced-motion' if reduced else 'completed')
   assert not await page.locator('#genie-guide').is_visible()
   assert not await page.evaluate("""() => window.GalaxyGenieGuide.show({
     userId:'browser-demo-a',next:{title:'Do not repeat'}})""")
