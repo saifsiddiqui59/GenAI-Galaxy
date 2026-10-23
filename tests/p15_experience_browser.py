@@ -40,7 +40,10 @@ async def inspect(browser,origin,viewport,reduced=False):
   await page.locator(".guardian-skip").wait_for(state="hidden",timeout=20000)
  await page.screenshot(path=str(ROOT/("preview-p19-"+label+"-offer.png")),timeout=20000)
  diagnostics=await page.evaluate("window.__galaxySkeletonDiagnostics")
- assert diagnostics and diagnostics.get("rig",{}).get("detectedBones",0)>0\n assert diagnostics.get('asset','').startswith('KayKit')\n assert diagnostics.get('clips',0)>=2\n assert any(m.get('map') for m in diagnostics.get('materials',[])), 'Textured character should preserve original CC0 atlas'
+ assert diagnostics and diagnostics.get("rig",{}).get("detectedBones",0)>0
+ assert diagnostics.get('asset','').startswith('KayKit')
+ assert diagnostics.get('clips',0)>=2
+ assert any(m.get('map') for m in diagnostics.get('materials',[])), 'Textured character should preserve original CC0 atlas'
  if diagnostics.get("rig",{}).get("canOffer"):
   assert isinstance(diagnostics.get("gripMidpoint"),list) and len(diagnostics["gripMidpoint"])==3
  if diagnostics.get("rig",{}).get("canCarry"):
