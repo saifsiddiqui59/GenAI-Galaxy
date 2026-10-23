@@ -28,6 +28,7 @@ async def inspect(browser,origin,viewport,reduced=False):
  assert model.status==200 and len(await model.body())==433820, "Expected verified CC0 Quaternius Skeleton FBX"
  await page.wait_for_function("""() => window.__galaxySkeletonDiagnostics?.meshes > 0 && window.__galaxySkeletonDiagnostics?.bones > 0""",timeout=15000)
  print("P17 skeleton diagnostics:",await page.evaluate("window.__galaxySkeletonDiagnostics"))
+ print("P20 FBX ORIGINAL MATERIAL:",await page.evaluate("window.__galaxyMaterialQA || null"))
 
  # Capture actual render during entrance, pickup and final presentation.
  label="mobile" if viewport["width"]<600 else "reduced" if reduced else "desktop"
