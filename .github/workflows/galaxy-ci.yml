@@ -36,6 +36,20 @@ jobs:
           node --check speech/azure-speech-adapter.js
           python -m py_compile api/core.py api/function_app.py tests/live_rls_check.py
           bash -n scripts/checkpoint.sh scripts/deploy_azure_static.sh scripts/publish_github.sh
+      - name: Build offline-ready 3D experience with pinned CC0 Guardian
+        run: |
+          npm install --prefix experience --no-audit --no-fund
+          npm run --prefix experience build
+          test -f experience/dist/index.html
+          test -f experience/dist/models/guardian.glb
+          test -d experience/dist/assets
+      - name: Upload 3D preview artifact for review
+        uses: actions/upload-artifact@v4
+        with:
+          name: galaxy-p15-3d-experience
+          path: experience/dist/
+          retention-days: 7
+          if-no-files-found: error
       - name: Verify server-owned rubrics are reproducible
         run: |
           python scripts/build_api_rubrics.py
