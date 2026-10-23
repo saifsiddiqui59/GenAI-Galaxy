@@ -18,14 +18,15 @@ const progress={
  [key(topics[2])]:own(2,'2025-01-01T00:00:00.000Z')
 };
 const baseline=build({userId:'alice',subjects,topics,progress,now:Date.parse('2026-01-01')});
-assert.equal(baseline.masteredWorlds.length,0,'a single unfinished topic blocks entire world mastery');
+assert.equal(baseline.masteredWorlds.length,1,'only the fully mastered World 1 is collected');
+assert.ok(!baseline.masteredWorlds.some(w=>w.index===0),'unfinished World 0 must not enter sack');
 assert.equal(baseline.masteredTopicCount,2);
 assert.equal(baseline.next.kind,'revision');
 assert.equal(baseline.next.topic,'C');
 assert.ok(!('userId' in baseline),'private identity is not returned');
 const completed={...progress,[key(topics[1])]:own(2)};
 const result=build({userId:'alice',subjects,topics,progress:completed});
-assert.equal(result.masteredWorlds.length,1);
+assert.equal(result.masteredWorlds.length,2);
 assert.equal(result.masteredWorlds[0].name,'World 0');
 const forged={...progress,[key(topics[0])]:{user_id:'bob',status:2}};
 assert.throws(()=>build({userId:'alice',subjects,topics,progress:forged}),/owner/);
