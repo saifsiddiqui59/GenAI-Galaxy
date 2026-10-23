@@ -1,0 +1,125 @@
+name: Galaxy P36 existing-site AI interviewer and personalization release
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        type: string
+        required: true
+        description: 'Type PUBLISH_GALAXY_P36_UI to publish reviewed low-cost learning files'
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  validate:
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' &&
+      github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'PUBLISH_GALAXY_P36_UI') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 143 &&
+        github.event.comment.user.id == 80577424 && github.event.comment.body == 'PUBLISH_GALAXY_P36_UI'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify reviewed frontend assets and local tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git hash-object 'app.js')" == '10933833aa9b098317c5596a49b88467eed02a34' ]] || { echo "::error::Source drift: app.js"; exit 1; }
+          [[ "$(git hash-object 'index.html')" == '7cba76a87364552386e75e5b2a708aafa6c9601d' ]] || { echo "::error::Source drift: index.html"; exit 1; }
+          [[ "$(git hash-object 'features/private-study-plan.js')" == 'edfa8d9b9aa2e3d5e1320ea3ca3bba0e0583d0e2' ]] || { echo "::error::Source drift: features/private-study-plan.js"; exit 1; }
+          node --check app.js
+          for file in features/*.js; do node --check "$file"; done
+          node tests/test_engine.cjs
+          node tests/test_auth_sync.cjs
+          node tests/test_p35_p1.cjs
+          node tests/test_p35_p2.cjs
+          node tests/test_p35_p3.cjs
+  publish:
+    needs: validate
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' &&
+      github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'PUBLISH_GALAXY_P36_UI') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 143 &&
+        github.event.comment.user.id == 80577424 && github.event.comment.body == 'PUBLISH_GALAXY_P36_UI'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: galaxy-existing-site-frontend
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify pinned app and Azure identity
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          TENANT: ${{ secrets.AZURE_TENANT_ID }}
+          SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ACCOUNT: ${{ vars.GALAXY_STORAGE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          [[ "$ACCOUNT" == 'gengalaxy1429841605' ]]
+          [[ "${CLIENT,,}" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]]
+          [[ -n "$TENANT" && -n "$SUBSCRIPTION" ]]
+          [[ "$(git hash-object 'app.js')" == '10933833aa9b098317c5596a49b88467eed02a34' ]] || { echo "::error::Source drift: app.js"; exit 1; }
+          [[ "$(git hash-object 'index.html')" == '7cba76a87364552386e75e5b2a708aafa6c9601d' ]] || { echo "::error::Source drift: index.html"; exit 1; }
+          [[ "$(git hash-object 'features/private-study-plan.js')" == 'edfa8d9b9aa2e3d5e1320ea3ca3bba0e0583d0e2' ]] || { echo "::error::Source drift: features/private-study-plan.js"; exit 1; }
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Publish reviewed three files and validate remote bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          acct='gengalaxy1429841605'; rg='GenAI_Galaxy'
+          id="$(az storage account show -g "$rg" -n "$acct" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Storage/storageAccounts/gengalaxy1429841605 ]]
+          enabled="$(az storage account blob-service-properties show -g "$rg" --account-name "$acct" --query staticWebsite.enabled -o tsv)"
+          [[ "${enabled,,}" == true ]]
+          files=(app.js index.html features/private-study-plan.js)
+          tmp="$(mktemp -d)"; mkdir -p "$tmp/previous" "$tmp/verified"
+          old_files=(); new_files=(); complete=0
+          restore() {
+            if [[ "$complete" != 1 ]]; then
+              for file in "${old_files[@]}"; do
+                az storage blob upload --account-name "$acct" --auth-mode login --container-name '$web' --name "$file" --file "$tmp/previous/$file" --overwrite true --only-show-errors >/dev/null || true
+              done
+              for file in "${new_files[@]}"; do
+                az storage blob delete --account-name "$acct" --auth-mode login --container-name '$web' --name "$file" --only-show-errors >/dev/null || true
+              done
+              echo '::error::Release failed and rollback attempted'
+            fi
+            rm -rf "$tmp"
+          }
+          trap restore EXIT
+          for file in "${files[@]}"; do
+            mkdir -p "$tmp/previous/$(dirname "$file")" "$tmp/verified/$(dirname "$file")"
+            if az storage blob exists --account-name "$acct" --auth-mode login --container-name '$web' --name "$file" --query exists -o tsv | grep -qi true; then
+              az storage blob download --account-name "$acct" --auth-mode login --container-name '$web' --name "$file" --file "$tmp/previous/$file" --overwrite true --only-show-errors >/dev/null
+              old_files+=("$file")
+            else
+              new_files+=("$file")
+            fi
+          done
+          for file in "${files[@]}"; do
+            case "$file" in index.html) typ='text/html' ;; *) typ='application/javascript' ;; esac
+            az storage blob upload --account-name "$acct" --auth-mode login --container-name '$web' --name "$file" --file "$file" --overwrite true --content-type "$typ" --content-cache-control 'no-cache,max-age=0' --only-show-errors >/dev/null
+            az storage blob download --account-name "$acct" --auth-mode login --container-name '$web' --name "$file" --file "$tmp/verified/$file" --overwrite true --only-show-errors >/dev/null
+            cmp "$file" "$tmp/verified/$file"
+          done
+          complete=1
+          echo 'Three Galaxy P36 frontend assets published and byte-verified.'
+          echo 'https://gengalaxy1429841605.z29.web.core.windows.net/' >> "$GITHUB_STEP_SUMMARY"
+      - name: Azure logout
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
