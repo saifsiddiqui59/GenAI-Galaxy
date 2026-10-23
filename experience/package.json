@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "assets": "node scripts/fetch-guardian.mjs",
-    "dev": "npm run assets && vite --host 0.0.0.0",
-    "build": "npm run assets && vite build",
+    "dev": "python3 scripts/fetch-skeleton.py && npm run assets && vite --host 0.0.0.0",
+    "build": "python3 scripts/fetch-skeleton.py && npm run assets && vite build",
     "preview": "vite preview --host 0.0.0.0"
   },
   "dependencies": {
