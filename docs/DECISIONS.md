@@ -147,3 +147,11 @@
 - Prioritize actual ready-made 3D skeletal clips and legible cosmic atmosphere over repeated basic SVG keyframes. Official RobotExpressive by Tomás Laulhé (modification Don McCurdy, CC0-1.0) was selected as a verifiably redistributable 463,988-byte candidate. Quaternius CC0 monsters are optional later aesthetic alternatives after checking exact animation and model license; 3merillon MIT character-controller code does not independently prove embedded meshes licensed.
 - Avoid direct copy of React Bits (MIT+Commons Clause) Hyperspeed shaders; local original CSS portal uses similar genre only. Reuse only when specific license permits.
 - Keep separate standalone Vite/R3F static experience, original 17 worlds and every V3 persisted key. Miniature mastered-planet tokens go into clickable satchel; true planets remain selectable. Use solely status=2 across whole chapter for mastery. Warp via safe bounded chapter index to existing lesson page. Prefer explicitly labeled synthetic demo data before owner-approved real Auth integration. No automatic deployment or paid model calls.
+
+
+## P19 cinematic 3D decisions (2026-10-23)
+
+- Retain Quaternius CC0 FBX provenance. Reuse its real arm chains (FBX exports arm chains as L/RUpperLeg001 -> L/RDownLeg001 -> end); no geometry hand substitutes or fake IK success.
+- Derive 3D satchel and offered planet positions from actual animated bone world transforms, fail closed when required anchors absent. CCD IK applied in offering phase; screenshot review remains gate.
+- Keep mobile GPU cost bounded with scaled galaxy and small deterministic procedurally textured planets; no external paid textures or model calls.
+- Only isolated versioned Azure prefix for preview, protected manual workflow and immutable tested SHA. Existing lesson data and public homepage remain intact.

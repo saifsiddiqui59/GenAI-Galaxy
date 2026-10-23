@@ -1,5 +1,5 @@
 """Real Chromium acceptance for compiled P15 3D preview, with no live Auth/Azure calls."""
-import asyncio, functools, http.server, threading
+import asyncio, functools, http.server, threading, math
 from pathlib import Path
 from urllib.parse import urlparse
 from playwright.async_api import async_playwright
@@ -29,8 +29,28 @@ async def inspect(browser,origin,viewport,reduced=False):
  await page.wait_for_function("""() => window.__galaxySkeletonDiagnostics?.meshes > 0 && window.__galaxySkeletonDiagnostics?.bones > 0""",timeout=15000)
  print("P17 skeleton diagnostics:",await page.evaluate("window.__galaxySkeletonDiagnostics"))
 
- # Let the walking, collection and two-handed offering visual sequence finish.
- await page.wait_for_timeout(4200)
+ # Capture actual render during entrance, pickup and final presentation.
+ label="mobile" if viewport["width"]<600 else "reduced" if reduced else "desktop"
+ await page.screenshot(path=str(ROOT/("preview-p19-"+label+"-entrance.png")),timeout=20000)
+ if not reduced:
+  await page.wait_for_timeout(2600)
+  await page.screenshot(path=str(ROOT/("preview-p19-"+label+"-pickup.png")),timeout=20000)
+ await page.wait_for_timeout(5100 if not reduced else 350)
+ if not reduced:
+  await page.locator(".guardian-skip").wait_for(state="hidden",timeout=20000)
+ await page.screenshot(path=str(ROOT/("preview-p19-"+label+"-offer.png")),timeout=20000)
+ diagnostics=await page.evaluate("window.__galaxySkeletonDiagnostics")
+ assert diagnostics and diagnostics.get("rig",{}).get("detectedBones",0)>0
+ if diagnostics.get("rig",{}).get("canOffer"):
+  assert isinstance(diagnostics.get("gripMidpoint"),list) and len(diagnostics["gripMidpoint"])==3
+ if diagnostics.get("rig",{}).get("canCarry"):
+  assert isinstance(diagnostics.get("waistPosition"),list) and len(diagnostics["waistPosition"])==3
+ if not reduced:
+  pose=await page.evaluate("window.__galaxySkeletonDiagnostics")
+  print('P19 ACTUAL OFFERING IK:',pose.get('ikError'),pose.get('hasArmIK'))
+  assert pose.get('hasArmIK') is True,'FBX real-arm CCD chain must exist'
+  assert isinstance(pose.get('ikError'),(int,float)) and math.isfinite(pose['ikError']),'IK must execute against real wrist targets'
+  assert pose['ikError']<.35,'Hand endpoint too far from offered planet target'
  await page.screenshot(path=str(ROOT/("preview-p15-"+("mobile" if viewport["width"]<600 else "reduced" if reduced else "desktop")+".png")),timeout=20000,animations="disabled")
  await page.locator(".guardian-accept").click()
  await page.locator(".galaxy-portal").wait_for(timeout=6000)

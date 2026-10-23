@@ -185,3 +185,11 @@ In VS Code Git Bash, from the Galaxy main branch run bash scripts/galaxy_p3_one_
 - Finish honest 3D finger grip/two-hand model IK if needed after visual signoff; replace RobotExpressive with selected Quaternius CC0 monster only after the actual target .glb/rig/license/provenance is verified.
 - Real owner-scoped progress must be connected after successful Auth/RLS sync; currently the stand-alone home accepts synthetic progress with visible ?demo=1 label only. No private progress passes through URL. Existing lesson app receives chapter index 0–16 only.
 - Merge with review and main CI only when accepted; publish a separate protected DEV Azure STATIC PREVIEW if owner explicitly approves. Do not overwrite live root site or run paid AI models for animation tests.
+
+
+## P19 3D V3 acceptance before any live release
+
+1. Verify PR #91's latest exact-head commit GitHub Actions jobs; fix any failed tests and obtain desktop/mobile/reduced-motion screenshot artifacts.
+2. Human visual acceptance: full-body skeleton visible, arm-to-planet contact with original-bone IK, attached small waist bag, hand-waypoint miniature pickup, all 17 textured planets, nested eight-section lesson, warp.
+3. Confirm production authenticated owner-scoped mastery with consented Galaxy test accounts; do not infer mastery from static screenshots or synthetic demo.
+4. Prepare manual protected isolated Azure /previews/galaxy-3d-v3 deployment pinned to reviewed source SHA; never overwrite root or claim hosted preview before remote SHA/HTTP verification.

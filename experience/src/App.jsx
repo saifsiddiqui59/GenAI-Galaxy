@@ -1,4 +1,4 @@
-import React,{useCallback,useMemo,useState} from 'react';
+import React,{useCallback,useMemo,useRef,useState} from 'react';
 import GalaxyAuth from './auth/GalaxyAuth.jsx';
 import CollectionFX from './effects/CollectionFX.jsx';
 import WorldDock from './navigation/WorldDock.jsx';
@@ -32,8 +32,8 @@ const PREVIEW_PROGRESS=SHOW_SAMPLE?fakeProgress():{};
 const TOPIC_KEYS=new Set(TOPICS.map(worldKey));
 export function studyLink(index){
  const url=new URL(window.location.href);
- const prefix='/previews/galaxy-3d-v2/';
- if(url.pathname.includes(prefix)){
+ const prefix=url.pathname.match(/^\/previews\/galaxy-3d-v[0-9]+\//)?.[0];
+ if(prefix){
    if(!validWorld(index))throw Error('Invalid learning world');
    return new URL(prefix+'lesson/index.html?galaxyWorld='+index,url.origin).href;
  }
@@ -50,6 +50,7 @@ export default function App(){
  const reduced=budget.noMotion;
  const [animationEnabled,setAnimationEnabled]=useState(!reduced);
  const [modelPhase,setModelPhase]=useState('arriving');
+ const rigPoseRef=useRef(null);
  const [selected,setSelected]=useState(null);
  const [warp,setWarp]=useState(null);
  const [menuOpen,setMenuOpen]=useState(false);
@@ -80,10 +81,10 @@ export default function App(){
        gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}>
        <GalaxyScene masteredWorlds={collected} selectedIndex={selected} recommendedIndex={nextIndex}
          onSelect={select} reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
-       <Guardian phase={animationEnabled?modelPhase:'idle'}/>
+       <Guardian phase={animationEnabled?modelPhase:'idle'} rigPoseRef={rigPoseRef}/>
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced||budget.lowPower}
          epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
-         onOpenSack={()=>setSackOpenFrom3D(x=>x+1)}/>
+         onOpenSack={()=>setSackOpenFrom3D(x=>x+1)} rigPoseRef={rigPoseRef}/>
      </Canvas>
    </div>}
    {!available3D&&<div className="galaxy-no-webgl" role="status">
