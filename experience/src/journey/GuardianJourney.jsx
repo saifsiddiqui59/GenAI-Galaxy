@@ -12,7 +12,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
  useEffect(()=>{setStart(performance.now());setElapsed(0);setSkipped(false)},[nextIndex,count,reducedMotion]);
  useEffect(()=>{
   if(reducedMotion||skipped)return undefined;
-  const handle=setInterval(()=>setElapsed(Math.min(20000,performance.now()-start)),80);
+  const handle=setInterval(()=>setElapsed(Math.min(25000,performance.now()-start)),80);
   return ()=>clearInterval(handle);
  },[start,reducedMotion,skipped]);
  useEffect(()=>onPhase?.(view.phase),[view.phase,onPhase]);
