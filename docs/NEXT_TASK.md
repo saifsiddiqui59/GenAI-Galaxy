@@ -164,3 +164,9 @@ In VS Code Git Bash, from the Galaxy main branch run bash scripts/galaxy_p3_one_
 
 
 **P11 database update:** Galaxy subscription migration `20261023110022_galaxy_freemium_subscriptions_v1` is NOW applied and synthetic SQL FREE cap test passed. Real Auth login/2-user RLS/plan test and actual Azure model deployment remain for the GitHub one-shot runner. Never treat synthetic SQL tests as real login acceptance.
+
+
+## P12 — unblock missing LLM before Functions (2026-10-23)
+- A user read-only CLI check confirmed no Azure OpenAI/AIServices resource within `GenAI_Galaxy`. The previous launcher mistakenly prompted for an endpoint that did not exist. Fixed: manual `galaxy-p3-model-provision.yml` and source script create/reuse an isolated Azure OpenAI S0 resource in South India, deploy `gpt-4.1-mini` regional Standard at bounded 5 throughput capacity and verify expected model/version/location.
+- The Galaxy one-shot now launches dedicated model provisioning BEFORE backend deployment, which fetches the real endpoint and model key using OIDC, never prompting for them. This remains conditional on Azure model quota/access. Do not copy WineShopPOS endpoint/keys or create global deployment as fallback.
+- Run `bash scripts/galaxy_p3_one_shot.sh` from a clean `main` checkout (use separate local Galaxy deploy clone to preserve work in `chore/m5-azure-actions`). Only actual GitHub Actions results prove cloud completion. User-owned subscription is pay-per-use; verify charges directly in Azure.
