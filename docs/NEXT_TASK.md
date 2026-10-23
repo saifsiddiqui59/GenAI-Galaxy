@@ -139,3 +139,11 @@ Do not change RetailGrowthAI or WineShopPOS or conflate offline mocks with appro
 **Hosted prerequisites:** Approve/apply the **Galaxy-only** quota SQL to the already shared Supabase project; configure protected `dev` publishable/model secrets; validate an actual existing Azure OpenAI pay-as-you-go deployment and Central India Flex availability; grant narrowly scoped Azure RG management permissions to the known Galaxy OIDC principal. Then manually run the new workflows in GitHub Actions with `PROVISION` and `DEPLOY`. These workflows are not run by PRs or pushes; the GitHub connector cannot dispatch them.
 
 **Remaining after backend release:** Negative real JWT tests, actual quota 429/503 tests, consented two-user Supabase RLS workflow, and a separately reviewed frontend runtime URL change. Browser/physical mic tests deferred and P4 monitoring excluded at owner's request. No backend cloud provisioning or database migration has yet occurred.
+
+## P9 — live quota migration complete; Azure backend still blocked (2026-10-23)
+
+**Completed:** Supabase migration `20261023101156_galaxy_p3_consumption_eval_quota` applied only to Galaxy quota objects. RLS/grants inspected and quota behavior tested in a rollback-only transaction (5/6 per-user and 50/51 global; zero retained test counters). Added GitHub source fix to `COALESCE`, remote Python build, and Flex-region/Always Ready checks.
+
+**Pending before real paid AI execution:** Verify RG-scoped Azure provisioning privileges for existing Galaxy OIDC principal, configure protected GitHub `dev` model/publishable secrets, and manually dispatch `galaxy-p3-flex-provision.yml` with `PROVISION`, then `galaxy-p3-flex-deploy.yml` with `DEPLOY`. These actions may incur usage costs and require a real existing Azure OpenAI pay-per-token deployment. Workflow triggers remain manual-only; we cannot call GitHub workflow_dispatch through the currently connected app, alter protected dev secrets or authenticate to the owner's Azure subscription in this chat.
+
+**Separate incomplete:** Two-user hosted Auth/RLS test using disposable users; actual signed-in AI requests and real HTTP 429/503 checks. Do not count synthetic database JWT simulation as real sign-in. P4 monitoring and manual browser/mic acceptance remain deferred per owner.
