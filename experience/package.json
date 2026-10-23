@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "assets": "node scripts/fetch-guardian.mjs",
-    "dev": "python3 scripts/fetch-skeleton.py && npm run assets && vite --host 0.0.0.0",
-    "build": "npm run test:rig && python3 scripts/fetch-skeleton.py && npm run assets && vite build",
+    "dev": "python3 scripts/fetch-skeleton.py && npm run assets && python3 scripts/fetch-kaykit.py && vite --host 0.0.0.0",
+    "build": "npm run test:rig && python3 scripts/fetch-skeleton.py && npm run assets && python3 scripts/fetch-kaykit.py && vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test:rig": "node --test tests/*.test.mjs"
   },
