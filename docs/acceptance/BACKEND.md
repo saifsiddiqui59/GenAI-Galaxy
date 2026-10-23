@@ -25,3 +25,9 @@
 ## Outstanding blockers
 
 Actual gateway policy, real network origin isolation, malware scanning/quarantine, hosted JWT/RLS negative acceptance, integration load tests, cost budget and explicit Azure backend deployment approval.
+
+## P7 — credential-forwarding and project-origin protection (source only)
+
+- Pin `SUPABASE_URL` to the existing Galaxy-approved shared Supabase project, rejecting alternate Supabase hosts before Auth calls.
+- Reject HTTP 3xx redirects for private Storage downloads, user JWT verification, model evaluation and Speech token requests: bearer/API keys must never follow a redirect to an untrusted endpoint.
+- These are source guardrails only. Hosted Functions, upstream authenticated user quotas, blocked direct origin, private Vault malware scanning/quarantine and real model/speech calls remain not deployed or verified. Do not turn on paid Azure resources via PR CI.
