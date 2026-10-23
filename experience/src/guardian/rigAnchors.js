@@ -2,8 +2,8 @@
 // Names are matched from the loaded Quaternius skeleton; unrecognized rigs fail closed.
 const canonical = name => String(name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const tokens = {
- left: [/left(?:hand|wrist|palm)/, /(?:hand|wrist|palm)left/, /^lefthand/, /mixamoriglefthand/, /handl$/, /wristl$/],
- right: [/right(?:hand|wrist|palm)/, /(?:hand|wrist|palm)right/, /^righthand/, /mixamorigrighthand/, /handr$/, /wristr$/],
+ left: [/^ldownleg001end$/, /^ldownleg001$/, /left(?:hand|wrist|palm)/, /(?:hand|wrist|palm)left/, /^lefthand/, /mixamoriglefthand/, /handl$/, /wristl$/],
+ right: [/^rdownleg001end$/, /^rdownleg001$/, /right(?:hand|wrist|palm)/, /(?:hand|wrist|palm)right/, /^righthand/, /mixamorigrighthand/, /handr$/, /wristr$/],
  waist: [/pelvis/, /hips?$/, /spine0?$/, /rootpelvis/]
 };
 function rank(name, side) {
