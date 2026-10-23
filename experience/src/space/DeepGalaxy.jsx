@@ -58,7 +58,7 @@ function NebulaCloud({lowPower}){
      uniforms={uniforms} transparent depthWrite={false} depthTest={false}/>
  </mesh>;
 }
-function Planet({world,mastered,recommended,selected,onSelect,reducedMotion}){
+function Planet({world,mastered,recommended,selected,onSelect,reducedMotion,lowPower}){
  const group=useRef();
  useFrame((state,delta)=>{
   if(!group.current||reducedMotion)return;
@@ -73,6 +73,20 @@ function Planet({world,mastered,recommended,selected,onSelect,reducedMotion}){
      <sphereGeometry args={[world.scale,32,22]}/>
      <meshStandardMaterial color={color} emissive={color} emissiveIntensity={recommended?1.9:selected?1.35:1.05} roughness={.45} metalness={.15} toneMapped={false}/>
     </mesh>
+    {!lowPower&&<mesh scale={1.08}>
+      <sphereGeometry args={[world.scale,28,20]}/>
+      <meshBasicMaterial color={color} transparent opacity={.095} blending={THREE.AdditiveBlending}
+        depthWrite={false} side={THREE.BackSide}/>
+    </mesh>}
+    {!lowPower&&Array.from({length:5},(_,i)=>{
+      const phi=(i*2.399963229728653+world.index*.61),theta=.62+(i%3)*.74;
+      const rr=world.scale*1.008;
+      return <mesh key={i} position={[Math.sin(theta)*Math.cos(phi)*rr,Math.cos(theta)*rr,Math.sin(theta)*Math.sin(phi)*rr]}
+        rotation={[theta,0,phi]} scale={[.12+.025*(i%2),.045,.012]}>
+        <sphereGeometry args={[world.scale,9,7]}/>
+        <meshStandardMaterial color={i%2?'#10283b':'#30213c'} transparent opacity={.58} roughness={.9}/>
+      </mesh>;
+    })}
     {mastered&&<mesh rotation={[.48,.2,.55]}>
       <torusGeometry args={[world.scale*1.35,.022,8,64]}/>
       <meshBasicMaterial color="#efc878"/>
@@ -99,7 +113,7 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
   <group scale={lowPower?[.65,.93,.9]:[1,1,1]}>
   {layoutWorlds().map(world=><Planet key={world.index} world={world} mastered={set.has(world.index)}
    recommended={world.index===recommendedIndex} selected={world.index===selectedIndex}
-   onSelect={onSelect} reducedMotion={reducedMotion}/>)}
+   onSelect={onSelect} reducedMotion={reducedMotion} lowPower={lowPower}/>)}
   </group>
  </>;
 }
