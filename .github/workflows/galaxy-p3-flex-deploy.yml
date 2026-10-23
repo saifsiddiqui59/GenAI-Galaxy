@@ -78,8 +78,9 @@ jobs:
           app_id="$(az functionapp show -g "$RG" -n "$FUNCTION_NAME" --query id -o tsv)"
           [[ "$app_id" == */resourceGroups/"$RG"/providers/Microsoft.Web/sites/"$FUNCTION_NAME" ]] || exit 1
           # Require explicit no-always-ready setting, to avoid idle compute.
-          count="$(az resource show -g "$RG" -n "$FUNCTION_NAME" --resource-type Microsoft.Web/sites --query 'properties.functionAppConfig.scaleAndConcurrency.alwaysReady | length(@)' -o tsv)"
-          [[ "$count" == '0' || "$count" == 'None' ]] || { echo '::error::Always Ready found; refusing pay-per-use deploy'; exit 1; }
+          ready="$(az resource show -g "$RG" -n "$FUNCTION_NAME" --resource-type Microsoft.Web/sites --query 'properties.functionAppConfig.scaleAndConcurrency.alwaysReady' -o json)"
+          ready="$(printf '%s' "$ready" | tr -d '[:space:]')"
+          [[ "$ready" == '[]' || "$ready" == 'null' ]] || { echo '::error::Always Ready found; refusing pay-per-use deploy'; exit 1; }
           az functionapp config appsettings set -g "$RG" -n "$FUNCTION_NAME" -o none --settings \
             GALAXY_BACKEND_PROFILE=direct-consumption \
             GALAXY_ALLOWED_ORIGIN="$GALAXY_PUBLIC_SITE" \
