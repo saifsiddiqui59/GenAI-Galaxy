@@ -53,6 +53,16 @@ insert into galaxy_private.approval_settings(singleton,enforce_approval) values(
 on conflict(singleton) do nothing;
 revoke all on galaxy_private.approval_settings from public,anon,authenticated;
 
+create table if not exists galaxy_private.platform_events (
+ id bigint generated always as identity primary key,
+ actor_id uuid not null references auth.users(id),
+ target_id uuid not null references auth.users(id),
+ action text not null check(action in('APPROVE','REJECT','ASSIGN_PLAN')),
+ reason text not null check(length(reason) between 10 and 300),
+ details jsonb not null default '{}'::jsonb,
+ created_at timestamptz not null default now()
+);
+revoke all on galaxy_private.platform_events from public,anon,authenticated;
 create or replace function public.galaxy_account_approval()
 returns jsonb language plpgsql stable security definer set search_path=''
 as $$
@@ -111,6 +121,9 @@ begin
  update galaxy_private.signup_approvals set status=v_status,decided_at=now(),decided_by=auth.uid(),reason=btrim(p_reason)
  where user_id=p_user_id and status='PENDING';
  if not found then raise exception 'NOT_PENDING'; end if;
+ insert into galaxy_private.platform_events(actor_id,target_id,action,reason,details)
+ values(auth.uid(),p_user_id,case when p_approve then 'APPROVE' else 'REJECT' end,btrim(p_reason),
+ jsonb_build_object('status',v_status));
  return jsonb_build_object('user_id',p_user_id,'status',v_status);
 end $$;
 revoke all on function public.galaxy_platform_review(uuid,boolean,text) from public,anon;
@@ -127,6 +140,9 @@ begin
  values(p_user_id,p_plan,'ACTIVE',now()+make_interval(days=>p_days),now())
  on conflict(user_id) do update set plan_code=excluded.plan_code,status='ACTIVE',
   period_ends_at=excluded.period_ends_at,updated_at=now();
+ insert into galaxy_private.platform_events(actor_id,target_id,action,reason,details)
+ values(auth.uid(),p_user_id,'ASSIGN_PLAN',btrim(p_reason),
+ jsonb_build_object('plan',p_plan,'days',p_days));
  return jsonb_build_object('user_id',p_user_id,'plan_code',p_plan,'status','ACTIVE');
 end $$;
 revoke all on function public.galaxy_platform_assign_plan(uuid,text,text,integer) from public,anon;
