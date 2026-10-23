@@ -67,3 +67,6 @@ Remaining: manual browser/device acceptance, real auth and two-user Supabase iso
 
 
 - 2026-10-23 — Applied Galaxy-only migration `20261023110022_galaxy_freemium_subscriptions_v1` after source/role review. Confirmed three plans and zero paid enrollments; direct user subscription INSERT denied; RPC denies anon; rollback-only simulated authenticated FREE 5/day test passed and left both quota counter tables empty. No WineShopPOS schema affected, payment integrations enabled, actual Auth test users created, or Azure backend provisioned from this chat.
+
+
+- 2026-10-23 — User correctly noted that Galaxy had no created Foundry/LLM resource, so prompting for a model endpoint was invalid. Prepared manual-only Azure OpenAI S0 South India regional Standard `gpt-4.1-mini` provisioning workflow, idempotent CLI resource/verified deployment script, changed deployment to retrieve actual endpoint/model key through OIDC into private Function settings, removed impossible Git Bash prompts, added source regression coverage. Real Azure provisioning, cloud quota and model smoke still require workflow execution and are not claimed complete. No WineShopPOS or RetailGrowthAI edits.

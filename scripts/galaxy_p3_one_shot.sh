@@ -47,9 +47,8 @@ public_key="$(sed -n "s/^const SB_PUBLISHABLE_KEY='\([^']*\)'.*/\1/p" app.js | h
 ensure_secret GALAXY_SUPABASE_PUBLISHABLE_KEY "$public_key"
 unset public_key
 ensure_secret GALAXY_SUPABASE_ADMIN_KEY ''
-ensure_secret GALAXY_AZURE_OPENAI_ENDPOINT ''
-ensure_secret GALAXY_AZURE_OPENAI_DEPLOYMENT ''
-ensure_secret GALAXY_AZURE_OPENAI_API_KEY ''
+# Dedicated model is created/verified by the model workflow using OIDC.
+# No endpoint, model deployment or API key is requested from the user.
 
 vars="$(gh variable list -R "$REPO" -e "$ENV" --json name -q '.[].name')" || fail 'Cannot access dev variables.'
 if ! grep -Fxq GALAXY_STORAGE_ACCOUNT <<< "$vars"; then
@@ -84,9 +83,10 @@ run_workflow() {
 }
 
 run_workflow galaxy-ephemeral-rls.yml confirm TEST
+run_workflow galaxy-p3-model-provision.yml confirm PROVISION_MODEL
 run_workflow galaxy-p3-flex-provision.yml confirm PROVISION
 run_workflow galaxy-p3-flex-deploy.yml confirm DEPLOY
 run_workflow galaxy-ephemeral-live-ai.yml confirm TEST
 run_workflow galaxy-static-deploy.yml confirm_deploy DEPLOY enable_evaluator=AI_READY
-echo 'SUCCESS: Supabase Auth tests, Flex backend, real AI, and static frontend Actions all passed.'
+echo 'SUCCESS: Supabase Auth, dedicated pay-as-you-go Galaxy LLM, Flex backend, live AI and static frontend Actions all passed.'
 echo 'https://gengalaxy1429841605.z29.web.core.windows.net/'

@@ -1,0 +1,54 @@
+name: Galaxy P3 dedicated Azure OpenAI LLM (manual, pay-as-you-go)
+# Requires explicit workflow_dispatch. Never deploys on push or PR.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type PROVISION_MODEL to create/verify dedicated South India gpt-4.1-mini regional Standard pay-as-you-go'
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: galaxy-p3-model-provision
+  cancel-in-progress: false
+
+jobs:
+  provision-galaxy-model:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'PROVISION_MODEL'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate source, OIDC identity and exclusive Galaxy target
+        shell: bash
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TENANT: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || exit 1
+          [[ "$SUBSCRIPTION" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || exit 1
+          [[ -n "$TENANT" ]] || exit 1
+          bash -n scripts/provision_galaxy_openai.sh
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Provision or verify named regional S0 pay-as-you-go model only
+        shell: bash
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: bash scripts/provision_galaxy_openai.sh
+      - name: Clear Azure runner credentials
+        if: always()
+        shell: bash
+        run: az logout >/dev/null 2>&1 || true

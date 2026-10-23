@@ -185,3 +185,10 @@ Exclude owner-declined P4 monitoring; don't touch other projects or reactivate b
 ### P11 hosted Supabase verification
 
 Applied Galaxy-only migration `20261023110022_galaxy_freemium_subscriptions_v1` in shared project `vfoghlhtnifpnbevgufa`. Verified three plan catalog rows, no user paid assignments, plan-owner RLS, no authenticated INSERT privilege and no anonymous `my_subscription()` execution. A rollback-only simulated authenticated JWT test verified FREE daily cap 5 with denial of request 6; user/global counter tables returned zero rows afterward. This is DB verification, not real Auth user or Azure runtime test. No checkout, recurring billing, pricing or platform monitoring enabled.
+
+
+## P12 — Dedicated India Azure OpenAI model provisioning prepared (2026-10-23)
+- Corrected deployment sequencing: real Supabase Auth smoke -> **dedicated model provisioning** -> backend Flex provisioning -> backend deploy with OIDC model endpoint and key discovery -> one real model smoke -> gated frontend release.
+- Added manual-only GitHub Action `galaxy-p3-model-provision.yml` and idempotent `scripts/provision_galaxy_openai.sh`: target only `GenAI_Galaxy` RG, new Galaxy-specific OpenAI S0 `gengalaxy-ai-sin-1429841605` in `southindia` with `gpt-4.1-mini` version `2025-04-14`, regional `Standard` capacity 5, without provisioned PTUs. Azure model/quota availability is subject to subscription approval.
+- Removed the unfulfillable requirement to paste an existing Azure OpenAI endpoint, deployment or API key. The deploy GitHub Action retrieves the endpoint and account key using approved Azure OIDC only **after model exists**, and stores them in backend Function app settings, without exposing them in the repo or frontend.
+- **Cloud model and Functions NOT provisioned by this source change**, manual workflow must run and report real results. No WineShopPOS changes and no P4 monitoring.

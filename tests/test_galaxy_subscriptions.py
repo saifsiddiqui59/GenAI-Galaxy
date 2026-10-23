@@ -41,12 +41,16 @@ class GalaxySubscriptionTests(unittest.TestCase):
     def test_workflow_and_script_are_manual_and_test_before_paid_provisioning(self):
         script=(ROOT/"scripts/galaxy_p3_one_shot.sh").read_text()
         self.assertLess(script.index("run_workflow galaxy-ephemeral-rls.yml"),
+                        script.index("run_workflow galaxy-p3-model-provision.yml"))
+        self.assertLess(script.index("run_workflow galaxy-p3-model-provision.yml"),
                         script.index("run_workflow galaxy-p3-flex-provision.yml"))
         self.assertLess(script.index("run_workflow galaxy-p3-flex-deploy.yml"),
                         script.index("run_workflow galaxy-ephemeral-live-ai.yml"))
         self.assertLess(script.index("run_workflow galaxy-ephemeral-live-ai.yml"),
                         script.index("run_workflow galaxy-static-deploy.yml"))
         self.assertIn("gh run watch",script)
+        self.assertNotIn("ensure_secret GALAXY_AZURE_OPENAI_ENDPOINT",script)
+        self.assertNotIn("ensure_secret GALAXY_AZURE_OPENAI_API_KEY",script)
         self.assertNotIn("az group create",script)
         wf=(ROOT/".github/workflows/galaxy-ephemeral-live-ai.yml").read_text()
         self.assertIn("workflow_dispatch:",wf)
