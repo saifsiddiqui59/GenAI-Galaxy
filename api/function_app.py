@@ -7,7 +7,7 @@ import json
 import os
 from pathlib import Path
 from urllib.parse import quote, urlencode, urlparse
-from urllib.request import Request, urlopen
+from urllib.request import Request, urlopen, build_opener, HTTPRedirectHandler
 from urllib.error import HTTPError, URLError
 import uuid
 import re
@@ -21,6 +21,17 @@ class UpstreamError(RuntimeError):
     pass
 
 
+class _NoRedirect(HTTPRedirectHandler):
+    """Reject upstream redirects before forwarding a bearer token or API key."""
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _no_redirect_open(request, timeout):
+    # Per-call opener only; never modify process-global redirect handlers.
+    return build_opener(_NoRedirect()).open(request, timeout=timeout)
+
+
 def request_json(url, method='GET', payload=None, token=None, extra_headers=None, limit=2_000_000, timeout=15):
     headers={'Accept':'application/json'}
     if token:
@@ -30,7 +41,7 @@ def request_json(url, method='GET', payload=None, token=None, extra_headers=None
     headers.update(extra_headers or {})
     body=json.dumps(payload).encode('utf-8') if payload is not None else None
     try:
-        with urlopen(Request(url,data=body,method=method,headers=headers),timeout=timeout) as r:
+        with _no_redirect_open(Request(url,data=body,method=method,headers=headers),timeout=timeout) as r:
             data=r.read(limit+1)
             if len(data)>limit:
                 raise UpstreamError('Upstream result was too large')
@@ -66,7 +77,7 @@ def preflight(req):
 def env_config():
     url=os.environ.get('SUPABASE_URL','').rstrip('/')
     key=os.environ.get('SUPABASE_PUBLISHABLE_KEY','')
-    if not re.fullmatch(r'https://[a-z0-9-]+\.supabase\.co',url) or not key:
+    if url != 'https://vfoghlhtnifpnbevgufa.supabase.co' or not key:
         raise RuntimeError('Supabase backend configuration incomplete')
     return url,key
 
@@ -164,7 +175,7 @@ def vault_extract(req:func.HttpRequest)->func.HttpResponse:
         path=owned_storage_path(user_id,row.get('file_path'))
         download=base+'/storage/v1/object/authenticated/genai-study-docs/'+quote(path,safe='/')
         try:
-            with urlopen(Request(download,headers={'Authorization':'Bearer '+token,'apikey':public_key}),timeout=15) as r:
+            with _no_redirect_open(Request(download,headers={'Authorization':'Bearer '+token,'apikey':public_key}),timeout=15) as r:
                 raw=r.read(MAX_BYTES+1)
         except (HTTPError,URLError,TimeoutError):
             return make_response(req,{'error':'Private file cannot be retrieved'},502)
@@ -195,7 +206,7 @@ def speech_token(req:func.HttpRequest)->func.HttpResponse:
         # Azure Speech STS issues limited-lifetime authorization tokens, not keys.
         url='https://'+region+'.api.cognitive.microsoft.com/sts/v1.0/issueToken'
         try:
-            with urlopen(Request(url,data=b'',method='POST',headers={
+            with _no_redirect_open(Request(url,data=b'',method='POST',headers={
                 'Ocp-Apim-Subscription-Key':key,'Content-Type':'application/x-www-form-urlencoded'}),timeout=12) as response:
                 value=response.read(10_001)
             if len(value)>10_000:raise UpstreamError('Token was too large')
