@@ -221,18 +221,31 @@ function resetAuthToGuest(){
 function showGenieForSignedInUser(){
  const user=state.user,next=pickNext();
  if(!user?.id||state.isGuest||!next||!window.GalaxyGenieGuide)return;
- const masteredWorlds=state.subjects.flatMap((chapter,index)=>{
+ // Full production curriculum is 17 worlds; isolated legacy test harnesses may
+ // contain fewer and retain the original safe chapter-count fallback.
+ const story=window.GalaxyProgressStory&&state.subjects.length===17?
+  window.GalaxyProgressStory.build({
+   userId:user.id,subjects:state.subjects,topics:state.topics,
+   progress:state.progress,now:Date.now()
+  }):null;
+ const masteredWorlds=story?.masteredWorlds||state.subjects.flatMap((chapter,index)=>{
   const topics=chapterTopics(index);
   return topics.length&&topics.every(t=>getP(t).status===2)?
-    [{index,name:chapter.title}]:[];
+   [{index,name:chapter.title}]:[];
  });
  state.current=next;
  window.GalaxyGenieGuide.show({
   userId:user.id,masteredWorlds,
   next:{index:next.branchIndex,title:next.branch,
-   isReview:!!(getP(next).next_review_at&&Date.parse(getP(next).next_review_at)<=Date.now())},
+   isReview:story?.next.isReview??!!(getP(next).next_review_at&&Date.parse(getP(next).next_review_at)<=Date.now())},
   motion:state.motion,
-  onContinue:()=>{state.chapter=next.branchIndex;chooseTopic(next)}
+  onContinue:({sourceRect}={})=>{
+   const target=DOM('universe')?.querySelector('[data-chapter="'+next.branchIndex+'"]');
+   const navigate=()=>{state.chapter=next.branchIndex;chooseTopic(next)};
+   if(window.GalaxyPlanetHandoff){
+    void window.GalaxyPlanetHandoff.run({sourceRect,target,motion:state.motion,onNavigate:navigate});
+   }else navigate();
+  }
  });
 }
 async function signedIn(user){
