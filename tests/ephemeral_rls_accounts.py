@@ -100,6 +100,34 @@ def check_galaxy_subscriptions(key, a_email, a_pw, b_email, b_pw):
     print("Galaxy subscription verified: authenticated FREE defaults, cross-user isolation, and no self-upgrade.")
 
 
+def check_galaxy_platform(key, a_email, a_pw, b_email, b_pw):
+    """Real two-user JWT negative checks; no privileged admin assignment."""
+    a_id, a_token = sign_in(a_email, a_pw, key)
+    b_id, b_token = sign_in(b_email, b_pw, key)
+    for identity,token in ((a_id,a_token),(b_id,b_token)):
+        code,raw=request("POST","/rest/v1/rpc/galaxy_request_access",key,token=token,body={})
+        status=json_body(raw)
+        if code!=200 or not isinstance(status,dict) or status.get("status")!="PENDING":
+            raise CheckFailed("Temporary Galaxy signup review queue failed")
+        code,raw=request("POST","/rest/v1/rpc/galaxy_account_approval",key,token=token,body={})
+        account=json_body(raw)
+        if code!=200 or not isinstance(account,dict) or account.get("status")!="PENDING":
+            raise CheckFailed("Account approval status not scoped correctly")
+        code,raw=request("POST","/rest/v1/rpc/galaxy_access_allowed",key,token=token,body={})
+        if code!=200 or json_body(raw) is not True:
+            raise CheckFailed("Staged approval gate unexpectedly blocked valid current users")
+        for rpc,body in (
+            ("galaxy_platform_summary",{}),
+            ("galaxy_platform_pending",{"p_limit":3}),
+            ("galaxy_platform_assign_plan",{"p_user_id":identity,"p_plan":"PRO","p_reason":"Unauthorized test assignment","p_days":30}),
+            ("galaxy_platform_review",{"p_user_id":identity,"p_approve":True,"p_reason":"Unauthorized approval test"})
+        ):
+            code,_=request("POST","/rest/v1/rpc/"+rpc,key,token=token,body=body)
+            if code in (200,201,204):
+                raise CheckFailed("CRITICAL: ordinary account accessed platform admin RPC")
+    print("Galaxy hosted platform checks passed: review queue, ownership, and denied admin escalation.")
+
+
 def _cancellation_requested(signum, frame):
     # GitHub sends SIGTERM before forcibly killing a timed-out/cancelled job.
     # Convert the signal to a normal exception so the existing finally runs.
@@ -140,6 +168,9 @@ def run():
         print("Created two temporary Galaxy-only Auth test accounts (identities masked).")
         run_rls()
         check_galaxy_subscriptions(key,
+            os.environ["GALAXY_TEST_A_EMAIL"], os.environ["GALAXY_TEST_A_PASSWORD"],
+            os.environ["GALAXY_TEST_B_EMAIL"], os.environ["GALAXY_TEST_B_PASSWORD"])
+        check_galaxy_platform(key,
             os.environ["GALAXY_TEST_A_EMAIL"], os.environ["GALAXY_TEST_A_PASSWORD"],
             os.environ["GALAXY_TEST_B_EMAIL"], os.environ["GALAXY_TEST_B_PASSWORD"])
         if os.environ.get("GALAXY_RUN_AI_SMOKE") == "1":
