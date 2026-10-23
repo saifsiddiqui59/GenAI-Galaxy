@@ -93,6 +93,7 @@ jobs:
         with:
           app-name: gengalaxy-p3-1429841605
           package: api
+          remote-build: true
       - name: Log out of Azure
         if: always()
         run: az logout >/dev/null 2>&1 || true
