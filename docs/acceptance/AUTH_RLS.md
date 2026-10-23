@@ -22,3 +22,9 @@
 ## Current evidence
 
 GitHub CI can test only the **safety of the manual workflow, fail-closed project scope and key classes**. The live negative tests and real password-reset emails have not been run. This branch does not provision cloud resources, create test users, run the manual workflow or alter database policies.
+
+## P7 — GitHub Actions-only Auth acceptance, no VS Code needed
+
+- The owner requested that real tests use GitHub Actions only. The protected `galaxy-ephemeral-rls.yml` manual `TEST` workflow will create **two temporary** Galaxy-only email-confirmed Auth identities, execute `tests/live_rls_check.py` as normal users and delete the new Auth UUIDs in `finally`.
+- P7 adds a best-effort SIGTERM cancellation handler so ordinary GitHub cancellation invokes cleanup. Forced runner termination/SIGKILL can still leave orphan test accounts; review and manually remove only exact `galaxy-rls-*` users if that happens. Never clean unrelated clinic identities.
+- The GitHub connector can read/commit CI code but cannot add protected `dev` secrets or dispatch the manual workflow. Real sign-in/RLS results **remain unknown** until both `GALAXY_SUPABASE_ADMIN_KEY` and `GALAXY_SUPABASE_PUBLISHABLE_KEY` are stored through the GitHub environment settings and manual `TEST` is run. Mock success does not count as live login.
