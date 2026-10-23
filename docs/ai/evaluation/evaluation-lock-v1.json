@@ -1,0 +1,28 @@
+{
+  "evaluation_lock": "galaxy-v1-2026-10-23",
+  "source_reference": "WineShopPOS golden-owner-assistant-v1 + quality-gates-v1, adapted to distinct GenAI-Galaxy topics",
+  "dataset_version": "galaxy-golden-v1",
+  "dataset_path": "docs/ai/evaluation/golden-galaxy-v1.jsonl",
+  "policy_path": "docs/ai/evaluation/quality-gates-galaxy-v1.json",
+  "case_count": 10,
+  "evaluator_roles": {
+    "runtime_feedback": "Galaxy model_review using Azure OpenAI deployment from protected dev settings",
+    "independent_gate": "separate externally-scored evaluator results; no live judge executed yet"
+  },
+  "metrics": {
+    "model_reported": [
+      "accuracy_0_100",
+      "clarity_0_100"
+    ],
+    "independent_required": [
+      "groundedness_1_5",
+      "relevance_1_5",
+      "coherence_1_5",
+      "factual_accuracy_1_5"
+    ]
+  },
+  "score_provenance": "Only genuine independent scored evidence passes the manual release checker; no synthetic offline result should be presented as actual quality performance",
+  "trace_transport": "Azure Functions structured stdout + X-Galaxy-Trace-Id only; no Azure Monitor/App Insights resources or verified trace ingestion",
+  "protection": "No raw answers, questions, user ID, JWT, secrets, documents or provider response body in logs",
+  "deployment_status": "source_only_no_live_metric_claim"
+}
