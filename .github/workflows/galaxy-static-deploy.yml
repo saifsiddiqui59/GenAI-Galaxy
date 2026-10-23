@@ -8,6 +8,11 @@ on:
         description: 'Type DEPLOY to publish approved public static assets to the existing Galaxy storage account'
         type: string
         required: true
+      enable_evaluator:
+        description: 'AI_READY requires successful live Auth+AI smoke on the same main commit'
+        type: string
+        required: false
+        default: 'DISABLED'
 
 permissions:
   contents: read
@@ -87,6 +92,32 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Require verified live AI smoke before enabling public AI evaluator
+        if: inputs.enable_evaluator == 'AI_READY'
+        shell: bash
+        env:
+          GH_TOKEN: \${{ github.token }}
+          RELEASE_SHA: \${{ github.sha }}
+        run: |
+          set -euo pipefail
+          count="$(gh run list -R saifsiddiqui59/GenAI-Galaxy \
+            --workflow galaxy-ephemeral-live-ai.yml --branch main \
+            --event workflow_dispatch --limit 25 --json conclusion,headSha \
+            -q "[.[] | select(.conclusion == \"success\" and .headSha == \"$RELEASE_SHA\")] | length")"
+          [[ "$count" =~ ^[0-9]+$ && "$count" -gt 0 ]] || {
+            echo '::error::No successful hosted AI smoke on the current Galaxy commit'
+            exit 1
+          }
+          python - <<'PY'
+          from pathlib import Path
+          path=Path("runtime-config.js")
+          s=path.read_text()
+          old="window.GALAXY_EVALUATOR_URL='';"
+          assert s.count(old) == 1, "Evaluator config has unexpected contents"
+          path.write_text(s.replace(old,
+              "window.GALAXY_EVALUATOR_URL='https://gengalaxy-p3-1429841605.azurewebsites.net/api/practice/evaluate';"))
+          PY
+
       - name: Upload only allowlisted frontend assets to existing static website
         shell: bash
         run: bash scripts/deploy_existing_static.sh
