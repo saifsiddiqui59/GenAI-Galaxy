@@ -97,8 +97,8 @@ jobs:
         if: inputs.enable_evaluator == 'AI_READY'
         shell: bash
         env:
-          GH_TOKEN: \${{ github.token }}
-          RELEASE_SHA: \${{ github.sha }}
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
           count="$(gh run list -R saifsiddiqui59/GenAI-Galaxy \
