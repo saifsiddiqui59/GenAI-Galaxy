@@ -26,7 +26,7 @@
   const t=topic||{},l=lesson||{},clean=compact(answer),past=Array.isArray(used)?used.filter(x=>typeof x==='string').slice(-20):[];
   const seen=new Set([...past,currentQuestion].map(normalize).filter(Boolean));
   const bank=questionBank(t,l),novel=bank.find(q=>!seen.has(normalize(q)));
-  if(round>5)return {kind:'complete',text:'Five interview questions completed. Review your report before another session.',factualGrade:false};
+  if(round>=5)return {kind:'complete',text:'Five interview questions completed. Review your report before another session.',factualGrade:false};
   if(!clean||/^(i (do not|don't|dont) know|no idea|not sure)$/i.test(clean))
    return {kind:'teach',text:inRange(l.simple||t.summary||'Read the topic explanation first.',800),example:inRange(l.example||'',600),
       nextQuestion:novel||bank[0],factualGrade:false};
