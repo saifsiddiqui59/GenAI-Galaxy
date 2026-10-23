@@ -1,0 +1,106 @@
+name: Galaxy P36 existing backend contextual AI release
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        type: string
+        required: true
+        description: 'Type PUBLISH_GALAXY_P36_API to deploy code only to existing Flex function'
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  validate:
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'PUBLISH_GALAXY_P36_API') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 143 &&
+        github.event.comment.user.id == 80577424 && github.event.comment.body == 'PUBLISH_GALAXY_P36_API'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Exact backend source and fail-closed context tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git hash-object api/core.py)" == 'd3edd5b2574933f2c5ef5ecaed80598266d5efd4' ]] || exit 1
+          [[ "$(git hash-object api/function_app.py)" == '09b27c79684c7b73c5a162d6d30eb71ddc3b7a13' ]] || exit 1
+          python -m unittest discover -s tests -p 'test_p36_interview_history.py' -v
+          python -m unittest discover -s tests -p 'test_consumption_security.py' -v
+          python -m unittest discover -s tests -p 'test_api_core.py' -v
+          python -m py_compile api/core.py api/function_app.py
+  deploy:
+    needs: validate
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'PUBLISH_GALAXY_P36_API') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 143 &&
+        github.event.comment.user.id == 80577424 && github.event.comment.body == 'PUBLISH_GALAXY_P36_API'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: galaxy-existing-function-backend
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify OIDC and code allowlist
+        shell: bash
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          TENANT: ${{ secrets.AZURE_TENANT_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || exit 1
+          [[ "$SUBSCRIPTION" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || exit 1
+          [[ -n "$TENANT" ]] || exit 1
+          [[ "$(git hash-object api/core.py)" == 'd3edd5b2574933f2c5ef5ecaed80598266d5efd4' ]] || exit 1
+          [[ "$(git hash-object api/function_app.py)" == '09b27c79684c7b73c5a162d6d30eb71ddc3b7a13' ]] || exit 1
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Verify existing Galaxy-only pay-per-use Function
+        shell: bash
+        run: |
+          set -euo pipefail
+          RG='GenAI_Galaxy'; FN='gengalaxy-p3-1429841605'
+          id="$(az functionapp show -g "$RG" -n "$FN" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
+          ready="$(az resource show -g "$RG" -n "$FN" --resource-type Microsoft.Web/sites --query properties.functionAppConfig.scaleAndConcurrency.alwaysReady -o json | tr -d '[:space:]')"
+          [[ "$ready" == '[]' || "$ready" == 'null' ]] || { echo '::error::Unexpected always-ready workers; release denied'; exit 1; }
+          echo 'Existing dedicated Galaxy consumption backend verified, no provisioning or settings changes.'
+      - name: Deploy P36 backend source only
+        uses: Azure/functions-action@v1
+        with:
+          app-name: gengalaxy-p3-1429841605
+          package: api
+          remote-build: true
+      - name: Reject unauthenticated evaluation without spending model tokens
+        shell: bash
+        run: |
+          set -euo pipefail
+          url='https://gengalaxy-p3-1429841605.azurewebsites.net/api/practice/evaluate'
+          for attempt in 1 2 3 4 5; do
+            status="$(curl -sS --connect-timeout 8 --max-time 20 -o /dev/null -w '%{http_code}' -X POST "$url" -H 'Content-Type: application/json' -d '{"question":"Explain RAG","response":"Retrieval improves factual grounding by passing relevant reference documents into the generation context."}' || true)"
+            if [[ "$status" == '401' ]]; then
+              echo 'P36 API rejected unauthenticated request before quota/model; no paid AI call.'
+              exit 0
+            fi
+            sleep 5
+          done
+          echo '::error::Backend unauthorized smoke did not return expected HTTP 401'
+          exit 1
+      - name: Azure logout
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
