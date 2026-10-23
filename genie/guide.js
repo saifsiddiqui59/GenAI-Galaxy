@@ -18,6 +18,7 @@
   var previousFocus = null;
   var action = null;
   var accountKey = '';
+  var seenThisPage = new Set(); // Fallback for opaque-origin/private-storage browsers.
   var palette = ['#b6a0ff','#82dce9','#f8bd84','#8ce7bd','#ee9cc3','#f5dc91'];
   var svgNS = 'http://www.w3.org/2000/svg';
   function localDay() {
@@ -31,9 +32,11 @@
     return 'genai_galaxy_guide_v1_'+(h>>>0).toString(36);
   }
   function getSeen(key) {
+    if (seenThisPage.has(key+'@'+localDay())) return true;
     try { return localStorage.getItem(key)===localDay(); } catch (_) { return false; }
   }
   function markSeen(key) {
+    seenThisPage.add(key+'@'+localDay());
     try { localStorage.setItem(key,localDay()); } catch (_) {}
   }
   function reduced() {
