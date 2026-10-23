@@ -15,6 +15,7 @@ ctx.__topics=topics;ctx.__lessons=lessons;
 vm.runInContext('render=()=>{};stopVoice=()=>{};saveProgress=async()=>true;state.topics=__topics;state.lessons=__lessons;state.current=__topics[0];state.progress={};',ctx);
 const get=code=>vm.runInContext(code,ctx);
 const set=code=>vm.runInContext(code,ctx);
+async function run(){
 set('startMockSession()');
 assert.equal(get('state.session.done'),0);
 assert.equal(get('state.session.limit'),5);
@@ -33,10 +34,9 @@ assert.equal(get('state.sessionReport.answered'),5);
 assert.equal(get('state.sessionReport.modelReviewed'),0);
 assert.equal(get('state.sessionReport.skipped'),0);
 set('startMockSession()');
-async function skipFive(){for(let i=0;i<5;i++){set('state.feedback=null;state.progress={};');await set('advanceTopic()');}}
+for(let i=0;i<5;i++){set('state.feedback=null;state.progress={};');await set('advanceTopic()');}
 
-// async skip regression is run under a separate function to keep test synchronous
-assert.equal(typeof get('advanceTopic'),'function');
+assert.equal(get('state.sessionReport.skipped'),5);
 assert.equal(get('state.sessionReport.done'),5);
 const l={simple:'Tokenization splits input into model tokens.',keywords:['token','context'],followups:['Why do tokens impact context windows?']};
 const t={title:'Tokens',question:'What is a token?'};
@@ -51,3 +51,6 @@ assert.equal(signals.signals.example,true);
 assert.equal(signals.signals.explanation,true);
 assert.equal(coach.nextTurn({topic:t,lesson:l,round:6}).kind,'complete');
 console.log('P34 mock five-round / answer-aware follow-ups passed with zero network or AI calls');
+
+}
+run().catch(err=>{console.error(err);process.exitCode=1});
