@@ -28,7 +28,20 @@ export function advanceSkeletonX(phase,elapsed,smallScreen=false){
 function SkeletonModel({phase='idle'}){
  const source=import.meta.env.BASE_URL+'models/skeleton/Skeleton.fbx';
  const rootFBX=useLoader(FBXLoader,source);
- const instance=useMemo(()=>cloneSkinnedSkeleton(rootFBX),[rootFBX]);
+ const instance=useMemo(()=>{
+   const model=cloneSkinnedSkeleton(rootFBX);
+   model.updateMatrixWorld(true);
+   const bounds=new THREE.Box3().setFromObject(model);
+   const size=bounds.getSize(new THREE.Vector3());
+   const center=bounds.getCenter(new THREE.Vector3());
+   // FBX character scale varies by exporter (centimeters/meters).
+   // Normalize by actual skinned geometry bounds, never a guessed .012.
+   const height=Number.isFinite(size.y)&&size.y>0.01?size.y:170;
+   const factor=3.2/height;
+   model.scale.setScalar(factor);
+   model.position.set(-center.x*factor,-bounds.min.y*factor,-center.z*factor);
+   return model;
+ },[rootFBX]);
  const {actions,names}=useAnimations(rootFBX.animations,instance);
  const holder=useRef(null),elapsed=useRef(0),previous=useRef(phase);
  // Adapted from MIT-licensed 3merillon CharacterController mobile smoothing.
@@ -78,7 +91,7 @@ function SkeletonModel({phase='idle'}){
  });
  // FBX can have drastically different authoring scale; geometry comes from the
  // external asset and is not replaced by a custom mesh.
- return <group ref={holder} position={[-5.7,narrow?-1.55:-2.35,3.2]} scale={narrow?.006:.012}>
+ return <group ref={holder} position={[-5.7,narrow?-1.95:-2.35,4.2]} scale={narrow?.65:1}>
    <primitive object={instance}/>
    <pointLight position={[0,120,120]} intensity={8} color="#e9d2ff" distance={400}/>
  </group>;
