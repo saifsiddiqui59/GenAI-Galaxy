@@ -19,7 +19,7 @@
 }
 /* The character and interactive controls sit above the decorative layer. */
 #genie-guide .genie-stage {isolation:isolate}
-#genie-guide .genie-stage > :not(.genie-cosmic-polish) {position:relative;z-index:1}
+#genie-guide .genie-illustration,#genie-guide .genie-eyebrow,#genie-guide .genie-heading,#genie-guide .genie-mastered,#genie-guide .genie-world-name,#genie-guide .genie-message,#genie-guide .genie-continue {z-index:1}
 #genie-guide .genie-illustration {filter:drop-shadow(0 12px 25px rgba(117,100,249,.17))}
 #genie-guide.no-motion .genie-cosmic-particle {animation:none;opacity:.33}
 @media (prefers-reduced-motion:reduce) {
