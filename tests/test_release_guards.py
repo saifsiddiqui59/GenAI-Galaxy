@@ -106,7 +106,10 @@ class ReleaseGuardTests(unittest.TestCase):
 
     def test_live_browser_acceptance_rejects_stale_deploys(self):
         hosted_test = (ROOT / 'tests/live_site_browser_check.py').read_text()
-        self.assertIn('sha256(downloaded).digest() == sha256(local).digest()', hosted_test)
+        self.assertIn('verify_public_asset(path, downloaded, local)', hosted_test)
+        policy = (ROOT / 'tests/public_asset_policy.py').read_text()
+        self.assertIn('sha256(downloaded).digest() == sha256(local).digest()', policy)
+        self.assertIn('hosted_text == expected', policy)
         self.assertIn('assert len(hosted_lessons) == 245', hosted_test)
         self.assertIn('assert mapped == 246', hosted_test)
         self.assertIn('PUBLIC_ASSETS', hosted_test)
