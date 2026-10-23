@@ -28,20 +28,22 @@ create table if not exists galaxy_private.signup_approvals (
  reason text
 );
 revoke all on galaxy_private.signup_approvals from public,anon,authenticated;
--- Existing enrolled people are preserved; new signups go to review.
-insert into galaxy_private.signup_approvals(user_id,status,decided_at,decided_by,reason)
-select u.id,'APPROVED',now(),u.id,'Grandfathered existing Galaxy user'
-from auth.users u on conflict(user_id) do nothing;
-create or replace function galaxy_private.signup_review_queue()
-returns trigger language plpgsql security definer set search_path=''
-as $$ begin
- insert into galaxy_private.signup_approvals(user_id) values(new.id) on conflict do nothing;
- return new;
+-- Do not touch global auth.users: this Supabase project is shared with other apps.
+-- Only users explicitly entering Galaxy may request access; no global signup trigger.
+create or replace function public.galaxy_request_access()
+returns jsonb language plpgsql security definer set search_path=''
+as $$
+declare v_status text;
+begin
+ if auth.uid() is null or coalesce((auth.jwt()->>'is_anonymous')::boolean,false)
+ then raise exception 'LOGIN_REQUIRED' using errcode='42501'; end if;
+ insert into galaxy_private.signup_approvals(user_id) values(auth.uid())
+ on conflict(user_id) do nothing;
+ select status into v_status from galaxy_private.signup_approvals where user_id=auth.uid();
+ return jsonb_build_object('status',v_status);
 end $$;
-revoke all on function galaxy_private.signup_review_queue() from public,anon,authenticated;
-drop trigger if exists galaxy_queue_new_signup on auth.users;
-create trigger galaxy_queue_new_signup after insert on auth.users
-for each row execute function galaxy_private.signup_review_queue();
+revoke all on function public.galaxy_request_access() from public,anon;
+grant execute on function public.galaxy_request_access() to authenticated;
 -- Gate deliberately starts OFF; promotion to enforced admission requires tested release.
 create table if not exists galaxy_private.approval_settings (
  singleton boolean primary key default true check(singleton),
