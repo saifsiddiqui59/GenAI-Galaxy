@@ -32,8 +32,8 @@ const PREVIEW_PROGRESS=SHOW_SAMPLE?fakeProgress():{};
 const TOPIC_KEYS=new Set(TOPICS.map(worldKey));
 export function studyLink(index){
  const url=new URL(window.location.href);
- const prefix='/previews/galaxy-3d-v2/';
- if(url.pathname.includes(prefix)){
+ const prefix=url.pathname.match(/^\/previews\/galaxy-3d-v[0-9]+\//)?.[0];
+ if(prefix){
    if(!validWorld(index))throw Error('Invalid learning world');
    return new URL(prefix+'lesson/index.html?galaxyWorld='+index,url.origin).href;
  }
