@@ -147,3 +147,8 @@
 - Use an original grouped 2D SVG Genie character and native browser keyframes inspired by MIT Tween.js/easing and public SVG animation concepts, not copied assets, CDNs, new runtimes, or paid AI generation. Animation UI only; preserve existing 17 worlds/topic keys, provider credentials and study data boundaries.
 - Only full-chapter status-2 mastery adds a mini planet to the genie sack; source is the verified signed-in progress snapshot. The recommended chapter is presented for the next eligible study topic; no mastery claims from provisional scoring. User can skip, use Escape, and disable animation via motion/reduced-motion settings.
 - Feature branch and PR review do not authorize production website deployment, Supabase writes, or Azure provisioning; existing manually approved `dev` gates remain.
+
+
+## P14 Genie cinematic design — zero-runtime-cost integration
+- Prefer original, optional 2D SVG/CSS/WAAPI character/planet effects over copying GitHub assets or introducing heavyweight 3D engines for the baseline. Separate modules into Genie visual layer, cancellable handoff, pure progress model, and independent QA. Keep legacy 17 planets and topic keys.
+- UI must never grant mastery, use private progress outside verified owner-scoped snapshot, make paid calls, or block navigation on animation failure. Respect skip, reduced motion, one-session replay fallback and keyboard focus. Merge/deployment remain coordinator/release approval gates.
