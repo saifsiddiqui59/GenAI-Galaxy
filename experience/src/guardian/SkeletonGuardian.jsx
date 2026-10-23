@@ -121,7 +121,7 @@ function SkeletonModel({phase='idle',rigPoseRef}){
     holder.current.rotation.y=THREE.MathUtils.damp(holder.current.rotation.y,-.17,4,dt);
     // Capture actual animated bone positions for visual QA; no fake IK claims.
     instance.updateMatrixWorld(true);
-    const ik=phase==='offering'?poseTwoHandOffering(chains,rig.waist,narrow?3:5):null;
+    const ik=phase==='offering'?poseTwoHandOffering(chains,rig.waist,narrow?3:5,narrow?.58:1):null;
     if(rigPoseRef){
       const hand=gripMidpoint(rig,THREE.Vector3);
       const hip=waistPosition(rig,THREE.Vector3);
