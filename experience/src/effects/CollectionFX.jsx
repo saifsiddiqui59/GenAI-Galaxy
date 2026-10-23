@@ -61,7 +61,7 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
    </mesh>
  </group>;
 }
-function Satchel({onOpenSack,count,bagPosition,rigPoseRef}){
+function Satchel({onOpenSack,count,bagPosition,rigPoseRef,compact}){
  const bag=useRef();
  useFrame((state)=>{
   if(!bag.current)return;
@@ -69,7 +69,7 @@ function Satchel({onOpenSack,count,bagPosition,rigPoseRef}){
   if(hip)bag.current.position.copy(hip).add(new THREE.Vector3(.38,-.25,.16));
   bag.current.rotation.z=Math.sin(state.clock.elapsedTime*1.7)*.035;
  });
- return <group ref={bag} position={bagPosition}
+ return <group ref={bag} position={bagPosition} scale={compact?.78:1}
   onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
    <mesh scale={[.37,.30,.24]}>
       <sphereGeometry args={[1,28,22]}/>
@@ -83,6 +83,7 @@ function Satchel({onOpenSack,count,bagPosition,rigPoseRef}){
       <sphereGeometry args={[1,16,16]}/>
       <meshStandardMaterial color={count>0?"#f7d99e":"#6d4b5c"} emissive="#a77bbf" emissiveIntensity={count>0?.8:.05}/>
    </mesh>
+   <mesh position={[-.3,.27,-.03]} rotation={[0,0,-.45]} scale={[.07,.42,.08]}><boxGeometry args={[1,1,1]}/><meshStandardMaterial color="#704a38" roughness={.92}/></mesh>
    <mesh position={[0,.17,.20]} scale={[.37,.115,.08]}><sphereGeometry args={[1,18,12]}/><meshStandardMaterial color="#755044" roughness={.87}/></mesh>
    <pointLight color="#dfb5ff" intensity={count>0?1.5:.25} distance={3}/>
  </group>;
@@ -107,12 +108,12 @@ function OfferingOrb({worldIndex,phase,bagPosition,rigPoseRef,compact}){
      <mesh><sphereGeometry args={[.42,42,32]}/>
        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.1}
           metalness={.22} roughness={.35} toneMapped={false}/></mesh>
-     <mesh rotation={[1.2,.2,.6]}>
+     {!compact&&<mesh rotation={[1.2,.2,.6]}>
        <torusGeometry args={[.57,.017,8,64]}/>
-       <meshBasicMaterial color="#fbe7a8" transparent opacity={.9}/></mesh>
-     <mesh rotation={[-.8,.6,1.1]}>
+       <meshBasicMaterial color="#fbe7a8" transparent opacity={.9}/></mesh>}
+     {!compact&&<mesh rotation={[-.8,.6,1.1]}>
        <torusGeometry args={[.65,.012,7,64]}/>
-       <meshBasicMaterial color="#b1f1ff" transparent opacity={.75}/></mesh>
+       <meshBasicMaterial color="#b1f1ff" transparent opacity={.75}/></mesh>}
      <pointLight intensity={8} color={color} distance={5}/>
    </group>
  </group>;
@@ -122,7 +123,7 @@ export default function CollectionFX({completed=[],reducedMotion=false,epoch=0,o
  const size=useThree(state=>state.size);
  const bagPosition=size.width<700?[-.75,-.82,3.7]:BAG_POSITION;
  return <>
-   <Satchel onOpenSack={onOpenSack} count={completed.length} bagPosition={bagPosition} rigPoseRef={rigPoseRef}/>
+   <Satchel onOpenSack={onOpenSack} count={completed.length} bagPosition={bagPosition} rigPoseRef={rigPoseRef} compact={size.width<680}/>
    <OfferingOrb phase={phase} worldIndex={nextWorldIndex} bagPosition={bagPosition} rigPoseRef={rigPoseRef} compact={size.width<680}/>
    {completed.filter(w=>Number.isInteger(w.index)&&w.index>=0&&w.index<17).slice(0,17).map((world,order)=>
      <CollectedOrb key={world.index} world={world} order={order}
