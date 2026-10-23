@@ -87,7 +87,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: galaxy-p15-3d-screenshots
-          path: preview-p15-*.png
+          path: |
+            preview-p15-*.png
+            preview-p19-*.png
           retention-days: 7
           if-no-files-found: ignore
   release-safety:
