@@ -32,5 +32,7 @@ class ThreeDIntegrationTests(unittest.TestCase):
  def test_no_generated_glb_committed_in_source(self):
   ignore=(XP/".gitignore").read_text()
   self.assertIn("public/models/guardian.glb",ignore)
-  self.assertFalse((XP/"public/models/guardian.glb").exists())
+  import subprocess
+  tracked=subprocess.run(['git','ls-files','experience/public/models'],cwd=ROOT,capture_output=True,text=True,check=True).stdout
+  self.assertNotIn('.glb',tracked) # A valid local build may contain ignored downloaded assets.
 if __name__=="__main__": unittest.main()

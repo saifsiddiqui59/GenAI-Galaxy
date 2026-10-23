@@ -11,3 +11,24 @@
   .planet-name{font-size:10px;line-height:1.25;max-width:112px}
   .galaxy-legend{bottom:12px;left:15px}
 }
+
+/* Only server-verified Galaxy platform administrators may see the control link. */
+.navlink[hidden]{display:none!important}
+
+/* P30 · Single-account, guest-optional login landing; existing Galaxy app preserved. */
+.entry-gate{position:fixed;inset:0;z-index:15;display:grid;grid-template-columns:minmax(0,1.08fr) minmax(360px,.92fr);background:#080d1e;color:#f1f5ff;overflow-y:auto}
+.entry-story{min-height:100vh;padding:clamp(30px,5vw,75px);display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden;background:radial-gradient(circle at 72% 35%,#322a7655 0,transparent 38%),radial-gradient(circle at 20% 78%,#1087a444 0,transparent 42%),linear-gradient(140deg,#0a0d28,#0c1834 55%,#10112b)}
+.entry-story:after{content:"";position:absolute;right:8%;top:20%;width:min(30vw,360px);aspect-ratio:1;border-radius:100%;background:radial-gradient(circle at 38% 35%,#70d3ff,#5349b1 47%,#191f54 69%);box-shadow:0 0 110px #7475ed65;opacity:.7;pointer-events:none}
+.entry-logo{position:relative;z-index:1;display:flex;gap:12px;align-items:center;font-size:21px;font-weight:800;letter-spacing:.04em}
+.entry-logo em{color:#b6aaff;font-style:normal}
+.entry-story-copy{position:relative;z-index:1;max-width:640px;margin:60px 0}
+.entry-story-copy h1{font-size:clamp(35px,4.5vw,65px);line-height:1.07;letter-spacing:-.04em;margin:15px 0 25px}
+.entry-story-copy p{font-size:16px;line-height:1.8;color:#b8c6e4;max-width:510px}
+.entry-proofs{display:flex;flex-wrap:wrap;gap:16px;margin-top:30px;color:#d6dcf2;font-size:13px}
+.entry-story small{position:relative;z-index:1;color:#b0bedc}
+.entry-form-area{display:grid;place-items:center;padding:36px;min-height:100vh;background:linear-gradient(160deg,#090e1e,#111a33)}
+.entry-card{width:min(100%,470px);display:flex;flex-direction:column;gap:17px;padding:clamp(22px,4vw,50px);border:1px solid #39466e;border-radius:22px;background:#151f39;box-shadow:0 30px 100px #0007}
+.entry-card h2{font-size:30px;margin:0}.entry-card p{line-height:1.7;color:#bcc8e0;margin:0}
+.entry-card .btn{width:100%;justify-content:center;min-height:48px}.entry-card .text-button{margin:0 auto;color:#c9bbff}
+.entry-gate.is-hidden{display:none!important}
+@media(max-width:850px){.entry-gate{grid-template-columns:1fr}.entry-story{min-height:270px;padding:28px}.entry-story-copy{margin:22px 0}.entry-story-copy h1{font-size:32px}.entry-story:after{right:0;top:12%;width:160px;opacity:.4}.entry-story small,.entry-proofs{display:none}.entry-form-area{min-height:0;padding:20px 18px 32px}.entry-card{padding:25px}}

@@ -1,49 +1,39 @@
-/* The 3D scene owns the background; this UI intentionally stays minimal. */
-.guardian-journey{position:absolute;inset:0;z-index:4;pointer-events:none;color:#f7f4ff;font-family:Inter,system-ui,sans-serif}
+.guardian-journey{position:absolute;inset:0;z-index:4;pointer-events:none;color:#f7f3ed}
 .guardian-journey button{pointer-events:auto;cursor:pointer;font:inherit}
-.guardian-journey-top{position:absolute;top:13%;left:max(22px,4vw);max-width:370px}
-.guardian-eyebrow,.guardian-label{font-size:11px;font-weight:800;letter-spacing:.2em;color:#85eff8}
-.guardian-journey h1{font-size:clamp(24px,2.7vw,35px);line-height:1.04;letter-spacing:-.045em;margin:13px 0 14px}
-.guardian-subtitle{color:#a3b4d9;font-size:14px}
-.guardian-mission{position:absolute;right:max(22px,4vw);top:10%}
-.guardian-sack{background:#151c45e8;border:1px solid #a6b6df8a;border-radius:17px;color:#ffe6a7;padding:13px 19px;box-shadow:0 10px 55px #0009}
-.guardian-sack-panel{position:absolute;top:55px;right:0;width:min(320px,90vw);max-height:50vh;overflow:auto;
- padding:16px;border-radius:17px;background:#080e28f4;border:1px solid #9382ce;box-shadow:0 19px 55px #000b;pointer-events:auto}
-.guardian-sack-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
-.guardian-sack-header button{background:transparent;color:white;border:0;padding:7px}
+.guardian-journey-top{position:absolute;top:15%;left:6%;max-width:420px}
+.guardian-eyebrow,.guardian-label{font-size:9px;font-weight:600;letter-spacing:.22em;color:#c7b283}
+.guardian-journey h1{font-family:Georgia,'Times New Roman',serif;font-size:clamp(36px,4.15vw,62px);line-height:1.04;letter-spacing:-.035em;font-weight:400;margin:20px 0 20px}
+.guardian-journey h1 em{font-weight:400;color:#d7c09a}
+.guardian-subtitle{color:#8998b3;font-size:12px;line-height:1.8;letter-spacing:.015em;max-width:260px}
+.guardian-mission{position:absolute;right:4.2%;top:29px}
+.guardian-sack{background:#101829a6;border:1px solid #ffffff22;border-radius:8px;color:#dbcaab;padding:12px 17px;font-size:11px!important}
+.guardian-sack>span{color:#e5c68b;margin-right:7px}
+.guardian-sack-panel{position:absolute;top:52px;right:0;width:min(320px,90vw);max-height:50vh;overflow:auto;padding:18px;border-radius:12px;background:#0a1123f8;border:1px solid #bfa77460;box-shadow:0 20px 80px #0009;pointer-events:auto}
+.guardian-sack-header{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:13px}
+.guardian-sack-header button{background:transparent;color:white;border:0;padding:7px;min-width:36px;min-height:36px}
 .guardian-sack-panel ul{list-style:none;padding:0;display:grid;gap:6px}
-.guardian-sack-panel li button{background:#1a224a;color:#fff;border:1px solid #434e81;border-radius:9px;width:100%;padding:10px;text-align:left}
-.guardian-gem{color:#f6d386;margin-right:9px}
-.guardian-collected{position:absolute;top:65%;left:29%;display:flex;gap:3px;max-width:170px;flex-wrap:wrap}
-.guardian-mini-world{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 32% 24%,white,hsl(var(--hue),75%,70%) 45%,#282c8c 86%);
- box-shadow:0 0 12px #a6b6ffb8;animation:planet-sack-in .48s both}
-.guardian-next{position:absolute;right:max(22px,6vw);bottom:12%;display:grid;gap:10px;max-width:330px}
-.guardian-next strong{font-size:clamp(20px,2.5vw,35px)}
-.guardian-accept{border:1px solid #bcb5fc;border-radius:15px;padding:16px 22px;color:white;
- background:linear-gradient(105deg,#6657c7,#9b72e0);font-weight:800!important}
-.guardian-skip,.guardian-replay{position:absolute;bottom:3%;border:0;background:#171e44cc;color:#dce5fc;border-radius:100px;padding:9px 14px}
-.guardian-skip{left:3%}.guardian-replay{right:3%}
-@keyframes planet-sack-in{0%{opacity:0;transform:translate(110px,-90px) scale(1.7)}100%{opacity:1;transform:none}}
-@media(max-width:700px){.guardian-journey-top{top:14%;max-width:81%}.guardian-journey h1{font-size:24px}
- .guardian-mission{right:12px;top:31%}.guardian-next{bottom:11%;right:16px;left:16px;max-width:unset}
- .guardian-collected{left:16%;top:58%}}
-@media(prefers-reduced-motion:reduce){.guardian-journey *{animation:none!important;transition:none!important}}
-
-@media(max-width:700px){.guardian-subtitle{display:none}.guardian-skip{left:auto;right:12px;bottom:auto;top:calc(31% + 104px)}.guardian-replay{right:12px;bottom:auto;top:calc(31% + 61px)}.guardian-accept{padding:12px 17px}}
-
-/* Mobile: place Replay/Skip above the content instead of over the satchel popup. */
+.guardian-sack-panel li button{background:#131f34;color:#dfe7f7;border:1px solid #ffffff18;border-radius:6px;width:100%;padding:12px;text-align:left;font-size:12px}
+.guardian-sack-panel p{font-size:12px;color:#9cabc2;line-height:1.7}.guardian-gem{color:#e4c68b;margin-right:10px}
+.guardian-next{position:absolute;right:6%;bottom:13%;display:grid;gap:12px;width:330px;padding:26px 0 0;border-top:1px solid #bfa77450}
+.guardian-label{display:flex;justify-content:space-between}.guardian-label span{color:#76859d}
+.guardian-next strong{font-family:Georgia,'Times New Roman',serif;font-size:32px;font-weight:400;letter-spacing:-.02em;line-height:1.15}
+.guardian-next p{font-size:11px;color:#8b9bb5;margin:0 0 5px;line-height:1.5}
+.guardian-accept{display:flex;justify-content:space-between;align-items:center;border:1px solid #efd6a4;border-radius:7px;padding:15px 18px;color:#161c28;background:#dec69c;font-size:12px!important;font-weight:650!important;box-shadow:0 6px 30px #e7bd6e0b}
+.guardian-accept:hover{background:#f0dab4}.guardian-accept span{font-size:18px;font-weight:400}
+.guardian-skip,.guardian-replay{position:absolute;bottom:29px;right:4.2%;border:1px solid #ffffff18;background:#0b1323a6;color:#96a4bc;border-radius:7px;padding:12px 14px;font-size:10px!important;min-height:40px}
+.guardian-live-status{position:absolute;left:32%;bottom:13%;transform:translateX(-50%);font-size:9px;letter-spacing:.09em;color:#92a3bc;text-align:center;max-width:260px;margin:0}
+.guardian-live-status::before{content:'';display:inline-block;width:4px;height:4px;border-radius:100%;background:#d5c292;margin-right:7px;box-shadow:0 0 12px #ddc79750}
+@media(max-width:1000px) and (min-width:701px){.guardian-next{right:4%;width:260px}.guardian-journey-top{left:5%;max-width:350px}.guardian-live-status{left:29%}}
 @media(max-width:700px){
- .guardian-journey-top{top:18%;}
- .guardian-mission{top:35%;}
- .guardian-replay{top:101px;bottom:auto;right:12px;font-size:10px;padding:8px 10px}
- .guardian-skip{top:101px;bottom:auto;left:12px;right:auto;font-size:10px;padding:8px 10px}
+ .guardian-journey-top{top:112px;left:22px;max-width:88%}.guardian-eyebrow{font-size:8px;margin:0}
+ .guardian-journey h1{font-size:35px;line-height:1.04;margin:12px 0}.guardian-subtitle{font-size:10px;line-height:1.5;margin:0;max-width:300px}
+ .guardian-mission{right:22px;top:19px}.guardian-sack{font-size:9px!important;padding:8px 10px;min-height:32px}.guardian-sack>span{margin-right:3px}
+ .guardian-sack-panel{top:43px;max-height:55dvh;width:300px}
+ .guardian-next{bottom:106px;left:22px;right:22px;width:auto;padding-top:16px;gap:9px}
+ .guardian-next strong{font-size:26px}.guardian-next p{display:none}.guardian-label{font-size:8px}
+ .guardian-accept{padding:12px 15px;min-height:44px;font-size:11px!important}
+ .guardian-skip,.guardian-replay{top:auto;bottom:77px;right:22px;padding:4px 8px;min-height:24px;font-size:8px!important}
+ .guardian-live-status{width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 }
-
-/* P21 real-device: keep the mastered-world inspector off the guardian's face. */
-@media(max-width:700px){.guardian-mission{top:29%;right:10px}.guardian-sack{padding:9px 12px;font-size:12px;border-radius:12px}.guardian-sack-panel{top:44px;right:0;max-height:44vh}}
-
-/* P23 visual QA at 390px: controls must not collide with each other or the heading. */
-@media(max-width:700px){
- .guardian-replay{top:100px;right:12px;left:auto}
- .guardian-skip{top:132px;right:12px;left:auto}
-}
+@media(max-width:700px) and (max-height:780px){.guardian-journey h1{font-size:31px}.guardian-subtitle{max-width:270px}}
+@media(max-height:760px) and (min-width:701px){.guardian-journey h1{font-size:45px}.guardian-next{bottom:14%;gap:9px}.guardian-next strong{font-size:28px}.guardian-subtitle{font-size:11px}}

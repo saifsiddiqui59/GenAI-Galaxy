@@ -155,3 +155,7 @@
 - Derive 3D satchel and offered planet positions from actual animated bone world transforms, fail closed when required anchors absent. CCD IK applied in offering phase; screenshot review remains gate.
 - Keep mobile GPU cost bounded with scaled galaxy and small deterministic procedurally textured planets; no external paid textures or model calls.
 - Only isolated versioned Azure prefix for preview, protected manual workflow and immutable tested SHA. Existing lesson data and public homepage remain intact.
+
+## V6 — coherent animation and isolated art release
+
+Use the existing verified KayKit CC0 rig, immutable asset pins, and original procedural textures. A shared simulation clock controls real clips, distance-based walk cadence, palm IK and prop contact/release. Renderer demand/30fps/hidden-tab pause avoids unnecessary GPU use. Ship a new fixed preview prefix on existing storage only, with source CI, per-file SHA256, unchanged homepage hash and hosted screenshots; never auto-deploy on push or merge unfinished art to main.

@@ -30,3 +30,7 @@ Auth transitions increment a client-local epoch. Each async Supabase progress/at
 ## M7b — opt-in two-account RLS acceptance
 
 `tests/live_rls_check.py` is a separate GitHub Actions manual-only workflow with protected `dev` environment, exact `TEST` acknowledgement and credentials for two existing consented Galaxy auth identities. Uses publishable key + per-user Supabase JWT only. Exercises scoped progress, attempts, metadata and private Storage with randomized temporary fixtures and own-user cleanup. No service-role escalation, new accounts, non-Galaxy tables, Azure backend or automatic PR/push cloud operations.
+
+## V6 isolated 3D presentation
+
+React Three Fiber uses a demand loop capped at 30fps. Frame priority -3 advances one simulation clock, -2 samples the original KayKit AnimationMixer and solves real bones, -1 positions the palm-attached miniature/open satchel/offer. DOM reads the same clock. Source-clip contact determines the miniature staging point; attachment persists until explicit release. Current main lesson features are staged into the isolated nested lesson directory. Auth/mastery interfaces and 17 chapter identifiers are unchanged.

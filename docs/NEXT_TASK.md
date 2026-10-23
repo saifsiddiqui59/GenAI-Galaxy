@@ -193,3 +193,13 @@ In VS Code Git Bash, from the Galaxy main branch run bash scripts/galaxy_p3_one_
 2. Human visual acceptance: full-body skeleton visible, arm-to-planet contact with original-bone IK, attached small waist bag, hand-waypoint miniature pickup, all 17 textured planets, nested eight-section lesson, warp.
 3. Confirm production authenticated owner-scoped mastery with consented Galaxy test accounts; do not infer mastery from static screenshots or synthetic demo.
 4. Prepare manual protected isolated Azure /previews/galaxy-3d-v3 deployment pinned to reviewed source SHA; never overwrite root or claim hosted preview before remote SHA/HTTP verification.
+## P21 V4 preview — follow-up acceptance gates
+
+1. Review the real [isolated KayKit preview](https://gengalaxy1429841605.z29.web.core.windows.net/previews/galaxy-3d-v4/index.html?demo=1) at 1440x900 and 390x844 on physical devices; do not call stylized low-poly art photoreal.
+2. Validate natural character turning, repeated miniature planet pickup and sack deposit, exact hand alignment and mobile GPU frame rate with manual screen recording before merging source PR #96.
+3. Use consented Galaxy test accounts for authentic progress and two-user isolation validation; demo progress is not authentic mastery.
+4. Keep root $web/index.html unchanged; release future approved revisions under a new preview prefix with an immutable tested SHA.
+
+## Current V6 priority — 24 October 2026
+
+Finish exact-source CI and screenshot review, publish ONLY the reviewed V6 prefix through the protected existing Azure identity, verify every staged file and unchanged homepage hash, then run hosted Chromium and retain real desktop/mobile PNGs. Keep unfinished visual PRs #96/#105 and V6 draft; do not merge visual code into production. Physical-device GPU performance and consented signed-in V6 acceptance remain separate from sample-mode QA.

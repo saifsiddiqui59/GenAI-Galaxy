@@ -38,7 +38,7 @@ jobs:
           bash -n scripts/checkpoint.sh scripts/deploy_azure_static.sh scripts/publish_github.sh
       - name: Build offline-ready 3D experience with pinned CC0 Guardian
         run: |
-          npm install --prefix experience --no-audit --no-fund
+          npm ci --prefix experience --no-audit --no-fund
           npm run --prefix experience build
           test -f experience/dist/index.html
           test -f experience/dist/models/guardian.glb
@@ -78,19 +78,22 @@ jobs:
           node-version: '22'
       - name: Build real 3D preview for Chromium acceptance
         run: |
-          npm install --prefix experience --no-audit --no-fund
+          npm ci --prefix experience --no-audit --no-fund
           npm run --prefix experience build
-      - name: Test live Chromium 3D character, satchel and warp (synthetic only)
-        run: python tests/p15_experience_browser.py
+      - name: Stage V6 with the current isolated lesson assets
+        run: GALAXY_SOURCE_ROOT="$PWD" GALAXY_STAGE="$PWD/artifacts/p35-stage/previews/galaxy-3d-v6" bash scripts/p16/stage-preview.sh
+      - name: Render V6 entrance, real palm contact, deposit and offering in Chromium
+        run: python tests/p35_v6_browser.py
       - name: Attach synthetic deep-space screenshots for review
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: galaxy-p15-3d-screenshots
+          name: galaxy-v6-visual-evidence
           path: |
             preview-p15-*.png
             preview-p19-*.png
             preview-p23-*.png
+            artifacts/p35-v6/
           retention-days: 7
           if-no-files-found: ignore
   release-safety:

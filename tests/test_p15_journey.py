@@ -14,5 +14,6 @@ class JourneyTests(unittest.TestCase):
   s=(ROOT/"experience/src/journey/GuardianJourney.jsx").read_text()
   for v in ("aria-expanded", "aria-controls", "onSelectCompleted", "onAccept", "Skip introduction", "Replay guardian entrance", "reducedMotion"):
    self.assertIn(v,s)
-  self.assertIn("performance.now()",s)
+  self.assertIn("clockRef.current.ms",s)
+  self.assertNotIn("performance.now()",s)
 if __name__=="__main__":unittest.main()

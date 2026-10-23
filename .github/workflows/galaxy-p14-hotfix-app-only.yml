@@ -1,0 +1,141 @@
+name: Galaxy P14 pinned frontend-only hotfix (manual, no AI calls)
+# Manually requested by the owner. NEVER run on pushes or pull requests.
+# Does not provision resources or update backend, model, Supabase, or secrets.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type PUBLISH_P14_APP_ONLY to replace only the approved existing $web/app.js'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  validate:
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' &&
+      github.ref == 'refs/heads/main' &&
+      inputs.confirm == 'PUBLISH_P14_APP_ONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Fail closed unless checked-out app.js is the exact P14-reviewed bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          PINNED_COMMIT='f93af599bdbb1409742323f06a5a9307bfe9ec7b'
+          PINNED_BLOB='04f1e03ee347d51d88f6bf942a3b8921d02e5c65'
+          git merge-base --is-ancestor "$PINNED_COMMIT" HEAD || {
+            echo '::error::Reviewed P14 commit is not in this branch'; exit 1;
+          }
+          [[ "$(git rev-parse HEAD:app.js)" == "$PINNED_BLOB" ]] || {
+            echo '::error::app.js diverged since reviewed P14 release; abort'; exit 1;
+          }
+          node --check app.js
+          node tests/test_engine.cjs
+          echo 'P14 app.js bytes and offline mocked model/local evaluation tests passed.'
+  publish:
+    needs: validate
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' &&
+      github.ref == 'refs/heads/main' &&
+      inputs.confirm == 'PUBLISH_P14_APP_ONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: dev
+    concurrency:
+      group: galaxy-existing-public-static-release
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require only approved Galaxy OIDC and storage account
+        shell: bash
+        env:
+          CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          STORAGE: ${{ vars.GALAXY_STORAGE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          [[ "${CLIENT_ID,,}" == "737d67b7-4984-48bb-bb1f-5f62599f645c" ]] || exit 1
+          [[ -n "$TENANT_ID" && -n "$SUBSCRIPTION_ID" ]] || exit 1
+          [[ "$STORAGE" == "gengalaxy1429841605" ]] || exit 1
+          [[ "$(git rev-parse HEAD:app.js)" == "04f1e03ee347d51d88f6bf942a3b8921d02e5c65" ]] || exit 1
+      - name: Azure login with pre-existing restricted workload identity
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Publish only app.js, verifying original public bytes before overwrite
+        shell: bash
+        run: |
+          set -euo pipefail
+          STORAGE='gengalaxy1429841605'
+          RG='GenAI_Galaxy'
+          ORIGINAL_APP_BLOB='bcfbbfcf638b2844d14703cff69306593223ea4e'
+          P14_APP_BLOB='04f1e03ee347d51d88f6bf942a3b8921d02e5c65'
+          resource="$(az storage account show --name "$STORAGE" --resource-group "$RG" --query id -o tsv)"
+          [[ "$resource" == */resourceGroups/"$RG"/providers/Microsoft.Storage/storageAccounts/"$STORAGE" ]] || exit 1
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          az storage blob download --account-name "$STORAGE" \
+            --container-name '$web' --name app.js --auth-mode login \
+            --file "$tmp/current.js" --overwrite true --only-show-errors >/dev/null
+          [[ "$(git hash-object "$tmp/current.js")" == "$ORIGINAL_APP_BLOB" ]] || {
+            echo '::error::Live app.js is no longer the verified pre-P14 version. Aborting to avoid overwriting another release.'
+            exit 1
+          }
+          [[ "$(git hash-object app.js)" == "$P14_APP_BLOB" ]] || exit 1
+          az storage blob upload --account-name "$STORAGE" \
+            --container-name '$web' --name app.js --file app.js \
+            --auth-mode login --overwrite true --only-show-errors \
+            --content-type 'application/javascript' \
+            --content-cache-control 'no-cache, max-age=0' >/dev/null
+          az storage blob download --account-name "$STORAGE" \
+            --container-name '$web' --name app.js --auth-mode login \
+            --file "$tmp/after.js" --overwrite true --only-show-errors >/dev/null
+          [[ "$(git hash-object "$tmp/after.js")" == "$P14_APP_BLOB" ]] || {
+            echo '::error::Post-publish Blob byte verification failed'; exit 1;
+          }
+          echo 'P14 app.js-only public release verified. No paid model calls.'
+      - name: Logout of Azure
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
+  live-playwright:
+    needs: publish
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' &&
+      github.ref == 'refs/heads/main' &&
+      inputs.confirm == 'PUBLISH_P14_APP_ONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install Playwright Chromium
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install chromium
+      - name: Verify deployed P14 UI on desktop, mobile and reduced-motion, with model calls blocked
+        run: python tests/p14_live_guest_smoke.py
+      - name: Upload nonprivate guest browser screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: galaxy-p14-public-guest-${{ github.run_id }}
+          path: artifacts/galaxy-p14-*.png
+          if-no-files-found: warn
+          retention-days: 2

@@ -14,3 +14,4 @@ galaxy-reduced-motion.png
 # Temporary publish/coverage output
 *.log
 .coverage
+artifacts/

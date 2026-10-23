@@ -1,0 +1,49 @@
+name: Galaxy P33 zero-cost hosted Auth and admin isolation verification
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        type: string
+        required: true
+        description: 'Type TEST to create and delete two disposable Galaxy Auth users'
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  hosted-rls:
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' &&
+      github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'TEST') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 125 &&
+        github.event.comment.user.id == 80577424 && github.event.comment.body == 'VERIFY_GALAXY_P33_AUTH'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: dev
+    concurrency:
+      group: galaxy-p33-disposable-hosted-auth
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check exact dedicated Galaxy testing credentials are supplied
+        env:
+          PUBLIC_KEY: ${{ secrets.GALAXY_SUPABASE_PUBLISHABLE_KEY }}
+          ADMIN_KEY: ${{ secrets.GALAXY_SUPABASE_ADMIN_KEY }}
+        run: |
+          set -euo pipefail
+          test -n "$PUBLIC_KEY"
+          test -n "$ADMIN_KEY"
+      - name: Run Auth, RLS, admin-denial and cleanup tests; no AI calls
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: ${{ github.ref }}
+          GALAXY_CONFIRM: TEST
+          GALAXY_RUN_AI_SMOKE: '0'
+          GALAXY_SUPABASE_URL: https://vfoghlhtnifpnbevgufa.supabase.co
+          GALAXY_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.GALAXY_SUPABASE_PUBLISHABLE_KEY }}
+          GALAXY_SUPABASE_ADMIN_KEY: ${{ secrets.GALAXY_SUPABASE_ADMIN_KEY }}
+        run: python tests/ephemeral_rls_accounts.py

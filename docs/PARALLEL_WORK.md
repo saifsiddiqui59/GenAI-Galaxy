@@ -54,3 +54,14 @@ All four independent branches started at main. Contributors own ONLY their liste
 | Coordinator combined | feat/p15-3d-experience-integration / #69 | experience/{index.html,package.json,vite.config.js,src/App.jsx,src/main.jsx,src/shell.css}, tests/p15_experience_browser.py, tests/test_p15_integration.py, existing root app.js bridge, shared CI/docs |
 
 Galaxy hosted root remains unchanged and no Azure deploy/provisioning, Supabase modification, paid model call or other repo modification is authorized. Real signed-in session integration and high-quality hand-gripping IK remain separate pending acceptance.
+
+## V6 coordinator ownership — 24 October 2026
+
+| Scope | Owned paths | Boundary |
+| --- | --- | --- |
+| Motion/contact | experience/src/guardian, journey/choreography.js, journey/JourneyTimeline.jsx, effects | Original rig/clip/prop shared clock |
+| Composition/materials | experience/src/space, shell.css, journey/journey.css | No external texture/API dependency |
+| QA/integration | tests/p35_v6_browser.py, App, CI, canonical docs | Open actual PNGs, retain exact-source evidence |
+| Isolated release | separate main-based preview workflow branch | Fixed existing V6 storage prefix only; visual source stays draft |
+
+One coordinator owns these scopes; no background-agent requirement. Existing V5 and older draft PRs are preserved.
