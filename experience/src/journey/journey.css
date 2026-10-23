@@ -30,3 +30,11 @@
 @media(prefers-reduced-motion:reduce){.guardian-journey *{animation:none!important;transition:none!important}}
 
 @media(max-width:700px){.guardian-subtitle{display:none}.guardian-skip{left:auto;right:12px;bottom:auto;top:calc(31% + 104px)}.guardian-replay{right:12px;bottom:auto;top:calc(31% + 61px)}.guardian-accept{padding:12px 17px}}
+
+/* Mobile: place Replay/Skip above the content instead of over the satchel popup. */
+@media(max-width:700px){
+ .guardian-journey-top{top:18%;}
+ .guardian-mission{top:35%;}
+ .guardian-replay{top:101px;bottom:auto;right:12px;font-size:10px;padding:8px 10px}
+ .guardian-skip{top:101px;bottom:auto;left:12px;right:auto;font-size:10px;padding:8px 10px}
+}
