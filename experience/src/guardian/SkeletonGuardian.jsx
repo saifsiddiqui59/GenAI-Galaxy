@@ -81,6 +81,9 @@ function SkeletonModel({phase='idle',rigPoseRef}){
       node.receiveShadow=true;
       if(node.material){
         const mats=Array.isArray(node.material)?node.material:[node.material];
+        if(import.meta.env.DEV||new URLSearchParams(window.location.search).has('demo')){
+          window.__galaxyMaterialQA=mats.map(mat=>({name:mat.name,type:mat.type,hasDiffuseTexture:!!mat.map,color:mat.color?.getHexString(),roughness:mat.roughness,metalness:mat.metalness}));
+        }
         for(const material of mats){
           // FBX winding can differ across authoring exporters; avoid culling bones.
           material.side=THREE.DoubleSide;
