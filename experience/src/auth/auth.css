@@ -1,0 +1,11 @@
+.galaxy-auth{position:absolute;top:76px;right:24px;z-index:60;color:#d9ebff;max-width:min(360px,calc(100vw - 48px));font-family:system-ui,sans-serif}
+.galaxy-auth>button,.galaxy-account button{background:#19234ccc;border:1px solid #899de0;color:#e9ecff;
+ padding:10px 13px;border-radius:12px;font-size:12px;cursor:pointer}
+.galaxy-account{display:flex;gap:12px;align-items:center;justify-content:flex-end;flex-wrap:wrap;font-size:11px}
+.galaxy-auth form{background:#0b1233f2;border:1px solid #9a92df;border-radius:17px;padding:16px;margin-top:8px;display:grid;gap:9px;box-shadow:0 14px 55px #000b}
+.galaxy-auth label{display:grid;gap:4px;font-size:12px}
+.galaxy-auth input{background:#0c173d;color:white;border:1px solid #6d83c0;border-radius:9px;padding:10px}
+.galaxy-auth form button{padding:10px;background:#5e56ac;border:1px solid #c7b8ff;color:white;border-radius:10px;cursor:pointer}
+.galaxy-auth small{color:#ffe0b4}
+.galaxy-auth form p{font-size:11px;color:#a8badb;line-height:1.5}
+@media(max-width:700px){.galaxy-auth{top:85px;right:12px;max-width:calc(100vw - 24px)}}

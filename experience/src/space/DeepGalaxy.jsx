@@ -42,8 +42,8 @@ const cloudFragment=[
  'void main(){vec2 q=(vUv-.5)*vec2(2.,1.25);float swirl=atan(q.y,q.x)+length(q)*1.5;',
  'float clouds=n(q*3.+vec2(cos(swirl),sin(swirl))*1.4+time*.009);',
  'float wisps=n(q*8.+clouds*2.3+time*.004);float glow=exp(-length(q*vec2(1.25,1.4))*2.6);',
- 'vec3 color=mix(vec3(.006,.012,.05),vec3(.12,.065,.28),clamp(clouds*glow*2.,0.,1.));',
- 'color+=vec3(.024,.075,.17)*pow(wisps*glow,2.)*2.3;',
+ 'vec3 color=mix(vec3(.006,.012,.05),vec3(.25,.12,.52),clamp(clouds*glow*2.,0.,1.));',
+ 'color+=vec3(.045,.16,.35)*pow(wisps*glow,2.)*2.3;',
  'gl_FragColor=vec4(color,uLow>.5?.54:.76);}'
 ].join(' ');
 function NebulaCloud({lowPower}){
@@ -71,7 +71,7 @@ function Planet({world,mastered,recommended,selected,onSelect,reducedMotion}){
       onPointerOver={()=>{document.body.style.cursor='pointer';}}
       onPointerOut={()=>{document.body.style.cursor='';}}>
      <sphereGeometry args={[world.scale,32,22]}/>
-     <meshStandardMaterial color={color} emissive={color} emissiveIntensity={recommended?.44:selected?.26:.10} roughness={.45} metalness={.15}/>
+     <meshStandardMaterial color={color} emissive={color} emissiveIntensity={recommended?1.9:selected?1.35:1.05} roughness={.45} metalness={.15} toneMapped={false}/>
     </mesh>
     {mastered&&<mesh rotation={[.48,.2,.55]}>
       <torusGeometry args={[world.scale*1.35,.022,8,64]}/>
@@ -89,13 +89,17 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
  const set=new Set(masteredWorlds.map(x=>typeof x==='number'?x:x?.index).filter(Number.isInteger));
  return <>
   <color attach="background" args={['#030817']}/>
-  <ambientLight intensity={.57}/>
-  <pointLight position={[0,3,5]} color="#a6c2ff" intensity={28} distance={17}/>
-  <pointLight position={[-4,-3,1]} color="#8662dc" intensity={16} distance={13}/>
+  <ambientLight intensity={1.7}/>
+  <hemisphereLight color="#d0f5ff" groundColor="#413166" intensity={2.1}/>
+  <spotLight position={[-2,5,9]} color="#fff0d8" intensity={115} angle={.65} penumbra={.8} distance={22}/>
+  <pointLight position={[0,3,5]} color="#a6c2ff" intensity={65} distance={24}/>
+  <pointLight position={[-4,-3,1]} color="#8662dc" intensity={35} distance={24}/>
   <NebulaCloud lowPower={lowPower||reducedMotion}/>
   <Starfield lowPower={lowPower}/>
+  <group scale={lowPower?[.65,.93,.9]:[1,1,1]}>
   {layoutWorlds().map(world=><Planet key={world.index} world={world} mastered={set.has(world.index)}
    recommended={world.index===recommendedIndex} selected={world.index===selectedIndex}
    onSelect={onSelect} reducedMotion={reducedMotion}/>)}
+  </group>
  </>;
 }

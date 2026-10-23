@@ -43,6 +43,7 @@ jobs:
           test -f experience/dist/index.html
           test -f experience/dist/models/guardian.glb
           test -d experience/dist/assets
+          GALAXY_SOURCE_ROOT="$PWD" GALAXY_STAGE="$(mktemp -d)" bash scripts/p16/stage-preview.sh
       - name: Upload 3D preview artifact for review
         uses: actions/upload-artifact@v4
         with:

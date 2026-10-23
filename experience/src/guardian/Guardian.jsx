@@ -1,5 +1,5 @@
 import React, {useEffect, useRef, useState, Suspense} from 'react';
-import {useFrame} from '@react-three/fiber';
+import {useFrame,useThree} from '@react-three/fiber';
 import {useGLTF, useAnimations} from '@react-three/drei';
 import * as THREE from 'three';
 
@@ -24,6 +24,8 @@ function GuardianModel({phase, onPosition}){
  const file=import.meta.env.BASE_URL+'models/guardian.glb';
  const {scene,animations}=useGLTF(file);
  const {actions,names}=useAnimations(animations,scene);
+ const size=useThree(state=>state.size);
+ const narrow=size.width<700;
  const character=useRef();
  const elapsed=useRef(0);
  const previousPhase=useRef(phase);
@@ -38,14 +40,14 @@ function GuardianModel({phase, onPosition}){
  useFrame((_,dt)=>{
    if(previousPhase.current!==phase){previousPhase.current=phase;elapsed.current=0;}
    elapsed.current+=Math.min(dt,.08);
-   const x=phaseX(phase,elapsed.current);
+   const x=phaseX(phase,elapsed.current,narrow?-3.2:-6,narrow?-.52:-2.85);
    if(character.current){
       character.current.position.x=THREE.MathUtils.damp(character.current.position.x,x,5,dt);
       character.current.rotation.y=.14;
       onPosition?.(character.current.position.x);
    }
  });
- return <group ref={character} position={[-5,-1.8,0]} scale={.52}>
+ return <group ref={character} position={[-5,narrow?-1.32:-2.15,3.15]} scale={narrow?.56:.90}>
    <primitive object={scene} rotation={[0,Math.PI*.18,0]}/>
  </group>;
 }
@@ -54,7 +56,7 @@ export function GuardianFallback({phase}){
  useFrame((_,delta)=>{
    if(mesh.current && phase!=='idle')mesh.current.rotation.y+=delta*.18;
  });
- return <group ref={mesh} position={[-1.5,-.1,0]}>
+ return <group ref={mesh} position={[-2,-.1,2]}>
     <mesh><icosahedronGeometry args={[.55,2]}/><meshStandardMaterial color="#a5b4fc" metalness={.6} roughness={.2}/></mesh>
     <pointLight intensity={1.4} color="#cbb6ff" distance={5}/>
   </group>;

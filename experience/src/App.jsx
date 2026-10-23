@@ -1,4 +1,8 @@
 import React,{useCallback,useMemo,useState} from 'react';
+import GalaxyAuth from './auth/GalaxyAuth.jsx';
+import CollectionFX from './effects/CollectionFX.jsx';
+import WorldDock from './navigation/WorldDock.jsx';
+import {lessonHref,powerBudget,validWorld} from './navigation/navigation.js';
 import {Canvas} from '@react-three/fiber';
 import Guardian from './guardian/Guardian.jsx';
 import {GalaxyScene} from './space/DeepGalaxy.jsx';
@@ -25,10 +29,15 @@ function fakeProgress(){
  return rows;
 }
 const PREVIEW_PROGRESS=SHOW_SAMPLE?fakeProgress():{};
+const TOPIC_KEYS=new Set(TOPICS.map(worldKey));
 export function studyLink(index){
- // Only an integer chapter index is carried across pages; NEVER private progress.
- if(!Number.isInteger(index)||index<0||index>=17)throw Error('Unknown learning world');
- return new URL('../index.html?galaxyWorld='+index,window.location.href).href;
+ const url=new URL(window.location.href);
+ const prefix='/previews/galaxy-3d-v2/';
+ if(url.pathname.includes(prefix)){
+   if(!validWorld(index))throw Error('Invalid learning world');
+   return new URL(prefix+'lesson/index.html?galaxyWorld='+index,url.origin).href;
+ }
+ return lessonHref(index,url.origin);
 }
 function canWebGL(){
  try{
@@ -37,20 +46,30 @@ function canWebGL(){
  }catch{return false;}
 }
 export default function App(){
- const reduced=useMemo(()=>window.matchMedia?.('(prefers-reduced-motion: reduce)').matches||false,[]);
+ const budget=useMemo(powerBudget,[]);
+ const reduced=budget.noMotion;
  const [animationEnabled,setAnimationEnabled]=useState(!reduced);
  const [modelPhase,setModelPhase]=useState('arriving');
  const [selected,setSelected]=useState(null);
  const [warp,setWarp]=useState(null);
  const [menuOpen,setMenuOpen]=useState(false);
+ const [authSnapshot,setAuthSnapshot]=useState({status:'guest',user:null,progress:{}});
+ const [sackOpenFrom3D,setSackOpenFrom3D]=useState(0);
+ const [effectsEpoch,setEffectsEpoch]=useState(0);
+ const receiveAuth=useCallback(value=>setAuthSnapshot(value),[]);
  const available3D=useMemo(canWebGL,[]);
- const collected=useMemo(()=>SHOW_SAMPLE?
-   completedWorlds({chapters:CHAPTERS,topics:TOPICS,progress:PREVIEW_PROGRESS,ownerId:SAMPLE_USER})
-   :[],[]);
- const nextIndex=useMemo(()=>SHOW_SAMPLE?recommendedWorld({topics:TOPICS,progress:PREVIEW_PROGRESS}):0,[]);
+ const activeOwner=SHOW_SAMPLE?SAMPLE_USER:(authSnapshot.status==='authenticated'?authSnapshot.user?.id:null);
+ const activeProgress=SHOW_SAMPLE?PREVIEW_PROGRESS:(activeOwner?authSnapshot.progress:{});
+ const collected=useMemo(()=>{
+   if(!activeOwner)return [];
+   try{return completedWorlds({chapters:CHAPTERS,topics:TOPICS,progress:activeProgress,ownerId:activeOwner});}
+   catch(error){console.warn('Galaxy mastery display unavailable',error?.message);return [];}
+ },[activeOwner,activeProgress]);
+ const nextIndex=useMemo(()=>activeOwner?
+   recommendedWorld({topics:TOPICS,progress:activeProgress}):0,[activeOwner,activeProgress]);
  const phaseUpdate=useCallback(next=>setModelPhase(next),[]);
  const select=useCallback(index=>{
-  if(!Number.isInteger(index)||index<0||index>=17||warp)return;
+  if(!validWorld(index)||warp)return;
   setSelected(index);
   setWarp({id:String(Date.now())+'-'+index,index});
  },[warp]);
@@ -60,8 +79,11 @@ export default function App(){
      <Canvas camera={{position:[0,0,11.5],fov:57}} dpr={[1,1.5]}
        gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}>
        <GalaxyScene masteredWorlds={collected} selectedIndex={selected} recommendedIndex={nextIndex}
-         onSelect={select} reducedMotion={!animationEnabled||reduced}/>
+         onSelect={select} reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
        <Guardian phase={animationEnabled?modelPhase:'idle'}/>
+       <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced||budget.lowPower}
+         epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
+         onOpenSack={()=>setSackOpenFrom3D(x=>x+1)}/>
      </Canvas>
    </div>}
    {!available3D&&<div className="galaxy-no-webgl" role="status">
@@ -74,10 +96,12 @@ export default function App(){
    </div>
    <div className="galaxy-mode-tag">{SHOW_SAMPLE?
     'VISUAL DEMO · 3 SAMPLE MASTERED WORLDS · NO ACCOUNT DATA':
-    '3D SCENE PREVIEW · NO PRIVATE PROGRESS LOADED'}</div>
+    (authSnapshot.status==='authenticated'?'YOUR PRIVATE LEARNING GALAXY':'3D GALAXY · SIGN IN TO SYNC PROGRESS')}</div>
+   <GalaxyAuth demo={SHOW_SAMPLE} topicKeys={TOPIC_KEYS} onSnapshot={receiveAuth}/>
    <GuardianJourney completed={collected} nextIndex={nextIndex} nextName={LABELS[nextIndex]}
      onSelectCompleted={select} onAccept={select} onPhase={phaseUpdate}
-     reducedMotion={!animationEnabled||reduced}/>
+     openSackSignal={sackOpenFrom3D} onReplay={()=>setEffectsEpoch(x=>x+1)}
+     reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
    <div className="galaxy-view-actions">
      <button type="button" aria-expanded={menuOpen} aria-controls="galaxy-world-menu"
        onClick={()=>setMenuOpen(v=>!v)}>Explore all 17 worlds</button>
@@ -85,19 +109,11 @@ export default function App(){
        disabled={reduced} title={reduced?'System prefers reduced motion':''}>
        Motion: {animationEnabled?'on':'off'}
      </button>
-     <a href="../index.html">Current lesson dashboard ↗</a>
+     <a href={studyLink(0)}>Current lesson dashboard ↗</a>
    </div>
-   {menuOpen&&<nav id="galaxy-world-menu" className="galaxy-world-menu" aria-label="Keyboard-accessible worlds">
-      <div className="galaxy-world-menu-top">
-       <h2>Select a learning planet</h2>
-       <button type="button" onClick={()=>setMenuOpen(false)} aria-label="Close worlds">✕</button>
-      </div>
-      <ol>{LABELS.map((label,index)=><li key={index}>
-        <button type="button" onClick={()=>{setMenuOpen(false);select(index)}}>
-          <span>{String(index+1).padStart(2,'0')}</span>{label}
-        </button>
-      </li>)}</ol>
-    </nav>}
+   <WorldDock worlds={LABELS} visible={menuOpen} recommended={nextIndex}
+      selected={selected} onClose={()=>setMenuOpen(false)}
+      onSelect={index=>{setMenuOpen(false);select(index)}}/>
    <WarpGate request={warp} onComplete={enterLesson}
      reducedMotion={!animationEnabled||reduced}/>
  </div>;

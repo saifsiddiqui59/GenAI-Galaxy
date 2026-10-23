@@ -1,0 +1,14 @@
+.galaxy-dock{position:absolute;z-index:40;left:18px;bottom:90px;width:min(460px,calc(100vw - 36px));
+ max-height:70dvh;overflow:auto;background:#080f29f5;border:1px solid #8aa6d9;border-radius:23px;
+ box-shadow:0 23px 80px #000c;padding:19px;color:#f5f5ff;backdrop-filter:blur(15px)}
+.galaxy-dock-header{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.galaxy-dock small{letter-spacing:.2em;font-size:9px;color:#9fe7f8;font-weight:800}
+.galaxy-dock h2{font-size:20px;margin:5px 0 12px}
+.galaxy-dock-header button{background:#1d2850;color:white;border:1px solid #768ec0;
+ border-radius:12px;padding:9px 12px;cursor:pointer}
+.galaxy-dock ol{list-style:none;display:grid;grid-template-columns:1fr;gap:6px;padding:0;margin:0}
+.galaxy-dock li button{display:flex;align-items:center;gap:11px;text-align:left;background:#172248;
+ border:1px solid #3c4a80;border-radius:12px;color:#e7eaff;padding:10px 12px;width:100%;cursor:pointer}
+.galaxy-dock li button:hover,.galaxy-dock li button:focus-visible{border-color:#b5e7ff;background:#29386c}
+.galaxy-dock-index{font-size:11px;color:#9cdfef}
+.galaxy-dock-recommend{margin-left:auto;color:#fde59f;border:1px solid #b29a63;border-radius:20px;font-size:10px;padding:3px 8px}

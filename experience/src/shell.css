@@ -32,8 +32,8 @@ button,a{font-family:inherit}button:focus-visible,a:focus-visible{outline:3px so
  .galaxy-brand{top:12px;left:13px}.galaxy-brand strong{font-size:12px}
  .galaxy-brand-orb{width:33px;height:33px;font-size:20px}
  .galaxy-mode-tag{top:62px;left:50%;font-size:8px;max-width:94vw;overflow:hidden;text-overflow:ellipsis}
- .galaxy-view-actions{left:10px;bottom:10px;right:10px;gap:6px}
- .galaxy-view-actions button,.galaxy-view-actions a{padding:9px;font-size:10px}
+ .galaxy-view-actions{left:10px;bottom:9px;right:10px;gap:6px;justify-content:center}
+ .galaxy-view-actions button,.galaxy-view-actions a{padding:8px 10px;font-size:10px}
  .galaxy-world-menu{bottom:73px}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
