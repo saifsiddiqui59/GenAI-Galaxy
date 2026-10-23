@@ -39,11 +39,11 @@ export function moveWrist(chain,target,iterations=6){
  }
  return wrist.getWorldPosition(new THREE.Vector3()).distanceTo(target);
 }
-export function poseTwoHandOffering(chains,hips,iterations=5){
+export function poseTwoHandOffering(chains,hips,iterations=5,characterScale=1){
  if(!chains?.left||!chains?.right||!hips)return null;
- const centre=hips.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.69,.32));
- const left=centre.clone().add(new THREE.Vector3(-.25,-.05,.03));
- const right=centre.clone().add(new THREE.Vector3(.25,-.05,.03));
+ const centre=hips.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.69*characterScale,.32*characterScale));
+ const left=centre.clone().add(new THREE.Vector3(-.25*characterScale,-.05*characterScale,.03*characterScale));
+ const right=centre.clone().add(new THREE.Vector3(.25*characterScale,-.05*characterScale,.03*characterScale));
  const errorLeft=moveWrist(chains.left,left,iterations);
  const errorRight=moveWrist(chains.right,right,iterations);
  return {centre,errorLeft,errorRight};
