@@ -1,0 +1,44 @@
+name: Galaxy disposable account and real AI smoke (manual, one paid model call)
+# Never triggered by push/PR. Runs only after backend deployment and valid secrets.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type TEST to create two temporary confirmed users, verify Supabase RLS/subscriptions and issue one paid model evaluation'
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-ephemeral-live-ai-smoke
+  cancel-in-progress: false
+jobs:
+  real-ai-smoke:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'TEST'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Require disposable Auth access credentials
+        shell: bash
+        env:
+          PUBLIC_KEY: ${{ secrets.GALAXY_SUPABASE_PUBLISHABLE_KEY }}
+          ADMIN_KEY: ${{ secrets.GALAXY_SUPABASE_ADMIN_KEY }}
+        run: |
+          set -euo pipefail
+          [[ -n "$PUBLIC_KEY" && -n "$ADMIN_KEY" ]] || { echo '::error::Missing Galaxy dev Supabase test secrets'; exit 1; }
+      - name: Test real login, two-user isolation, subscriptions and one AI scoring call
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: ${{ github.ref }}
+          GALAXY_CONFIRM: ${{ inputs.confirm }}
+          GALAXY_RUN_AI_SMOKE: '1'
+          GALAXY_LIVE_AI_URL: https://gengalaxy-p3-1429841605.azurewebsites.net/api/practice/evaluate
+          GALAXY_SUPABASE_URL: https://vfoghlhtnifpnbevgufa.supabase.co
+          GALAXY_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.GALAXY_SUPABASE_PUBLISHABLE_KEY }}
+          GALAXY_SUPABASE_ADMIN_KEY: ${{ secrets.GALAXY_SUPABASE_ADMIN_KEY }}
+        run: python tests/ephemeral_rls_accounts.py

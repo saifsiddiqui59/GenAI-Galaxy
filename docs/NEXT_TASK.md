@@ -155,3 +155,12 @@ Do not change RetailGrowthAI or WineShopPOS or conflate offline mocks with appro
 **Needs actual evidence:** Deploy the consumption evaluator via protected Github Actions after model secrets configured; verify real authenticated responses plus correlation headers. Run real independent ground-truth/LLM judge evaluation across all cases (never treat model-reported accuracy/clarity as groundedness), then provide actual safely aggregated results to `python scripts/gate_galaxy_eval.py <actual-scored-evidence.json>`. No synthetic CI fixture represents independent quality success. Optional Foundry/Log Analytics trace ingestion is **not** configured or claimed, since owner opted out of P4 monitoring resources.
 
 **Existing blockers remain:** Galaxy P3 Azure Function/AI deployment and disposable two-account hosted login/RLS acceptance. Avoid WineShopPOS resources/secrets.
+
+## P11 — Supabase plans and five protected Galaxy Actions
+
+Source: WineShopPOS's AuthContext, SaaSContext, SaaSAccessBoundary and V4 schema. Existing Galaxy Supabase login and password recovery remain intact. New Galaxy-only FREE 5, PLUS 10, PRO 20 daily model-call caps use server-side Auth and RLS; global 50/day stays. Prices and checkout are not implemented. Verify subscription migration in shared Galaxy Supabase before running the launcher.
+
+In VS Code Git Bash, from the Galaxy main branch run bash scripts/galaxy_p3_one_shot.sh. It verifies/prompt-for protected GitHub dev secrets, runs disposable user login/RLS+plan TEST, Azure Flex PROVISION, model DEPLOY, one real AI TEST and finally gated static frontend DEPLOY. Every stage stops on failure. No GH workflow has been dispatched here. Browser/microphone acceptance and P4 monitoring remain excluded.
+
+
+**P11 database update:** Galaxy subscription migration `20261023110022_galaxy_freemium_subscriptions_v1` is NOW applied and synthetic SQL FREE cap test passed. Real Auth login/2-user RLS/plan test and actual Azure model deployment remain for the GitHub one-shot runner. Never treat synthetic SQL tests as real login acceptance.

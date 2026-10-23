@@ -14,7 +14,7 @@ import uuid
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from live_rls_check import CheckFailed, URL, run as run_rls, validate_publishable_key
+from live_rls_check import CheckFailed, URL, run as run_rls, validate_publishable_key, sign_in, request, json_body
 
 ADMIN_ENDPOINT = URL + "/auth/v1/admin/users"
 TIMEOUT = 20
@@ -78,6 +78,28 @@ def create_test_user(secret, address, password):
     return user_id
 
 
+def check_galaxy_subscriptions(key, a_email, a_pw, b_email, b_pw):
+    # Each real user signs in normally. No admin/service key touches these checks.
+    a_id, a_token = sign_in(a_email, a_pw, key)
+    b_id, b_token = sign_in(b_email, b_pw, key)
+    if a_id == b_id:
+        raise CheckFailed("Subscription test accounts must be distinct")
+    for token in (a_token, b_token):
+        status, raw = request("POST", "/rest/v1/rpc/genai_study_my_subscription",
+                              key, token=token, body={})
+        state = json_body(raw)
+        if status != 200 or not isinstance(state, dict) or state.get("plan_code") != "FREE" or state.get("allowed") is not True or state.get("daily_eval_limit") != 5:
+            raise CheckFailed("Galaxy default FREE subscription or authenticated RPC failed")
+    status, raw = request("GET", "/rest/v1/genai_study_user_subscriptions?select=user_id&user_id=eq." + b_id, key, token=a_token)
+    if status != 200 or json_body(raw) != []:
+        raise CheckFailed("User A can access User B subscription")
+    status, _ = request("POST", "/rest/v1/genai_study_user_subscriptions",
+                        key, token=a_token, body={"user_id":a_id,"plan_code":"PRO","status":"ACTIVE"})
+    if status in (200, 201, 204):
+        raise CheckFailed("CRITICAL: user can self-upgrade to paid subscription plan")
+    print("Galaxy subscription verified: authenticated FREE defaults, cross-user isolation, and no self-upgrade.")
+
+
 def _cancellation_requested(signum, frame):
     # GitHub sends SIGTERM before forcibly killing a timed-out/cancelled job.
     # Convert the signal to a normal exception so the existing finally runs.
@@ -117,6 +139,13 @@ def run():
             raise CheckFailed("Two distinct Auth accounts were not created")
         print("Created two temporary Galaxy-only Auth test accounts (identities masked).")
         run_rls()
+        check_galaxy_subscriptions(key,
+            os.environ["GALAXY_TEST_A_EMAIL"], os.environ["GALAXY_TEST_A_PASSWORD"],
+            os.environ["GALAXY_TEST_B_EMAIL"], os.environ["GALAXY_TEST_B_PASSWORD"])
+        if os.environ.get("GALAXY_RUN_AI_SMOKE") == "1":
+            from live_ai_smoke import run_ai_smoke
+            run_ai_smoke(key, os.environ["GALAXY_TEST_A_EMAIL"],
+                         os.environ["GALAXY_TEST_A_PASSWORD"])
     finally:
         for user_id in reversed(created):
             try:
