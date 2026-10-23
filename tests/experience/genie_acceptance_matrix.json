@@ -1,0 +1,98 @@
+{
+  "version": "genie-experience-2026-10-23",
+  "feature_pr": 47,
+  "automation_scope": "offline and synthetic browser only; authenticated production checks require separate approval",
+  "performance_targets": {
+    "desktop_animation_ms_max": 950,
+    "mobile_animation_ms_max": 950,
+    "desktop_layout_shift_cls_target_max": 0.1,
+    "mobile_low_power_disable_effects": true,
+    "third_party_runtime_requests_max": 0
+  },
+  "cases": [
+    {
+      "id": "GEN-LOGIN-001",
+      "title": "Authenticated welcome after owner-scoped cloud sync",
+      "type": "synthetic_browser",
+      "blocking": true
+    },
+    {
+      "id": "GEN-LOGIN-002",
+      "title": "No genie on guest and failed authentication",
+      "type": "synthetic_browser",
+      "blocking": true
+    },
+    {
+      "id": "GEN-OWNER-003",
+      "title": "Foreign-row rejection before progress display",
+      "type": "offline",
+      "blocking": true
+    },
+    {
+      "id": "GEN-OWNER-004",
+      "title": "Sign-out or account switch dismisses stale genie",
+      "type": "synthetic_browser",
+      "blocking": true
+    },
+    {
+      "id": "GEN-STORY-005",
+      "title": "Sack planet only after entire chapter truly mastered",
+      "type": "offline",
+      "blocking": true
+    },
+    {
+      "id": "GEN-STORY-006",
+      "title": "Review-due planet takes priority",
+      "type": "offline",
+      "blocking": true
+    },
+    {
+      "id": "GEN-UX-007",
+      "title": "Skip dismisses without navigating",
+      "type": "synthetic_browser",
+      "blocking": true
+    },
+    {
+      "id": "GEN-UX-008",
+      "title": "Accept navigates exactly once even when animation fails",
+      "type": "offline",
+      "blocking": true
+    },
+    {
+      "id": "GEN-A11Y-009",
+      "title": "Escape and keyboard focus trap and restore",
+      "type": "synthetic_browser",
+      "blocking": true
+    },
+    {
+      "id": "GEN-A11Y-010",
+      "title": "Reduced motion removes movement but retains CTA",
+      "type": "synthetic_browser",
+      "blocking": true
+    },
+    {
+      "id": "GEN-VIEW-011",
+      "title": "Mobile 390x844 and desktop 1440x900 no clipping",
+      "type": "manual",
+      "blocking": true
+    },
+    {
+      "id": "GEN-REPLAY-012",
+      "title": "Once-per-day account replay guard even with blocked storage",
+      "type": "synthetic_browser",
+      "blocking": true
+    },
+    {
+      "id": "GEN-PERF-013",
+      "title": "Performance and page loading budgets on device",
+      "type": "manual",
+      "blocking": true
+    },
+    {
+      "id": "GEN-REAL-014",
+      "title": "Consent-based signed-in RLS acceptance before production claim",
+      "type": "manual",
+      "blocking": true
+    }
+  ]
+}
