@@ -15,7 +15,7 @@
     const dx=tx-fx,dy=ty-fy;
     const size=Math.min(110,Math.max(22,from.width));
     const scaleEnd=Math.min(1.9,Math.max(.25,to.width/size));
-    const translate=(x,y,scale) => 'translate3d('+x+'px,'+y+'px,0) scale('+scale+')';
+    const translate=(x,y,scale) => 'translate(-50%,-50%) translate3d('+x+'px,'+y+'px,0) scale('+scale+')';
     return [
       {transform:translate(0,0,1),opacity:1,offset:0},
       {transform:translate(dx*.55,dy*.22-44,1.13),opacity:1,offset:.55},
