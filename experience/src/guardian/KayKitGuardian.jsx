@@ -39,7 +39,7 @@ export function characterEntranceX(phase,t,compact){
  const stop=compact?-.55:-1.98;
  return phase==='arriving'?Math.min(stop,start+Math.max(0,t)*1.14):stop;
 }
-function Model({phase,rigPoseRef,reducedMotion=false}){
+function Model({phase,rigPoseRef,reducedMotion=false,collectionIndex=-1}){
  const {scene,animations}=useGLTF(ASSET);
  const narrow=useThree(state=>state.size.width<700);
  const holder=useRef(),t=useRef(0),was=useRef(phase);
@@ -79,7 +79,7 @@ function Model({phase,rigPoseRef,reducedMotion=false}){
   actions[clip].reset().fadeIn(.26).play();
   for(const [name,action] of Object.entries(actions))if(name!==clip)action?.fadeOut(.26);
   return ()=>actions[clip]?.fadeOut(.20);
- },[phase,actions,names]);
+ },[phase,collectionIndex,actions,names]);
  useEffect(()=>{
   if(!observed())return;
   const bones=[],materials=[];
@@ -107,7 +107,11 @@ function Model({phase,rigPoseRef,reducedMotion=false}){
   t.current+=delta;
   const root=holder.current;
   if(!root)return;
-  const x=characterEntranceX(reducedMotion?'idle':phase,t.current,narrow);
+  // Each genuine mastered world starts a fresh KayKit PickUp clip and a small
+  // approaching step. The full-size learning planets stay untouched.
+  const pickupStep=phase==='collecting'&&collectionIndex>=0
+    ?(collectionIndex%3-1)*(narrow?.13:.20):0;
+  const x=characterEntranceX(reducedMotion?'idle':phase,t.current,narrow)+pickupStep;
   root.position.x=THREE.MathUtils.damp(root.position.x,x,narrow?6:4.5,delta);
   // MIT 3merillon CharacterController approach: damp position/heading,
   // never teleport a moving animated character between keyframes.
@@ -137,6 +141,7 @@ function Model({phase,rigPoseRef,reducedMotion=false}){
    d.worldPosition=root.getWorldPosition(eye).toArray();
    d.currentPhase=phase;
    d.currentClip=chooseKayKitAnimation(phase,names);
+   d.currentPickupIndex=collectionIndex;
   }
  });
  return <group ref={holder} position={[narrow?-1.8:-3.2,narrow?-1.55:-2.20,4.3]}
@@ -146,7 +151,7 @@ function Model({phase,rigPoseRef,reducedMotion=false}){
    <pointLight position={[-1.3,2.8,-1.8]} intensity={22} color="#a18aff" distance={10}/>
  </group>;
 }
-export default function KayKitGuardian({phase='idle',rigPoseRef,reducedMotion=false}){
- return <Suspense fallback={null}><Model phase={phase} rigPoseRef={rigPoseRef} reducedMotion={reducedMotion}/></Suspense>;
+export default function KayKitGuardian({phase='idle',collectionIndex=-1,rigPoseRef,reducedMotion=false}){
+ return <Suspense fallback={null}><Model phase={phase} collectionIndex={collectionIndex} rigPoseRef={rigPoseRef} reducedMotion={reducedMotion}/></Suspense>;
 }
 useGLTF.preload(ASSET);
