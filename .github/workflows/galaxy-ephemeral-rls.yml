@@ -1,0 +1,46 @@
+name: Galaxy ephemeral two-account RLS test (manual)
+# Creates/deletes temporary Auth identities on the EXISTING shared Supabase project.
+# Never runs on push, pull requests or schedules. Does not deploy or provision.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type TEST to create two disposable Galaxy-only Auth users and test RLS"
+        type: string
+        required: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: galaxy-ephemeral-rls
+  cancel-in-progress: false
+
+jobs:
+  test-two-real-users:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'TEST'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: dev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Refuse missing GitHub dev secrets before Auth writes
+        shell: bash
+        env:
+          GALAXY_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.GALAXY_SUPABASE_PUBLISHABLE_KEY }}
+          GALAXY_SUPABASE_ADMIN_KEY: ${{ secrets.GALAXY_SUPABASE_ADMIN_KEY }}
+        run: |
+          test -n "$GALAXY_SUPABASE_PUBLISHABLE_KEY" || { echo "::error::Set dev environment secret GALAXY_SUPABASE_PUBLISHABLE_KEY"; exit 1; }
+          test -n "$GALAXY_SUPABASE_ADMIN_KEY" || { echo "::error::Set dev environment secret GALAXY_SUPABASE_ADMIN_KEY"; exit 1; }
+      - name: Create two temporary users, execute user-level RLS and remove only those users
+        env:
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          GITHUB_REF: ${{ github.ref }}
+          GALAXY_CONFIRM: ${{ inputs.confirm }}
+          GALAXY_SUPABASE_URL: https://vfoghlhtnifpnbevgufa.supabase.co
+          GALAXY_SUPABASE_PUBLISHABLE_KEY: ${{ secrets.GALAXY_SUPABASE_PUBLISHABLE_KEY }}
+          GALAXY_SUPABASE_ADMIN_KEY: ${{ secrets.GALAXY_SUPABASE_ADMIN_KEY }}
+        run: python tests/ephemeral_rls_accounts.py
