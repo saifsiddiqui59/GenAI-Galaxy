@@ -34,3 +34,7 @@ Auth transitions increment a client-local epoch. Each async Supabase progress/at
 ## Isolated V6 review build
 
 Draft #131 hosts the R3F scene on its own source branch; production source remains unchanged. A main-only protected publisher builds an immutable pin and stages the scene plus current public nested lesson assets under a V6 prefix on existing storage. One frame-ordered clock governs original clips, real palm IK, attached miniature, open satchel and next-world reveal. No backend/data interface changes.
+
+## V6 deployed preview snapshot
+
+The isolated `/previews/galaxy-3d-v6/` release now runs frozen source `6614f79`, including its nested P34 lesson snapshot and four public learning modules. Production main and homepage continue independently. #40022442803 verified 18 hosted files and four real Chromium variants; the frame-ordered clip/IK/prop implementation remains in draft #131, outside production source.

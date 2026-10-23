@@ -145,3 +145,7 @@
 ## V6 publisher boundary
 
 The new main-based publisher may release immutable V6 source `6614f79` only to `previews/galaxy-3d-v6` in existing `gengalaxy1429841605`. Require owner ID 80577424 and an exact command on #131 (or explicit manual input), protected dev OIDC, all three exact-source CI jobs, every staged-file SHA256, unchanged root homepage hash and hosted Chromium. No push-triggered cloud action, account/IAM provisioning or visual merge into production.
+
+## V6 verified release disposition
+
+Keep the visual source frozen at `6614f79` and draft #131. The successful protected #40022442803 release is only an isolated art/interaction preview: 18 staged files, exact hosted hashes, unchanged homepage and inspected Chromium evidence. Parallel learning work on main may advance independently; this preview retains the P34 lesson snapshot included at the tested source pin. Do not describe sample progress as authenticated acceptance or synthetic Chromium as physical-phone performance.

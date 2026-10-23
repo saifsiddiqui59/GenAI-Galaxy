@@ -19,3 +19,7 @@ Based on the RetailGrowthAI coordinator's verified process, the Galaxy workflow 
 ## V6 pinned preview acceptance
 
 The separate V6 publisher reads exact-source Actions results, requires successful curriculum-and-api/browser-smoke/release-safety jobs, then uses protected dev OIDC for only the fixed existing-storage prefix. It compares every staged hosted SHA256 and the before/after root index hash. Hosted Chromium PNG/JSON/manifest evidence is retained for 14 days as `galaxy-v6-hosted-evidence`. No cloud execution on PR/push.
+
+## V6 verified CI and hosted evidence
+
+Source validation #40021350132: 3/3 success at `6614f7903c52b81f471083321a49f8870b5becdc`. Publisher PR #135: core 3/3 #40021933086 plus V5 browser #40021933103 success. Replacement main run #40022214773: 3/3 success after another chat's update cancelled the initial post-merge run. Protected deployment/hosted-browser #40022442803: both jobs success, 18 hosted SHA256 matches and unchanged homepage. Artifact #12532090063 contains 13 PNGs, four browser JSON records and three parity/source files; its SHA256 is `7c8e7017fd3c38bb99c6fd01b81431b03f3ee7a2f2eec14a9d07e8d70e477126`. Actual hosted PNGs were downloaded and opened.
