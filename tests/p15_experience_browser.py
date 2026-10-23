@@ -18,8 +18,8 @@ async def inspect(browser,origin,viewport,reduced=False):
  assert "3 mastered" in await page.locator(".guardian-sack").inner_text()
  # All seventeen canonical chapter buttons are keyboard-accessible even without WebGL.
  await page.get_by_role("button",name="Explore all 17 worlds").click()
- assert await page.locator("#galaxy-world-menu li").count()==17
- await page.get_by_role("button",name="Close worlds").click()
+ assert await page.locator(".galaxy-dock li").count()==17
+ await page.get_by_role("button",name="Close world navigator").click()
  await page.locator(".guardian-sack").click()
  assert await page.locator("#guardian-sack-panel li").count()==3
  await page.get_by_role("button",name="Close satchel").click()
