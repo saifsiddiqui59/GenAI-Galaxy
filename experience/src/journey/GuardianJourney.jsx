@@ -2,7 +2,7 @@ import React,{useEffect,useMemo,useState} from 'react';
 import {phaseAt} from './story.js';
 import './journey.css';
 const MAX_COLLECTION_DISPLAY=17;
-export default function GuardianJourney({completed=[],nextIndex=0,nextName='',onAccept,onSelectCompleted,onPhase,reducedMotion=false,openSackSignal=0,onReplay}){
+export default function GuardianJourney({completed=[],nextIndex=0,nextName='',onAccept,onSelectCompleted,onPhase,onSequence,onClock,reducedMotion=false,openSackSignal=0,onReplay}){
  const [start,setStart]=useState(0);
  const [elapsed,setElapsed]=useState(0);
  const [skipped,setSkipped]=useState(false);
@@ -16,6 +16,8 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
   return ()=>clearInterval(handle);
  },[start,reducedMotion,skipped]);
  useEffect(()=>onPhase?.(view.phase),[view.phase,onPhase]);
+ useEffect(()=>onSequence?.({activeIndex:view.activeIndex,visible:view.visible,skipped}),[view.activeIndex,view.visible,skipped,onSequence]);
+ useEffect(()=>onClock?.({ms:skipped?99999:elapsed,skipped,reducedMotion}),[elapsed,skipped,reducedMotion,onClock]);
  useEffect(()=>{if(openSackSignal>0)setSackOpen(true)},[openSackSignal]);
  return <div className="guardian-journey" aria-label="Your Galaxy Guardian">
     <div className="guardian-journey-top">
