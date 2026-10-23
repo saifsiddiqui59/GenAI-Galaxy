@@ -1,0 +1,30 @@
+/* Optional overlay for PR #47's #genie-guide; loaded by coordinator only.
+   Compositor transforms, no extra canvas, no remote media and no background timers. */
+#genie-guide .genie-cosmic-polish {
+  position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;
+  contain:paint;isolation:isolate;
+}
+#genie-guide .genie-cosmic-particle {
+  position:absolute;left:var(--gx);top:var(--gy);
+  width:var(--gsize);height:var(--gsize);border-radius:50%;
+  background:#ddf6ff;opacity:.65;box-shadow:0 0 8px 2px rgba(137,210,255,.52);
+}
+#genie-guide.playing:not(.no-motion) .genie-cosmic-particle {
+  animation:genie-cosmic-lift var(--gduration) ease-in-out var(--gdelay) infinite alternate;
+}
+@keyframes genie-cosmic-lift {
+  0% { transform:translate3d(0,5px,0) scale(.58);opacity:.12 }
+  60% {opacity:.88}
+  100% {transform:translate3d(3px,-19px,0) scale(1.16);opacity:.24}
+}
+/* The character and interactive controls sit above the decorative layer. */
+#genie-guide .genie-stage {isolation:isolate}
+#genie-guide .genie-stage > :not(.genie-cosmic-polish) {position:relative;z-index:1}
+#genie-guide .genie-illustration {filter:drop-shadow(0 12px 25px rgba(117,100,249,.17))}
+#genie-guide.no-motion .genie-cosmic-particle {animation:none;opacity:.33}
+@media (prefers-reduced-motion:reduce) {
+  #genie-guide .genie-cosmic-particle {animation:none!important;opacity:.33!important}
+}
+@media (max-width:660px) {
+  #genie-guide .genie-cosmic-particle:nth-child(n+13){display:none}
+}
