@@ -38,10 +38,15 @@ function SkeletonModel({phase='idle'}){
    // Normalize by actual skinned geometry bounds, never a guessed .012.
    const height=Number.isFinite(size.y)&&size.y>0.01?size.y:170;
    const factor=3.2/height;
+   const originalScale=model.scale.clone();
+   const originalPosition=model.position.clone();
    model.userData.sourceDimensions={height,width:size.x,depth:size.z,factor,
+       initialScale:originalScale.toArray(),
        min:[bounds.min.x,bounds.min.y,bounds.min.z],max:[bounds.max.x,bounds.max.y,bounds.max.z]};
-   model.scale.setScalar(factor);
-   model.position.set(-center.x*factor,-bounds.min.y*factor,-center.z*factor);
+   // Keep FBXLoader's built-in unit conversion. The bounds measured above
+   // already include it; replacing root scale would double-apply units.
+   model.scale.copy(originalScale).multiplyScalar(factor);
+   model.position.copy(originalPosition).add(new THREE.Vector3(-center.x*factor,-bounds.min.y*factor,-center.z*factor));
    return model;
  },[rootFBX]);
  const {actions,names}=useAnimations(rootFBX.animations,instance);
