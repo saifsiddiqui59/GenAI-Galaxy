@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Type DEPLOY after approving the Galaxy-only quota SQL migration and Azure model configuration'
+        description: 'Type DEPLOY after the dedicated Galaxy model provisioning workflow succeeds'
         type: string
         required: true
 
@@ -43,38 +43,56 @@ jobs:
       GALAXY_PUBLIC_SITE: https://gengalaxy1429841605.z29.web.core.windows.net
     steps:
       - uses: actions/checkout@v4
-      - name: Require all model credentials in protected dev secrets
+      - name: Require existing Galaxy Supabase public key and approved OIDC identity
         shell: bash
         env:
           CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
           SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
           SUPABASE_PUBLISHABLE: ${{ secrets.GALAXY_SUPABASE_PUBLISHABLE_KEY }}
-          OPENAI_ENDPOINT: ${{ secrets.GALAXY_AZURE_OPENAI_ENDPOINT }}
-          OPENAI_DEPLOYMENT: ${{ secrets.GALAXY_AZURE_OPENAI_DEPLOYMENT }}
-          OPENAI_API_KEY: ${{ secrets.GALAXY_AZURE_OPENAI_API_KEY }}
         run: |
           set -euo pipefail
           [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || exit 1
           [[ "$SUBSCRIPTION" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || exit 1
-          for var in SUPABASE_PUBLISHABLE OPENAI_ENDPOINT OPENAI_DEPLOYMENT OPENAI_API_KEY; do
-            [[ -n "${!var}" ]] || { echo "::error::Missing protected dev secret $var"; exit 1; }
-          done
-          [[ "$SUPABASE_PUBLISHABLE" == sb_publishable_* || "$SUPABASE_PUBLISHABLE" == eyJ* ]] || exit 1
-          [[ "$OPENAI_ENDPOINT" == https://*.openai.azure.com || "$OPENAI_ENDPOINT" == https://*.services.ai.azure.com ]] || exit 1
+          [[ "$SUPABASE_PUBLISHABLE" == sb_publishable_* || "$SUPABASE_PUBLISHABLE" == eyJ* ]] || {
+            echo '::error::Missing or invalid Galaxy Supabase public key'
+            exit 1
+          }
       - uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Refuse non-existing or always-ready backend and install private settings
+      - name: Verify provisioned Galaxy-only LLM and install private backend settings
         shell: bash
         env:
           SUPABASE_PUBLISHABLE: ${{ secrets.GALAXY_SUPABASE_PUBLISHABLE_KEY }}
-          OPENAI_ENDPOINT: ${{ secrets.GALAXY_AZURE_OPENAI_ENDPOINT }}
-          OPENAI_DEPLOYMENT: ${{ secrets.GALAXY_AZURE_OPENAI_DEPLOYMENT }}
-          OPENAI_API_KEY: ${{ secrets.GALAXY_AZURE_OPENAI_API_KEY }}
         run: |
           set -euo pipefail
+          # Discover the dedicated Galaxy S0 model rather than asking the user
+          # for an endpoint, deployment name or key that does not yet exist.
+          llm_name='gengalaxy-ai-sin-1429841605'
+          llm_deploy='galaxy-gpt-41-mini'
+          llm_id="$(az cognitiveservices account show -g "$RG" -n "$llm_name" --query id -o tsv)"
+          llm_kind="$(az cognitiveservices account show -g "$RG" -n "$llm_name" --query kind -o tsv)"
+          llm_region="$(az cognitiveservices account show -g "$RG" -n "$llm_name" --query location -o tsv)"
+          llm_sku="$(az cognitiveservices account show -g "$RG" -n "$llm_name" --query sku.name -o tsv)"
+          [[ "$llm_id" == */resourceGroups/"$RG"/providers/Microsoft.CognitiveServices/accounts/"$llm_name" &&
+             "$llm_kind" == OpenAI && "${llm_region,,}" == southindia && "${llm_sku^^}" == S0 ]] || {
+            echo '::error::Dedicated Galaxy S0 model resource was not verified'; exit 1;
+          }
+          model="$(az cognitiveservices account deployment show -g "$RG" -n "$llm_name" --deployment-name "$llm_deploy" --query properties.model.name -o tsv)"
+          version="$(az cognitiveservices account deployment show -g "$RG" -n "$llm_name" --deployment-name "$llm_deploy" --query properties.model.version -o tsv)"
+          type="$(az cognitiveservices account deployment show -g "$RG" -n "$llm_name" --deployment-name "$llm_deploy" --query sku.name -o tsv)"
+          [[ "$model" == 'gpt-4.1-mini' && "$version" == '2025-04-14' && "$type" == Standard ]] || {
+            echo '::error::Approved regional pay-as-you-go model deployment not found'; exit 1;
+          }
+          OPENAI_ENDPOINT="$(az cognitiveservices account show -g "$RG" -n "$llm_name" --query properties.endpoint -o tsv)"
+          OPENAI_ENDPOINT="${OPENAI_ENDPOINT%/}"
+          [[ "$OPENAI_ENDPOINT" == "https://$llm_name.openai.azure.com" ]] || exit 1
+          # Azure Key Vault/GitHub secret is not required: OIDC grants access to
+          # the account key only within the protected, ephemeral runner.
+          OPENAI_API_KEY="$(az cognitiveservices account keys list -g "$RG" -n "$llm_name" --query key1 -o tsv)"
+          [[ -n "$OPENAI_API_KEY" ]] || { echo '::error::Azure model key read blocked by RBAC'; exit 1; }
           app_id="$(az functionapp show -g "$RG" -n "$FUNCTION_NAME" --query id -o tsv)"
           [[ "$app_id" == */resourceGroups/"$RG"/providers/Microsoft.Web/sites/"$FUNCTION_NAME" ]] || exit 1
           # Require explicit no-always-ready setting, to avoid idle compute.
@@ -87,8 +105,10 @@ jobs:
             SUPABASE_URL="$SUPABASE_PROJECT_URL" \
             SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE" \
             AZURE_OPENAI_ENDPOINT="$OPENAI_ENDPOINT" \
-            AZURE_OPENAI_DEPLOYMENT="$OPENAI_DEPLOYMENT" \
+            AZURE_OPENAI_DEPLOYMENT="$llm_deploy" \
             AZURE_OPENAI_API_KEY="$OPENAI_API_KEY"
+          unset OPENAI_API_KEY
+          echo 'Dedicated Galaxy endpoint and deployment resolved from Azure; model key stored only as private Function app setting.'
       - name: Deploy only Galaxy backend source, without publish profile
         uses: Azure/functions-action@v1
         with:
