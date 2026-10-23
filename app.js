@@ -49,8 +49,8 @@ function modelAvailability(){
  const endpoint=window.GALAXY_EVALUATOR_URL;
  if(!endpoint)return {ready:false,message:'AI evaluation is not configured on this deployment. Local checking only; no model was called.'};
  if(typeof endpoint!=='string'||!endpoint.startsWith('https://'))return {ready:false,message:'The AI endpoint configuration is invalid. Only the free local check is available.'};
- if(!state.client)return {ready:false,message:'Account sign-in is not ready. Only local checking is available; no model was called.'};
  if(!state.user||state.isGuest)return {ready:false,message:'Guest mode uses a free keyword check, not an LLM. Sign in to request model-based feedback.'};
+ if(!state.client)return {ready:false,message:'Account sign-in is not ready. Only local checking is available; no model was called.'};
  return {ready:true,message:'Signed in: AI evaluation uses the existing pay-as-you-go model and one daily evaluation allowance. Or choose the free local check.'};
 }
 function modelFailureMessage(status){
