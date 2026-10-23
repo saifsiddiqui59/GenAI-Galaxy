@@ -180,3 +180,8 @@ Exclude owner-declined P4 monitoring; don't touch other projects or reactivate b
 - Protected existing disposable two-Auth-user GitHub test with separate signed-in checks for per-user subscription RPC, cross-user subscription read denied, direct self-upgrade denied. New manual hosted Galaxy AI smoke reuses temporary real users to verify forged bearer denied and one authenticated paid evaluator result with trace header; finally deletes users. GitHub workflows have not been dispatched from this chat.
 - Added Git Bash `scripts/galaxy_p3_one_shot.sh` to securely prompt for missing GitHub `dev` secrets, run Auth TEST, Flex PROVISION, model DEPLOY, hosted AI TEST and frontend static DEPLOY sequentially and stop on failure.
 - Kept source `runtime-config.js` evaluator URL empty, modifying the manually approved static-deploy workflow to accept `enable_evaluator=AI_READY` only when its exact Git commit has a successful hosted live AI smoke run, then inject the fixed public endpoint into deploy artifact only. No premature public model integration, new monitoring or unrelated resource touch.
+
+
+### P11 hosted Supabase verification
+
+Applied Galaxy-only migration `20261023110022_galaxy_freemium_subscriptions_v1` in shared project `vfoghlhtnifpnbevgufa`. Verified three plan catalog rows, no user paid assignments, plan-owner RLS, no authenticated INSERT privilege and no anonymous `my_subscription()` execution. A rollback-only simulated authenticated JWT test verified FREE daily cap 5 with denial of request 6; user/global counter tables returned zero rows afterward. This is DB verification, not real Auth user or Azure runtime test. No checkout, recurring billing, pricing or platform monitoring enabled.
