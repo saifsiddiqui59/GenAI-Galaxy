@@ -23,3 +23,6 @@ assert.equal(harder,lessons['KV cache'].followups[0]);
 assert.equal(e.questionFor(t,2),lessons['KV cache'].followups[0]);
 assert.equal(curriculum.length,17);
 console.log('Node learning-engine checks passed');
+
+// Run zero-cost mocked evaluator mode tests with the existing Node CI step.
+require('./test_evaluator_ui.cjs');

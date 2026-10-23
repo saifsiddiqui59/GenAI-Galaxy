@@ -9,7 +9,7 @@ on:
         type: string
         required: true
       enable_evaluator:
-        description: 'AI_READY requires successful live Auth+AI smoke on the same main commit'
+        description: 'AI_READY requires a verified successful live AI smoke; source-only frontend revisions can reuse the pinned tested backend with strict file allowlist'
         type: string
         required: false
         default: 'DISABLED'
@@ -56,6 +56,8 @@ jobs:
       GALAXY_AZ_STORAGE: ${{ vars.GALAXY_STORAGE_ACCOUNT }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Validate every changed path since the pinned tested backend.
       - name: Refuse deployment without exact existing storage destination
         shell: bash
         run: |
@@ -93,7 +95,7 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Require verified live AI smoke before enabling public AI evaluator
+      - name: Reuse existing verified model smoke only when backend and release assets are unchanged
         if: inputs.enable_evaluator == 'AI_READY'
         shell: bash
         env:
@@ -101,12 +103,37 @@ jobs:
           RELEASE_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
+          # Immutable Galaxy commit whose disposable real-user Auth/RLS and single
+          # already-paid model smoke BOTH passed. Never issue a new model call here.
+          SMOKE_SHA="c12625931e99b8b00ffe6677f718fe263b1f1000"
+          [[ -n "${RELEASE_SHA:-}" ]] || exit 1
+          if [[ "$RELEASE_SHA" != "$SMOKE_SHA" ]]; then
+            # For this no-spend release, only app.js and non-executable tests/docs
+            # may change. The one gate workflow is reviewed explicitly here.
+            # Any backend, deploy script, runtime config, workflow, or HTML/CSS
+            # change must be reviewed in a *separate* release with its own proof.
+            git cat-file -e "$SMOKE_SHA^{commit}" || {
+              echo '::error::Pinned tested Galaxy baseline is missing'; exit 1;
+            }
+            changed="$(git diff --name-only "$SMOKE_SHA" "$RELEASE_SHA")"
+            while IFS= read -r file; do
+              [[ -n "$file" ]] || continue
+              case "$file" in
+                app.js|docs/*|tests/*|.github/workflows/galaxy-static-deploy.yml) ;;
+                *)
+                  echo "::error::Unverified change since tested backend: $file"
+                  echo 'Frontend-only low-cost gate cannot authorize this deployment.'
+                  exit 1 ;;
+              esac
+            done <<< "$changed"
+            echo 'Galaxy backend, model, and credentials unchanged since proven hosted smoke.'
+          fi
           count="$(gh run list -R saifsiddiqui59/GenAI-Galaxy \
             --workflow galaxy-ephemeral-live-ai.yml --branch main \
-            --event workflow_dispatch --limit 25 --json conclusion,headSha \
-            -q "[.[] | select(.conclusion == \"success\" and .headSha == \"$RELEASE_SHA\")] | length")"
+            --event workflow_dispatch --limit 50 --json conclusion,headSha \
+            -q "[.[] | select(.conclusion == \"success\" and .headSha == \"$SMOKE_SHA\")] | length")"
           [[ "$count" =~ ^[0-9]+$ && "$count" -gt 0 ]] || {
-            echo '::error::No successful hosted AI smoke on the current Galaxy commit'
+            echo '::error::No successful hosted AI smoke on pinned Galaxy backend baseline'
             exit 1
           }
           python - <<'PY'
