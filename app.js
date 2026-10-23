@@ -204,7 +204,7 @@ async function advanceTopic(){
    next_review_at:new Date(Date.now()+DAYS).toISOString()};
   await saveProgress(current);
  }
- if(trackMockQuestion())return;
+ if(trackMockQuestion({skipped:!state.feedback}))return;
  beginPracticeTopic(next);
 }
 
@@ -224,7 +224,8 @@ function topicRoleMatch(t){
  return terms.reduce((n,term)=>n+(info.includes(term)?1:0),0);
 }
 function nextRoleTopic(current){
- const candidates=state.topics.filter(t=>key(t)!==key(current)&&getP(t).status!==2);
+ const tried=new Set(state.session?.topics||[]);
+ const candidates=state.topics.filter(t=>key(t)!==key(current)&&getP(t).status!==2&&!tried.has(t.title));
  candidates.sort((a,b)=>topicRoleMatch(b)-topicRoleMatch(a));
  return candidates[0]||topicAfter(current);
 }
@@ -248,19 +249,27 @@ function buildCoachReport(){
  state.coachInsights=api.summarize({attempts:state.attempts,progress:state.progress,session:state.sessionReport});render();
 }
 function startMockSession(){
- state.studyMode='mock';state.session={done:0,limit:5,topics:[],startedAt:Date.now()};
+ state.studyMode='mock';state.session={done:0,limit:5,topics:[],rounds:[],asked:[],startedAt:Date.now()};
  state.sessionReport=null;beginPracticeTopic(nextRoleTopic(state.current||pickNext()));render();
 }
 function finishMockSession(){
  if(!state.session)return;
- state.sessionReport={...state.session,endedAt:Date.now()};
+ const rounds=state.session.rounds||[];
+ state.sessionReport={...state.session,endedAt:Date.now(),answered:rounds.filter(r=>!r.skipped).length,
+ skipped:rounds.filter(r=>r.skipped).length,modelReviewed:rounds.filter(r=>r.modelReviewed).length};
  state.session=null;state.studyMode='practice';render();
 }
-function trackMockQuestion(){
+function trackMockQuestion({skipped=false}={}){
  if(!state.session)return false;
- state.session.done+=1;
- if(state.current)state.session.topics.push(state.current.title);
- if(state.session.done>=state.session.limit){finishMockSession();return true}
+ const session=state.session,feedback=state.feedback,topic=state.current;
+ session.done+=1;
+ if(topic)session.topics.push(topic.title);
+ // Session report stores minimal metrics, never a second copy of the answer.
+ session.rounds.push({topic:topic?.title||'Topic',skipped:Boolean(skipped),
+ modelReviewed:!skipped&&feedback?.serverReviewed===true,
+ modelEstimatedAccuracy:!skipped&&feedback?.serverReviewed===true?feedback.accuracy:null,
+ missingCount:!skipped?Math.min(20,feedback?.missing?.length||0):null});
+ if(session.done>=session.limit){finishMockSession();return true}
  return false;
 }
 function practiceMarkup(){const t=state.current||pickNext(),f=state.feedback,l=state.lessons[t.title]||overview(t);state.current=t;const availability=modelAvailability();const topicOptions=state.topics.filter(x=>!!state.lessons[x.title]);return intro('INTERVIEW SIMULATOR','Practice with <span class="gradient-text">your own voice.</span>','Choose Learn, Guided Practice or Mock Interview. Free local concept checks are not factual grades; optional authenticated AI evaluations use existing quotas.')+`<div class="panel" style="margin-bottom:16px"><div class="practice-actions" role="group" aria-label="Learning mode"><button type="button" class="btn ${state.studyMode==='learn'?'accent':'ghost'}" data-study-mode="learn">Learn first</button><button type="button" class="btn ${state.studyMode==='practice'?'accent':'ghost'}" data-study-mode="practice">Guided practice</button><button type="button" class="btn ${state.studyMode==='mock'?'accent':'ghost'}" data-study-mode="mock">Mock interview</button></div><div class="practice-actions"><label for="target-role">Target role</label><select id="target-role" aria-label="Target role">${TARGET_ROLES.map(role=>`<option ${state.targetRole===role?'selected':''}>${escapeHtml(role)}</option>`).join('')}</select><label for="job-focus">Job focus (optional)</label><input type="text" id="job-focus" maxlength="160" placeholder="e.g. RAG, Azure, LangGraph" value="${escapeHtml(state.jobFocus)}" autocomplete="off" /><button type="button" class="btn ghost" id="apply-job-focus">Apply</button>${state.session?'<button type="button" class="btn ghost" id="finish-mock">Finish mock</button>':'<button type="button" class="btn ghost" id="start-mock">Start 5-question mock</button>'}</div><p class="footnote">${state.session?`Question ${Math.min(state.session.done+1,state.session.limit)} of ${state.session.limit} · ${escapeHtml(state.targetRole)} · feedback after every question`:state.studyMode==='learn'?'Learn the concept before answering. No AI tokens required.':state.studyMode==='mock'?'Start a timed-style five-question practice session. Timing is not enforced.':'Use hints or skip without being trapped in retries.'}</p>${state.sessionReport?`<section class="score-panel" role="status"><h3>Mock interview complete</h3><p>${state.sessionReport.done} questions completed · ${escapeHtml(state.targetRole)} · ${Math.max(1,Math.ceil((state.sessionReport.endedAt-state.sessionReport.startedAt)/60000))} minutes elapsed</p><p>This counts questions attempted, not verified correctness. Review your feedback and revision queue.</p><button class="btn ghost" id="close-mock-report" type="button">Dismiss report</button></section>`:''}</div>${galaxyCoachPanel()}<div class="grid-two"><div class="panel"><span class="eyebrow">${state.session?`MOCK QUESTION ${Math.min(state.session.done+1,state.session.limit)} / ${state.session.limit}`:'OPEN-ENDED ROUND'} · LEVEL ${state.level}</span><h3>Topic: ${escapeHtml(t.title)}</h3><div class="practice-question">${escapeHtml(state.attemptQuestion||questionFor(t,state.level))}</div><div class="practice-actions" aria-label="Question navigation"><button type="button" class="btn accent" id="top-teach">Teach me</button><button type="button" class="btn ghost" id="top-skip">Skip / Next topic →</button><button type="button" class="btn ghost" id="top-hint">Show hint</button></div><p class="footnote">You can move forward at any time. Skipping schedules a review, not a mastery score.</p>${state.guideOpen?`<section class="panel" id="adaptive-guide" role="region" aria-label="Guided explanation"><span class="eyebrow">LEARN FIRST · NO MODEL CALL</span><h3>Start with the basics</h3><p><b>Simple explanation:</b> ${escapeHtml(l.simple)}</p><p><b>Example:</b> ${escapeHtml(l.example||'Try relating this idea to a familiar situation.')}</p><details><summary>View full reference answer</summary><p>${escapeHtml(l.answer)}</p></details><button class="btn accent" id="adaptive-guided-try" type="button">Try a simple guided question →</button></section>`:''}<p class="footnote" id="evaluation-mode" role="status">${escapeHtml(availability.message)}</p>${!availability.ready&&window.GALAXY_EVALUATOR_URL?`<button class="btn ghost" id="practice-signin" type="button">Sign in for AI evaluation →</button>`:''}<form class="practice-form" id="answer-form" style="margin-top:17px"><label for="spoken-answer">Your answer — editable transcript</label><textarea id="spoken-answer" maxlength="2000" placeholder="Tell the interviewer what it is, how it works, and when you used it…">${escapeHtml(state.answerDraft)}</textarea><div class="practice-actions"><button class="mic-button ${state.recording?'recording':''}" id="mic-control" type="button" aria-pressed="${state.recording}">${state.recording?'■ Stop listening':'🎙 Start microphone'}</button><span class="footnote" id="mic-hint">${state.recording?'Listening… pause to finish.':'Browser recognition may process audio remotely; check its privacy policy. Use a secure origin and microphone permission.'}</span></div><div class="practice-actions"><button class="btn accent" id="evaluate-btn" type="submit">${availability.ready?'Evaluate with AI (uses model tokens) →':'Check concepts locally (free) →'}</button>${availability.ready?'<button class="btn ghost" id="evaluate-local" type="button">Local check (free)</button>':''}<button class="btn ghost" id="practice-retry" type="button">Try again</button><button class="btn ghost" id="adaptive-teach" type="button">I don’t know · Teach me</button><button class="btn ghost" id="adaptive-skip" type="button">Skip / Next topic →</button></div></form>${f?`<div class="score-panel"><span class="eyebrow">${f.serverReviewed?'SERVER MODEL REVIEW · VERIFY AGAINST SOURCE':'LOCAL CONCEPT CHECK · NOT A FACTUAL GRADE'}</span><p><strong>${f.serverReviewed?f.score+'% model estimate':'Practice hint'}</strong> ${f.serverReviewed?'(not independently verified)':'(not a technical accuracy score)'} · <span class="${f.passed?'good':'weak'}">${f.serverReviewed?(f.passed?'Model-reviewed strong attempt':'Model-reviewed retry recommended'):(f.challengeReady?'Concepts mentioned · accuracy unverified':'Targeted retry · accuracy unverified')}</span></p>${f.localReason?`<p role="status"><b>Why this is a local check:</b> ${escapeHtml(f.localReason)}</p>`:''}<p>${escapeHtml(f.message)}</p>${f.missing.length?`<p><b>Consider covering:</b> ${f.missing.map(x=>`<span class="tag">${escapeHtml(x)}</span>`).join('')}</p>`:''}<p><b>Suggested interview answer:</b> ${escapeHtml(f.improved_answer||l.answer)}</p>${transcriptCoaching(state.answerDraft)}<p class="footnote">${f.challengeReady?'Adaptive step: try a harder follow-up; concept coverage alone cannot certify mastery.':'Adaptive step: revisit the simple explanation and retry.'}</p><button class="btn accent" id="adaptive-next">${f.challengeReady?(state.level>=3?'Finish Level 3 · Next topic →':'Try harder follow-up →'):'Retry targeted question →'}</button><button class="btn ghost" id="adaptive-next-topic" type="button">Next topic →</button><button class="btn ghost" id="adaptive-explain" type="button">View explanation</button></div>`:''}</div><aside class="panel"><span class="eyebrow">CHOOSE A FOCUS TOPIC</span><p class="footnote">Expanded lessons currently provide concept-specific scoring terms. Other topics only have summary-based practice.</p><select id="focus-topic" style="width:100%">${topicOptions.map(x=>`<option value="${encodeURIComponent(key(x))}" ${key(x)===key(t)?'selected':''}>${escapeHtml(x.title)}</option>`).join('')}</select><div class="content-block"><h3>Simple explanation</h3><p>${escapeHtml(l.simple)}</p></div><div class="content-block"><h3>What a good answer includes</h3><p>Clear definition, technical mechanism, relevant example, and trade-off. A local score cannot reliably detect invented facts or negation.</p></div></aside></div>`}
