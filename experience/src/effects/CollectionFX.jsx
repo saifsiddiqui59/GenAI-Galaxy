@@ -31,6 +31,8 @@ export function collectPosition(world,index,time,disabled=false,bagPosition=BAG_
 function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPoseRef,compact,clockRef}){
  const mesh=useRef(),halo=useRef();
  const worldLayout=layoutWorlds()[world.index];
+ const miniatureTexture=useMemo(()=>planetSurfaceTexture(world.index,COLORS[world.index],compact),[world.index,compact]);
+ useEffect(()=>()=>miniatureTexture.dispose(),[miniatureTexture]);
  const begin=useRef(null),spawn=useRef(null);
  useFrame(({clock},delta)=>{
   if(!mesh.current||!worldLayout)return;
@@ -44,8 +46,8 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
   const hip=rigPoseRef?.current?.hip;
   if(!spawn.current&&hip&&time>=COLLECT_START_MS-120)spawn.current={
     ...worldLayout,
-    x:hip.x+((order%4)-1.5)*.22,y:hip.y-.38,
-    z:hip.z+.48+Math.floor(order/4)*.12
+    x:hip.x+((order%4)-1.5)*.17,y:hip.y-.25,
+    z:hip.z+.65+Math.floor(order/4)*.09
   };
   const sourceWorld=spawn.current||(
     compact?{...worldLayout,x:worldLayout.x*.48,y:worldLayout.y*.73+.4,z:worldLayout.z*.8-1.8}:worldLayout
@@ -54,7 +56,7 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
   const sackOffset=new THREE.Vector3((order%4-1.5)*.115,Math.floor(order/4)*.08,order*.007);
   if(arrived)point.add(sackOffset);
   mesh.current.position.copy(point);
-  mesh.current.scale.setScalar(arrived?.38:.68);
+  mesh.current.scale.setScalar(arrived?.30:.46);
   if(halo.current){
     const shine=arrived?.45:.8+Math.sin(time*.012)*.22;
     halo.current.material.opacity=shine;
@@ -64,11 +66,11 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
  });
  if(!worldLayout)return null;
  return <group ref={mesh} position={[worldLayout.x,worldLayout.y,worldLayout.z]}>
-   <mesh><icosahedronGeometry args={[.22,2]}/><meshStandardMaterial color={COLORS[world.index]}
-     emissive={COLORS[world.index]} emissiveIntensity={.7} metalness={.25} roughness={.25}/></mesh>
+   <mesh><icosahedronGeometry args={[.17,3]}/><meshStandardMaterial map={miniatureTexture} color="#ffffff"
+     emissive={COLORS[world.index]} emissiveIntensity={.22} metalness={.08} roughness={.52}/></mesh>
    <mesh ref={halo}>
-    <sphereGeometry args={[.185,12,12]}/>
-    <meshBasicMaterial color={COLORS[world.index]} transparent opacity={.10} depthWrite={false}/>
+    <sphereGeometry args={[.19,12,12]}/>
+    <meshBasicMaterial color={COLORS[world.index]} transparent opacity={.07} depthWrite={false}/>
    </mesh>
  </group>;
 }
