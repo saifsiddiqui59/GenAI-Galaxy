@@ -3,6 +3,7 @@ import {useFrame,useLoader,useThree} from '@react-three/fiber';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import {useAnimations} from '@react-three/drei';
 import * as THREE from 'three';
+import {discoverRigAnchors,gripMidpoint,waistPosition} from './rigAnchors.js';
 // The scene uses one character, so keep FBXLoader's original skinned mesh and bindings.
 
 // Real Quaternius 2018 CC0 skeletal FBX, not generated placeholder geometry.
@@ -50,6 +51,7 @@ function SkeletonModel({phase='idle'}){
    return model;
  },[rootFBX]);
  const {actions,names}=useAnimations(rootFBX.animations,instance);
+ const rig=useMemo(()=>discoverRigAnchors(instance),[instance]);
  const holder=useRef(null),elapsed=useRef(0),previous=useRef(phase);
  // Adapted from MIT-licensed 3merillon CharacterController mobile smoothing.
  // https://github.com/3merillon/React-Three-Fiber-Character-Controller/blob/main/src/components/CharacterController.tsx
@@ -65,8 +67,11 @@ function SkeletonModel({phase='idle'}){
   if(import.meta.env.DEV||new URLSearchParams(window.location.search).has('demo'))
     window.__galaxySkeletonDiagnostics={meshes,bones,clips:names.length,
        sourceDimensions:instance.userData.sourceDimensions,
-       worldPosition:instance.getWorldPosition(new THREE.Vector3()).toArray()};
- },[instance,names]);
+       worldPosition:instance.getWorldPosition(new THREE.Vector3()).toArray(),
+       rig:{detectedBones:rig.detectedBones,left:rig.leftHand?.name||null,
+        right:rig.rightHand?.name||null,waist:rig.waist?.name||null,
+        canOffer:rig.readyToOffer,canCarry:rig.readyForSatchel}};
+ },[instance,names,rig]);
  useEffect(()=>{
   instance.traverse(node=>{
     if(node.isSkinnedMesh||node.isMesh){
@@ -112,6 +117,12 @@ function SkeletonModel({phase='idle'}){
       smoothedPosition.current.copy(holder.current.position);
     }
     holder.current.rotation.y=THREE.MathUtils.damp(holder.current.rotation.y,-.17,4,dt);
+    // Capture actual animated bone positions for visual QA; no fake IK claims.
+    if(import.meta.env.DEV&&window.__galaxySkeletonDiagnostics){
+      instance.updateMatrixWorld(true);
+      window.__galaxySkeletonDiagnostics.gripMidpoint=gripMidpoint(rig,THREE.Vector3)?.toArray()||null;
+      window.__galaxySkeletonDiagnostics.waistPosition=waistPosition(rig,THREE.Vector3)?.toArray()||null;
+    }
   }
  });
  // FBX can have drastically different authoring scale; geometry comes from the
