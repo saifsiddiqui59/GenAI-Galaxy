@@ -3,6 +3,7 @@ import {useFrame,useLoader,useThree} from '@react-three/fiber';
 import {FBXLoader} from 'three/addons/loaders/FBXLoader.js';
 import {useAnimations} from '@react-three/drei';
 import * as THREE from 'three';
+import {clone as cloneSkinnedSkeleton} from 'three/addons/utils/SkeletonUtils.js';
 
 // Real Quaternius 2018 CC0 skeletal FBX, not generated placeholder geometry.
 // Animation names from the original asset are detected and logged on load.
@@ -27,7 +28,7 @@ export function advanceSkeletonX(phase,elapsed,smallScreen=false){
 function SkeletonModel({phase='idle'}){
  const source=import.meta.env.BASE_URL+'models/skeleton/Skeleton.fbx';
  const rootFBX=useLoader(FBXLoader,source);
- const instance=useMemo(()=>rootFBX.clone(true),[rootFBX]);
+ const instance=useMemo(()=>cloneSkinnedSkeleton(rootFBX),[rootFBX]);
  const {actions,names}=useAnimations(rootFBX.animations,instance);
  const holder=useRef(null),elapsed=useRef(0),previous=useRef(phase);
  // Adapted from MIT-licensed 3merillon CharacterController mobile smoothing.
