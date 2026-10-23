@@ -1,0 +1,128 @@
+name: Galaxy P18 isolated adaptive learning preview (manual only)
+# Owner-authorized preview. Existing Galaxy Blob /adaptive-preview ONLY.
+# No model calls, no Auth, no new resources, no prod index/app.js edits.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type PREVIEW_P18 to publish the standalone offline adaptive preview'
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  validate:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'PREVIEW_P18'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify no-cost learning mode and build independent guest-only HTML
+        run: |
+          node --check app.js
+          node tests/test_engine.cjs
+          python scripts/build_adaptive_preview.py
+          test -s artifacts/adaptive-learning-preview.html
+      - name: Upload exact reviewed bundle as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Galaxy-P18-Preview-Source
+          path: artifacts/adaptive-learning-preview.html
+          retention-days: 3
+  publish:
+    needs: validate
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'PREVIEW_P18'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    concurrency:
+      group: galaxy-p18-isolated-adaptive-preview
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Generate no-network single page
+        run: python scripts/build_adaptive_preview.py
+      - name: Pin existing Galaxy cloud identity, RG and account
+        shell: bash
+        env:
+          CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ACCOUNT: ${{ vars.GALAXY_STORAGE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          [[ "${CLIENT_ID,,}" == "737d67b7-4984-48bb-bb1f-5f62599f645c" ]] || {
+            echo '::error::Wrong Galaxy OIDC principal'; exit 1;
+          }
+          [[ -n "$TENANT_ID" && -n "$SUBSCRIPTION_ID" ]] || exit 1
+          [[ "$ACCOUNT" == "gengalaxy1429841605" ]] || exit 1
+      - name: Sign in to existing Galaxy Azure
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Upload ONLY adaptive-preview/index.html to existing website
+        shell: bash
+        run: |
+          set -euo pipefail
+          account='gengalaxy1429841605'
+          rg='GenAI_Galaxy'
+          dest='adaptive-preview/index.html'
+          id="$(az storage account show --resource-group "$rg" --name "$account" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/"$rg"/providers/Microsoft.Storage/storageAccounts/"$account" ]] || exit 1
+          az storage blob upload --account-name "$account" --auth-mode login \
+            --container-name '$web' --name "$dest" \
+            --file artifacts/adaptive-learning-preview.html --overwrite true \
+            --content-type text/html --content-cache-control 'no-cache, max-age=0' \
+            --only-show-errors >/dev/null
+          temp="$(mktemp)"
+          trap 'rm -f "$temp"' EXIT
+          az storage blob download --account-name "$account" --auth-mode login \
+            --container-name '$web' --name "$dest" --file "$temp" \
+            --overwrite true --only-show-errors >/dev/null
+          cmp artifacts/adaptive-learning-preview.html "$temp" || {
+            echo '::error::Hosted preview bytes differ from generated safe file'; exit 1;
+          }
+          echo 'Preview bytes verified. No original website files changed.'
+      - name: Logout
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
+  hosted-playwright:
+    needs: publish
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'PREVIEW_P18'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and install headless Chromium
+        run: |
+          python scripts/build_adaptive_preview.py
+          python -m pip install playwright==1.57.0
+          python -m playwright install chromium
+      - name: Verify live P18 preview desktop and mobile without any AI requests
+        env:
+          GALAXY_ADAPTIVE_PREVIEW_URL: https://gengalaxy1429841605.z29.web.core.windows.net/adaptive-preview/index.html
+        run: python tests/preview_adaptive_browser.py
+      - name: Attach guest-only screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: P18-hosted-preview-screenshots
+          path: artifacts/p18-*.png
+          retention-days: 3

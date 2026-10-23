@@ -32,6 +32,23 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
   await page.locator('#practice-this').click()
   assert await page.locator('#spoken-answer').count()==1
   assert await page.locator('[data-choice]').count()==0
+  # Free adaptive tutoring: explain, guide, skip, and resume without a model.
+  assert await page.locator('#adaptive-teach').count()==1
+  await page.locator('#adaptive-teach').click()
+  assert await page.locator('#adaptive-guide').count()==1
+  assert 'Simple explanation' in await page.locator('#adaptive-guide').inner_text()
+  await page.locator('#adaptive-guided-try').click()
+  assert 'In your own words' in await page.locator('.practice-question').inner_text()
+  await page.locator('#spoken-answer').fill("I don't know the answer yet")
+  await page.locator('#evaluate-btn').click()
+  assert await page.locator('#adaptive-guide').count()==1
+  assert await page.locator('.score-panel').count()==0
+  previous_topic = await page.locator('.panel h3').first.inner_text()
+  await page.locator('#adaptive-skip').click()
+  next_topic = await page.locator('.panel h3').first.inner_text()
+  assert next_topic != previous_topic, 'Skip failed to advance topic'
+  assert await page.locator('#adaptive-guide').count()==0
+  assert await page.locator('#sidebar-mastered').inner_text()=='0'
   await page.locator('#mic-control').click()
   assert await page.locator('#mic-control').get_attribute('aria-pressed')=='true'
   await page.evaluate('''() => {const r=window.__fake_recognition; const part=[{transcript:'I am practicing a spoken interview answer'}];part.isFinal=true;r.onresult({results:[part]})}''')
