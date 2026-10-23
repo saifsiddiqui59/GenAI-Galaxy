@@ -1,9 +1,9 @@
 """Read-only acceptance of the LIVE public Galaxy website; guest mode only."""
 import asyncio
 import json
-from hashlib import sha256
 from pathlib import Path
 from playwright.async_api import async_playwright
+from public_asset_policy import verify_public_asset
 
 SITE = "https://gengalaxy1429841605.z29.web.core.windows.net/"
 ROOT = Path(__file__).resolve().parents[1]
@@ -40,10 +40,7 @@ async def inspect(viewport, reduced=False):
             assert asset.status == 200, f"{path}: HTTP {asset.status}"
             downloaded = await asset.body()
             local = (ROOT / path).read_bytes()
-            assert sha256(downloaded).digest() == sha256(local).digest(), (
-                f"{path}: hosted bytes differ from checked-out main; "
-                "deploy this reviewed commit before claiming live acceptance"
-            )
+            verify_public_asset(path, downloaded, local)
             if path == "data/curriculum.json":
                 hosted_curriculum = json.loads(downloaded)
             elif path == "data/lessons.json":
