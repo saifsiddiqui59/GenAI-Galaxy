@@ -147,3 +147,11 @@ Do not change RetailGrowthAI or WineShopPOS or conflate offline mocks with appro
 **Pending before real paid AI execution:** Verify RG-scoped Azure provisioning privileges for existing Galaxy OIDC principal, configure protected GitHub `dev` model/publishable secrets, and manually dispatch `galaxy-p3-flex-provision.yml` with `PROVISION`, then `galaxy-p3-flex-deploy.yml` with `DEPLOY`. These actions may incur usage costs and require a real existing Azure OpenAI pay-per-token deployment. Workflow triggers remain manual-only; we cannot call GitHub workflow_dispatch through the currently connected app, alter protected dev secrets or authenticate to the owner's Azure subscription in this chat.
 
 **Separate incomplete:** Two-user hosted Auth/RLS test using disposable users; actual signed-in AI requests and real HTTP 429/503 checks. Do not count synthetic database JWT simulation as real sign-in. P4 monitoring and manual browser/mic acceptance remain deferred per owner.
+
+## P10 — lightweight evaluator tracing and release quality gate
+
+**Source completed:** Privacy-safe per-request `X-Galaxy-Trace-Id` and structured Function-stage/token/latency/result telemetry, 10-case versioned golden dataset, independent-score quality policy, fail-closed gate checker and offline automated tests. Root guide: `docs/ai/evaluation/README.md`.
+
+**Needs actual evidence:** Deploy the consumption evaluator via protected Github Actions after model secrets configured; verify real authenticated responses plus correlation headers. Run real independent ground-truth/LLM judge evaluation across all cases (never treat model-reported accuracy/clarity as groundedness), then provide actual safely aggregated results to `python scripts/gate_galaxy_eval.py <actual-scored-evidence.json>`. No synthetic CI fixture represents independent quality success. Optional Foundry/Log Analytics trace ingestion is **not** configured or claimed, since owner opted out of P4 monitoring resources.
+
+**Existing blockers remain:** Galaxy P3 Azure Function/AI deployment and disposable two-account hosted login/RLS acceptance. Avoid WineShopPOS resources/secrets.
