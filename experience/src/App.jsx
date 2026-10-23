@@ -82,7 +82,8 @@ export default function App(){
          onSelect={select} reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
        <Guardian phase={animationEnabled?modelPhase:'idle'}/>
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced||budget.lowPower}
-         epoch={effectsEpoch} onOpenSack={()=>setSackOpenFrom3D(x=>x+1)}/>
+         epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
+         onOpenSack={()=>setSackOpenFrom3D(x=>x+1)}/>
      </Canvas>
    </div>}
    {!available3D&&<div className="galaxy-no-webgl" role="status">
