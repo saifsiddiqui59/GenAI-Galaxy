@@ -26,7 +26,7 @@ class P3ReleasePolicyTests(unittest.TestCase):
         for must in ("workflow_dispatch:", "inputs.confirm == 'DEPLOY'",
                      "environment: dev", "refs/heads/main", "functionapp show",
                      "GALAXY_BACKEND_PROFILE=direct-consumption",
-                     "GALAXY_AZURE_OPENAI_API_KEY", "GALAXY_SUPABASE_PUBLISHABLE_KEY",
+                     "az cognitiveservices account keys list", "GALAXY_SUPABASE_PUBLISHABLE_KEY",
                      "Azure/functions-action@v1", "package: api", "remote-build: true",
                      "gengalaxy-p3-1429841605"):
             self.assertIn(must, s)
