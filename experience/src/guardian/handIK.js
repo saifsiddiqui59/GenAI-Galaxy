@@ -41,9 +41,9 @@ export function moveWrist(chain,target,iterations=6){
 }
 export function poseTwoHandOffering(chains,hips,iterations=5){
  if(!chains?.left||!chains?.right||!hips)return null;
- const centre=hips.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.79,.55));
- const left=centre.clone().add(new THREE.Vector3(-.28,-.08,.03));
- const right=centre.clone().add(new THREE.Vector3(.28,-.08,.03));
+ const centre=hips.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0,.69,.32));
+ const left=centre.clone().add(new THREE.Vector3(-.25,-.05,.03));
+ const right=centre.clone().add(new THREE.Vector3(.25,-.05,.03));
  const errorLeft=moveWrist(chains.left,left,iterations);
  const errorRight=moveWrist(chains.right,right,iterations);
  return {centre,errorLeft,errorRight};
