@@ -41,8 +41,11 @@ async def inspect(browser,origin,viewport,reduced=False):
   await page.wait_for_function("""() => window.__galaxySkeletonDiagnostics?.currentPhase === 'collecting' && window.__galaxySkeletonDiagnostics?.currentClip === 'PickUp' && Number.isInteger(window.__galaxySkeletonDiagnostics?.currentPickupIndex) && window.__galaxySkeletonDiagnostics.currentPickupIndex >= 0""",timeout=9000)
   started=await page.evaluate("window.__galaxySkeletonDiagnostics.currentPickupIndex")
   print('P23 VERIFIED PER-WORLD KAYKIT PICKUP',started)
+  # Snapshot mid-reach rather than only the collection phase's first frame.
+  await page.wait_for_timeout(420)
   await page.screenshot(path=str(ROOT/("preview-p19-"+label+"-pickup.png")),timeout=20000)
   await page.wait_for_function("""index => window.__galaxySkeletonDiagnostics?.currentPickupIndex !== index || window.__galaxySkeletonDiagnostics?.currentPhase === 'offering'""",arg=started,timeout=9000)
+  await page.screenshot(path=str(ROOT/("preview-p23-"+label+"-satchel-deposit.png")),timeout=20000)
  await page.wait_for_timeout(5100 if not reduced else 350)
  if not reduced:
   await page.locator(".guardian-skip").wait_for(state="hidden",timeout=20000)
