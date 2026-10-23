@@ -141,3 +141,9 @@
 - Owner explicitly prohibits adding any payment gateway, automated charging, Stripe/Razorpay checkout, new paid AI model, fine-tuning, and paid evaluation calls for this workstream. Existing FREE/PLUS/PRO codes remain internal server-owned entitlements only with null price, no end-user upgrades, and no checkout.
 - Existing P12 Azure AI PAYG deployment is allowed to remain; P13 does **not** invoke it for QA, provision new cloud resources or claim paid model operations are free.
 - Use offline/mocked regression, rubric inventory, release parity, read-only guest browser checks and human/device acceptance; no paid live golden judge or repeated live AI smoke. See `docs/reviews/P13_ZERO_COST_ACCEPTANCE.md`.
+
+
+## P15 — premium 3D homepage with existing, licensed skeletal character
+- Prioritize actual ready-made 3D skeletal clips and legible cosmic atmosphere over repeated basic SVG keyframes. Official RobotExpressive by Tomás Laulhé (modification Don McCurdy, CC0-1.0) was selected as a verifiably redistributable 463,988-byte candidate. Quaternius CC0 monsters are optional later aesthetic alternatives after checking exact animation and model license; 3merillon MIT character-controller code does not independently prove embedded meshes licensed.
+- Avoid direct copy of React Bits (MIT+Commons Clause) Hyperspeed shaders; local original CSS portal uses similar genre only. Reuse only when specific license permits.
+- Keep separate standalone Vite/R3F static experience, original 17 worlds and every V3 persisted key. Miniature mastered-planet tokens go into clickable satchel; true planets remain selectable. Use solely status=2 across whole chapter for mastery. Warp via safe bounded chapter index to existing lesson page. Prefer explicitly labeled synthetic demo data before owner-approved real Auth integration. No automatic deployment or paid model calls.
