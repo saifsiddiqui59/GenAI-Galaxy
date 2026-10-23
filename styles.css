@@ -11,3 +11,6 @@
   .planet-name{font-size:10px;line-height:1.25;max-width:112px}
   .galaxy-legend{bottom:12px;left:15px}
 }
+
+/* Only server-verified Galaxy platform administrators may see the control link. */
+.navlink[hidden]{display:none!important}
