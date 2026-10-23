@@ -28,18 +28,23 @@ export function collectPosition(world,index,time,disabled=false,bagPosition=BAG_
  }
  return {point,arrived:t>=1,atHand:Boolean(pickup&&t>=.44&&t<.52)};
 }
-function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPoseRef,compact}){
+function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPoseRef,compact,clockRef}){
  const mesh=useRef(),halo=useRef();
  const worldLayout=layoutWorlds()[world.index];
  const begin=useRef(null);
  useFrame(({clock},delta)=>{
   if(!mesh.current||!worldLayout)return;
   if(begin.current?.epoch!==epoch)begin.current={epoch,start:clock.elapsedTime*1000};
-  const time=clock.elapsedTime*1000-begin.current.start;
+  const time=clockRef?.current?.ms??(clock.elapsedTime*1000-begin.current.start);
   const dynamicBag=rigPoseRef?.current?.hip;
   const position=dynamicBag?dynamicBag.toArray().map((v,i)=>v+([.38,-.25,.16][i])):bagPosition;
   const hand=rigPoseRef?.current?.hand?.toArray()||null;
-  const sourceWorld=compact?{...worldLayout,x:worldLayout.x*.48,y:worldLayout.y*.73+.4,z:worldLayout.z*.8-1.8}:worldLayout;
+  // Actual mastered miniatures line up at the guardian's feet for pickup.
+  // Original full-size learning planets remain intact and clickable.
+  const hip=rigPoseRef?.current?.hip;
+  const sourceWorld=hip?
+    {...worldLayout,x:hip.x+((order%4)-1.5)*.38,y:hip.y-.72,z:hip.z+.43+Math.floor(order/4)*.15}:
+    compact?{...worldLayout,x:worldLayout.x*.48,y:worldLayout.y*.73+.4,z:worldLayout.z*.8-1.8}:worldLayout;
   const {point,arrived}=collectPosition(sourceWorld,order,time,reducedMotion,position,hand);
   const sackOffset=new THREE.Vector3((order%4-1.5)*.115,Math.floor(order/4)*.08,order*.007);
   if(arrived)point.add(sackOffset);
@@ -63,12 +68,16 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPose
  </group>;
 }
 function Satchel({onOpenSack,count,bagPosition,rigPoseRef,compact}){
- const bag=useRef();
- useFrame((state)=>{
+ const bag=useRef(),lastDeposited=useRef(count),pulse=useRef(0);
+ useFrame((state,dt)=>{
   if(!bag.current)return;
   const hip=rigPoseRef?.current?.hip;
   if(hip)bag.current.position.copy(hip).add(new THREE.Vector3(.38,-.25,.16));
-  bag.current.rotation.z=Math.sin(state.clock.elapsedTime*1.7)*.035;
+  if(count>lastDeposited.current)pulse.current=1;
+  lastDeposited.current=count;
+  pulse.current=Math.max(0,pulse.current-Math.min(dt,.05)*2.5);
+  bag.current.scale.setScalar((compact?.78:1)*(1+.17*pulse.current));
+  bag.current.rotation.z=Math.sin(state.clock.elapsedTime*1.7)*.035+.12*pulse.current;
  });
  return <group ref={bag} position={bagPosition} scale={compact?.78:1}
   onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
@@ -123,14 +132,14 @@ function OfferingOrb({worldIndex,phase,bagPosition,rigPoseRef,compact}){
  </group>;
 }
 
-export default function CollectionFX({completed=[],reducedMotion=false,epoch=0,onOpenSack,phase='idle',nextWorldIndex=0,rigPoseRef}){
+export default function CollectionFX({completed=[],collectedCount,clockRef,reducedMotion=false,epoch=0,onOpenSack,phase='idle',nextWorldIndex=0,rigPoseRef}){
  const size=useThree(state=>state.size);
  const bagPosition=size.width<700?[-.75,-.82,3.7]:BAG_POSITION;
  return <>
-   <Satchel onOpenSack={onOpenSack} count={completed.length} bagPosition={bagPosition} rigPoseRef={rigPoseRef} compact={size.width<680}/>
+   <Satchel onOpenSack={onOpenSack} count={collectedCount??completed.length} bagPosition={bagPosition} rigPoseRef={rigPoseRef} compact={size.width<680}/>
    <OfferingOrb phase={phase} worldIndex={nextWorldIndex} bagPosition={bagPosition} rigPoseRef={rigPoseRef} compact={size.width<680}/>
    {completed.filter(w=>Number.isInteger(w.index)&&w.index>=0&&w.index<17).slice(0,17).map((world,order)=>
      <CollectedOrb key={world.index} world={world} order={order}
-      epoch={epoch} reducedMotion={reducedMotion} ready={true} bagPosition={bagPosition} rigPoseRef={rigPoseRef} compact={size.width<680}/>)}
+      epoch={epoch} reducedMotion={reducedMotion} ready={true} bagPosition={bagPosition} rigPoseRef={rigPoseRef} compact={size.width<680} clockRef={clockRef}/>)}
  </>;
 }
