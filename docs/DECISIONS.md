@@ -104,3 +104,9 @@
 - Broad owner permission to pursue remaining Galaxy work does not manufacture dedicated authentication credentials, actual device microphone access, subscription budget limits or a GitHub workflow-dispatch capability. Preserve protected manual `DEPLOY`/`TEST` gates and existing-only Azure storage targeting rather than changing CI to auto-deploy.
 - A hosted HTTP 200 or guest navigation pass is insufficient to claim P3 deployment. Require exact SHA-256 parity for all seven allowlisted public files against the selected main checkout plus 17 worlds/245 unique hosted lessons/246 mapped topics. No cloud launch is claimed from P4 source commits.
 - No changes to unrelated objects in shared Supabase project; catalog verification is safe read-only evidence, not live user-isolation proof.
+
+## P6 — GitHub-hosted disposable Auth tests, no SQL Auth inserts
+
+- All future user-triggered executions should be GitHub Actions; local VS Code/Git Bash CLI is no longer a required user workflow. Do not create Auth users by direct SQL insertion or disable confirmation globally. Use Supabase's documented Admin Auth API via **protected GitHub `dev` environment secret** to create two uniquely named disposable users, perform data-plane tests with their standard Auth tokens and a publishable key, and delete only the IDs just created.
+- The service/secret key bypasses RLS: use it **only** for Auth admin create/delete, never for progress/docs/storage assertions, frontend JavaScript or routine CI. No user account password/email/key in source, artifacts or logs; the users have randomly generated credentials and synthetic example.com identities. The existing clinic Auth users and tables stay unchanged.
+- Preserve workflow_dispatch/main/`TEST` protection, leave browser acceptance postponed, and do not claim hosted sign-in/RLS tested before the protected workflow succeeds.
