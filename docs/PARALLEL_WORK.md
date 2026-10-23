@@ -39,3 +39,18 @@ This section supersedes the original broad assignments below. **Repo:** `saifsid
 - QA/CI: `tests/**`, `.github/workflows/**`, `scripts/checkpoint.sh`.
 
 Only coordinator edits shared `app.js`/interfaces and merges PRs; workers create branches and report blockers. All GitHub work stays isolated from RetailGrowthAI/WineShopPOS.
+
+
+## P15 — new standalone cinematic home workstreams (2026-10-23)
+
+All four independent branches started at main. Contributors own ONLY their listed folders/files; coordinator owns React/Vite app glue, root app.js chapter-index bridge, shared CI, docs and deployment decisions. Avoid merging independent source branches and coordinator copies twice.
+
+| Scope | Branch / PR | Exclusive ownership |
+|---|---|---|
+| A ready-made 3D CC0 guardian | feat/p15-guardian-3d / #64 | experience/src/guardian/**, experience/scripts/fetch-guardian.mjs, tests/test_p15_guardian.py, docs/experience/GUARDIAN.md |
+| B deep space/planets | feat/p15-deep-space / #65 | experience/src/space/**, tests/test_p15_space.py, docs/experience/SPACE.md |
+| C portal | feat/p15-portal-warp / #66 | experience/src/portal/**, tests/test_p15_portal.py, docs/experience/PORTAL.md |
+| D journey/satchel | feat/p15-guardian-journey / #67 | experience/src/journey/**, tests/test_p15_journey.py, docs/experience/JOURNEY.md |
+| Coordinator combined | feat/p15-3d-experience-integration / #69 | experience/{index.html,package.json,vite.config.js,src/App.jsx,src/main.jsx,src/shell.css}, tests/p15_experience_browser.py, tests/test_p15_integration.py, existing root app.js bridge, shared CI/docs |
+
+Galaxy hosted root remains unchanged and no Azure deploy/provisioning, Supabase modification, paid model call or other repo modification is authorized. Real signed-in session integration and high-quality hand-gripping IK remain separate pending acceptance.
