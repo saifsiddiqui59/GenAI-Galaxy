@@ -63,6 +63,38 @@ class EphemeralAuthTests(unittest.TestCase):
         self.assertEqual(len(deleted), 2)
         self.assertNotEqual(deleted[0], deleted[1])
 
+    def test_sigterm_during_probe_requests_existing_cleanup(self):
+        ids = [str(tool.uuid.uuid4()), str(tool.uuid.uuid4())]
+        removed = []
+        def created(secret, address, password):
+            return ids.pop(0)
+        def admin(method, path, secret, body=None):
+            self.assertEqual(method, 'DELETE')
+            removed.append(path)
+            return 204, {}
+        with patch.dict(tool.os.environ, {
+            "GITHUB_REPOSITORY": "saifsiddiqui59/GenAI-Galaxy",
+            "GITHUB_REF": "refs/heads/main", "GALAXY_CONFIRM": "TEST",
+            "GALAXY_SUPABASE_URL": tool.URL,
+            "GALAXY_SUPABASE_PUBLISHABLE_KEY": "sb_publishable_fake",
+            "GALAXY_SUPABASE_ADMIN_KEY": "sb_secret_fake",
+        }, clear=True), patch.object(tool, 'create_test_user', side_effect=created), \
+             patch.object(tool, 'admin_request', side_effect=admin), \
+             patch.object(tool, 'run_rls', side_effect=lambda: tool._cancellation_requested(None,None)):
+            with self.assertRaisesRegex(tool.CheckFailed, "cancellation"):
+                tool.run()
+        self.assertEqual(len(removed), 2)
+
+    def test_workflow_is_manual_and_never_exposes_secret_in_pull_requests(self):
+        wf = (ROOT.parent / '.github/workflows/galaxy-ephemeral-rls.yml').read_text()
+        self.assertIn('workflow_dispatch:', wf)
+        self.assertNotIn('pull_request:', wf)
+        self.assertNotIn('  push:', wf)
+        self.assertIn('environment: dev', wf)
+        self.assertIn("inputs.confirm == 'TEST'", wf)
+        self.assertIn('GALAXY_SUPABASE_ADMIN_KEY: ${{ secrets.GALAXY_SUPABASE_ADMIN_KEY }}', wf)
+        self.assertNotIn('az storage', wf)
+
     def test_cannot_run_on_push_or_other_repo(self):
         with patch.dict(tool.os.environ, {"GITHUB_REPOSITORY":"example/other",
                                           "GITHUB_REF":"refs/heads/main",
