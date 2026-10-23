@@ -1,10 +1,12 @@
 """Playwright test of the exact portable offline HTML sent for user acceptance."""
 import asyncio
 from pathlib import Path
+import os
 from playwright.async_api import async_playwright
 
 ROOT = Path(__file__).resolve().parents[1]
 FILE = ROOT / "artifacts/adaptive-learning-preview.html"
+HOSTED = "https://gengalaxy1429841605.z29.web.core.windows.net/adaptive-preview/index.html"
 
 
 async def inspect(name, width, height):
@@ -15,7 +17,9 @@ async def inspect(name, width, height):
         errors = []
         page.on("pageerror", lambda e: errors.append(str(e)))
         try:
-            response = await page.goto(FILE.resolve().as_uri(), wait_until="domcontentloaded", timeout=20000)
+            target = os.getenv("GALAXY_ADAPTIVE_PREVIEW_URL", FILE.resolve().as_uri())
+            assert target in (FILE.resolve().as_uri(), HOSTED), "Unexpected preview host"
+            response = await page.goto(target, wait_until="domcontentloaded", timeout=20000)
             await page.wait_for_selector(".planet-node", timeout=10000)
             assert await page.locator(".planet-node").count() == 17
             assert await page.evaluate("window.__GALAXY_OFFLINE_PREVIEW") is True
