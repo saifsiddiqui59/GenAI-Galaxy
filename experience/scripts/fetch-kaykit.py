@@ -19,7 +19,7 @@ DEST = Path(__file__).resolve().parents[1] / "public/models/kaykit/Skeleton_Mage
 def verify(raw):
     if len(raw) != EXPECTED_BYTES:
         raise ValueError(f"KayKit model byte count mismatch: {len(raw)}")
-    git_sha = hashlib.sha1(b"blob " + str(len(raw)).encode() + b"\\0" + raw).hexdigest()
+    git_sha = hashlib.sha1(b"blob " + str(len(raw)).encode() + bytes([0]) + raw).hexdigest()
     if git_sha != GIT_BLOB_SHA:
         raise ValueError("KayKit Git blob SHA mismatch — possible asset substitution")
     if raw[:4] != b"glTF" or struct.unpack_from("<I", raw, 4)[0] != 2:
