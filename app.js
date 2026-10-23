@@ -250,7 +250,7 @@ function galaxyCoachPanel(){
  <div class="practice-actions"><button id="coach-build" class="btn accent" type="button">Create free study plan</button><button id="coach-report" class="btn ghost" type="button">Build learning report</button><button id="coach-export" class="btn ghost" type="button" ${stats?'':'disabled'}>Copy report as CSV</button></div>
  ${plan?`<h3>Local learning plan · ${plan.days} days</h3>
  <p class="footnote">${plan.skillGaps?.length?'Possible JD skills not evidenced in CV wording: '+plan.skillGaps.map(x=>escapeHtml(x.skill)).join(', '):'No unmatched supported skill terms identified. This does not prove qualification.'}</p>
- <p class="footnote">${plan.mentionedSkills?.length?'Skills mentioned in both JD and CV: '+plan.mentionedSkills.map(x=>escapeHtml(x.skill)).join(', '):'No overlap identified from supported skill terms.'}</p>`${plan.schedule.slice(0,14).map(x=>`<p class="footnote">Day ${x.day}: ${escapeHtml(x.topic)} — ${escapeHtml(x.reason)}</p>`).join('')}`:''}
+ <p class="footnote">${plan.mentionedSkills?.length?'Skills mentioned in both JD and CV: '+plan.mentionedSkills.map(x=>escapeHtml(x.skill)).join(', '):'No overlap identified from supported skill terms.'}</p>${plan.schedule.slice(0,14).map(x=>`<p class="footnote">Day ${x.day}: ${escapeHtml(x.topic)} — ${escapeHtml(x.reason)}</p>`).join('')}`:''}
  ${stats?`<h3>Practice activity report</h3><p>${stats.attemptCount} recorded attempts · ${stats.modelReviewed} model-reported reviews · ${stats.localOnly} local checks</p><p class="footnote">${escapeHtml(stats.accuracyStatus)}</p>`:''}
  <p class="footnote">JD/CV matching happens only on your device. Mentions are not proof of ability or a certified skill assessment.</p></section>`;
 }
