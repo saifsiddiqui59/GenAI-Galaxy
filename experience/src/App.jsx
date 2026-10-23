@@ -1,4 +1,4 @@
-import React,{useCallback,useMemo,useState} from 'react';
+import React,{useCallback,useMemo,useRef,useState} from 'react';
 import GalaxyAuth from './auth/GalaxyAuth.jsx';
 import CollectionFX from './effects/CollectionFX.jsx';
 import WorldDock from './navigation/WorldDock.jsx';
@@ -50,6 +50,7 @@ export default function App(){
  const reduced=budget.noMotion;
  const [animationEnabled,setAnimationEnabled]=useState(!reduced);
  const [modelPhase,setModelPhase]=useState('arriving');
+ const rigPoseRef=useRef(null);
  const [selected,setSelected]=useState(null);
  const [warp,setWarp]=useState(null);
  const [menuOpen,setMenuOpen]=useState(false);
@@ -80,10 +81,10 @@ export default function App(){
        gl={{antialias:true,alpha:false,powerPreference:'high-performance'}}>
        <GalaxyScene masteredWorlds={collected} selectedIndex={selected} recommendedIndex={nextIndex}
          onSelect={select} reducedMotion={!animationEnabled||reduced||budget.lowPower}/>
-       <Guardian phase={animationEnabled?modelPhase:'idle'}/>
+       <Guardian phase={animationEnabled?modelPhase:'idle'} rigPoseRef={rigPoseRef}/>
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced||budget.lowPower}
          epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
-         onOpenSack={()=>setSackOpenFrom3D(x=>x+1)}/>
+         onOpenSack={()=>setSackOpenFrom3D(x=>x+1)} rigPoseRef={rigPoseRef}/>
      </Canvas>
    </div>}
    {!available3D&&<div className="galaxy-no-webgl" role="status">
