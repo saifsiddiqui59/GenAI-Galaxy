@@ -124,7 +124,7 @@ function SkeletonModel({phase='idle',rigPoseRef}){
       const hip=waistPosition(rig,THREE.Vector3);
       rigPoseRef.current={hand,hip,rigReady:rig.readyToOffer,waistReady:rig.readyForSatchel};
     }
-    if(import.meta.env.DEV&&window.__galaxySkeletonDiagnostics){
+    if((import.meta.env.DEV||new URLSearchParams(window.location.search).has('demo'))&&window.__galaxySkeletonDiagnostics){
       window.__galaxySkeletonDiagnostics.gripMidpoint=gripMidpoint(rig,THREE.Vector3)?.toArray()||null;
       window.__galaxySkeletonDiagnostics.waistPosition=waistPosition(rig,THREE.Vector3)?.toArray()||null;
     }
