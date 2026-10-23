@@ -103,7 +103,7 @@ function OfferingOrb({worldIndex,phase,bagPosition,rigPoseRef,compact}){
  if(phase!=='offering')return null;
  const color=COLORS[worldIndex%COLORS.length]||'#a6c3ff';
  return <group>
-   <group ref={orb} scale={compact?.72:1}>
+   <group ref={orb} scale={compact?.62:.74}>
      <mesh><sphereGeometry args={[.42,42,32]}/>
        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.1}
           metalness={.22} roughness={.35} toneMapped={false}/></mesh>
