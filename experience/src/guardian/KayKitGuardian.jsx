@@ -13,8 +13,8 @@ const observed=()=>import.meta.env.DEV||new URLSearchParams(window.location.sear
 export function chooseKayKitAnimation(phase,names=[]){
  const wants={
   arriving:[/walk/i,/run/i,/move/i],
-  collecting:[/interact/i,/pickup/i,/grab/i,/cast/i,/attack/i],
-  offering:[/cast/i,/spell/i,/magic/i,/idle/i],
+  collecting:[/^PickUp$/i,/interact/i,/grab/i,/cast/i,/attack/i],
+  offering:[/Spellcast_Summon/i,/Spellcast_Raise/i,/spell/i,/cast/i,/idle/i],
   idle:[/idle/i,/breath/i,/stand/i],
   celebrating:[/cheer/i,/dance/i,/victory/i,/idle/i]
  };
@@ -24,10 +24,15 @@ export function chooseKayKitAnimation(phase,names=[]){
 }
 function armChain(hand){
  if(!hand)return null;
- const lower=hand.parent;
- const upper=lower?.parent;
- if(!lower?.isBone||!upper?.isBone)return null;
- return [upper,lower,hand];
+ let parent=hand;
+ let lower=null,upper=null;
+ while(parent&&parent.isBone){
+  const label=parent.name.toLowerCase().replace(/[^a-z0-9]/g,'');
+  if(label.startsWith('lowerarm')||label.startsWith('forearm'))lower=parent;
+  if(label.startsWith('upperarm')){upper=parent;break}
+  parent=parent.parent;
+ }
+ return upper&&lower?[upper,lower,hand]:null;
 }
 export function characterEntranceX(phase,t,compact){
  const start=compact?-1.8:-3.2;
@@ -105,7 +110,7 @@ function Model({phase,rigPoseRef,reducedMotion=false}){
   let maxError=null;
   if(phase==='offering'&&rig.readyToOffer&&rig.waist&&arms.left&&arms.right){
    const hip=rig.waist.getWorldPosition(new THREE.Vector3());
-   const width=narrow?.58:1;
+   const width=narrow?.76:1;
    const centre=hip.add(new THREE.Vector3(0,.77*width,.46*width));
    const left=centre.clone().add(new THREE.Vector3(-.24*width,-.04*width,0));
    const right=centre.clone().add(new THREE.Vector3(.24*width,-.04*width,0));
