@@ -16,7 +16,7 @@ const PALETTES=[
  ['#c5d3f6','#667ec8','#31326f','#adc1f6'],['#fbc2bd','#bd7677','#623045','#d88d94'],['#c1f2c1','#659d86','#224b53','#8bd9c4'],
  ['#eec3fa','#a15cbd','#402863','#d48ef0'],['#b3f6ff','#648add','#21346c','#7fbfff']
 ];
-const state={subjects:[],topics:[],lessons:{},current:null,chapter:0,view:'galaxy',progress:{},attempts:[],documents:[],user:null,client:null,isGuest:true,query:'',attemptQuestion:'',level:1,answerDraft:'',feedback:null,guideOpen:false,studyMode:'practice',targetRole:'GenAI Engineer',session:null,sessionReport:null,jobFocus:'',coachResume:'',coachJob:'',coachPlan:null,coachInsights:null,planInfo:null,planCatalog:[],platformSummary:null,platformPending:[],platformAuthorized:false,platformError:'',approvalInfo:null,motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,voice:null,recording:false,voicePending:false,starFrame:0,stars:[],galaxyFrame:0,lastFrame:0};
+const state={subjects:[],topics:[],lessons:{},current:null,chapter:0,view:'galaxy',progress:{},attempts:[],documents:[],user:null,client:null,isGuest:true,query:'',attemptQuestion:'',level:1,answerDraft:'',feedback:null,guideOpen:false,studyMode:'practice',targetRole:'GenAI Engineer',session:null,sessionReport:null,jobFocus:'',coachResume:'',coachJob:'',coachPlan:null,coachInsights:null,planInfo:null,planCatalog:[],platformSummary:null,platformPending:[],platformAuthorized:false,platformError:'',approvalInfo:null,motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,voice:null,voiceEvents:[],voiceStartedAt:null,voiceElapsedMs:null,recording:false,voicePending:false,starFrame:0,stars:[],galaxyFrame:0,lastFrame:0};
 const total=()=>state.topics.length;
 const getP=t=>state.progress[key(t)]||{status:0,confidence:0,note:'',last_reviewed_at:null,next_review_at:null};
 const chapterTopics=c=>state.topics.filter(t=>t.branchIndex===c);
@@ -58,9 +58,10 @@ function answerStructureChecklist(text){
   '<p class="footnote">These indicators are based on visible wording, not semantic correctness. Verify the lesson reference and sources.</p></details>';
 }
 function transcriptCoaching(text){
- const data=window.GalaxySpeakingMetrics?.fromTranscript(text)||null;
+ const timing=state.voiceElapsedMs?{elapsedMs:state.voiceElapsedMs,voiceEvents:state.voiceEvents}:undefined;
+ const data=window.GalaxySpeakingMetrics?.fromTranscript(text,timing)||null;
  if(!data||!data.wordCount)return '';
- return `<div class="panel" style="margin-top:12px"><span class="eyebrow">TRANSCRIPT DELIVERY HINTS · FREE</span><p>${data.wordCount} transcribed words · ${data.fillerCount} visible fillers · ${data.immediateRepetitions} adjacent repetitions</p><p class="footnote">${escapeHtml(data.limitations)}</p></div>`;
+ return `<div class="panel" style="margin-top:12px"><span class="eyebrow">TRANSCRIPT DELIVERY HINTS · FREE</span><p>${data.wordCount} transcribed words · ${data.fillerCount} visible fillers · ${data.immediateRepetitions} adjacent repetitions</p>${data.paceBasis==='browser speech intervals'?'<p>Estimated speaking pace: '+data.estimatedWordsPerMinute+' words/min (browser event timing) · pauses: '+data.detectedPauseBoundaries+'</p>':''}<p class="footnote">${escapeHtml(data.limitations)}</p></div>`;
 }
 // Galaxy-only entitlement display. The database quota RPC, not these cards, is authoritative.
 const PLAN_FEATURES=[
@@ -145,7 +146,15 @@ async function platformAssign(event){
  notify(out.error?'Plan assignment failed: '+out.error.message:'Plan assignment accepted by server');
  await platformRefresh();
 }
-function dashboard(){const s=getStats(),recent=state.attempts.slice(0,6),next=pickNext();return intro('COMMAND CENTER','Progress across the <span class="gradient-text">galaxy.</span>','Your revision path, practice history, and progress are visible here.')+`<div class="cards"><div class="panel metric"><span class="eyebrow">MASTERY</span><strong>${s.mastered}/${s.total}</strong><small>Topics mastered</small></div><div class="panel metric"><span class="eyebrow">REVISION</span><strong>${s.due}</strong><small>Reviews due today</small></div><div class="panel metric"><span class="eyebrow">EXPANDED CONTENT</span><strong>${s.expanded}</strong><small>Lessons with all 8 sections (editorial unverified)</small></div></div><div class="grid-two" style="margin-top:16px"><div class="panel"><span class="eyebrow">YOUR NEXT TARGET</span><h2>${escapeHtml(next?.title||'Choose a topic')}</h2><p>${escapeHtml(next?.summary||'')}</p><button class="btn accent" id="next-lesson">Start interview lesson →</button></div><div class="panel"><span class="eyebrow">RECENT ANSWERS</span>${recent.length?recent.map(a=>`<p class="footnote">${escapeHtml(a.topic_key.split(' / ').at(-1))} · ${a.correct===true?'Model-reviewed strong':a.correct===null?'Provisional · unverified':'Retry scheduled'} · ${escapeHtml(new Date(a.created_at).toLocaleDateString())}</p>`).join(''):'<p>No practice attempts yet. Open any topic and give a spoken or typed answer.</p>'}</div></div>`+activityInsights()}
+function milestonePanel(){
+ const m=window.GalaxyMilestones?.summarize({progress:state.progress,attempts:state.attempts});
+ if(!m)return '';
+ return '<section class="panel" style="margin-top:16px"><span class="eyebrow">LEARNING MILESTONES · ACTIVITY, NOT CERTIFIED SKILL</span><h2>'+
+ m.earned.length+' milestones reached</h2><p>'+m.earned.map(x=>escapeHtml(x.label)).join(' · ')+
+ '</p><p class="footnote">Next: '+m.next.map(x=>escapeHtml(x.label)).join(' · ')+
+ '</p><p class="footnote">'+escapeHtml(m.notice)+'</p></section>';
+}
+function dashboard(){const s=getStats(),recent=state.attempts.slice(0,6),next=pickNext();return intro('COMMAND CENTER','Progress across the <span class="gradient-text">galaxy.</span>','Your revision path, practice history, and progress are visible here.')+`<div class="cards"><div class="panel metric"><span class="eyebrow">MASTERY</span><strong>${s.mastered}/${s.total}</strong><small>Topics mastered</small></div><div class="panel metric"><span class="eyebrow">REVISION</span><strong>${s.due}</strong><small>Reviews due today</small></div><div class="panel metric"><span class="eyebrow">EXPANDED CONTENT</span><strong>${s.expanded}</strong><small>Lessons with all 8 sections (editorial unverified)</small></div></div><div class="grid-two" style="margin-top:16px"><div class="panel"><span class="eyebrow">YOUR NEXT TARGET</span><h2>${escapeHtml(next?.title||'Choose a topic')}</h2><p>${escapeHtml(next?.summary||'')}</p><button class="btn accent" id="next-lesson">Start interview lesson →</button></div><div class="panel"><span class="eyebrow">RECENT ANSWERS</span>${recent.length?recent.map(a=>`<p class="footnote">${escapeHtml(a.topic_key.split(' / ').at(-1))} · ${a.correct===true?'Model-reviewed strong':a.correct===null?'Provisional · unverified':'Retry scheduled'} · ${escapeHtml(new Date(a.created_at).toLocaleDateString())}</p>`).join(''):'<p>No practice attempts yet. Open any topic and give a spoken or typed answer.</p>'}</div></div>`+activityInsights()+milestonePanel()}
 function library(){const q=state.query.trim().toLowerCase();let matches=0;const chapters=state.subjects.map((c,ci)=>{const groups=c.groups.map(g=>{const rows=g.items.map(it=>state.topics.find(t=>t.branchIndex===ci&&t.group===g.title&&t.title===it.title)).filter(t=>t && (!q||[t.title,t.branch,t.group,t.summary].join(' ').toLowerCase().includes(q)));matches+=rows.length;return rows.length?`<div class="group-title">${escapeHtml(g.title)} · ${rows.length} topics</div><div class="pills">${rows.map(t=>`<button class="pill ${state.lessons[t.title]?'expanded':'incomplete'} ${getP(t).status===2?'mastered':''}" data-topic="${encodeURIComponent(key(t))}">${escapeHtml(t.title)}</button>`).join('')}</div>`:''}).join('');return groups?`<details class="panel library-card" ${q?'open':''}><summary>${String(ci+1).padStart(2,'0')} · ${escapeHtml(c.title)}</summary><div class="chapter-info">${escapeHtml(c.summary)}</div>${groups}</details>`:''}).join('');return intro('CURRICULUM INDEX','Learn from <span class="gradient-text">every chapter.</span>','Original 230 V3 topics preserved. Verified conversation/resume gaps added. Content still undergoing eight-part quality review.')+`<p><input type="search" id="topic-filter" class="topic-search" value="${escapeHtml(state.query)}" placeholder="Search RAG, KV cache, Azure Speech, evaluation…" aria-label="Filter topics"></p><p class="footnote" id="found-count">${matches} matching topics · Expanded lessons are highlighted, overviews are explicitly marked</p>${chapters||'<p>No topics match your search.</p>'}`}
 function pickNext(){const due=state.topics.filter(t=>getP(t).next_review_at&&Date.parse(getP(t).next_review_at)<=Date.now());return due[0]||state.topics.find(t=>getP(t).status<2)||state.topics[0]}
 const overview=t=>({simple:t.summary,technical:'A detailed verified technical treatment has not yet been authored for this topic.',example:'Example pending editorial review.',project:'Relevant resume/project example pending verification.',answer:'A 30–60 second model answer is pending editorial review.',workflow:[],mistakes:[],followups:[t.question||`Explain ${t.title} with an example.`],keywords:[],depth_status:'overview_only'});
@@ -199,7 +208,7 @@ function beginGuidedPractice(){
 }
 function beginPracticeTopic(t){
  if(!t)return;
- stopVoice();state.current=t;state.level=1;state.feedback=null;state.guideOpen=false;
+ stopVoice();state.voiceEvents=[];state.voiceElapsedMs=null;state.current=t;state.level=1;state.feedback=null;state.guideOpen=false;
  state.answerDraft='';state.attemptQuestion=questionFor(t,1);
  render();
 }
@@ -318,6 +327,8 @@ function paintStars(now){const canvas=DOM('stars');const ctx=canvas?.getContext(
 let voiceGeneration=0; // Reject results/startup from obsolete microphone sessions.
 function stopVoice(){
  voiceGeneration++;
+ if(state.voiceStartedAt!==null)state.voiceElapsedMs=Math.max(0,Date.now()-state.voiceStartedAt);
+ state.voiceStartedAt=null;
  const old=state.voice;state.voice=null;state.recording=false;state.voicePending=false;
  try{const outcome=old?.stop?.();if(outcome?.catch)outcome.catch(()=>{})}catch(_){}
 }
@@ -325,6 +336,7 @@ async function toggleVoice(){
  if(state.recording||state.voicePending){stopVoice();renderVoiceState();return}
  const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
  const generation=++voiceGeneration;
+ state.voiceEvents=[];state.voiceElapsedMs=null;state.voiceStartedAt=Date.now();
  if(!Speech){
   const url=window.GALAXY_SPEECH_BROKER_URL;
   if(url&&state.client&&state.user){
@@ -363,6 +375,8 @@ async function toggleVoice(){
  recognition.lang='en-IN';recognition.continuous=true;recognition.interimResults=true;recognition.maxAlternatives=1;
  const initial=DOM('spoken-answer')?.value.trim()||'';
  state.voice=recognition;state.recording=true;
+ recognition.onspeechstart=()=>{if(generation===voiceGeneration)state.voiceEvents.push({type:'speechstart',time:Date.now()})};
+ recognition.onspeechend=()=>{if(generation===voiceGeneration)state.voiceEvents.push({type:'speechend',time:Date.now()})};
  recognition.onresult=event=>{
   if(generation!==voiceGeneration||state.view!=='practice')return;
   const finals=[],partials=[];
@@ -380,7 +394,8 @@ async function toggleVoice(){
  };
  recognition.onend=()=>{
   if(generation!==voiceGeneration)return;
-  state.voice=null;state.recording=false;renderVoiceState();
+  if(state.voiceStartedAt!==null)state.voiceElapsedMs=Math.max(0,Date.now()-state.voiceStartedAt);
+  state.voiceStartedAt=null;state.voice=null;state.recording=false;renderVoiceState();
  };
  try{recognition.start();renderVoiceState()}
  catch(err){stopVoice();renderVoiceState();notify('Microphone could not start: '+err.message)}
@@ -435,10 +450,11 @@ async function submitAnswer(e,localOnly=false){
  state.feedback=score;
  const p=getP(t);
  const oldHistory=state.attempts.filter(a=>a.topic_key===key(t)&&a.correct===true).length;
- p.status=score.passed&&oldHistory>=1?2:1;
+ const decision=window.GalaxyEvidencePolicy?.nextReview({evidence:score,history:oldHistory});
+ p.status=decision?decision.masteryCredit?2:1:score.passed&&oldHistory>=1?2:1;
  p.confidence=score.serverReviewed?Math.max(1,Math.min(5,Math.round(score.accuracy/20))):Math.max(1,Math.min(3,Math.round(score.score/35)));
  p.last_reviewed_at=dateNow();
- p.next_review_at=new Date(Date.now()+(p.status===2?[1,3,7,14,30][Math.min(oldHistory,4)]:1)*DAYS).toISOString();
+ p.next_review_at=new Date(Date.now()+(decision?decision.days:(p.status===2?[1,3,7,14,30][Math.min(oldHistory,4)]:1))*DAYS).toISOString();
  state.progress[key(t)]=p;
  const row={level:state.level,passed:score.serverReviewed?score.passed:null,
   response:answer,feedback:`${score.serverReviewed?'model rubric':'provisional concept proxy'} ${score.score}% — missing ${score.missing.join(', ')}`};
@@ -549,8 +565,13 @@ function setEntryVisible(visible){
  if(!visible)gate.setAttribute?.('aria-hidden','true');
  else gate.removeAttribute?.('aria-hidden');
 }
+function clearPrivateCoachState(){
+ state.coachResume='';state.coachJob='';state.coachPlan=null;state.coachInsights=null;state.jobFocus='';
+ state.session=null;state.sessionReport=null;state.answerDraft='';state.feedback=null;
+ state.voiceEvents=[];state.voiceStartedAt=null;state.voiceElapsedMs=null;
+}
 function resetAuthToGuest(){
- stopVoice();authEpoch++;
+ stopVoice();authEpoch++;clearPrivateCoachState();
  state.user=null;state.isGuest=true;state.documents=[];state.planInfo=null;state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];state.approvalInfo=null;
  loadGuest();render();setEntryVisible(true);
 }
@@ -561,7 +582,7 @@ async function signedIn(user){
  const current=()=>authEpoch===epoch;
  // Never display an earlier account's private records during a user switch.
  if(state.user?.id&&state.user.id!==userId){
-  state.user=null;state.isGuest=true;state.documents=[];loadGuest();render();
+  clearPrivateCoachState();state.user=null;state.isGuest=true;state.documents=[];loadGuest();render();
  }
  try{
   const {data,error}=await state.client.from('genai_study_progress')
