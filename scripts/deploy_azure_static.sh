@@ -13,10 +13,13 @@ az storage account create --name "$GALAXY_AZ_STORAGE" --resource-group "$GALAXY_
 az storage blob service-properties update --account-name "$GALAXY_AZ_STORAGE" --auth-mode login --static-website --index-document index.html --404-document index.html
 cd "$(dirname "$0")/.."
 # Deploy only runtime assets, never V3 source, local reports, or confidential documents.
-mkdir -p /tmp/genai-galaxy-static/{data,speech,genie}
+mkdir -p /tmp/genai-galaxy-static/{data,speech,genie,genie/progress,genie/effects,galaxy/handoff}
 cp index.html styles.css app.js runtime-config.js /tmp/genai-galaxy-static/
 cp data/curriculum.json data/lessons.json /tmp/genai-galaxy-static/data/
 cp speech/azure-speech-adapter.js /tmp/genai-galaxy-static/speech/
 cp genie/guide.js /tmp/genai-galaxy-static/genie/
+cp genie/progress/story.js /tmp/genai-galaxy-static/genie/progress/
+cp genie/effects/cosmic-polish.js genie/effects/cosmic-polish.css /tmp/genai-galaxy-static/genie/effects/
+cp galaxy/handoff/planet-flight.js galaxy/handoff/planet-flight.css /tmp/genai-galaxy-static/galaxy/handoff/
 az storage blob upload-batch --account-name "$GALAXY_AZ_STORAGE" --auth-mode login --destination '$web' --source /tmp/genai-galaxy-static --overwrite true
 az storage account show --name "$GALAXY_AZ_STORAGE" --resource-group "$GALAXY_AZ_RG" --query primaryEndpoints.web -o tsv
