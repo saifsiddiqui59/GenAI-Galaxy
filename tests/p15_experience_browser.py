@@ -1,5 +1,5 @@
 """Real Chromium acceptance for compiled P15 3D preview, with no live Auth/Azure calls."""
-import asyncio, functools, http.server, threading
+import asyncio, functools, http.server, threading, math
 from pathlib import Path
 from urllib.parse import urlparse
 from playwright.async_api import async_playwright
@@ -45,6 +45,12 @@ async def inspect(browser,origin,viewport,reduced=False):
   assert isinstance(diagnostics.get("gripMidpoint"),list) and len(diagnostics["gripMidpoint"])==3
  if diagnostics.get("rig",{}).get("canCarry"):
   assert isinstance(diagnostics.get("waistPosition"),list) and len(diagnostics["waistPosition"])==3
+ if not reduced:
+  pose=await page.evaluate("window.__galaxySkeletonDiagnostics")
+  print('P19 ACTUAL OFFERING IK:',pose.get('ikError'),pose.get('hasArmIK'))
+  assert pose.get('hasArmIK') is True,'FBX real-arm CCD chain must exist'
+  assert isinstance(pose.get('ikError'),(int,float)) and math.isfinite(pose['ikError']),'IK must execute against real wrist targets'
+  assert pose['ikError']<.35,'Hand endpoint too far from offered planet target'
  await page.screenshot(path=str(ROOT/("preview-p15-"+("mobile" if viewport["width"]<600 else "reduced" if reduced else "desktop")+".png")),timeout=20000,animations="disabled")
  await page.locator(".guardian-accept").click()
  await page.locator(".galaxy-portal").wait_for(timeout=6000)
