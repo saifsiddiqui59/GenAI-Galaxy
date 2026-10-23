@@ -22,7 +22,7 @@ jobs:
       AZ_STORAGE: gengalaxy1429841605
       PREFIX: previews/galaxy-3d-v2
       # Coordinator replaces below with a final, CI-tested immutable commit.
-      REF_SHA: a58ce84db3235063ad4699e97010aa35e172323a
+      REF_SHA: ec305ea8d8978aaa30c871f02ae54a407cb59317
     steps:
       - uses: actions/checkout@v4
         with:
