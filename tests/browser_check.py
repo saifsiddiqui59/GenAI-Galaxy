@@ -21,7 +21,7 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
   await page.locator('#entry-guest').click()
   assert not await page.locator('#entry-gate').is_visible()
   count=await page.locator('.planet-node').count();assert count==17,count
-  assert await page.locator('h1').inner_text()
+  assert await page.locator('#root h1').inner_text()
   if reduced:
    assert not await page.locator('#motion-toggle').is_checked()
    assert await page.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches")
