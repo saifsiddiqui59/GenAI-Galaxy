@@ -1,7 +1,7 @@
 /* The 3D scene owns the background; this UI intentionally stays minimal. */
 .guardian-journey{position:absolute;inset:0;z-index:4;pointer-events:none;color:#f7f4ff;font-family:Inter,system-ui,sans-serif}
 .guardian-journey button{pointer-events:auto;cursor:pointer;font:inherit}
-.guardian-journey-top{position:absolute;top:6%;left:max(22px,4vw);max-width:530px}
+.guardian-journey-top{position:absolute;top:16%;left:max(22px,4vw);max-width:530px}
 .guardian-eyebrow,.guardian-label{font-size:11px;font-weight:800;letter-spacing:.2em;color:#85eff8}
 .guardian-journey h1{font-size:clamp(28px,3.6vw,56px);line-height:1.04;letter-spacing:-.045em;margin:13px 0 14px}
 .guardian-subtitle{color:#a3b4d9;font-size:14px}
@@ -24,7 +24,7 @@
 .guardian-skip,.guardian-replay{position:absolute;bottom:3%;border:0;background:#171e44cc;color:#dce5fc;border-radius:100px;padding:9px 14px}
 .guardian-skip{left:3%}.guardian-replay{right:3%}
 @keyframes planet-sack-in{0%{opacity:0;transform:translate(110px,-90px) scale(1.7)}100%{opacity:1;transform:none}}
-@media(max-width:700px){.guardian-journey-top{top:4%;max-width:70%}.guardian-journey h1{font-size:26px}
+@media(max-width:700px){.guardian-journey-top{top:16%;max-width:80%}.guardian-journey h1{font-size:26px}
  .guardian-mission{right:12px;top:27%}.guardian-next{bottom:11%;right:16px;left:16px;max-width:unset}
  .guardian-collected{left:16%;top:63%}}
 @media(prefers-reduced-motion:reduce){.guardian-journey *{animation:none!important;transition:none!important}}
