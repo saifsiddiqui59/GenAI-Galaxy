@@ -68,7 +68,7 @@ function SkeletonModel({phase='idle',rigPoseRef}){
     window.__galaxySkeletonDiagnostics={meshes,bones,clips:names.length,
        sourceDimensions:instance.userData.sourceDimensions,
        worldPosition:instance.getWorldPosition(new THREE.Vector3()).toArray(),
-       rig:{detectedBones:rig.detectedBones,left:rig.leftHand?.name||null,
+       rig:{boneNames:(()=>{const a=[];instance.traverse(n=>{if(n.isBone)a.push(n.name)});return a})(),detectedBones:rig.detectedBones,left:rig.leftHand?.name||null,
         right:rig.rightHand?.name||null,waist:rig.waist?.name||null,
         canOffer:rig.readyToOffer,canCarry:rig.readyForSatchel}};
  },[instance,names,rig]);
