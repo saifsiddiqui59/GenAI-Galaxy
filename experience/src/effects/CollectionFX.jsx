@@ -18,7 +18,7 @@ export function collectPosition(world,index,time,disabled=false,bagPosition=BAG_
  point.z+=Math.sin(Math.PI*t)*.75;
  return {point,arrived:t>=1};
 }
-function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition}){
+function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition,rigPoseRef}){
  const mesh=useRef(),halo=useRef();
  const worldLayout=layoutWorlds()[world.index];
  const begin=useRef(null);
@@ -26,7 +26,9 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition}){
   if(!mesh.current||!worldLayout)return;
   if(begin.current?.epoch!==epoch)begin.current={epoch,start:clock.elapsedTime*1000};
   const time=clock.elapsedTime*1000-begin.current.start;
-  const {point,arrived}=collectPosition(worldLayout,order,time,reducedMotion,bagPosition);
+  const dynamicBag=rigPoseRef?.current?.hip;
+  const position=dynamicBag?dynamicBag.toArray().map((v,i)=>v+([.24,-.32,.12][i])):bagPosition;
+  const {point,arrived}=collectPosition(worldLayout,order,time,reducedMotion,position);
   const sackOffset=new THREE.Vector3((order%4-1.5)*.115,Math.floor(order/4)*.08,order*.007);
   if(arrived)point.add(sackOffset);
   mesh.current.position.copy(point);
@@ -48,10 +50,13 @@ function CollectedOrb({world,order,reducedMotion,epoch,ready,bagPosition}){
    </mesh>
  </group>;
 }
-function Satchel({onOpenSack,count,bagPosition}){
+function Satchel({onOpenSack,count,bagPosition,rigPoseRef}){
  const bag=useRef();
  useFrame((state)=>{
-  if(bag.current)bag.current.rotation.z=Math.sin(state.clock.elapsedTime*1.7)*.035;
+  if(!bag.current)return;
+  const hip=rigPoseRef?.current?.hip;
+  if(hip)bag.current.position.copy(hip).add(new THREE.Vector3(.24,-.32,.12));
+  bag.current.rotation.z=Math.sin(state.clock.elapsedTime*1.7)*.035;
  });
  return <group ref={bag} position={bagPosition}
   onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
@@ -71,20 +76,20 @@ function Satchel({onOpenSack,count,bagPosition}){
  </group>;
 }
 
-function OfferingOrb({worldIndex,phase,bagPosition}){
+function OfferingOrb({worldIndex,phase,bagPosition,rigPoseRef}){
  const orb=useRef();
  useFrame((state,dt)=>{
   if(!orb.current)return;
   orb.current.rotation.y+=Math.min(.04,dt)*.36;
   orb.current.rotation.z+=Math.min(.04,dt)*.18;
-  orb.current.position.y=.12+Math.sin(state.clock.elapsedTime*1.65)*.075;
+  // The world-space location comes from the two real hand bones rather than a prop sphere.
+  const hand=rigPoseRef?.current?.hand;
+  if(hand)orb.current.position.copy(hand);
+  orb.current.rotation.y+=Math.min(.04,dt)*.15;
  });
  if(phase!=='offering')return null;
  const color=COLORS[worldIndex%COLORS.length]||'#a6c3ff';
- const x=bagPosition[0]+.72;
- const y=bagPosition[1]+.95;
- const z=bagPosition[2]+.15;
- return <group position={[x,y,z]}>
+ return <group>
    <group ref={orb}>
      <mesh><sphereGeometry args={[.42,42,32]}/>
        <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.1}
@@ -100,14 +105,14 @@ function OfferingOrb({worldIndex,phase,bagPosition}){
  </group>;
 }
 
-export default function CollectionFX({completed=[],reducedMotion=false,epoch=0,onOpenSack,phase='idle',nextWorldIndex=0}){
+export default function CollectionFX({completed=[],reducedMotion=false,epoch=0,onOpenSack,phase='idle',nextWorldIndex=0,rigPoseRef}){
  const size=useThree(state=>state.size);
  const bagPosition=size.width<700?[-.75,-.82,3.7]:BAG_POSITION;
  return <>
-   <Satchel onOpenSack={onOpenSack} count={completed.length} bagPosition={bagPosition}/>
-   <OfferingOrb phase={phase} worldIndex={nextWorldIndex} bagPosition={bagPosition}/>
+   <Satchel onOpenSack={onOpenSack} count={completed.length} bagPosition={bagPosition} rigPoseRef={rigPoseRef}/>
+   <OfferingOrb phase={phase} worldIndex={nextWorldIndex} bagPosition={bagPosition} rigPoseRef={rigPoseRef}/>
    {completed.filter(w=>Number.isInteger(w.index)&&w.index>=0&&w.index<17).slice(0,17).map((world,order)=>
      <CollectedOrb key={world.index} world={world} order={order}
-      epoch={epoch} reducedMotion={reducedMotion} ready={true} bagPosition={bagPosition}/>)}
+      epoch={epoch} reducedMotion={reducedMotion} ready={true} bagPosition={bagPosition} rigPoseRef={rigPoseRef}/>)}
  </>;
 }
