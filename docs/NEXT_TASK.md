@@ -177,3 +177,11 @@ In VS Code Git Bash, from the Galaxy main branch run bash scripts/galaxy_p3_one_
 - P13 source work: pure, free hosted asset parity verifier accepts only the explicitly staged public evaluator endpoint; all other public files must match exactly. Offline Python checks assert no payment provider, no paid workflows in push CI, and 10 golden-question topic coverage without an independent model call.
 - **Human-only remaining**: actual microphone hardware/browser permission checks, real password-reset email, SME factual reviews of 245 lessons. Optional manual *read-only guest* website browser test incurs no LLM call. Vault extraction and paid Speech broker stay disabled until separately planned.
 - See `docs/reviews/P13_ZERO_COST_ACCEPTANCE.md`. No payment integration planned.
+
+
+## P15 — deliberate 3D preview acceptance and release next
+- Review independent 3D feature PRs #64–#67 and integration draft PR #69. Verify successful Actions #39973163920 and inspect desktop/mobile/reduced-motion preview screenshots; build bundle artifact galaxy-p15-3d-experience is available from that run.
+- Human visual review must check actual model silhouette, GPU FPS, mobile responsiveness, no color clashes and whether guardian/sack gesture meets aesthetic expectations. Earlier SVG P14 PRs #47/#58 are superseded artistically, not merged in this workstream.
+- Finish honest 3D finger grip/two-hand model IK if needed after visual signoff; replace RobotExpressive with selected Quaternius CC0 monster only after the actual target .glb/rig/license/provenance is verified.
+- Real owner-scoped progress must be connected after successful Auth/RLS sync; currently the stand-alone home accepts synthetic progress with visible ?demo=1 label only. No private progress passes through URL. Existing lesson app receives chapter index 0–16 only.
+- Merge with review and main CI only when accepted; publish a separate protected DEV Azure STATIC PREVIEW if owner explicitly approves. Do not overwrite live root site or run paid AI models for animation tests.

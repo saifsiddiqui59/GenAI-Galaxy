@@ -1,0 +1,30 @@
+/* The 3D scene owns the background; this UI intentionally stays minimal. */
+.guardian-journey{position:absolute;inset:0;z-index:4;pointer-events:none;color:#f7f4ff;font-family:Inter,system-ui,sans-serif}
+.guardian-journey button{pointer-events:auto;cursor:pointer;font:inherit}
+.guardian-journey-top{position:absolute;top:16%;left:max(22px,4vw);max-width:530px}
+.guardian-eyebrow,.guardian-label{font-size:11px;font-weight:800;letter-spacing:.2em;color:#85eff8}
+.guardian-journey h1{font-size:clamp(28px,3.6vw,56px);line-height:1.04;letter-spacing:-.045em;margin:13px 0 14px}
+.guardian-subtitle{color:#a3b4d9;font-size:14px}
+.guardian-mission{position:absolute;right:max(22px,4vw);top:7%}
+.guardian-sack{background:#151c45e8;border:1px solid #a6b6df8a;border-radius:17px;color:#ffe6a7;padding:13px 19px;box-shadow:0 10px 55px #0009}
+.guardian-sack-panel{position:absolute;top:55px;right:0;width:min(320px,90vw);max-height:50vh;overflow:auto;
+ padding:16px;border-radius:17px;background:#080e28f4;border:1px solid #9382ce;box-shadow:0 19px 55px #000b;pointer-events:auto}
+.guardian-sack-header{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.guardian-sack-header button{background:transparent;color:white;border:0;padding:7px}
+.guardian-sack-panel ul{list-style:none;padding:0;display:grid;gap:6px}
+.guardian-sack-panel li button{background:#1a224a;color:#fff;border:1px solid #434e81;border-radius:9px;width:100%;padding:10px;text-align:left}
+.guardian-gem{color:#f6d386;margin-right:9px}
+.guardian-collected{position:absolute;top:61%;left:31%;display:flex;gap:3px;max-width:170px;flex-wrap:wrap}
+.guardian-mini-world{width:13px;height:13px;border-radius:50%;background:radial-gradient(circle at 32% 24%,white,hsl(var(--hue),75%,70%) 45%,#282c8c 86%);
+ box-shadow:0 0 12px #a6b6ffb8;animation:planet-sack-in .48s both}
+.guardian-next{position:absolute;right:max(22px,6vw);bottom:12%;display:grid;gap:10px;max-width:330px}
+.guardian-next strong{font-size:clamp(20px,2.5vw,35px)}
+.guardian-accept{border:1px solid #bcb5fc;border-radius:15px;padding:16px 22px;color:white;
+ background:linear-gradient(105deg,#6657c7,#9b72e0);font-weight:800!important}
+.guardian-skip,.guardian-replay{position:absolute;bottom:3%;border:0;background:#171e44cc;color:#dce5fc;border-radius:100px;padding:9px 14px}
+.guardian-skip{left:3%}.guardian-replay{right:3%}
+@keyframes planet-sack-in{0%{opacity:0;transform:translate(110px,-90px) scale(1.7)}100%{opacity:1;transform:none}}
+@media(max-width:700px){.guardian-journey-top{top:16%;max-width:80%}.guardian-journey h1{font-size:26px}
+ .guardian-mission{right:12px;top:27%}.guardian-next{bottom:11%;right:16px;left:16px;max-width:unset}
+ .guardian-collected{left:16%;top:63%}}
+@media(prefers-reduced-motion:reduce){.guardian-journey *{animation:none!important;transition:none!important}}
