@@ -24,10 +24,10 @@ async def inspect(browser,origin,viewport,reduced=False):
  assert await page.locator("#guardian-sack-panel li").count()==3
  await page.get_by_role("button",name="Close satchel").click()
  # Verify the staged model is served locally rather than requested via runtime CDN.
- model=await page.request.get(origin+"/models/skeleton/Skeleton.fbx")
- assert model.status==200 and len(await model.body())==433820, "Expected verified CC0 Quaternius Skeleton FBX"
+ model=await page.request.get(origin+"/models/kaykit/Skeleton_Mage.glb")
+ assert model.status==200 and len(await model.body())==4761048, "Expected verified CC0 KayKit Skeleton Mage GLB"
  await page.wait_for_function("""() => window.__galaxySkeletonDiagnostics?.meshes > 0 && window.__galaxySkeletonDiagnostics?.bones > 0""",timeout=15000)
- print("P17 skeleton diagnostics:",await page.evaluate("window.__galaxySkeletonDiagnostics"))
+ print("KAYKIT guardian diagnostics:",await page.evaluate("window.__galaxySkeletonDiagnostics"))
 
  # Capture actual render during entrance, pickup and final presentation.
  label="mobile" if viewport["width"]<600 else "reduced" if reduced else "desktop"
@@ -41,6 +41,9 @@ async def inspect(browser,origin,viewport,reduced=False):
  await page.screenshot(path=str(ROOT/("preview-p19-"+label+"-offer.png")),timeout=20000)
  diagnostics=await page.evaluate("window.__galaxySkeletonDiagnostics")
  assert diagnostics and diagnostics.get("rig",{}).get("detectedBones",0)>0
+ assert diagnostics.get('asset','').startswith('KayKit')
+ assert diagnostics.get('clips',0)>=2
+ assert any(m.get('map') for m in diagnostics.get('materials',[])), 'Textured character should preserve original CC0 atlas'
  if diagnostics.get("rig",{}).get("canOffer"):
   assert isinstance(diagnostics.get("gripMidpoint"),list) and len(diagnostics["gripMidpoint"])==3
  if diagnostics.get("rig",{}).get("canCarry"):

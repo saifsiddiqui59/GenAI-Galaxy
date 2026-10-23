@@ -1,4 +1,5 @@
-import React,{useRef} from 'react';
+import React,{useRef,useMemo,useEffect} from 'react';
+import {planetSurfaceTexture} from '../space/PlanetSurface.js';
 import {useFrame,useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import {layoutWorlds,COLORS} from '../space/DeepGalaxy.jsx';
@@ -91,6 +92,9 @@ function Satchel({onOpenSack,count,bagPosition,rigPoseRef,compact}){
 
 function OfferingOrb({worldIndex,phase,bagPosition,rigPoseRef,compact}){
  const orb=useRef();
+ const color=COLORS[worldIndex%COLORS.length]||'#a6c3ff';
+ const texture=useMemo(()=>planetSurfaceTexture(worldIndex,color,compact),[worldIndex,color,compact]);
+ useEffect(()=>()=>texture.dispose(),[texture]);
  useFrame((state,dt)=>{
   if(!orb.current)return;
   orb.current.rotation.y+=Math.min(.04,dt)*.36;
@@ -102,19 +106,19 @@ function OfferingOrb({worldIndex,phase,bagPosition,rigPoseRef,compact}){
   orb.current.rotation.y+=Math.min(.04,dt)*.15;
  });
  if(phase!=='offering')return null;
- const color=COLORS[worldIndex%COLORS.length]||'#a6c3ff';
  return <group>
    <group ref={orb} scale={compact?.62:.74}>
-     <mesh><sphereGeometry args={[.42,42,32]}/>
-       <meshStandardMaterial color={color} emissive={color} emissiveIntensity={2.1}
-          metalness={.22} roughness={.35} toneMapped={false}/></mesh>
+     <mesh><sphereGeometry args={[.30,40,32]}/>
+       <meshStandardMaterial map={texture} color="#ffffff" emissive={color} emissiveIntensity={.60}
+          metalness={.08} roughness={.33}/></mesh>
      {!compact&&<mesh rotation={[1.2,.2,.6]}>
-       <torusGeometry args={[.57,.017,8,64]}/>
+       <torusGeometry args={[.40,.012,8,64]}/>
        <meshBasicMaterial color="#fbe7a8" transparent opacity={.9}/></mesh>}
      {!compact&&<mesh rotation={[-.8,.6,1.1]}>
-       <torusGeometry args={[.65,.012,7,64]}/>
+       <torusGeometry args={[.47,.01,7,64]}/>
        <meshBasicMaterial color="#b1f1ff" transparent opacity={.75}/></mesh>}
-     <pointLight intensity={8} color={color} distance={5}/>
+     {Array.from({length:compact?8:18},(_,i)=>{const a=i*2.39996,rr=.47+(i%4)*.045;return <mesh key={i} position={[Math.cos(a)*rr,Math.sin(a)*rr*.62,Math.sin(a*1.4)*.14]}><sphereGeometry args={[compact?.012:.016,6,6]}/><meshBasicMaterial color={i%3===0?"#fff4d8":color} toneMapped={false}/></mesh>})}
+     <pointLight intensity={7} color={color} distance={4}/>
    </group>
  </group>;
 }

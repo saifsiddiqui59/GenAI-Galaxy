@@ -45,7 +45,8 @@ const cloudFragment=[
  'float wisps=n(q*8.+clouds*2.3+time*.004);float glow=exp(-length(q*vec2(1.25,1.4))*2.6);',
  'vec3 color=mix(vec3(.006,.012,.05),vec3(.25,.12,.52),clamp(clouds*glow*2.,0.,1.));',
  'color+=vec3(.045,.16,.35)*pow(wisps*glow,2.)*2.3;',
- 'gl_FragColor=vec4(color,uLow>.5?.54:.76);}'
+ 'float edge=1.-smoothstep(.58,.98,max(abs(vUv.x-.5),abs(vUv.y-.5))*2.);',
+ 'gl_FragColor=vec4(color,(uLow>.5?.47:.72)*edge);}'
 ].join(' ');
 function NebulaCloud({lowPower}){
  const mat=useRef();
@@ -53,7 +54,7 @@ function NebulaCloud({lowPower}){
  useFrame((state)=>{
   if(mat.current&&!lowPower)mat.current.uniforms.time.value=Math.min(120000,state.clock.elapsedTime);
  });
- return <mesh position={[0,0,-35]} scale={[65,38,1]} renderOrder={-10}>
+ return <mesh position={[0,0,-36]} scale={[115,78,1]} renderOrder={-10}>
   <planeGeometry args={[1,1]}/>
   <shaderMaterial ref={mat} vertexShader={cloudVertex} fragmentShader={cloudFragment}
      uniforms={uniforms} transparent depthWrite={false} depthTest={false}/>
@@ -111,6 +112,7 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
   <spotLight position={[-2,5,9]} color="#fff0d8" intensity={115} angle={.65} penumbra={.8} distance={22}/>
   <pointLight position={[0,3,5]} color="#a6c2ff" intensity={65} distance={24}/>
   <pointLight position={[-4,-3,1]} color="#8662dc" intensity={35} distance={24}/>
+  <pointLight position={[-2.4,1.3,7.3]} color="#fff1dc" intensity={56} distance={12}/>
   <NebulaCloud lowPower={lowPower||reducedMotion}/>
   <Starfield lowPower={lowPower}/>
   <group position={lowPower?[0,.4,-1.8]:[0,0,0]} scale={lowPower?[.48,.73,.8]:[1,1,1]}>
