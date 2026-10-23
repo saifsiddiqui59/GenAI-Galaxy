@@ -30,6 +30,11 @@ function SkeletonModel({phase='idle'}){
  const instance=useMemo(()=>rootFBX.clone(true),[rootFBX]);
  const {actions,names}=useAnimations(rootFBX.animations,instance);
  const holder=useRef(null),elapsed=useRef(0),previous=useRef(phase);
+ // Adapted from MIT-licensed 3merillon CharacterController mobile smoothing.
+ // https://github.com/3merillon/React-Three-Fiber-Character-Controller/blob/main/src/components/CharacterController.tsx
+ const smoothedPosition=useRef(new THREE.Vector3());
+ const targetPosition=useRef(new THREE.Vector3());
+ const isInitialized=useRef(false);
  const narrow=useThree(state=>state.size.width<700);
  useEffect(()=>{
   instance.traverse(node=>{
@@ -56,7 +61,17 @@ function SkeletonModel({phase='idle'}){
   if(previous.current!==phase){previous.current=phase;elapsed.current=0;}
   elapsed.current+=dt;
   if(holder.current){
-    holder.current.position.x=THREE.MathUtils.damp(holder.current.position.x,advanceSkeletonX(phase,elapsed.current,narrow),5,dt);
+    const targetX=advanceSkeletonX(phase,elapsed.current,narrow);
+    // Source technique: target position and mobile-specific vector smoothing.
+    targetPosition.current.set(targetX,holder.current.position.y,holder.current.position.z);
+    if(!isInitialized.current){smoothedPosition.current.copy(holder.current.position);isInitialized.current=true;}
+    if(narrow){
+      smoothedPosition.current.lerp(targetPosition.current,.15);
+      holder.current.position.copy(smoothedPosition.current);
+    }else{
+      holder.current.position.x=THREE.MathUtils.damp(holder.current.position.x,targetX,5,dt);
+      smoothedPosition.current.copy(holder.current.position);
+    }
     holder.current.rotation.y=THREE.MathUtils.damp(holder.current.rotation.y,-.17,4,dt);
   }
  });
