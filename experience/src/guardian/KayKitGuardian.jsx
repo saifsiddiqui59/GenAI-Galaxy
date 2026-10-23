@@ -101,6 +101,17 @@ function Model({phase,rigPoseRef,reducedMotion=false,collectionIndex=-1}){
    sourceDimensions:{height:source.userData.geometryHeight}
   };
  },[source,rig,names]);
+ useEffect(()=>{
+  // Visual QA records actual clip handoffs, not fabricated completion.
+  if(!observed())return;
+  const diagnostics=window.__galaxySkeletonDiagnostics;
+  if(!diagnostics)return;
+  if(phase==='arriving'){diagnostics.pickupLog=[];return}
+  if(phase!=='collecting'||collectionIndex<0)return;
+  const log=diagnostics.pickupLog||(diagnostics.pickupLog=[]);
+  if(log[log.length-1]?.index!==collectionIndex)
+    log.push({index:collectionIndex,clip:chooseKayKitAnimation(phase,names)});
+ },[phase,collectionIndex,names]);
  useFrame((state,dt)=>{
   const delta=Math.min(dt,.05);
   if(was.current!==phase){was.current=phase;t.current=0}
