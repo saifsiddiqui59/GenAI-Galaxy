@@ -37,7 +37,7 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
   assert await page.locator('#genie-collected-count').inner_text()=='1 of 17 worlds mastered'
   assert await page.locator('#genie-collected-orbs circle').count()==1
   assert await page.locator('#genie-world-name').inner_text()=='RAG & Retrieval'
-  assert await page.locator('#genie-skip').is_focused()
+  assert await page.evaluate("document.activeElement?.id === 'genie-skip'")
   if reduced:
    assert 'no-motion' in (await page.locator('#genie-guide').get_attribute('class'))
   await page.locator('#genie-continue').click()
