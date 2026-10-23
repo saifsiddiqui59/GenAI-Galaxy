@@ -1,9 +1,9 @@
 """Read-only acceptance of the LIVE public Galaxy website; guest mode only."""
 import asyncio
 import json
-from hashlib import sha256
 from pathlib import Path
 from playwright.async_api import async_playwright
+from public_asset_policy import verify_public_asset
 
 SITE = "https://gengalaxy1429841605.z29.web.core.windows.net/"
 ROOT = Path(__file__).resolve().parents[1]
@@ -12,36 +12,6 @@ PUBLIC_ASSETS = (
     "data/curriculum.json", "data/lessons.json",
     "speech/azure-speech-adapter.js",
 )
-APPROVED_EVALUATOR = (
-    "https://gengalaxy-p3-1429841605.azurewebsites.net/api/practice/evaluate"
-)
-EVAL_DEFAULT = "window.GALAXY_EVALUATOR_URL='';"
-EVAL_APPROVED = "window.GALAXY_EVALUATOR_URL='" + APPROVED_EVALUATOR + "';"
-
-
-def verify_public_asset(path, downloaded, local):
-    """Exact release bytes; one documented exception for approved runtime URL.
-
-    The protected deployment injects ONLY the evaluator URL into a staged copy.
-    Replacing that one expected string is the only permitted difference.
-    Model keys, payment SDKs and extra backend URLs are never allowed.
-    """
-    if path == "runtime-config.js":
-        local_text = local.decode("utf-8")
-        hosted_text = downloaded.decode("utf-8")
-        assert local_text.count(EVAL_DEFAULT) == 1, "Unexpected runtime configuration source"
-        expected = local_text.replace(EVAL_DEFAULT, EVAL_APPROVED)
-        assert hosted_text == expected, (
-            "Hosted evaluator URL, disabled Vault/Speech settings or "
-            "other runtime config differs from approved AI_READY staging"
-        )
-        assert "window.GALAXY_VAULT_EXTRACT_URL='';" in hosted_text
-        assert "window.GALAXY_SPEECH_BROKER_URL='';" in hosted_text
-    else:
-        assert sha256(downloaded).digest() == sha256(local).digest(), (
-            f"{path}: hosted bytes differ from checked-out main; "
-            "deploy this reviewed commit before claiming live acceptance"
-        )
 
 
 async def inspect(viewport, reduced=False):
