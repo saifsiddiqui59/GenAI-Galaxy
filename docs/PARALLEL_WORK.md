@@ -43,3 +43,7 @@ Only coordinator edits shared `app.js`/interfaces and merges PRs; workers create
 ## V6 integration boundary
 
 `feat/p35-v6-cinematic` / draft #131 owns isolated motion, scene/materials and visual QA; `feat/p35-v6-preview-release` is based on latest main and owns only protected publisher, its boundary tests and canonical release state. Keep visual source draft. Coordinator reviews source CI/screenshots and publisher independently; deploy only the new V6 prefix and verify hosted results.
+
+## V6 final coordinator checkpoint
+
+Draft source #131 is frozen and publisher #135 is merged. Hosted release #40022442803 and artifact #12532090063 complete the isolated V6 visual acceptance scope, with actual desktop/mobile screenshots opened. Shared main's concurrent P35 learning-module changes were preserved. Keep older visual PRs #96/#105 draft and do not integrate their art into production; physical-device and authenticated V6 checks remain explicit follow-ups.

@@ -41,3 +41,7 @@ The undeployed `/api/vault/extract` route returns HTTP 503 unless the backend-on
 ## V6 preview release contract
 
 Release command `PUBLISH_V6_REVIEWED_6614f79` is bound to owner 80577424, PR #131 and full source SHA `6614f7903c52b81f471083321a49f8870b5becdc`. Preview handoff carries only chapter index 0–16 to its isolated nested lesson document. The demo seek interface changes ephemeral presentation time only; authentic mastery is never fabricated.
+
+## V6 hosted interface verification
+
+#40022442803 verified the actual V6 URL and bounded nested lesson handoff to `lesson/index.html?galaxyWorld=1`, all 17 navigation entries and visibly labeled demo progress. The presentation-only seek/clock never writes mastery. Real authenticated owner/progress contracts were preserved; signed-in V6 runtime acceptance was not performed.

@@ -189,3 +189,7 @@ In VS Code Git Bash, from the Galaxy main branch run bash scripts/galaxy_p3_one_
 ## Current V6 release action
 
 Require all three exact-source CI jobs for #131 and review its screenshot artifact. Merge only the independent fixed-prefix V6 publisher after main-based CI; use its owner command on #131, inspect actual hosted byte-parity/browser results and open the downloaded desktop/mobile images. Record verified run/link evidence afterward. Keep #96/#105/#131 draft; physical-device GPU rates and signed-in V6 journeys remain unverified.
+
+## V6 hosted preview acceptance completed — 24 October 2026
+
+V6 is hosted and verified in #40022442803; source CI, 18-file parity, unchanged homepage and four Chromium viewport/motion variants passed, and actual hosted PNGs were opened. Review the existing isolated V6 link and retain source PR #131 as draft; do not merge #96/#105/#131 into production without a distinct release decision. Physical-device FPS and signed-in V6 acceptance remain unverified; no failed automated V6 acceptance check remains. Details in `docs/experience/V6_HOSTED_VERIFICATION.md`.
