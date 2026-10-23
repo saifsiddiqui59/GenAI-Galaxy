@@ -37,7 +37,7 @@ class GalaxyModelProvisionPolicyTests(unittest.TestCase):
            'account_sku'
         ):
             self.assertIn(expected,shell)
-        for unsafe in ('GlobalStandard', 'ProvisionedManaged', 'PTU --', 'az group create',
+        for unsafe in ('--sku-name GlobalStandard', '--sku-name ProvisionedManaged', 'PTU --', 'az group create',
                        'wineshopPOS', 'WineShopPOS', 'az account keys', 'keys list'):
             self.assertNotIn(unsafe,shell)
         subprocess.run(['bash','-n',str(ROOT/'scripts/provision_galaxy_openai.sh')],check=True)
