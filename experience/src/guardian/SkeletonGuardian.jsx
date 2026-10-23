@@ -84,8 +84,8 @@ function SkeletonModel({phase='idle',rigPoseRef}){
           material.side=THREE.DoubleSide;
           material.transparent=false;
           material.opacity=1;
-          if(material.color)material.color.set('#e7ddcb');
-          if(material.emissive){material.emissive.set('#443160');material.emissiveIntensity=.35;}
+          if(material.color)material.color.set('#f2e3d2');
+          if(material.emissive){material.emissive.set('#9d7f73');material.emissiveIntensity=.47;}
           material.needsUpdate=true;
         }
       }
@@ -134,7 +134,8 @@ function SkeletonModel({phase='idle',rigPoseRef}){
  // external asset and is not replaced by a custom mesh.
  return <group ref={holder} position={[narrow?-2.0:-3.0,narrow?-1.95:-2.35,4.2]} scale={narrow?.65:1}>
    <primitive object={instance}/>
-   <pointLight position={[0,120,120]} intensity={8} color="#e9d2ff" distance={400}/>
+   <pointLight position={[1,2.9,2.3]} intensity={15} color="#fff2db" distance={7}/>
+   <pointLight position={[-1.4,1.7,-.9]} intensity={16} color="#a56ffe" distance={6}/>
  </group>;
 }
 export default function SkeletonGuardian({phase='idle',rigPoseRef}){
