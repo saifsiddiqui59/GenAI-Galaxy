@@ -102,7 +102,7 @@ function OfferingOrb({worldIndex,phase,bagPosition}){
 
 export default function CollectionFX({completed=[],reducedMotion=false,epoch=0,onOpenSack,phase='idle',nextWorldIndex=0}){
  const size=useThree(state=>state.size);
- const bagPosition=size.width<700?[-1.4,-1.1,3.7]:BAG_POSITION;
+ const bagPosition=size.width<700?[-.75,-.82,3.7]:BAG_POSITION;
  return <>
    <Satchel onOpenSack={onOpenSack} count={completed.length} bagPosition={bagPosition}/>
    <OfferingOrb phase={phase} worldIndex={nextWorldIndex} bagPosition={bagPosition}/>
