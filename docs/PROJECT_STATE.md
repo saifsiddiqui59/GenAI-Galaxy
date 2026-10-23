@@ -136,3 +136,9 @@ The user elected to have a **single coordinator chat** own all six previously se
 ## P4 — independently reverified after P3 (2026-10-22)
 
 Before P4, main `accdecd9` [run #39845004927](https://github.com/saifsiddiqui59/GenAI-Galaxy/actions/runs/39845004927) completed **3/3 success**. Read-only live Supabase policy inspection verified Galaxy owner-scoped RLS policies and a private 8 MiB study bucket; it is **not** a signed-in two-user test. Added hosted deployment byte-parity and exact lesson-count acceptance checks in this P4 source PR. The existing Azure site has **not been republished**, and no manual workflow, hosted database fixture, actual mic or Azure backend launch was executed. See `docs/reviews/P4_RELEASE_EXECUTION.md` for evidence and limits.
+
+## P6 — temporary Galaxy test accounts via protected manual GitHub Action
+
+- Last verified Azure static deployment run #39858392869: validate and deploy successful; seven allowlisted assets uploaded with OIDC and narrow Blob permissions. Hosted browser run #39858621086 cancelled while installing Chromium; owner deferred browser tests.
+- Galaxy-only Supabase read-only audit on 2026-10-23: `genai_study_progress`, `genai_study_attempts`, `genai_study_documents` each RLS enabled with owner-scoped policies. Private bucket `genai-study-docs` exists with 8 MiB cap and per-user folder policies. This is **not** real cross-user acceptance.
+- P6 adds a protected GitHub Actions-only workflow to create 2 temporary Galaxy Auth test users using a GitHub environment admin key, run the existing scoped negative RLS probe as those independently signed-in users, and delete both users. **Workflow code exists; no real users or hosted test have yet been created/run**. Manual `TEST` dispatch and GitHub dev secret setup required; do not confuse offline unit success with hosted RLS.
