@@ -26,6 +26,8 @@ async def inspect(browser,origin,viewport,reduced=False):
  # Verify the staged model is served locally rather than requested via runtime CDN.
  model=await page.request.get(origin+"/models/skeleton/Skeleton.fbx")
  assert model.status==200 and len(await model.body())==433820, "Expected verified CC0 Quaternius Skeleton FBX"
+ await page.wait_for_function("""() => window.__galaxySkeletonDiagnostics?.meshes > 0 && window.__galaxySkeletonDiagnostics?.bones > 0""",timeout=15000)
+
  # Let the walking, collection and two-handed offering visual sequence finish.
  await page.wait_for_timeout(4200)
  await page.screenshot(path=str(ROOT/("preview-p15-"+("mobile" if viewport["width"]<600 else "reduced" if reduced else "desktop")+".png")),timeout=20000,animations="disabled")
