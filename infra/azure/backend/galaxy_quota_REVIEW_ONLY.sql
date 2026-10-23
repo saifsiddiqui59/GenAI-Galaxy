@@ -33,7 +33,7 @@ BEGIN
   -- No caller-provided identity, limit, date, counter or account is trusted.
   v_user := auth.uid();
   IF v_user IS NULL OR
-     pg_catalog.coalesce((auth.jwt() ->> 'is_anonymous')::boolean, false) THEN
+     COALESCE((auth.jwt() ->> 'is_anonymous')::boolean, false) THEN
     RETURN false;
   END IF;
 
@@ -48,8 +48,8 @@ BEGIN
     FROM public.genai_study_eval_global_daily
    WHERE usage_day = v_day;
 
-  IF pg_catalog.coalesce(v_count_user, 0) >= 5
-     OR pg_catalog.coalesce(v_count_global, 0) >= 50 THEN
+  IF COALESCE(v_count_user, 0) >= 5
+     OR COALESCE(v_count_global, 0) >= 50 THEN
     RETURN false;
   END IF;
 
