@@ -110,3 +110,11 @@
 - All future user-triggered executions should be GitHub Actions; local VS Code/Git Bash CLI is no longer a required user workflow. Do not create Auth users by direct SQL insertion or disable confirmation globally. Use Supabase's documented Admin Auth API via **protected GitHub `dev` environment secret** to create two uniquely named disposable users, perform data-plane tests with their standard Auth tokens and a publishable key, and delete only the IDs just created.
 - The service/secret key bypasses RLS: use it **only** for Auth admin create/delete, never for progress/docs/storage assertions, frontend JavaScript or routine CI. No user account password/email/key in source, artifacts or logs; the users have randomly generated credentials and synthetic example.com identities. The existing clinic Auth users and tables stay unchanged.
 - Preserve workflow_dispatch/main/`TEST` protection, leave browser acceptance postponed, and do not claim hosted sign-in/RLS tested before the protected workflow succeeds.
+
+## P7 — parallel work and current exclusions
+
+- Implement unrelated work in independent GitHub feature branches; merge in validated sequence. No VS Code/Git Bash requested by owner for further execution; user-facing acceptance steps should be GitHub Actions UI workflows. Never auto-enable manual cloud workflows on PR/push to bypass permissions.
+- Keep temporary Auth tests isolated to existing Galaxy objects; use elevated key strictly for ephemeral Auth create/delete in the protected manual workflow and independent normal-user JWTs for actual RLS assertions. Forced process cancellation cannot guarantee cleanup.
+- Limit backend implementation to source hardening without separate Azure provisioning consent; project-pin all user Auth calls, reject bearer/API-key redirects, preserve fail-closed gateway and private Vault requirements. No assertion that simple environment flags prove live user-level quotas or malware protection.
+- Prioritize editorial risk triage without mutating 245 authored lessons or pretending regex/version flags are domain-expert signoff.
+- Drop optional P4 monitoring and cost-alert implementation from the current task plan per owner request. Browser and physical microphone acceptance intentionally deferred, not marked passed.
