@@ -91,7 +91,7 @@ function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion,onSel
   <mesh scale={1.09}><sphereGeometry args={[.275,24,16]}/><meshBasicMaterial color={color} transparent opacity={.18} side={THREE.BackSide} depthWrite={false}/></mesh>
   {/* Slightly oversized invisible pick surface so the offered planet is touch-friendly. */}
   <mesh><sphereGeometry args={[.37,20,14]}/><meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false}/></mesh>
-  <Html center position={[0,-.47,0]} style={{pointerEvents:'auto',whiteSpace:'nowrap'}}>
+  <Html center position={[.72,.18,0]} style={{pointerEvents:'auto',whiteSpace:'nowrap'}}>
    <button ref={labelRef} type="button" style={{visibility:'hidden'}} className="galaxy-offer-label" onClick={e=>{e.stopPropagation();onSelect?.(worldIndex)}}>NEXT · {curriculum[worldIndex]?.title || 'Learning world'} ↗</button>
   </Html>
   <pointLight intensity={1.4} color={color} distance={2.2}/>
