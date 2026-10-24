@@ -211,6 +211,7 @@ function modelFailureMessage(status){
  if(status===429)return 'Daily AI evaluation limit reached. The local check below is not a factual grade.';
  if(status===503||status===502||status===504)return 'AI service or quota check is temporarily unavailable. This is a local check only.';
  if(status===400)return 'AI service rejected the submitted answer. The local check below is not a factual grade.';
+ if(status===404)return 'The deployed AI evaluation route was not found (HTTP 404). Check the configured API endpoint and Function route.';
  return 'AI review failed (HTTP '+status+'). The result below is a local check, not an LLM grade.';
 }
 
@@ -504,7 +505,8 @@ async function submitAnswer(e,localOnly=false){
    if(error==='NO_SESSION')score.localReason='Session expired. Sign in again; no authenticated AI review was returned.';
    else if(error==='INVALID_RESPONSE')score.localReason='AI returned an invalid response. Only the local keyword result is shown.';
    else if(/^HTTP_\d{3}$/.test(error))score.localReason=modelFailureMessage(Number(error.slice(5)));
-   else score.localReason='AI request could not be completed (network or browser access). This is only a local keyword result.';
+   else if(err instanceof TypeError)score.localReason='AI endpoint could not be reached by the browser. Verify the hosted API URL, CORS preflight for this site and HTTPS/network access. No model review was received.';
+   else score.localReason='AI evaluation did not complete ('+error.slice(0,100)+'). Only the local concept check is shown; no factual grade was produced.';
   }
  }
  if(!active())return;
