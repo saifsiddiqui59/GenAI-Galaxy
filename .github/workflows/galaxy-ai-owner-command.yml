@@ -83,6 +83,16 @@ jobs:
                 --ref main -f confirm=DIAGNOSE
               echo 'Owner requested read-only existing Azure Function runtime diagnostics.'
               ;;
+            "SCALE_FLEX_2048_$EVENT_SHA")
+              gh workflow run galaxy-p57-flex-memory.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=SCALE_2048
+              echo 'Owner requested existing-only no-idle 2048 MB Flex rightsize.'
+              ;;
+            "ROLLBACK_FLEX_512_$EVENT_SHA")
+              gh workflow run galaxy-p57-flex-memory.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=ROLLBACK_512
+              echo 'Owner requested restore existing Galaxy Flex to 512 MB.'
+              ;;
             *)
               echo '::error::Unsupported exact owner command; no workflow dispatched'
               exit 1
