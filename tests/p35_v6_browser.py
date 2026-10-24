@@ -30,7 +30,10 @@ async def inspect(pw,url,name,width,height,reduced=False):
         labels=await page.locator('[data-world-index]').evaluate_all('(nodes)=>nodes.map(n=>({index:n.dataset.worldIndex,name:n.title,text:n.textContent}))')
         print(name,'Visible atlas label nodes',len(labels),'worlds',[x['index'] for x in labels],flush=True)
         assert len(labels)>=12 and all(x['name'] and x['text'].strip() for x in labels),labels
-        assert await page.locator('[data-world-label]').count()>=1,'Recommended world must have visible full title'
+        if width>=700:
+            assert await page.locator('[data-world-label]').count()>=1,'Desktop must name the recommended world'
+        else:
+            assert await page.locator('[data-world-label]').count()==0,'Compact Galaxy must not obscure worlds with an oversized title'
         if name=='desktop' and not reduced:
             await page.wait_for_function("() => window.__galaxySkeletonDiagnostics.currentPhase==='offering' && window.__galaxySkeletonDiagnostics.pickupLog.length===3",timeout=60000)
             print('Natural timeline: three original PickUp cycles completed without seeking')
