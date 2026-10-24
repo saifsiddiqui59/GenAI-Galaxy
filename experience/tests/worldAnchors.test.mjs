@@ -17,6 +17,8 @@ test('non-spiral atlas separates clickable planets at normal size',()=>{
   for(const b of worlds.slice(i+1)){
    const distance=Math.hypot(a.x-b.x,a.y-b.y);
    assert(distance>a.scale+b.scale+.22, `crowded planets ${i} and ${b.index}: ${distance}`);
+   const hitA=Math.max(a.scale*1.28,.42),hitB=Math.max(b.scale*1.28,.42);
+   assert(distance>hitA+hitB, `overlapping mobile touch targets ${i} and ${b.index}`);
   }
  }
 });
