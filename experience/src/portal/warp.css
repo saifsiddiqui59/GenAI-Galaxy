@@ -1,0 +1,29 @@
+/* Zero-asset hyperspace corridor, designed for Galaxy only (not React Bits source). */
+.galaxy-portal{position:fixed;inset:0;z-index:120;overflow:hidden;display:grid;place-items:center;
+ background:radial-gradient(circle at 50% 50%,#1c2168 0%,#090d31 25%,#020716 70%);color:#fff;
+ animation:galaxy-portal-open 1.05s cubic-bezier(.3,.6,.4,1) both;isolation:isolate}
+.galaxy-portal-core{position:absolute;top:50%;left:50%;width:23vmin;height:23vmin;transform:translate(-50%,-50%);
+ border-radius:50%;background:radial-gradient(circle,#fff 0%,#c7f9ff 16%,#acb1fd 37%,transparent 68%);
+ box-shadow:0 0 70px #8178eeaa,0 0 140px #47d5f366}
+.galaxy-portal-rings{position:absolute;inset:0;pointer-events:none;perspective:800px}
+.galaxy-portal-rings i{position:absolute;left:50%;top:50%;width:40vmin;height:40vmin;
+ margin:-20vmin;border-radius:50%;border:1.5px solid #b6e4ff77;
+ box-shadow:0 0 15px #7bb8ff66,inset 0 0 35px #6e61fb33;
+ transform:translateZ(-300px) rotate(calc(var(--ring)*26deg)) scale(.1);opacity:0;
+ animation:galaxy-ring-rush .84s linear calc(var(--ring)*-.054s) infinite}
+.galaxy-portal-label{position:absolute;left:50%;bottom:18%;transform:translateX(-50%);
+ text-align:center;display:grid;gap:8px;min-width:270px;z-index:3;
+ text-shadow:0 3px 16px #05061b}
+.galaxy-portal-label strong{font-size:clamp(20px,4vw,35px);letter-spacing:.16em}
+.galaxy-portal-label span{color:#b9c9f3;font-size:13px}
+.galaxy-portal-skip{position:absolute;top:22px;right:22px;border:1px solid #8d91e0;
+ border-radius:30px;background:#171d47;color:white;padding:9px 15px;z-index:5;cursor:pointer}
+.galaxy-portal.no-motion{animation:none;background:#060c26}
+.galaxy-portal.no-motion .galaxy-portal-core{display:none}
+@keyframes galaxy-ring-rush{0%{opacity:0;transform:scale(.08)}20%{opacity:.85}
+ 98%{opacity:0}100%{opacity:0;transform:scale(4)}}
+@keyframes galaxy-portal-open{0%{opacity:.04;filter:brightness(.8)}28%{opacity:1}80%{opacity:1}100%{opacity:1}}
+@media(prefers-reduced-motion:reduce){
+ .galaxy-portal,.galaxy-portal *{animation:none!important;transition:none!important}
+ .galaxy-portal-rings{display:none}
+}
