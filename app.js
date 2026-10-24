@@ -270,7 +270,7 @@ function modelUsageMarkup(usage, estimated){
   ` · ${cached.toLocaleString('en-IN')} cached input`:'';
  const money=estimated?.currency==='INR' &&
   typeof estimated.model_cost_estimate_inr==='string' &&
-  /^\\d{1,7}\\.\\d{8}$/.test(estimated.model_cost_estimate_inr)?
+  /^\d{1,7}\.\d{8}$/.test(estimated.model_cost_estimate_inr)?
   `<p><b>Estimated model-token cost:</b> ₹${escapeHtml(estimated.model_cost_estimate_inr)} · Not Azure billed cost</p>`:
   '<p>INR cost unavailable — verified token rates are not configured.</p>';
  return `<div class="footnote" role="note" aria-label="AI model usage">
