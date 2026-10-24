@@ -157,3 +157,9 @@ Keep the visual source frozen at `6614f79` and draft #131. The successful protec
 - Reject arbitrary missing-concept score caps and unverifiable single self-assigned scores. Weighted question-specific dimension evidence is still **LLM-derived**, not independently verified; only a future human-reviewed benchmark can establish grading fairness.
 - Initial integration development proceeds without the requested 120-case golden suite or paid benchmark calls. This is an execution-order change, **not** approval to declare grading production-ready or waive the final human validation gate.
 - Show token usage from provider counters. Publish no INR cost estimate until the actual deployment-specific rates and date/source have been owner-verified; keep inferred request costs and separately billed private Azure cost reports distinct.
+
+## P50 no-charge AI release contract — 2026-10-24
+
+- Before any new billable benchmark or user-visible scoring claim, test real HTTP handler behavior with injected synthetic identity, quota and provider stubs under standard offline CI. These acceptance checks are **contract tests**, not human-calibrated model-quality tests, real Supabase RLS checks or cloud deployment evidence.
+- If reported provider prompt/completion/total token counts contradict one another, treat usage as **unknown** and suppress estimated INR instead of displaying unreliable measured totals or zero spend. Actual Azure Cost Management billing stays a separate private reconciliation task.
+- Leave the unfinished V6 Genie/3D visual work isolated. Azure provisioning, live smoke, secret configuration and publishing remain gated by distinct owner approval; the 120-case grading suite remains deferred.
