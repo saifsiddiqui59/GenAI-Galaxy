@@ -57,7 +57,9 @@ jobs:
       # apt package setup, which can stall even when the actual browser tests pass.
       - run: python -m playwright install chromium
       - name: Desktop/mobile/reduced-motion and simulated mic
-        run: python tests/browser_check.py
+        run: |
+          python tests/browser_check.py
+          python tests/browser_p42_roles.py
   release-safety:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
