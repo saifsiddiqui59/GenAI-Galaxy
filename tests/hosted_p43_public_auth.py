@@ -57,7 +57,8 @@ async def main():
             await scenario(browser, {"width":1440,"height":900})
             await scenario(browser, {"width":390,"height":844}, mobile=True)
             await scenario(browser, {"width":1440,"height":900}, reduced=True)
-            async with p.request.new_context() as request:
+            request = await p.request.new_context()
+            try:
                 response = await request.get(SITE+"app.js",timeout=30000)
                 assert response.ok, "Live Galaxy JavaScript asset missing"
                 deployed = await response.body()
@@ -74,6 +75,8 @@ async def main():
                                                 headers=headers, data=json.dumps(args),timeout=20000)
                     assert denied.status in (401,403), "Guest unexpectedly invoked "+rpc+":" + str(denied.status)
                     print("PASS unauthenticated server denial",rpc,denied.status)
+            finally:
+                await request.dispose()
             print("PASS hosted P42 asset parity, auth modal, mobile, accessibility and 4 anonymous denials")
         finally:
             await browser.close()
