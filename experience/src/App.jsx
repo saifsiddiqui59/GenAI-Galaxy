@@ -1,11 +1,9 @@
 import React,{useCallback,useEffect,useMemo,useRef,useState} from 'react';
 import JourneyTimeline from './journey/JourneyTimeline.jsx';
 import GalaxyAuth from './auth/GalaxyAuth.jsx';
-import CollectionFX from './effects/CollectionFX.jsx';
 import WorldDock from './navigation/WorldDock.jsx';
 import {lessonHref,powerBudget,validWorld} from './navigation/navigation.js';
 import {Canvas} from '@react-three/fiber';
-import Guardian from './guardian/KayKitGuardian.jsx';
 import {GalaxyScene} from './space/DeepGalaxy.jsx';
 import GuardianJourney from './journey/GuardianJourney.jsx';
 import {completedWorlds,recommendedWorld,worldKey} from './journey/story.js';
@@ -50,20 +48,14 @@ export default function App(){
  const budget=useMemo(powerBudget,[]);
  const reduced=budget.noMotion;
  const [animationEnabled,setAnimationEnabled]=useState(!reduced);
- const [modelPhase,setModelPhase]=useState('arriving');
- const rigPoseRef=useRef(null);
  const choreographyRef=useRef({ms:0,epoch:0,hold:false});
  const invalidateRef=useRef(()=>{});
- const [modelReady,setModelReady]=useState(false);
  const [visible,setVisible]=useState(!document.hidden);
- const ready=useCallback(()=>setModelReady(true),[]);
  const [sequence,setSequence]=useState({activeIndex:-1,visible:0,skipped:false});
  const [selected,setSelected]=useState(null);
  const [warp,setWarp]=useState(null);
  const [menuOpen,setMenuOpen]=useState(false);
  const [authSnapshot,setAuthSnapshot]=useState({status:'guest',user:null,progress:{}});
- const [sackOpenFrom3D,setSackOpenFrom3D]=useState(0);
- const [effectsEpoch,setEffectsEpoch]=useState(0);
  const receiveAuth=useCallback(value=>setAuthSnapshot(value),[]);
  const available3D=useMemo(canWebGL,[]);
  const activeOwner=SHOW_SAMPLE?SAMPLE_USER:(authSnapshot.status==='authenticated'?authSnapshot.user?.id:null);
@@ -75,11 +67,10 @@ export default function App(){
  },[activeOwner,activeProgress]);
  const nextIndex=useMemo(()=>activeOwner?
    recommendedWorld({topics:TOPICS,progress:activeProgress}):0,[activeOwner,activeProgress]);
- const phaseUpdate=useCallback(next=>setModelPhase(next),[]);
  const sequenceUpdate=useCallback(next=>setSequence(old=>old.activeIndex===next.activeIndex&&old.visible===next.visible&&old.skipped===next.skipped?old:next),[]);
  const resetClock=useCallback(()=>{
   choreographyRef.current={ms:0,epoch:choreographyRef.current.epoch+1,hold:false};
-  setEffectsEpoch(x=>x+1);invalidateRef.current();
+  invalidateRef.current();
  },[]);
  useEffect(()=>{resetClock()},[activeOwner,collected.length,nextIndex,resetClock]);
  useEffect(()=>{const handler=()=>setVisible(!document.hidden);document.addEventListener('visibilitychange',handler);return()=>document.removeEventListener('visibilitychange',handler)},[]);
@@ -103,18 +94,11 @@ export default function App(){
      <Canvas camera={{position:[0,.3,12.5],fov:48}} dpr={[1,1.5]} frameloop="demand"
        onCreated={state=>{invalidateRef.current=state.invalidate;state.gl.setClearColor('#050916');state.gl.toneMappingExposure=1.18}}
        gl={{antialias:true,alpha:false,powerPreference:'default'}}>
-       <JourneyTimeline clockRef={choreographyRef} count={collected.length} ready={modelReady}
+       <JourneyTimeline clockRef={choreographyRef} count={collected.length} ready={true}
          reducedMotion={!animationEnabled||reduced} active={visible}/>
        <GalaxyScene masteredWorlds={collected} selectedIndex={selected} recommendedIndex={nextIndex}
          onSelect={select} reducedMotion={!animationEnabled||reduced} clockRef={choreographyRef}/>
-       <Guardian rigPoseRef={rigPoseRef} clockRef={choreographyRef} completedCount={collected.length}
-         onReady={ready} reducedMotion={!animationEnabled||reduced}/>
-       <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced}
-         epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
-         collectedCount={sequence.visible} clockRef={choreographyRef}
-         onOpenSack={()=>setSackOpenFrom3D(x=>x+1)} rigPoseRef={rigPoseRef}/>
      </Canvas>
-     {!modelReady&&<div className="guardian-loading" role="status">Preparing your galaxy<span>Loading the companion and learning worlds</span></div>}
    </div>}
    {!available3D&&<div className="galaxy-no-webgl" role="status">
       <h2>3D graphics unavailable on this device</h2>
@@ -129,10 +113,10 @@ export default function App(){
     (authSnapshot.status==='authenticated'?'YOUR PRIVATE LEARNING GALAXY':'3D GALAXY · SIGN IN TO SYNC PROGRESS')}</div>
    <GalaxyAuth demo={SHOW_SAMPLE} topicKeys={TOPIC_KEYS} onSnapshot={receiveAuth}/>
    <GuardianJourney completed={collected} nextIndex={nextIndex} nextName={LABELS[nextIndex]}
-     onSelectCompleted={select} onAccept={select} onPhase={phaseUpdate}
-     onSequence={sequenceUpdate} clockRef={choreographyRef} ready={modelReady}
-     openSackSignal={sackOpenFrom3D} onReplay={resetClock}
-     reducedMotion={!animationEnabled||reduced}/>
+     onSelectCompleted={select} onAccept={select}
+     onSequence={sequenceUpdate} clockRef={choreographyRef} ready={true}
+     onReplay={resetClock}
+     reducedMotion={true}/>
    <div className="galaxy-atlas-label" aria-hidden="true"><span>THE LEARNING ATLAS</span><p>Seventeen worlds. Infinite connections.</p></div>
    <div className="galaxy-view-actions">
      <button type="button" aria-expanded={menuOpen} aria-controls="galaxy-world-menu"
