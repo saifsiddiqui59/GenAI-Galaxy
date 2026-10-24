@@ -17,7 +17,7 @@ def fetch(request):
 def main():
  status,headers,text=fetch(urllib.request.Request(SITE+"/runtime-config.js"))
  assert status==200, f"Hosted config unavailable HTTP {status}"
- match=re.search(r"window\\.GALAXY_EVALUATOR_URL\\s*=\\s*['\\\"]([^'\\\"]*)['\\\"]",text)
+ match=re.search(r"window[.]GALAXY_EVALUATOR_URL\s*=\s*'([^']*)'",text)
  assert match,"Hosted evaluator configuration missing"
  endpoint=match.group(1).strip()
  if not endpoint:
