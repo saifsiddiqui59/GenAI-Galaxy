@@ -117,6 +117,7 @@ async function run(){
    next_question:'How is vector similarity calculated?'})};
  };
  const tutorBefore=calls;
+ vm.runInContext("state.view='practice'",ctx);
  await vm.runInContext("askAiTutor('explain')",ctx);
  assert.equal(calls,tutorBefore+1);
  assert.match(vm.runInContext('practiceMarkup()',ctx),/A short explanation of embeddings/);
