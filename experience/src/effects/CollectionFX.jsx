@@ -1,8 +1,10 @@
 import React,{useRef,useMemo,useEffect} from 'react';
 import {useFrame,useThree} from '@react-three/fiber';
+import {Html} from '@react-three/drei';
 import * as THREE from 'three';
 import {planetSurfaceTexture} from '../space/PlanetSurface.js';
 import {COLORS} from '../space/DeepGalaxy.jsx';
+import curriculum from '../../../data/curriculum.json';
 import {pickupAt,smooth,COLLECT_START_MS,PER_WORLD_MS,RELEASE} from '../journey/choreography.js';
 export {COLLECT_START_MS,PER_WORLD_MS};
 import './collection.css';
@@ -62,29 +64,44 @@ function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
   <mesh position={[.19,.04,.22]}><sphereGeometry args={[.023,8,6]}/><meshStandardMaterial color="#d4ad73" metalness={.45} roughness={.4}/></mesh>
  </group>;
 }
-function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion}){
- const orb=useRef();
+function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion,onSelect}){
+ const orb=useRef(),labelRef=useRef();
  const color=COLORS[worldIndex];
  const texture=useMemo(()=>planetSurfaceTexture(worldIndex,color,compact),[worldIndex,color,compact]);
  useEffect(()=>()=>texture.dispose(),[texture]);
- useFrame(()=>{
+ useFrame(state=>{
   const pose=rigPoseRef.current;if(!orb.current||!pose)return;
   orb.current.visible=pose.offerReveal>.45;
+  if(labelRef.current)labelRef.current.style.visibility=orb.current.visible?'visible':'hidden';
   orb.current.position.copy(pose.offer);
   orb.current.scale.setScalar(pose.scale*smooth((pose.offerReveal-.45)/.55));
   orb.current.rotation.y=reducedMotion?0:clockRef.current.ms*.00012;
+  const diagnostics=window.__galaxySkeletonDiagnostics;
+  if(diagnostics&&orb.current.visible){
+   const p=orb.current.getWorldPosition(new THREE.Vector3()).project(state.camera);
+   diagnostics.offeredHitPoint=[(p.x+1)*state.size.width/2,(1-p.y)*state.size.height/2];
+   diagnostics.offeredWorldIndex=worldIndex;
+  }
  },-1);
- return <group ref={orb} visible={false}>
+ return <group ref={orb} visible={false}
+  onClick={e=>{e.stopPropagation();if(orb.current?.visible)onSelect?.(worldIndex)}}
+  onPointerOver={()=>{document.body.style.cursor='pointer'}}
+  onPointerOut={()=>{document.body.style.cursor=''}}>
   <mesh><sphereGeometry args={[.275,40,28]}/><meshStandardMaterial map={texture} roughness={.54} metalness={.06} emissive={color} emissiveIntensity={.12}/></mesh>
   <mesh scale={1.09}><sphereGeometry args={[.275,24,16]}/><meshBasicMaterial color={color} transparent opacity={.18} side={THREE.BackSide} depthWrite={false}/></mesh>
+  {/* Slightly oversized invisible pick surface so the offered planet is touch-friendly. */}
+  <mesh><sphereGeometry args={[.37,20,14]}/><meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false}/></mesh>
+  <Html center position={[.72,.18,0]} style={{pointerEvents:'auto',whiteSpace:'nowrap'}}>
+   <button ref={labelRef} type="button" style={{visibility:'hidden'}} className="galaxy-offer-label" onClick={e=>{e.stopPropagation();onSelect?.(worldIndex)}}>NEXT · {curriculum[worldIndex]?.title || 'Learning world'} ↗</button>
+  </Html>
   <pointLight intensity={1.4} color={color} distance={2.2}/>
  </group>;
 }
-export default function CollectionFX({completed=[],collectedCount,clockRef,reducedMotion=false,onOpenSack,nextWorldIndex=0,rigPoseRef}){
+export default function CollectionFX({completed=[],collectedCount,clockRef,reducedMotion=false,onOpenSack,onSelectWorld,nextWorldIndex=0,rigPoseRef}){
  const compact=useThree(s=>s.size.width<700);
  return <>
   <Satchel onOpenSack={onOpenSack} count={collectedCount} rigPoseRef={rigPoseRef} clockRef={clockRef}/>
-  <OfferingOrb worldIndex={nextWorldIndex} rigPoseRef={rigPoseRef} clockRef={clockRef} compact={compact} reducedMotion={reducedMotion}/>
+  <OfferingOrb worldIndex={nextWorldIndex} rigPoseRef={rigPoseRef} clockRef={clockRef} compact={compact} reducedMotion={reducedMotion} onSelect={onSelectWorld}/>
   {completed.slice(0,17).map((world,order)=><Miniature key={world.index} world={world} order={order} rigPoseRef={rigPoseRef} clockRef={clockRef} compact={compact}/>)}
  </>;
 }
