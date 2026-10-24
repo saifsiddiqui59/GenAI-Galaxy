@@ -1,6 +1,6 @@
 import React,{useEffect} from 'react';
 import './world-dock.css';
-export default function WorldDock({worlds=[],recommended=0,onSelect,selected=null,visible=false,onClose}){
+export default function WorldDock({worlds=[],recommended=0,onSelect,selected=null,visible=false,onClose,onReplay,canReplay=false,onSkip,canSkip=false}){
  useEffect(()=>{
   if(!visible)return;
   const listen=event=>{if(event.key==='Escape')onClose?.()};
@@ -13,6 +13,10 @@ export default function WorldDock({worlds=[],recommended=0,onSelect,selected=nul
     <div><small>SELECT A KNOWLEDGE WORLD</small><h2>17 planets · One universe</h2></div>
     <button type="button" onClick={onClose} aria-label="Close world navigator">✕</button>
    </div>
+   {(canReplay||canSkip)&&<div className="galaxy-dock-journey-actions">
+     {canSkip&&<button type="button" onClick={()=>onSkip?.()}>Skip Genie introduction →</button>}
+     {canReplay&&<button type="button" onClick={()=>onReplay?.()}>Replay Genie entrance ↻</button>}
+   </div>}
    <ol>{worlds.map((name,index)=>
     <li key={index}><button type="button"
       aria-current={selected===index?'page':undefined} onClick={()=>onSelect?.(index)}>

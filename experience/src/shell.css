@@ -22,9 +22,9 @@ button,a{font:inherit}button:focus-visible,a:focus-visible,input:focus-visible{o
 @media(max-width:700px){
  .galaxy-experience{min-height:740px}
  .galaxy-brand{top:20px;left:22px;gap:9px}.galaxy-brand strong{font-size:10px}.galaxy-brand small{font-size:7px}.galaxy-brand-orb{width:30px;height:30px;font-size:21px}
- .galaxy-mode-tag{top:68px;width:calc(100% - 44px);text-align:left;white-space:normal;line-height:1.5;font-size:7px;letter-spacing:.1em}
+ .galaxy-mode-tag{top:68px;width:calc(100% - 44px);text-align:left;white-space:normal;line-height:1.5;font-size:8px;letter-spacing:.1em}
  .galaxy-atlas-label{display:none}.galaxy-view-actions{left:22px;right:22px;bottom:17px;gap:6px;display:grid;grid-template-columns:1fr auto}
- .galaxy-view-actions button,.galaxy-view-actions a{font-size:10px;padding:11px 12px;text-align:center}.galaxy-view-actions a{grid-column:1/-1;padding:3px;background:none;border:0;font-size:9px;color:#7e8ea9}
+ .galaxy-view-actions button,.galaxy-view-actions a{font-size:10px;padding:11px 12px;text-align:center;min-height:44px}.galaxy-view-actions a{grid-column:1/-1;padding:3px;background:none;border:0;font-size:10px;color:#95a7c5;min-height:20px}
  .galaxy-auth{top:84px!important;right:22px!important;max-width:calc(100vw - 44px)}.galaxy-auth>button{font-size:9px!important;padding:6px 9px!important}
  .guardian-loading{left:42%;top:54%;width:80%}.galaxy-no-webgl{top:40%;left:22px;right:22px}
  .galaxy-dock{left:14px!important;bottom:83px!important;width:calc(100vw - 28px)!important}
