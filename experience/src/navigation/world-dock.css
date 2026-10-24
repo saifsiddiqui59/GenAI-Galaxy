@@ -12,3 +12,7 @@
 .galaxy-dock li button:hover,.galaxy-dock li button:focus-visible{border-color:#b5e7ff;background:#29386c}
 .galaxy-dock-index{font-size:11px;color:#9cdfef}
 .galaxy-dock-recommend{margin-left:auto;color:#fde59f;border:1px solid #b29a63;border-radius:20px;font-size:10px;padding:3px 8px}
+
+.galaxy-dock-journey-actions{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 14px}
+.galaxy-dock-journey-actions button{background:#172248;color:#f4d8a5;border:1px solid #877650;border-radius:9px;padding:10px 12px;min-height:44px;cursor:pointer;font-size:12px}
+.galaxy-dock-journey-actions button:focus-visible{outline:2px solid #f4d8a5;outline-offset:2px}
