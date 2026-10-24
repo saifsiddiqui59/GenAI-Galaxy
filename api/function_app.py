@@ -17,7 +17,8 @@ from core import InputError, bearer_token, document_id, topic_key, extract_text,
 from consumption_security import backend_profile, enforce_eval_quota, QuotaExceeded, QuotaUnavailable, DIRECT, GATEWAY
 from eval_observability import new_trace_id, record_evaluation, usage_counters
 from interview_grading import grading_system_prompt, validate_structured_review, GradingContractError
-from tutor_graph import invoke_tutor, validate_tutor_request, FREE_MODES
+# LangGraph and its transitive imports are lazy-loaded ONLY after a valid
+# authenticated tutor request, not during evaluator/preflight worker startup.
 from model_provider import chat_json, ProviderUnavailable
 from model_costs import estimate_model_cost
 
@@ -264,6 +265,9 @@ def tutor(req:func.HttpRequest)->func.HttpResponse:
     try:
         # Identical login + tenant-bound session verification as /evaluate.
         token,user_id,base,public_key=authenticate(req)
+        # Authenticate first: unauthorized and OPTIONS traffic must never
+        # force expensive LangGraph imports/graph compilation on a cold worker.
+        from tutor_graph import invoke_tutor, validate_tutor_request, FREE_MODES
         stage='validation'
         validated=validate_tutor_request(req.get_json(),set(RUBRICS))
         rubric=RUBRICS[validated['topic_key']]
