@@ -100,6 +100,31 @@ async function run(){
 
 
  reset({signedIn:true});
+ const route=vm.runInContext('tutorEndpoint()',ctx);
+ assert.equal(route,'https://gengalaxy-p3-1429841605.azurewebsites.net/api/practice/tutor');
+ assert.match(vm.runInContext('practiceMarkup()',ctx),/Ask AI tutor \(uses tokens\)/);
+ assert.match(vm.runInContext('practiceMarkup()',ctx),/Read reference \(free\)/);
+ // Authenticated tutor click is explicit and uses one request, unlike a local check.
+ reset({signedIn:true});
+ ctx.fetch=async (url,options)=>{
+  calls++;
+  assert.equal(url,route);
+  assert.equal(options.headers.Authorization,'Bearer mock-user-token');
+  assert.equal(JSON.parse(options.body).mode,'explain');
+  return {ok:true,status:200,json:async()=>({
+   tutor_status:'model_tutored',mode:'explain',model_called:true,
+   reply:'A short explanation of embeddings.',
+   next_question:'How is vector similarity calculated?'})};
+ };
+ const tutorBefore=calls;
+ await vm.runInContext("askAiTutor('explain')",ctx);
+ assert.equal(calls,tutorBefore+1);
+ assert.match(vm.runInContext('practiceMarkup()',ctx),/A short explanation of embeddings/);
+ reset({signedIn:false});
+ ctx.fetch=async()=>{throw Error('Guest triggered a paid request')};
+ await vm.runInContext("askAiTutor('explain')",ctx);
+ assert.equal(vm.runInContext('state.tutorResponse',ctx),null);
+
  const beforeLocal=calls;await submit(true);
  assert.equal(calls,beforeLocal,'Explicit free mode must not call model');
  assert.match(feedback().localReason,/free local check/);
