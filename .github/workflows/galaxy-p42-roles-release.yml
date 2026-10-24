@@ -1,0 +1,106 @@
+name: Galaxy P42 existing-site three-role UI release
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type PUBLISH_GALAXY_P42_APP to release reviewed RBAC UI"
+        required: true
+        type: string
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' &&
+      github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'PUBLISH_GALAXY_P42_APP') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 147 &&
+        github.event.comment.user.id == 80577424 &&
+        github.event.comment.body == 'PUBLISH_GALAXY_P42_APP'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Pinned source and Galaxy role contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git hash-object app.js)" == 'eb7c315912385777d71b1b33da330c9c7bf9e632' ]] || { echo '::error::P42 app.js changed; re-review mandatory'; exit 1; }
+          node --check app.js
+          python -m unittest discover -s tests -p test_p42_roles.py -v
+          node tests/test_p37_saas.cjs
+          ! grep -Eq 'service_role|SUPABASE_SERVICE_ROLE_KEY|AZURE_SPEECH_KEY' app.js
+  publish:
+    needs: verify
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' &&
+      github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'PUBLISH_GALAXY_P42_APP') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 147 &&
+        github.event.comment.user.id == 80577424 &&
+        github.event.comment.body == 'PUBLISH_GALAXY_P42_APP'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment: dev
+    concurrency:
+      group: galaxy-existing-site-frontend
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fail closed unless pinned app and existing Azure target
+        shell: bash
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          TENANT: ${{ secrets.AZURE_TENANT_ID }}
+          SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ACCOUNT: ${{ vars.GALAXY_STORAGE_ACCOUNT }}
+        run: |
+          set -euo pipefail
+          [[ "$(git hash-object app.js)" == 'eb7c315912385777d71b1b33da330c9c7bf9e632' ]]
+          [[ "$ACCOUNT" == 'gengalaxy1429841605' ]]
+          [[ "${CLIENT,,}" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]]
+          [[ -n "$TENANT" && -n "$SUBSCRIPTION" ]]
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Replace ONLY existing $web/app.js, compare bytes, roll back on failure
+        shell: bash
+        run: |
+          set -euo pipefail
+          rg='GenAI_Galaxy'; account='gengalaxy1429841605'
+          arm="$(az storage account show -g "$rg" -n "$account" --query id -o tsv)"
+          [[ "$arm" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Storage/storageAccounts/gengalaxy1429841605 ]]
+          web="$(az storage account blob-service-properties show -g "$rg" --account-name "$account" --query staticWebsite.enabled -o tsv)"
+          [[ "${web,,}" == true ]]
+          dir="$(mktemp -d)"; changed=0; complete=0
+          finish() {
+            if [[ "$changed" == 1 && "$complete" != 1 ]]; then
+              echo '::error::P42 release failed, reverting existing app.js'
+              az storage blob upload --account-name "$account" --auth-mode login --container-name '$web' --name app.js --file "$dir/previous.js" --overwrite true --content-type application/javascript --content-cache-control 'no-cache, max-age=0' --only-show-errors >/dev/null || true
+            fi
+            rm -rf "$dir"
+          }
+          trap finish EXIT
+          az storage blob download --account-name "$account" --auth-mode login --container-name '$web' --name app.js --file "$dir/previous.js" --overwrite true --only-show-errors >/dev/null
+          if ! cmp -s app.js "$dir/previous.js"; then
+            changed=1
+            az storage blob upload --account-name "$account" --auth-mode login --container-name '$web' --name app.js --file app.js --overwrite true --content-type application/javascript --content-cache-control 'no-cache, max-age=0' --only-show-errors >/dev/null
+          fi
+          az storage blob download --account-name "$account" --auth-mode login --container-name '$web' --name app.js --file "$dir/verified.js" --overwrite true --only-show-errors >/dev/null
+          cmp app.js "$dir/verified.js"
+          complete=1
+          echo 'P42 existing-site app.js verified byte-for-byte' >> "$GITHUB_STEP_SUMMARY"
+          echo 'https://gengalaxy1429841605.z29.web.core.windows.net/' >> "$GITHUB_STEP_SUMMARY"
+      - name: Sign out of Azure
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
