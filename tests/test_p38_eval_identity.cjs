@@ -53,8 +53,8 @@ async function run(){
  signin(B,{getSession:async()=>({data:{session:{access_token:'new-token'}}})});
  resolveFetch({ok:true,status:200,json:async()=>result});
  await pending2;
- assert.equal(attempts,0,'old answer cannot be saved under newly signed-in identity');
- assert.equal(saved,0,'old progress cannot be committed after identity change');
+ assert.equal(x('attempts'),0,'old answer cannot be saved under newly signed-in identity');
+ assert.equal(x('saved'),0,'old progress cannot be committed after identity change');
  assert.equal(x('state.feedback'),null);
  assert.equal(x('state.pendingEvaluation'),null);
  assert.equal(x('state.user.id'),B.id);
@@ -62,8 +62,8 @@ async function run(){
  // A valid current-session response still works unchanged.
  cx.fetch=async()=>{calls++;return {ok:true,status:200,json:async()=>result}};
  await x('submitAnswer({preventDefault(){}})');
- assert.equal(attempts,1);
- assert.equal(saved,1);
+ assert.equal(x('attempts'),1);
+ assert.equal(x('saved'),1);
  assert.equal(x('state.feedback.serverReviewed'),true);
  assert.equal(x('state.pendingEvaluation'),null);
  console.log('P38 identity-race, duplicate-request and valid-evaluation tests passed offline.');
