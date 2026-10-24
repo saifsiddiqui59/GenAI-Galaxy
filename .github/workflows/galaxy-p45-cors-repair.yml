@@ -1,0 +1,78 @@
+name: Galaxy P45 existing evaluator CORS allowlist repair
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type FIX_GALAXY_EVALUATOR_CORS'
+        required: true
+        type: string
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  fix-cors:
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'FIX_GALAXY_EVALUATOR_CORS') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 147 &&
+        github.event.comment.user.id == 80577424 &&
+        github.event.comment.body == 'FIX_GALAXY_EVALUATOR_CORS'))
+    environment: dev
+    concurrency:
+      group: galaxy-existing-function-cors
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      id-token: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    env:
+      RG: GenAI_Galaxy
+      APP: gengalaxy-p3-1429841605
+      ORIGIN: https://gengalaxy1429841605.z29.web.core.windows.net
+    steps:
+      - uses: actions/checkout@v4
+      - name: Strict Azure target and credentials validation
+        shell: bash
+        env:
+          CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$RG" == 'GenAI_Galaxy' && "$APP" == 'gengalaxy-p3-1429841605' ]]
+          [[ "$ORIGIN" == 'https://gengalaxy1429841605.z29.web.core.windows.net' ]]
+          [[ "${CLIENT_ID,,}" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]]
+          [[ -n "$TENANT_ID" && -n "$SUBSCRIPTION_ID" ]]
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Preserve existing CORS and add exact Galaxy website origin only
+        shell: bash
+        run: |
+          set -euo pipefail
+          resource="$(az functionapp show -g "$RG" -n "$APP" --query id -o tsv)"
+          [[ "$resource" == */resourceGroups/"$RG"/providers/Microsoft.Web/sites/"$APP" ]]
+          existing="$(az functionapp cors show -g "$RG" -n "$APP" --query 'allowedOrigins' -o tsv)"
+          echo 'Current app allowedOrigins inspected'
+          if printf '%s\n' "$existing" | grep -Fxq '*'; then
+            echo '::error::Existing wildcard CORS origin requires separate security review'
+            exit 1
+          fi
+          if printf '%s\n' "$existing" | grep -Fxq "$ORIGIN"; then
+            echo 'Galaxy website origin already listed'
+          else
+            az functionapp cors add -g "$RG" -n "$APP" --allowed-origins "$ORIGIN" --only-show-errors >/dev/null
+            echo 'Added one exact Galaxy website origin'
+          fi
+          present="$(az functionapp cors show -g "$RG" -n "$APP" --query 'allowedOrigins' -o tsv)"
+          printf '%s\n' "$present" | grep -Fxq "$ORIGIN"
+          echo 'Galaxy website CORS allowlist verified in Azure ARM'
+      - name: Verify actual hosted preflight without paid LLM calls
+        run: python tests/hosted_p44_evaluator_preflight.py
+      - name: Azure logout
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
