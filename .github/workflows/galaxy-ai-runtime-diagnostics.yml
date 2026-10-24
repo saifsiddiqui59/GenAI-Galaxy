@@ -1,0 +1,87 @@
+name: Galaxy AI Function runtime diagnostics (manual read-only)
+# Existing Azure Function only; never access private appsettings/keys or call model.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        required: true
+        type: string
+        description: 'Type DIAGNOSE to inspect existing Galaxy Function runtime and anonymous HTTP route health'
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-ai-runtime-diagnostics
+  cancel-in-progress: false
+jobs:
+  existing-function-only:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'DIAGNOSE'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RG: GenAI_Galaxy
+      APP: gengalaxy-p3-1429841605
+      API: https://gengalaxy-p3-1429841605.azurewebsites.net
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check dedicated Azure identity and exact existing Galaxy target
+        shell: bash
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUB: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == 737d67b7-4984-48bb-bb1f-5f62599f645c ]] || exit 1
+          [[ "$SUB" == 3a5e8018-40a4-49e3-bcba-a9af3344f50e ]] || exit 1
+          [[ "$RG" == GenAI_Galaxy && "$APP" == gengalaxy-p3-1429841605 ]] || exit 1
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Query existing Function state without reading app settings or secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          resource_id="$(az functionapp show -g "$RG" -n "$APP" --query id -o tsv)"
+          [[ "$resource_id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
+          az functionapp show -g "$RG" -n "$APP" --query '{name:name,state:state,kind:kind,region:location,hostNames:defaultHostName}' -o json
+          az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites --query '{state:properties.state,alwaysReady:properties.functionAppConfig.scaleAndConcurrency.alwaysReady}' -o json
+          echo 'Function discovery (names only; no keys or trigger URLs):'
+          if ! az functionapp function list -g "$RG" -n "$APP" --query '[].name' -o json; then
+            echo '::warning::Function listing failed; check host indexing / control-plane reachability.'
+          fi
+      - name: Probe anonymous routes without model credentials or quota
+        shell: bash
+        run: |
+          set -euo pipefail
+          for suffix in practice/evaluate practice/tutor; do
+            for method in OPTIONS POST; do
+              echo "Unprivileged probe path=$suffix method=$method"
+              if [[ "$method" == OPTIONS ]]; then
+                # OPTIONS includes only the approved public static Origin.
+                code="$(curl --silent --show-error --max-time 40 -o /dev/null \
+                  -w '%{http_code}' -X OPTIONS "$API/api/$suffix" \
+                  -H 'Origin: https://gengalaxy1429841605.z29.web.core.windows.net')"
+              else
+                # No bearer token, no provider request. Auth must return 401.
+                code="$(curl --silent --show-error --max-time 40 -o /dev/null \
+                  -w '%{http_code}' -X POST "$API/api/$suffix" \
+                  -H 'Content-Type: application/json' -H 'Origin: https://gengalaxy1429841605.z29.web.core.windows.net' \
+                  --data '{"topic_key":"NO_AUTH","mode":"reference","question":"ignored","response":"no bearer"}')"
+              fi
+              echo "Anonymous result path=$suffix method=$method http=$code"
+              if [[ "$method" == POST && "$code" != 401 ]]; then
+                echo '::error::Unprivileged POST was not correctly rejected with 401'; exit 1
+              fi
+              if [[ "$method" == OPTIONS && "$code" != 200 ]]; then
+                echo '::error::Expected authorized Origin CORS 200'; exit 1
+              fi
+            done
+          done
+      - name: Clear Azure runner login
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
