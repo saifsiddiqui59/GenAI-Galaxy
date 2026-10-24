@@ -27,3 +27,4 @@ console.log('Node learning-engine checks passed');
 // Run zero-cost mocked evaluator mode tests with the existing Node CI step.
 require('./test_evaluator_ui.cjs');
 require('./test_adaptive_flow.cjs');
+require('./test_p59_ai_timeout.cjs');
