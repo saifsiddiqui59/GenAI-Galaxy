@@ -43,7 +43,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
     <div className="guardian-next">
       <span className="guardian-label">YOUR NEXT DISCOVERY <span aria-hidden="true">/ {String(nextIndex+1).padStart(2,'0')}</span></span>
       <strong>{nextName||'World '+(nextIndex+1)}</strong>
-      <p>A new perspective is waiting on the other side.</p>
+      <p>Click the glowing planet in the Genie's hands, or choose Accept below.</p>
       <button type="button" className="guardian-accept" onClick={()=>onAccept?.(nextIndex)}>
        Accept this planet <span aria-hidden="true">↗</span>
       </button>
