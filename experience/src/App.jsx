@@ -64,6 +64,7 @@ export default function App(){
  const [authSnapshot,setAuthSnapshot]=useState({status:'guest',user:null,progress:{}});
  const [sackOpenFrom3D,setSackOpenFrom3D]=useState(0);
  const [effectsEpoch,setEffectsEpoch]=useState(0);
+ const [replayEpoch,setReplayEpoch]=useState(0);
  const receiveAuth=useCallback(value=>setAuthSnapshot(value),[]);
  const available3D=useMemo(canWebGL,[]);
  const activeOwner=SHOW_SAMPLE?SAMPLE_USER:(authSnapshot.status==='authenticated'?authSnapshot.user?.id:null);
@@ -92,6 +93,7 @@ export default function App(){
   };
   return()=>{delete window.__galaxyV6};
  },[resetClock]);
+ const triggerReplay=useCallback(()=>{resetClock();setReplayEpoch(x=>x+1)},[resetClock]);
  const select=useCallback(index=>{
   if(!validWorld(index)||warp)return;
   setSelected(index);
@@ -131,7 +133,7 @@ export default function App(){
    <GuardianJourney completed={collected} nextIndex={nextIndex} nextName={LABELS[nextIndex]}
      onSelectCompleted={select} onAccept={select} onPhase={phaseUpdate}
      onSequence={sequenceUpdate} clockRef={choreographyRef} ready={modelReady}
-     openSackSignal={sackOpenFrom3D} onReplay={resetClock}
+     openSackSignal={sackOpenFrom3D} onReplay={triggerReplay} replaySignal={replayEpoch}
      reducedMotion={!animationEnabled||reduced}/>
    <div className="galaxy-atlas-label" aria-hidden="true"><span>THE LEARNING ATLAS</span><p>Seventeen worlds. Infinite connections.</p></div>
    <div className="galaxy-view-actions">
@@ -145,6 +147,7 @@ export default function App(){
    </div>
    <WorldDock worlds={LABELS} visible={menuOpen} recommended={nextIndex}
       selected={selected} onClose={()=>setMenuOpen(false)}
+      onReplay={()=>{triggerReplay();setMenuOpen(false)}} canReplay={!reduced&&animationEnabled}
       onSelect={index=>{setMenuOpen(false);select(index)}}/>
    <WarpGate request={warp} onComplete={enterLesson}
      reducedMotion={!animationEnabled||reduced}/>
