@@ -78,6 +78,11 @@ jobs:
                 --ref main -f confirm=PREVIEW
               echo 'Owner requested isolated AI frontend preview publication.'
               ;;
+            "DIAG_BACKEND_$EVENT_SHA")
+              gh workflow run galaxy-ai-runtime-diagnostics.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=DIAGNOSE
+              echo 'Owner requested read-only existing Azure Function runtime diagnostics.'
+              ;;
             *)
               echo '::error::Unsupported exact owner command; no workflow dispatched'
               exit 1
