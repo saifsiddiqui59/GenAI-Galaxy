@@ -1,0 +1,87 @@
+name: Galaxy P57 existing Flex memory sizing (manual, reversible)
+# Changes only instance memory on the existing Function app. No Always Ready.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        type: string
+        required: true
+        description: 'Type SCALE_2048 or ROLLBACK_512 for the one approved Galaxy Flex app'
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-ai-flex-memory-rightsize
+  cancel-in-progress: false
+jobs:
+  rightsize-existing-only:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && (inputs.confirm == 'SCALE_2048' || inputs.confirm == 'ROLLBACK_512')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RG: GenAI_Galaxy
+      APP: gengalaxy-p3-1429841605
+    steps:
+      - uses: actions/checkout@v4
+      - name: Pin dedicated app and subscription (never use storage keys)
+        shell: bash
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUB: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || exit 1
+          [[ "$SUB" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || exit 1
+          [[ "$RG" == GenAI_Galaxy && "$APP" == gengalaxy-p3-1429841605 ]] || exit 1
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Resize existing on-demand Flex instance with no idle commitment
+        env:
+          REQUESTED: ${{ inputs.confirm }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          id="$(az functionapp show -g "$RG" -n "$APP" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
+          config="$(az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites --query properties.functionAppConfig.scaleAndConcurrency -o json)"
+          CONFIG="$config" REQUESTED="$REQUESTED" python3 - <<'PY'
+          import json,os,sys
+          cfg=json.loads(os.environ['CONFIG'])
+          ready=cfg.get('alwaysReady')
+          mem=cfg.get('instanceMemoryMB')
+          max_instances=cfg.get('maximumInstanceCount')
+          if ready not in ([],None):
+              sys.exit('Refusing: Always Ready instances configured')
+          if max_instances != 2:
+              sys.exit('Refusing: existing instance max differs from approved 2')
+          if mem not in (512,2048):
+              sys.exit('Refusing: unexpected existing instance memory')
+          if os.environ['REQUESTED']=='SCALE_2048' and mem!=512:
+              sys.exit('Refusing: scale-up requires observed original 512MB')
+          if os.environ['REQUESTED']=='ROLLBACK_512' and mem!=2048:
+              sys.exit('Refusing: rollback requires observed 2048MB')
+          print('Verified pre-change memory (MB):',mem)
+          PY
+          target=2048
+          if [[ "$REQUESTED" == ROLLBACK_512 ]]; then target=512; fi
+          az functionapp scale config set -g "$RG" -n "$APP" --instance-memory "$target" --maximum-instance-count 2 -o none
+          actual="$(az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites --query properties.functionAppConfig.scaleAndConcurrency -o json)"
+          ACTUAL="$actual" TARGET="$target" python3 - <<'PY'
+          import os,json,sys
+          state=json.loads(os.environ['ACTUAL'])
+          if (state.get('instanceMemoryMB')!=int(os.environ['TARGET'])
+              or state.get('maximumInstanceCount')!=2
+              or state.get('alwaysReady') not in ([],None)):
+              sys.exit('Scale validation failed; inspect existing app before manual recovery')
+          print('Verified on-demand memory MB:',state['instanceMemoryMB'])
+          print('Verified no Always Ready baseline and max instances=2')
+          PY
+      - name: Clear OIDC runner login
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
