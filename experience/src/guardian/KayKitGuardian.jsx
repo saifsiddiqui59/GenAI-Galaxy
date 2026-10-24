@@ -4,6 +4,7 @@ import {useGLTF} from '@react-three/drei';
 import {clone} from 'three/examples/jsm/utils/SkeletonUtils.js';
 import * as THREE from 'three';
 import {discoverRigAnchors,gripMidpoint} from './rigAnchors.js';
+import {styleKayKit,STYLE_PROFILE} from './styleKayKit.js';
 import {moveWrist} from './handIK.js';
 import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS} from '../journey/choreography.js';
 import {phaseAt} from '../journey/story.js';
@@ -43,14 +44,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,reducedMotion=false,onReady
   object.scale.setScalar(factor);
   object.position.set(-box.getCenter(new THREE.Vector3()).x*factor,-box.min.y*factor,-box.getCenter(new THREE.Vector3()).z*factor);
   object.userData.geometryHeight=height;
-  object.traverse(n=>{
-   if(n.isMesh){
-    n.frustumCulled=false;n.material=n.material.clone();
-    if(n.material.name==='Glow'){
-     n.material.emissive.set('#ffe5aa');n.material.emissiveIntensity=2;n.material.toneMapped=false;
-    }
-   }
-  });
+  object.userData.disposeStyle=styleKayKit(object,THREE);
   return object;
  },[scene]);
  const rig=useMemo(()=>discoverRigAnchors(source),[source]);
@@ -66,12 +60,12 @@ function Model({rigPoseRef,clockRef,completedCount=0,reducedMotion=false,onReady
   if(observed()){
    const materials=[];let meshes=0;
    source.traverse(n=>{if(n.isMesh){meshes++;materials.push({name:n.material.name,map:!!n.material.map})}});
-   window.__galaxySkeletonDiagnostics={asset:'KayKit CC0 Skeleton_Mage.glb',bones:rig.detectedBones,clips:animations.length,
+   window.__galaxySkeletonDiagnostics={asset:'KayKit CC0 Skeleton_Mage.glb',styleProfile:STYLE_PROFILE,bones:rig.detectedBones,clips:animations.length,
     animationNames:animations.map(a=>a.name),meshes,materials,pickupLog:[],
     rig:{detectedBones:rig.detectedBones,canOffer:rig.readyToOffer,canCarry:rig.readyForSatchel},
     sourceDimensions:{height:source.userData.geometryHeight}};
   }
-  return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source)};
+  return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeStyle?.()};
  },[source,rig,mixer,animations,onReady]);
  useFrame((state,dt)=>{
   if(!root.current)return;
