@@ -69,13 +69,19 @@ function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion,onSel
  const color=COLORS[worldIndex];
  const texture=useMemo(()=>planetSurfaceTexture(worldIndex,color,compact),[worldIndex,color,compact]);
  useEffect(()=>()=>texture.dispose(),[texture]);
- useFrame(()=>{
+ useFrame(state=>{
   const pose=rigPoseRef.current;if(!orb.current||!pose)return;
   orb.current.visible=pose.offerReveal>.45;
   if(labelRef.current)labelRef.current.style.visibility=orb.current.visible?'visible':'hidden';
   orb.current.position.copy(pose.offer);
   orb.current.scale.setScalar(pose.scale*smooth((pose.offerReveal-.45)/.55));
   orb.current.rotation.y=reducedMotion?0:clockRef.current.ms*.00012;
+  const diagnostics=window.__galaxySkeletonDiagnostics;
+  if(diagnostics&&orb.current.visible){
+   const p=orb.current.getWorldPosition(new THREE.Vector3()).project(state.camera);
+   diagnostics.offeredHitPoint=[(p.x+1)*state.size.width/2,(1-p.y)*state.size.height/2];
+   diagnostics.offeredWorldIndex=worldIndex;
+  }
  },-1);
  return <group ref={orb} visible={false}
   onClick={e=>{e.stopPropagation();if(orb.current?.visible)onSelect?.(worldIndex)}}
