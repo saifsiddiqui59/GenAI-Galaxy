@@ -45,7 +45,9 @@ function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
   bag.current.scale.set(pose.scale*(1+pulse),pose.scale*(1-pulse*.5),pose.scale*(1+pulse));
  },-1);
  return <group ref={bag} onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
-  <mesh scale={[1,1,.72]}><cylinderGeometry args={[.265,.225,.43,12]}/><meshStandardMaterial color="#8f5942" roughness={.9}/></mesh>
+  {/* Soft leather profile, rather than a rigid bucket silhouette. Keep the mouth open for genuine deposits. */}
+  <mesh scale={[1.10,.70,.80]}><sphereGeometry args={[.305,20,14]}/><meshStandardMaterial color="#85543f" roughness={.93}/></mesh>
+  <mesh position={[0,-.10,.201]} scale={[1,.8,1]}><boxGeometry args={[.40,.18,.038]}/><meshStandardMaterial color="#a26c50" roughness={.91}/></mesh>
   <mesh position={[0,.22,0]} rotation={[-Math.PI/2,0,0]} scale={[1,.72,1]}>
    <circleGeometry args={[.245,28]}/><meshBasicMaterial color="#140f19" side={THREE.DoubleSide}/>
   </mesh>
@@ -55,7 +57,9 @@ function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
   <mesh position={[0,-.015,.183]} rotation={[Math.PI/2,0,0]}>
    <cylinderGeometry args={[.075,.075,.025,6]}/><meshStandardMaterial color="#eac780" metalness={.55} roughness={.32} emissive="#9d6621" emissiveIntensity={count?.12:0}/>
   </mesh>
-  <mesh position={[.21,.18,-.06]} rotation={[0,0,-.38]}><boxGeometry args={[.055,.48,.06]}/><meshStandardMaterial color="#5e3c34" roughness={.9}/></mesh>
+  <mesh position={[.32,.29,-.10]} rotation={[0,0,-.36]}><boxGeometry args={[.068,.73,.07]}/><meshStandardMaterial color="#624136" roughness={.9}/></mesh>
+  <mesh position={[-.19,.04,.22]}><sphereGeometry args={[.023,8,6]}/><meshStandardMaterial color="#d4ad73" metalness={.45} roughness={.4}/></mesh>
+  <mesh position={[.19,.04,.22]}><sphereGeometry args={[.023,8,6]}/><meshStandardMaterial color="#d4ad73" metalness={.45} roughness={.4}/></mesh>
  </group>;
 }
 function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion}){
