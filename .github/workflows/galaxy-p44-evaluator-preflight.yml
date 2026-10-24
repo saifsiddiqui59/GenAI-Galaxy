@@ -1,0 +1,29 @@
+name: Galaxy P44 hosted evaluator preflight (zero model calls)
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      confirm:
+        required: true
+        description: Type CHECK_GALAXY_EVALUATOR_CORS
+        type: string
+permissions:
+  contents: read
+jobs:
+  preflight:
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'CHECK_GALAXY_EVALUATOR_CORS') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 147 &&
+        github.event.comment.user.id == 80577424 &&
+        github.event.comment.body == 'CHECK_GALAXY_EVALUATOR_CORS'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check real hosted endpoint and browser CORS without paid model use
+        run: python tests/hosted_p44_evaluator_preflight.py
