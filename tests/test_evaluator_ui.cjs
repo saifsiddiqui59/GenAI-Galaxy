@@ -30,7 +30,7 @@ vm.runInContext(`
 function reset({signedIn,endpoint=URL,session=true}){
  ctx.window.GALAXY_EVALUATOR_URL=endpoint;
  button.disabled=false;button.textContent='';
- vm.runInContext('state.progress={};state.attempts=[];state.feedback=null;state.tutorResponse=null;state.tutorPending=null;state.user=null;state.client=null;state.isGuest=true;',ctx);
+ vm.runInContext('state.progress={};state.attempts=[];state.feedback=null;state.tutorResponse=null;state.tutorPending=null;state.tutorDraft='';state.user=null;state.client=null;state.isGuest=true;',ctx);
  if(signedIn){
   ctx.__client={auth:{getSession:async()=>({data:{session:session?{access_token:'mock-user-token'}:null}})}};
   ctx.__user={id:'00000000-0000-4000-8000-000000000001',email:'fixture@example.com'};
@@ -121,6 +121,22 @@ async function run(){
  await vm.runInContext("askAiTutor('explain')",ctx);
  assert.equal(calls,tutorBefore+1);
  assert.match(vm.runInContext('practiceMarkup()',ctx),/A short explanation of embeddings/);
+ assert.match(vm.runInContext('practiceMarkup()',ctx),/Ask the AI tutor \(optional\)/);
+ assert.match(vm.runInContext('practiceMarkup()',ctx),/Get AI follow-up \(uses tokens\)/);
+ ctx.__capturedMode=null;ctx.__capturedMessage=null;
+ ctx.fetch=async (_url,options)=>{
+  const body=JSON.parse(options.body);
+  ctx.__capturedMode=body.mode;ctx.__capturedMessage=body.message;
+  return {ok:true,status:200,json:async()=>({
+   tutor_status:'model_tutored',mode:body.mode,model_called:true,
+   reply:'Advanced explanation for the current question.',
+   next_question:'What is approximate nearest-neighbor indexing?'})};
+ };
+ vm.runInContext("state.tutorDraft='How do embeddings differ from tokens?'",ctx);
+ await vm.runInContext("askAiTutor('followup')",ctx);
+ assert.equal(ctx.__capturedMode,'followup');
+ assert.equal(ctx.__capturedMessage,'How do embeddings differ from tokens?');
+
  reset({signedIn:false});
  ctx.fetch=async()=>{throw Error('Guest triggered a paid request')};
  await vm.runInContext("askAiTutor('explain')",ctx);
