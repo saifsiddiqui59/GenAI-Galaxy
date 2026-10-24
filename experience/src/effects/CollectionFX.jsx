@@ -76,13 +76,14 @@ function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
  </group>;
 }
 function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion,onSelect}){
- const orb=useRef();
+ const orb=useRef(),labelRef=useRef();
  const color=COLORS[worldIndex];
  const texture=useMemo(()=>planetSurfaceTexture(worldIndex,color,compact),[worldIndex,color,compact]);
  useEffect(()=>()=>texture.dispose(),[texture]);
  useFrame(()=>{
   const pose=rigPoseRef.current;if(!orb.current||!pose)return;
   orb.current.visible=pose.offerReveal>.45;
+  if(labelRef.current)labelRef.current.style.visibility=orb.current.visible?'visible':'hidden';
   orb.current.position.copy(pose.offer);
   orb.current.scale.setScalar(pose.scale*smooth((pose.offerReveal-.45)/.55));
   orb.current.rotation.y=reducedMotion?0:clockRef.current.ms*.00012;
@@ -95,8 +96,8 @@ function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion,onSel
   <mesh scale={1.09}><sphereGeometry args={[.275,24,16]}/><meshBasicMaterial color={color} transparent opacity={.18} side={THREE.BackSide} depthWrite={false}/></mesh>
   {/* Slightly oversized invisible pick surface so the offered planet is touch-friendly. */}
   <mesh><sphereGeometry args={[.37,20,14]}/><meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false}/></mesh>
-  <Html center position={[0,-.47,0]} style={{pointerEvents:'none',whiteSpace:'nowrap'}}>
-   <span className="galaxy-offer-label">NEXT · {curriculum[worldIndex]?.title || 'Learning world'} ↗</span>
+  <Html center position={[0,-.47,0]} style={{pointerEvents:'auto',whiteSpace:'nowrap'}}>
+   <button ref={labelRef} type="button" style={{visibility:'hidden'}} className="galaxy-offer-label" onClick={e=>{e.stopPropagation();onSelect?.(worldIndex)}}>NEXT · {curriculum[worldIndex]?.title || 'Learning world'} ↗</button>
   </Html>
   <pointLight intensity={1.4} color={color} distance={2.2}/>
  </group>;
