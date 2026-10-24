@@ -1,0 +1,25 @@
+name: Galaxy AI endpoints free read-only production smoke (manual)
+# Never run a paid AI call, create a user, or modify the static website.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type READONLY; sends unauthenticated OPTIONS and POST only'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  unauthenticated-ai-only:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'READONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Run no-network unit tests first
+        run: python -m unittest discover -s tests -p 'test_p51_ai_nocharge_hosted.py' -v
+      - name: Verify deployed API does NOT accept anonymous calls
+        run: python scripts/verify_ai_hosted_nocharge.py --confirm READONLY
