@@ -30,7 +30,7 @@ vm.runInContext(`
 function reset({signedIn,endpoint=URL,session=true}){
  ctx.window.GALAXY_EVALUATOR_URL=endpoint;
  button.disabled=false;button.textContent='';
- vm.runInContext('state.progress={};state.attempts=[];state.feedback=null;state.user=null;state.client=null;state.isGuest=true;',ctx);
+ vm.runInContext('state.progress={};state.attempts=[];state.feedback=null;state.tutorResponse=null;state.tutorPending=null;state.user=null;state.client=null;state.isGuest=true;',ctx);
  if(signedIn){
   ctx.__client={auth:{getSession:async()=>({data:{session:session?{access_token:'mock-user-token'}:null}})}};
   ctx.__user={id:'00000000-0000-4000-8000-000000000001',email:'fixture@example.com'};
