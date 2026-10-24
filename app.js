@@ -16,7 +16,7 @@ const PALETTES=[
  ['#c5d3f6','#667ec8','#31326f','#adc1f6'],['#fbc2bd','#bd7677','#623045','#d88d94'],['#c1f2c1','#659d86','#224b53','#8bd9c4'],
  ['#eec3fa','#a15cbd','#402863','#d48ef0'],['#b3f6ff','#648add','#21346c','#7fbfff']
 ];
-const state={subjects:[],topics:[],lessons:{},current:null,chapter:0,view:'galaxy',progress:{},attempts:[],documents:[],user:null,client:null,isGuest:true,query:'',attemptQuestion:'',level:1,answerDraft:'',feedback:null,guideOpen:false,studyMode:'practice',targetRole:'GenAI Engineer',session:null,sessionReport:null,jobFocus:'',coachResume:'',coachJob:'',coachPlan:null,coachInsights:null,planInfo:null,planLifecycle:null,planCatalog:[],platformAccounts:null,platformOffset:0,platformAudit:null,platformDataError:'',platformSummary:null,platformPending:[],platformAuthorized:false,platformError:'',approvalInfo:null,motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,voice:null,voiceEvents:[],voiceStartedAt:null,voiceElapsedMs:null,recording:false,voicePending:false,starFrame:0,stars:[],galaxyFrame:0,lastFrame:0};
+const state={subjects:[],topics:[],lessons:{},current:null,chapter:0,view:'galaxy',progress:{},attempts:[],documents:[],user:null,client:null,isGuest:true,query:'',attemptQuestion:'',level:1,answerDraft:'',feedback:null,guideOpen:false,studyMode:'practice',targetRole:'GenAI Engineer',session:null,sessionReport:null,jobFocus:'',coachResume:'',coachJob:'',coachPlan:null,coachInsights:null,planInfo:null,planLifecycle:null,planCatalog:[],platformAccounts:null,platformOffset:0,platformAudit:null,platformDataError:'',platformSummary:null,platformPending:[],platformAuthorized:false,platformRole:null,platformError:'',approvalInfo:null,motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,voice:null,voiceEvents:[],voiceStartedAt:null,voiceElapsedMs:null,recording:false,voicePending:false,starFrame:0,stars:[],galaxyFrame:0,lastFrame:0};
 const total=()=>state.topics.length;
 const getP=t=>state.progress[key(t)]||{status:0,confidence:0,note:'',last_reviewed_at:null,next_review_at:null};
 const chapterTopics=c=>state.topics.filter(t=>t.branchIndex===c);
@@ -111,19 +111,19 @@ function platformMarkup(){
   `<div style="overflow-x:auto"><table style="width:100%;text-align:left"><thead><tr><th>Learner</th><th>Approval</th><th>Plan</th><th>Expiry</th><th>Usage today</th><th>Manage</th></tr></thead><tbody>${rows.map(u=>{
    const remaining=window.GalaxySaaSOperations?.daysUntil(u.expires_at);
    const expiry=u.expires_at?(remaining===null?'Unverified':remaining<=0?'Expired':remaining+' days'):'Not set';
-   return `<tr><td style="padding:9px"><strong>${escapeHtml(u.email||'Unknown')}</strong><div class="footnote">${escapeHtml(u.user_id)}</div></td><td>${escapeHtml(u.approval)}</td><td>${escapeHtml(u.plan_code)} · ${escapeHtml(u.subscription_status)}</td><td>${escapeHtml(expiry)}</td><td>${safeValue(u.evaluations_today)}</td><td><button class="btn ghost" data-manage-user="${escapeHtml(u.user_id)}" data-manage-email="${escapeHtml(u.email||'')}">Manage</button></td></tr>`;
+   return `<tr><td style="padding:9px"><strong>${escapeHtml(u.email||'Unknown')}</strong><div class="footnote">${escapeHtml(u.user_id)}</div></td><td>${escapeHtml(u.approval)}</td><td>${escapeHtml(u.plan_code)} · ${escapeHtml(u.subscription_status)}</td><td>${escapeHtml(expiry)}</td><td>${safeValue(u.evaluations_today)}</td><td>${state.platformRole==='SUPER_ADMIN'?`<button class="btn ghost" data-manage-user="${escapeHtml(u.user_id)}" data-manage-email="${escapeHtml(u.email||'')}">Manage</button>`:'Read only'}</td></tr>`;
   }).join('')}</tbody></table></div>`;
  return intro('GALAXY SAAS OWNER','Platform control.','One login. Galaxy-only learner directory, approval decisions, subscription lifecycle and warnings. No billing processor is active.')+
  `<div class="cards">${metricKeys.map(([key,label])=>`<div class="panel metric"><span class="eyebrow">${escapeHtml(label)}</span><strong>${safeValue(sum?.[key])}</strong></div>`).join('')}</div>`+
  `<section class="panel" style="margin-top:16px"><h2>Operations & warnings</h2>${items.map(w=>`<p><strong>${escapeHtml(w.level.toUpperCase())} — ${escapeHtml(w.title)}</strong> · ${escapeHtml(w.message)}</p>`).join('')}${state.platformDataError?`<p class="footnote">${escapeHtml(state.platformDataError)}</p>`:''}<p class="footnote">Revenue, Azure costs, payment settlement and service-health alerts are unavailable until trusted data sources are connected.</p><button class="btn" id="platform-refresh">Refresh live counts</button></section>`+
  `<section class="panel" style="margin-top:16px"><h2>Signup approval requests</h2><p class="footnote">Galaxy signups appear through the normal email/password flow. An in-app queue is not a delivered email or an enforced access gate. ${state.approvalInfo?.approval_required?'Approval enforcement is active.':'Approval enforcement has not been activated.'}</p>${state.platformPending.length?state.platformPending.map(x=>`<div class="panel" style="margin-top:12px"><strong>${escapeHtml(x.email||'Account')}</strong><p class="footnote">${escapeHtml(x.user_id)}</p><div class="practice-actions"><button class="btn accent" data-platform-approve="${escapeHtml(x.user_id)}">Approve</button><button class="btn ghost" data-platform-reject="${escapeHtml(x.user_id)}">Reject</button></div></div>`).join(''):'<p>No pending requests returned.</p>'}</section>`+
  `<section class="panel" style="margin-top:16px"><h2>Learner account directory</h2><p class="footnote">Only Galaxy-enrolled learner identities; unrelated accounts in shared Supabase Auth are excluded.</p>${accountTable}<div class="practice-actions"><button class="btn ghost" id="platform-prev" ${!info||state.platformOffset===0?'disabled':''}>Previous</button><span>${info?state.platformOffset+1:0} – ${info?Math.min(state.platformOffset+25,info.total||0):0} of ${info?.total??'Unknown'}</span><button class="btn ghost" id="platform-next" ${!info||state.platformOffset+25>=info.total?'disabled':''}>Next</button></div></section>`+
- `<section class="panel" style="margin-top:16px"><h2>Subscription management</h2><p class="footnote">Only APPROVED Galaxy accounts can be assigned a paid plan. All changes are checked and audited by the server. No automatic charges or renewal occur.</p><form id="platform-plan-form">
+ (state.platformRole==='SUPER_ADMIN'?`<section class="panel" style="margin-top:16px"><h2>Subscription management</h2><p class="footnote">Only APPROVED Galaxy accounts can be assigned a paid plan. All changes are checked and audited by the server. No automatic charges or renewal occur.</p><form id="platform-plan-form">
  <label>Learner account UUID<input id="platform-target" type="text" required placeholder="Select Manage in account directory"/></label>
  <label>Plan<select id="platform-plan"><option>FREE</option><option>PLUS</option><option>PRO</option></select></label>
  <label>Status<select id="platform-status"><option>ACTIVE</option><option>PAST_DUE</option><option>SUSPENDED</option><option>CANCELLED</option><option>EXPIRED</option></select></label>
  <label>Valid for days (manual renewal)<input id="platform-days" type="number" min="1" max="365" value="30" required/></label>
- <label>Reason<input id="platform-reason" type="text" minlength="10" maxlength="300" required placeholder="Reason for audited entitlement update"/></label><button class="btn accent" type="submit">Save subscription decision</button></form></section>`+
+ <label>Reason<input id="platform-reason" type="text" minlength="10" maxlength="300" required placeholder="Reason for audited entitlement update"/></label><button class="btn accent" type="submit">Save subscription decision</button></form></section>`:`<section class="panel" style="margin-top:16px"><h2>Subscription changes restricted</h2><p>Only Galaxy Super Admin may change subscription entitlements.</p></section>`)+
  `<section class="panel" style="margin-top:16px"><h2>Recent administrator decisions</h2>${state.platformAudit===null?'<p>Audit unavailable.</p>':state.platformAudit.length?state.platformAudit.map(e=>`<p class="footnote"><strong>${escapeHtml(e.action)}</strong> · ${escapeHtml(e.created_at||'')} · ${escapeHtml(e.target_id||'')} · ${escapeHtml(e.reason||'')}</p>`).join(''):'<p>No changes recorded yet.</p>'}</section>`;
 }
 async function requestGalaxyAccess(){
@@ -140,15 +140,15 @@ async function requestGalaxyAccess(){
 async function platformRefresh(){
  if(state.isGuest||typeof state.client?.rpc!=='function')return;
  const identity=state.user?.id;
- const result=await state.client.rpc('galaxy_platform_summary');
+ const [result,roleResult]=await Promise.all([state.client.rpc('galaxy_platform_summary'),state.client.rpc('galaxy_my_platform_role')]);
  if(state.user?.id!==identity)return;
- if(result.error){
-  state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];
+ if(result.error||roleResult.error||!['SUPER_ADMIN','ADMIN'].includes(roleResult.data?.role)){
+  state.platformAuthorized=false;state.platformRole=null;state.platformSummary=null;state.platformPending=[];
   state.platformAccounts=null;state.platformAudit=null;state.platformError='Administrator access unavailable or not granted.';
   render();return;
  }
  const firstAuthorization=!state.platformAuthorized;
- state.platformAuthorized=true;state.platformSummary=result.data;state.platformError='';
+ state.platformAuthorized=true;state.platformRole=roleResult.data.role;state.platformSummary=result.data;state.platformError='';
  const [pending,accounts,audit]=await Promise.all([
   state.client.rpc('galaxy_platform_pending',{p_limit:30}),
   state.client.rpc('galaxy_platform_accounts',{p_limit:25,p_offset:state.platformOffset}),
@@ -170,7 +170,7 @@ async function platformDecide(userId,approved){
  await platformRefresh();
 }
 async function platformAssign(event){
- event.preventDefault();if(!state.platformAuthorized||!state.client)return;
+ event.preventDefault();if(!state.platformAuthorized||state.platformRole!=='SUPER_ADMIN'||!state.client)return;
  const userId=DOM('platform-target').value.trim(),code=DOM('platform-plan').value;
  const reason=DOM('platform-reason').value.trim(),days=Number(DOM('platform-days').value);
  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId) || reason.length<10 || days<1 || days>365){notify('Invalid user, reason or duration');return}
@@ -644,7 +644,7 @@ function clearPrivateCoachState(){
 }
 function resetAuthToGuest(){
  stopVoice();authEpoch++;clearPrivateCoachState();
- state.user=null;state.isGuest=true;state.documents=[];state.planInfo=null;state.planLifecycle=null;state.platformAccounts=null;state.platformAudit=null;state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];state.platformAccounts=null;state.platformAudit=null;state.planLifecycle=null;state.approvalInfo=null;
+ state.user=null;state.isGuest=true;state.documents=[];state.planInfo=null;state.planLifecycle=null;state.platformAccounts=null;state.platformAudit=null;state.platformAuthorized=false;state.platformRole=null;state.platformSummary=null;state.platformPending=[];state.platformAccounts=null;state.platformAudit=null;state.planLifecycle=null;state.approvalInfo=null;
  loadGuest();render();setEntryVisible(true);
 }
 async function signedIn(user){
@@ -678,7 +678,7 @@ async function signedIn(user){
   state.progress=Object.fromEntries((data||[]).map(p=>[p.topic_key,p]));
   state.attempts=hist.data||[];state.documents=docs.data||[];
   state.user=user;state.isGuest=false;
-  state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];state.approvalInfo=null;
+  state.platformAuthorized=false;state.platformRole=null;state.platformSummary=null;state.platformPending=[];state.approvalInfo=null;
   setEntryVisible(false);
   if(authMode!=='recovery')authClose();render();notify('Signed in · private study data loaded');
   void refreshPlan();
