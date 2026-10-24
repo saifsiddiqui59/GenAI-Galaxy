@@ -25,12 +25,18 @@ def configured_provider(settings):
     deployment = settings.get("AZURE_OPENAI_DEPLOYMENT", "")
     key = settings.get("AZURE_OPENAI_API_KEY", "")
     parsed = urlparse(endpoint)
+    try:
+        allowed_host = bool(parsed.hostname and (
+            parsed.hostname.endswith(".openai.azure.com")
+            or parsed.hostname.endswith(".services.ai.azure.com")))
+        valid_port = parsed.port in (None, 443)
+    except ValueError:
+        valid_port = False
+        allowed_host = False
     if (not key or parsed.scheme != "https" or parsed.username or parsed.password
-        or not parsed.hostname
-        or not (parsed.hostname.endswith(".openai.azure.com")
-                or parsed.hostname.endswith(".services.ai.azure.com"))
-        or parsed.path not in ("", "/") or parsed.port not in (None, 443)
-        or not re.fullmatch(r"[A-Za-z0-9_.-]{1,64}", deployment)):
+        or not allowed_host or not valid_port
+        or parsed.path not in ("", "/") or parsed.query or parsed.fragment
+        or parsed.params or not re.fullmatch(r"[A-Za-z0-9_.-]{1,64}", deployment)):
         raise ProviderUnavailable("Azure OpenAI backend is not configured")
     return {
         "provider": provider,
