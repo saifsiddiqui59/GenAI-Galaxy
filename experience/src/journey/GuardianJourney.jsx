@@ -17,7 +17,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
  useEffect(()=>onPhase?.(view.phase),[view.phase,onPhase]);
  useEffect(()=>onSequence?.({activeIndex:view.activeIndex,visible:view.visible,skipped}),[view.activeIndex,view.visible,skipped,onSequence]);
  useEffect(()=>{if(openSackSignal>0)setSackOpen(true)},[openSackSignal]);
- return <div className="guardian-journey" aria-label="Your Galaxy Guardian">
+ return <div className="guardian-journey" aria-label="Your learning journey">
     <div className="guardian-journey-top">
       <p className="guardian-eyebrow">CURIOSITY IS YOUR COMPASS</p>
       <h1>A universe of<br/><em>possibility.</em></h1>
@@ -46,11 +46,11 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
        Accept this planet <span aria-hidden="true">↗</span>
       </button>
     </div>
-    <p className="guardian-live-status" role="status">{!ready?'Preparing your companion':view.phase==='arriving'?'Your guide is arriving':view.phase==='collecting'?`Gathering your discoveries · ${view.visible} / ${count}`:'Your next world awaits'}</p>
+    <p className="guardian-live-status" role="status">{!ready?'Preparing your learning worlds':view.phase==='arriving'?'Your galaxy is loading':view.phase==='collecting'?`Gathering your discoveries · ${view.visible} / ${count}`:'Your next world awaits'}</p>
     {!reducedMotion&&!skipped&&view.phase!=='offering'&&
       <button type="button" className="guardian-skip" onClick={()=>{clockRef.current.ms=99999;setSkipped(true)}}>Skip introduction</button>}
     {!reducedMotion&&view.phase==='offering'&&<button type="button" className="guardian-replay" onClick={()=>{setElapsed(0);setSkipped(false);onReplay?.()}}>
-      Replay guardian entrance
+      Replay introduction
     </button>}
  </div>;
 }
