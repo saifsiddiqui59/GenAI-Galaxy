@@ -3,6 +3,7 @@ This is real HTTPS Chromium/PostgREST testing, but NOT a signed-in login test.
 No user creation, email submission, account mutation or model/API spend.
 """
 import asyncio
+import json
 import re
 from pathlib import Path
 from playwright.async_api import async_playwright
@@ -15,6 +16,8 @@ async def scenario(browser, viewport, reduced=False, mobile=False):
     context = await browser.new_context(viewport=viewport, is_mobile=mobile,
                                         has_touch=mobile, permissions=[])
     page = await context.new_page()
+    if reduced:
+        await page.emulate_media(reduced_motion='reduce')
     await page.goto(SITE, wait_until="domcontentloaded", timeout=45000)
     await page.wait_for_selector(".planet-node", timeout=20000)
     assert await page.locator("#entry-gate").is_visible(), "Login-first gate missing"
@@ -68,7 +71,7 @@ async def main():
                             "galaxy_platform_accounts","galaxy_platform_pending"):
                     args={"p_limit":1,"p_offset":0} if rpc=="galaxy_platform_accounts" else {}
                     denied = await request.post(SUPABASE+"/rest/v1/rpc/"+rpc,
-                                                headers=headers, data=args,timeout=20000)
+                                                headers=headers, data=json.dumps(args),timeout=20000)
                     assert denied.status in (401,403), "Guest unexpectedly invoked "+rpc+":" + str(denied.status)
                     print("PASS unauthenticated server denial",rpc,denied.status)
             print("PASS hosted P42 asset parity, auth modal, mobile, accessibility and 4 anonymous denials")
