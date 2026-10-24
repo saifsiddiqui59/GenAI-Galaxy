@@ -1,2 +1,3 @@
 azure-functions==1.23.0
 pypdf==5.9.0
+langgraph==1.2.16
