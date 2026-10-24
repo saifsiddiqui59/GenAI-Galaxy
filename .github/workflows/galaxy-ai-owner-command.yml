@@ -1,0 +1,78 @@
+name: Galaxy owner-approved AI workflow command bridge
+# Only issue #183, created by exact owner user ID, may dispatch existing
+# MANUAL protected workflows. No push/PR trigger, no provider/API credentials.
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  dispatch-approved-owner-command:
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' &&
+      github.ref == 'refs/heads/main' &&
+      github.event.issue.number == 183 &&
+      github.event.issue.pull_request == null &&
+      github.event.comment.user.id == 80577424 &&
+      github.actor == 'saifsiddiqui59'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Accept exact release SHA and green main CI only
+        env:
+          GH_TOKEN: ${{ github.token }}
+          COMMENT: ${{ github.event.comment.body }}
+          EVENT_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_REPOSITORY" == 'saifsiddiqui59/GenAI-Galaxy' &&
+             "$GITHUB_REF" == 'refs/heads/main' &&
+             "$GITHUB_EVENT_NAME" == 'issue_comment' ]] || exit 1
+          [[ "$EVENT_SHA" =~ ^[0-9a-f]{40}$ ]] || exit 1
+          [[ "$(git rev-parse HEAD)" == "$EVENT_SHA" ]] || {
+            echo '::error::Source checkout differs from exact owner command commit'; exit 1;
+          }
+          current="$(gh api repos/saifsiddiqui59/GenAI-Galaxy/git/ref/heads/main --jq '.object.sha')"
+          [[ "$current" == "$EVENT_SHA" ]] || {
+            echo '::error::main moved; stale release command rejected'; exit 1;
+          }
+          success="$(gh run list -R saifsiddiqui59/GenAI-Galaxy \
+            --workflow galaxy-ci.yml --branch main --event push --limit 25 \
+            --json headSha,conclusion \
+            --jq "[.[] | select(.headSha == \"$EVENT_SHA\" and .conclusion == \"success\")] | length")"
+          [[ "$success" =~ ^[0-9]+$ && "$success" -gt 0 ]] || {
+            echo '::error::No successful exact-source 3/3 GitHub main validation'; exit 1;
+          }
+          case "$COMMENT" in
+            "DEPLOY_BACKEND_$EVENT_SHA")
+              # Existing workflow targets only the pinned isolated Galaxy
+              # Azure Function and regional model. Protected dev OIDC, secret
+              # validations and no-always-ready checks remain authoritative.
+              gh workflow run galaxy-p3-flex-deploy.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=DEPLOY
+              echo 'Owner requested protected, existing-only Galaxy backend deployment.'
+              ;;
+            "TEST_RLS_$EVENT_SHA")
+              # Existing workflow creates then removes Galaxy-only temporary
+              # test users. It NEVER invokes the paid LLM.
+              gh workflow run galaxy-ephemeral-rls.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=TEST
+              echo 'Owner requested protected two-user Galaxy RLS acceptance.'
+              ;;
+            "SMOKE_NOCHARGE_$EVENT_SHA")
+              gh workflow run galaxy-ai-readonly-release-smoke.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=READONLY
+              echo 'Owner requested unauthenticated read-only API acceptance.'
+              ;;
+            *)
+              echo '::error::Unsupported exact owner command; no workflow dispatched'
+              exit 1
+              ;;
+          esac
