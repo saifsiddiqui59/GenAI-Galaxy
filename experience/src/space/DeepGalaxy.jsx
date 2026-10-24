@@ -71,8 +71,14 @@ function Planet({world,mastered,recommended,selected,onSelect,reducedMotion,lowP
    <ringGeometry args={[world.scale*1.32,world.scale*(recommended?1.41:1.72),64]}/>
    <meshBasicMaterial color={mastered?'#dfbc75':color} side={THREE.DoubleSide} transparent opacity={mastered?.8:.4} depthWrite={false}/>
   </mesh>}
-  {(hover||recommended)&&!lowPower&&<Html center position={[0,-world.scale-.18,0]} style={{pointerEvents:'none',whiteSpace:'nowrap'}}>
-   <div className="planet-caption"><span>{String(world.index+1).padStart(2,'0')}</span>{curriculum[world.index].title}</div>
+  {/* Every world keeps a numbered, accessible marker; expand long names only when useful. */}
+  <Html center position={[0,-world.scale-.085,0]} style={{pointerEvents:'none'}}>
+   <span className="planet-index-caption" data-world-index={world.index} title={curriculum[world.index].title} aria-label={curriculum[world.index].title}>{String(world.index+1).padStart(2,'0')}</span>
+  </Html>
+  {(hover||recommended||selected)&&<Html center position={[0,-world.scale-.34,0]} style={{pointerEvents:'none'}}>
+   <div className={'planet-caption'+(recommended?' planet-caption-next':'')} data-world-label={world.index} title={curriculum[world.index].title}>
+    <strong>{curriculum[world.index].title}</strong>
+   </div>
   </Html>}
  </group>;
 }
