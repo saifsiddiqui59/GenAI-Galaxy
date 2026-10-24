@@ -1,0 +1,102 @@
+name: Galaxy 3D V3 Cinematic Preview (manual isolated storage)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_preview:
+        description: 'Type DEPLOY_3D_V3_PREVIEW to publish only under /previews/galaxy-3d-v3'
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  publish:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm_preview == 'DEPLOY_3D_V3_PREVIEW'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZ_RG: GenAI_Galaxy
+      AZ_STORAGE: gengalaxy1429841605
+      PREFIX: previews/galaxy-3d-v3
+      # Coordinator replaces below with a final, CI-tested immutable commit.
+      REF_SHA: 486ffaade8863f7b1ab223d3cbe968550815a1df
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: publisher
+          persist-credentials: false
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REF_SHA }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Build approved 3D scene and stage ONLY public preview assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git -C source rev-parse HEAD)" == "$REF_SHA" ]] || exit 2
+          npm install --prefix source/experience --no-audit --no-fund
+          npm run --prefix source/experience build
+          mkdir -p "$RUNNER_TEMP/galaxy-3d-preview"
+          GALAXY_SOURCE_ROOT="$GITHUB_WORKSPACE/source" GALAXY_STAGE="$RUNNER_TEMP/galaxy-3d-preview" \
+            bash publisher/scripts/p16/stage-preview.sh
+          echo "STAGE=$RUNNER_TEMP/galaxy-3d-preview" >> "$GITHUB_ENV"
+      - name: Verify dedicated existing Azure credential
+        shell: bash
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ -n "$AZURE_CLIENT_ID" && -n "$AZURE_TENANT_ID" && -n "$AZURE_SUBSCRIPTION_ID" ]] || exit 2
+          [[ "${AZURE_CLIENT_ID,,}" == 737d67b7-4984-48bb-bb1f-5f62599f645c ]] || exit 2
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Verify storage and upload ONLY dedicated prefix
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$AZ_RG" == GenAI_Galaxy && "$AZ_STORAGE" == gengalaxy1429841605 ]]
+          [[ "$PREFIX" == 'previews/galaxy-3d-v3' ]]
+          id="$(az storage account show -g "$AZ_RG" -n "$AZ_STORAGE" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Storage/storageAccounts/gengalaxy1429841605 ]] || exit 2
+          enabled="$(az storage account blob-service-properties show -g "$AZ_RG" --account-name "$AZ_STORAGE" --query staticWebsite.enabled -o tsv)"
+          [[ "${enabled,,}" == true ]] || exit 2
+          az storage container show --auth-mode login --account-name "$AZ_STORAGE" --name '$web' >/dev/null
+          az storage blob upload-batch --auth-mode login --account-name "$AZ_STORAGE" \
+            --destination '$web' --destination-path "$PREFIX" \
+            --source "$STAGE" --overwrite true --only-show-errors
+          for file in index.html lesson/index.html; do
+            az storage blob upload --auth-mode login --account-name "$AZ_STORAGE" \
+              --container-name '$web' --name "$PREFIX/$file" --file "$STAGE/$file" \
+              --content-type 'text/html; charset=utf-8' --overwrite --only-show-errors
+          done
+      - name: Verify hosted content SHA256 for EVERY staged asset and print link
+        shell: bash
+        run: |
+          set -euo pipefail
+          site='https://gengalaxy1429841605.z29.web.core.windows.net'
+          while IFS= read -r file; do
+            expected="$(sha256sum "$STAGE/$file" | cut -d' ' -f1)"
+            hosted="$(curl --fail --silent --show-error --retry 3 --retry-delay 2 "$site/$PREFIX/$file" | sha256sum | cut -d' ' -f1)"
+            [[ "$expected" == "$hosted" ]] || { echo "::error::Hosted SHA mismatch $file"; exit 1; }
+          done < <(cd "$STAGE" && find . -type f -printf '%P\n' | sort)
+          url="$site/$PREFIX/index.html?demo=1"
+          echo "LIVE VERIFIED GALAXY 3D PREVIEW: $url"
+          echo "## Galaxy 3D V3 preview (live verified)" >> "$GITHUB_STEP_SUMMARY"
+          echo "[Open cinematic Galaxy V3 demo]($url)" >> "$GITHUB_STEP_SUMMARY"
+          echo "Only the isolated $PREFIX path was published; current website root unchanged." >> "$GITHUB_STEP_SUMMARY"
+      - name: Logout Azure
+        if: always()
+        shell: bash
+        run: az logout >/dev/null 2>&1 || true
