@@ -80,7 +80,7 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
   <Html center position={[0,-world.scale-.085,0]} style={{pointerEvents:'none'}}>
    <span className="planet-index-caption" data-world-index={world.index} title={curriculum[world.index].title} aria-label={curriculum[world.index].title}>{String(world.index+1).padStart(2,'0')}</span>
   </Html>
-  {(hover||recommended||selected)&&<Html center position={[0,-world.scale-.34,0]} style={{pointerEvents:'none'}}>
+  {!lowPower&&(hover||recommended||selected)&&<Html center position={[0,-world.scale-.34,0]} style={{pointerEvents:'none'}}>
    <div className={'planet-caption'+(recommended?' planet-caption-next':'')} data-world-label={world.index} title={curriculum[world.index].title}>
     <strong>{curriculum[world.index].title}</strong>
    </div>
