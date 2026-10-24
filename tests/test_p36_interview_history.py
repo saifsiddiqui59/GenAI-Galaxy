@@ -17,4 +17,7 @@ class P36History(unittest.TestCase):
   src=(ROOT/"api/function_app.py").read_text()
   self.assertLess(src.index("history=validate_interview_history"),src.index("enforce_eval_quota(token=token"))
   self.assertIn("review,usage=model_review(RUBRICS[k],question,response,history=history)",src)
-  self.assertIn("one specific relevant follow-up",src)
+  from interview_grading import grading_system_prompt
+  prompt=grading_system_prompt()
+  self.assertIn("one relevant, specific follow-up question",prompt)
+  self.assertIn("untrusted history",prompt)

@@ -73,6 +73,32 @@ async function run(){
  assert.equal(feedback().score,88);
  assert.equal(feedback().localReason,undefined);
 
+ // New server-computed evidence grading contract also works on the existing UI.
+ reset({signedIn:true});
+ ctx.fetch=async()=>{calls++;return {ok:true,status:200,json:async()=>({
+  review_status:'model_reviewed',accuracy:63,clarity:75,
+  has_factual_errors:true,missing_concepts:['Explain why chat generation is not nearest-neighbor search'],
+  incorrect_claims:['A chat completion is a vector index'],
+  correct_points:['Vectors encode similarity'],
+  why_score:'The answer defines embeddings but does not resolve the comparison.',
+  score_breakdown:{direct_answer:{score:1,max:4,weight:35,
+   reason:'Did not answer why',evidence:'embedding'}},
+  feedback:'Needs direct comparison',improved_answer:'Use embeddings to retrieve vectors; use chat generation to compose responses.',
+  followup:'How does cosine similarity differ from a chat completion?'
+ })};};
+ await submit();
+ assert.equal(feedback().score,63);
+ assert.equal(feedback().passed,false);
+ assert.equal(feedback().correctPoints.length,1);
+ assert.equal(feedback().incorrectClaims.length,1);
+ const structuredHtml=vm.runInContext('practiceMarkup()',ctx);
+ assert.match(structuredHtml,/What you answered correctly/);
+ assert.match(structuredHtml,/Incorrect technical claims/);
+ assert.match(structuredHtml,/Why this score/);
+ assert.match(structuredHtml,/View weighted score breakdown/);
+ assert.match(structuredHtml,/Next interview question/);
+
+
  reset({signedIn:true});
  const beforeLocal=calls;await submit(true);
  assert.equal(calls,beforeLocal,'Explicit free mode must not call model');
