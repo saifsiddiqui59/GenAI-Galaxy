@@ -193,3 +193,12 @@ Require all three exact-source CI jobs for #131 and review its screenshot artifa
 ## V6 hosted preview acceptance completed — 24 October 2026
 
 V6 is hosted and verified in #40022442803; source CI, 18-file parity, unchanged homepage and four Chromium viewport/motion variants passed, and actual hosted PNGs were opened. Review the existing isolated V6 link and retain source PR #131 as draft; do not merge #96/#105/#131 into production without a distinct release decision. Physical-device FPS and signed-in V6 acceptance remain unverified; no failed automated V6 acceptance check remains. Details in `docs/experience/V6_HOSTED_VERIFICATION.md`.
+
+
+## P47–P49 — AI integration source checkpoint (24 October 2026)
+
+- Merged [P47 PR #178](https://github.com/saifsiddiqui59/GenAI-Galaxy/pull/178): replaces arbitrary grade caps with weighted model-dimension evidence checks, preserves existing API compatibility and adds interpretable feedback. Superseded/closed unmerged #165.
+- Merged [P48 PR #179](https://github.com/saifsiddiqui59/GenAI-Galaxy/pull/179): server-owned free reference/quiz and paid JWT+quota-gated LangGraph tutor with an explicit user-triggered model call. No 3D changes.
+- P49 source PR [#180](https://github.com/saifsiddiqui59/GenAI-Galaxy/pull/180): shared Azure provider, response token counts and optional owner-verified INR token-rate estimates. No unverified prices embedded and no paid AI benchmark or Azure deployment.
+- **Next approvals (separate):** human-review grading against appropriate cases, approved backend/website release, authenticated hosted tutor/grade flow, real cost measurements and reconciliation against actual private Azure Cost Management reports. An offline green CI is not human grading validation or live hosted deployment. The 120-case golden suite is postponed at owner's request; production-quality signoff remains unavailable without human-reviewed validation.
+- Azure-Cost-Hub private offline/report workflows remain failed/unverified as of latest read-only 24 October check; troubleshoot privately and never copy cost secrets/reports into public Galaxy GitHub. See `docs/ai/AI_PROVIDER_FINOPS_P49.md`.
