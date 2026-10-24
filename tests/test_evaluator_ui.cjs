@@ -84,7 +84,9 @@ async function run(){
   score_breakdown:{direct_answer:{score:1,max:4,weight:35,
    reason:'Did not answer why',evidence:'embedding'}},
   feedback:'Needs direct comparison',improved_answer:'Use embeddings to retrieve vectors; use chat generation to compose responses.',
-  followup:'How does cosine similarity differ from a chat completion?'
+  followup:'How does cosine similarity differ from a chat completion?',
+  token_usage:{input_tokens:1000,output_tokens:500,total_tokens:1500},
+  estimated_model_cost:{currency:'INR',model_cost_estimate_inr:'0.15000000'}
  })};};
  await submit();
  assert.equal(feedback().score,63);
@@ -97,6 +99,10 @@ async function run(){
  assert.match(structuredHtml,/Why this score/);
  assert.match(structuredHtml,/View weighted score breakdown/);
  assert.match(structuredHtml,/Next interview question/);
+ assert.match(structuredHtml,/Measured tokens/);
+ assert.match(structuredHtml,/Estimated model-token cost/);
+ assert.match(structuredHtml,/Not Azure billed cost/);
+ assert.match(structuredHtml,/0\.15000000/);
 
 
  reset({signedIn:true});
@@ -114,13 +120,17 @@ async function run(){
   return {ok:true,status:200,json:async()=>({
    tutor_status:'model_tutored',mode:'explain',model_called:true,
    reply:'A short explanation of embeddings.',
-   next_question:'How is vector similarity calculated?'})};
+   next_question:'How is vector similarity calculated?',
+   token_usage:{input_tokens:1000,output_tokens:500,total_tokens:1500},
+   estimated_model_cost:{currency:'INR',model_cost_estimate_inr:'0.15000000'}})};
  };
  const tutorBefore=calls;
  vm.runInContext("state.view='practice'",ctx);
  await vm.runInContext("askAiTutor('explain')",ctx);
  assert.equal(calls,tutorBefore+1);
  assert.match(vm.runInContext('practiceMarkup()',ctx),/A short explanation of embeddings/);
+ assert.match(vm.runInContext('practiceMarkup()',ctx),/Measured tokens/);
+ assert.match(vm.runInContext('practiceMarkup()',ctx),/Estimated model-token cost/);
  assert.match(vm.runInContext('practiceMarkup()',ctx),/Ask the AI tutor \(optional\)/);
  assert.match(vm.runInContext('practiceMarkup()',ctx),/Get AI follow-up \(uses tokens\)/);
  ctx.__capturedMode=null;ctx.__capturedMessage=null;

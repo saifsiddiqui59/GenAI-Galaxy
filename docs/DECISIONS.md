@@ -149,3 +149,11 @@ The new main-based publisher may release immutable V6 source `6614f79` only to `
 ## V6 verified release disposition
 
 Keep the visual source frozen at `6614f79` and draft #131. The successful protected #40022442803 release is only an isolated art/interaction preview: 18 staged files, exact hosted hashes, unchanged homepage and inspected Chromium evidence. Parallel learning work on main may advance independently; this preview retains the P34 lesson snapshot included at the tested source pin. Do not describe sample progress as authenticated acceptance or synthetic Chromium as physical-phone performance.
+
+
+## P47–P49 AI integration decisions — 2026-10-24
+
+- Favor one authenticated, quota-gated GPT-4.1-mini call for the current interview evaluator and explicit tutor requests; introduce LangGraph only where the tutor genuinely branches, with deterministic no-model reference/quiz routes. No unrelated providers or multi-agent loops without evaluated benefit.
+- Reject arbitrary missing-concept score caps and unverifiable single self-assigned scores. Weighted question-specific dimension evidence is still **LLM-derived**, not independently verified; only a future human-reviewed benchmark can establish grading fairness.
+- Initial integration development proceeds without the requested 120-case golden suite or paid benchmark calls. This is an execution-order change, **not** approval to declare grading production-ready or waive the final human validation gate.
+- Show token usage from provider counters. Publish no INR cost estimate until the actual deployment-specific rates and date/source have been owner-verified; keep inferred request costs and separately billed private Azure cost reports distinct.

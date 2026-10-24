@@ -14,6 +14,12 @@
     "AZURE_SPEECH_KEY": "<backend-only-secret>",
     "AZURE_OPENAI_ENDPOINT": "https://<owned-resource>.openai.azure.com",
     "AZURE_OPENAI_DEPLOYMENT": "<model-deployment>",
-    "AZURE_OPENAI_API_KEY": "<backend-only-secret>"
+    "AZURE_OPENAI_API_KEY": "<backend-only-secret>",
+    "GALAXY_MODEL_PROVIDER": "azure-openai",
+    "GALAXY_PRICE_SOURCE": "not-verified",
+    "GALAXY_PRICE_ASOF": "",
+    "GALAXY_INPUT_INR_PER_1M": "",
+    "GALAXY_OUTPUT_INR_PER_1M": "",
+    "GALAXY_CACHED_INR_PER_1M": ""
   }
 }
