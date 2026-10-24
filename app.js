@@ -456,9 +456,15 @@ function renderVoiceState(){
 }
 async function submitAnswer(e,localOnly=false){
  e.preventDefault();
+ if(state.pendingEvaluation)return; // One explicit evaluation at a time, including local checks.
  const field=DOM('spoken-answer'),answer=field.value.trim();
  if(isUncertainAnswer(answer)){showGuidedExplanation();return}
  if(answer.length<15){notify('Please speak or type at least one complete sentence.');return}
+ const requestToken={},requestEpoch=authEpoch,requestUser=state.user?.id||null,wasGuest=state.isGuest,topic=state.current;
+ state.pendingEvaluation=requestToken;
+ const active=()=>state.pendingEvaluation===requestToken&&authEpoch===requestEpoch&&
+   (state.user?.id||null)===requestUser&&state.isGuest===wasGuest&&state.current===topic;
+ try{
  stopVoice();state.answerDraft=answer;
  const t=state.current,availability=modelAvailability();
  let score=evaluateAnswer(t,answer);
@@ -469,6 +475,7 @@ async function submitAnswer(e,localOnly=false){
   if(button){button.disabled=true;button.textContent='Reviewing with AI…'}
   try{
    const {data:{session}}=await state.client.auth.getSession();
+   if(!active())return; // logout, account switch or topic change during authentication
    if(!session?.access_token)throw Error('NO_SESSION');
    const req=await fetch(window.GALAXY_EVALUATOR_URL,{
     method:'POST',
@@ -476,8 +483,10 @@ async function submitAnswer(e,localOnly=false){
     body:JSON.stringify({topic_key:key(t),question:state.attemptQuestion,response:answer,rubric_version:'v4-m2',
      history:(state.session?.history||[]).slice(-4)})
    });
+   if(!active())return; // Never display or persist a response for a different identity.
    if(!req.ok)throw Error('HTTP_'+req.status);
    const result=await req.json();
+   if(!active())return;
    if(result.review_status!=='model_reviewed'||!Number.isFinite(result.accuracy)||!Number.isFinite(result.clarity)||!Array.isArray(result.missing_concepts)||typeof result.has_factual_errors!=='boolean')throw Error('INVALID_RESPONSE');
    const accuracy=Math.max(0,Math.min(100,result.accuracy)),clarity=Math.max(0,Math.min(100,result.clarity));
    score={...score,score:accuracy,accuracy,clarity,
@@ -488,6 +497,7 @@ async function submitAnswer(e,localOnly=false){
     message:result.feedback||'Compare the answer against the reference manually.',
     improved_answer:result.improved_answer,followup:result.followup};
   }catch(err){
+   if(!active())return;
    const error=String(err?.message||'');
    if(error==='NO_SESSION')score.localReason='Session expired. Sign in again; no authenticated AI review was returned.';
    else if(error==='INVALID_RESPONSE')score.localReason='AI returned an invalid response. Only the local keyword result is shown.';
@@ -495,6 +505,7 @@ async function submitAnswer(e,localOnly=false){
    else score.localReason='AI request could not be completed (network or browser access). This is only a local keyword result.';
   }
  }
+ if(!active())return;
  // Only previously AI-reviewed turns become conversational context, and only after
  // a deliberate model request. Free/local answers are never sent later as history.
  if(state.session&&score.serverReviewed===true){
@@ -515,7 +526,10 @@ async function submitAnswer(e,localOnly=false){
  const row={level:state.level,passed:score.serverReviewed?score.passed:null,
   response:answer,feedback:`${score.serverReviewed?'model rubric':'provisional concept proxy'} ${score.score}% — missing ${score.missing.join(', ')}`};
  await Promise.allSettled([saveProgress(t),storeAttempt(t,row)]);
- render();
+ if(active())render();
+ }finally{
+   if(state.pendingEvaluation===requestToken)state.pendingEvaluation=null;
+ }
 }
 function adaptiveQuestion(t,feedback,nextLevel){
  if(feedback.challengeReady)return feedback.followup||questionFor(t,nextLevel);
@@ -623,7 +637,7 @@ function setEntryVisible(visible){
 }
 function clearPrivateCoachState(){
  state.coachResume='';state.coachJob='';state.coachPlan=null;state.coachInsights=null;state.jobFocus='';
- state.session=null;state.sessionReport=null;state.answerDraft='';state.feedback=null;
+ state.session=null;state.sessionReport=null;state.answerDraft='';state.feedback=null;state.pendingEvaluation=null;
  state.voiceEvents=[];state.voiceStartedAt=null;state.voiceElapsedMs=null;
 }
 function resetAuthToGuest(){
