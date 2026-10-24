@@ -147,6 +147,7 @@ async function platformRefresh(){
   state.platformAccounts=null;state.platformAudit=null;state.platformError='Administrator access unavailable or not granted.';
   render();return;
  }
+ const firstAuthorization=!state.platformAuthorized;
  state.platformAuthorized=true;state.platformSummary=result.data;state.platformError='';
  const [pending,accounts,audit]=await Promise.all([
   state.client.rpc('galaxy_platform_pending',{p_limit:30}),
@@ -158,7 +159,7 @@ async function platformRefresh(){
  state.platformAccounts=accounts.error?null:accounts.data;
  state.platformAudit=audit.error?null:Array.isArray(audit.data)?audit.data:null;
  state.platformDataError=[pending.error&&'Approval inbox unavailable',accounts.error&&'Account directory unavailable',audit.error&&'Audit unavailable'].filter(Boolean).join(' · ');
- render();
+ if(firstAuthorization&&state.view==='galaxy')setView('platform');else render();
 }
 async function platformDecide(userId,approved){
  if(!state.platformAuthorized||!state.client)return;
