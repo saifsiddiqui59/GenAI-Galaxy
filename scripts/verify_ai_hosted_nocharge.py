@@ -37,7 +37,7 @@ def request_once(url: str, method: str, origin: str | None) -> tuple[int, dict[s
     req = Request(url, data=body, headers=headers, method=method)
     opener = build_opener(NoRedirect())
     try:
-        with opener.open(req, timeout=15) as response:
+        with opener.open(req, timeout=40) as response:
             response.read(2049)  # Never echo response, which may be untrusted.
             return response.status, dict(response.headers.items())
     except HTTPError as ex:
