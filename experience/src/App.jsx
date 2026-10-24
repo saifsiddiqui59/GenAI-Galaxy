@@ -94,6 +94,7 @@ export default function App(){
   return()=>{delete window.__galaxyV6};
  },[resetClock]);
  const triggerReplay=useCallback(()=>{resetClock();setReplayEpoch(x=>x+1)},[resetClock]);
+ const skipIntroduction=useCallback(()=>{choreographyRef.current.ms=99999;choreographyRef.current.hold=true;invalidateRef.current();},[]);
  const select=useCallback(index=>{
   if(!validWorld(index)||warp)return;
   setSelected(index);
@@ -148,6 +149,7 @@ export default function App(){
    <WorldDock worlds={LABELS} visible={menuOpen} recommended={nextIndex}
       selected={selected} onClose={()=>setMenuOpen(false)}
       onReplay={()=>{triggerReplay();setMenuOpen(false)}} canReplay={!reduced&&animationEnabled}
+      onSkip={()=>{skipIntroduction();setMenuOpen(false)}} canSkip={!reduced&&animationEnabled&&modelPhase!=='offering'}
       onSelect={index=>{setMenuOpen(false);select(index)}}/>
    <WarpGate request={warp} onComplete={enterLesson}
      reducedMotion={!animationEnabled||reduced}/>
