@@ -8,6 +8,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
  const [sackOpen,setSackOpen]=useState(false);
  const count=Math.min(MAX_COLLECTION_DISPLAY,completed.length);
  const view=useMemo(()=>phaseAt(skipped?99999:elapsed,count,reducedMotion),[skipped,elapsed,count,reducedMotion]);
+ const stored=completed.slice(0,view.visible);
  useEffect(()=>{setElapsed(0);setSkipped(false)},[nextIndex,count,reducedMotion]);
  useEffect(()=>{setElapsed(0);setSkipped(false)},[replaySignal]);
  useEffect(()=>{
@@ -27,16 +28,16 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
     <div className="guardian-mission">
       <button type="button" aria-expanded={sackOpen} aria-controls="guardian-sack-panel"
          className="guardian-sack" onClick={()=>setSackOpen(!sackOpen)}>
-        <span aria-hidden="true">✦</span> Satchel · {completed.length} mastered
+        <span aria-hidden="true">✦</span> Satchel · {stored.length} / {completed.length} collected
       </button>
       {sackOpen&&<div id="guardian-sack-panel" className="guardian-sack-panel">
         <div className="guardian-sack-header"><strong>Collected worlds</strong>
           <button type="button" aria-label="Close satchel" onClick={()=>setSackOpen(false)}>✕</button></div>
-        {completed.length?<ul>{completed.map(w=><li key={w.index}>
+        {stored.length?<ul>{stored.map(w=><li key={w.index}>
           <button type="button" onClick={()=>onSelectCompleted?.(w.index)}>
             <span aria-hidden="true" className="guardian-gem">✧</span>{w.name}
           </button>
-        </li>)}</ul>:<p>No fully mastered worlds yet. Your collection starts here.</p>}
+        </li>)}</ul>:<p>No planets stored yet. The Genie collects your mastered worlds as the introduction plays.</p>}
       </div>}
     </div>
     <div className="guardian-next">
