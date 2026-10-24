@@ -1,0 +1,46 @@
+name: Galaxy P37 hosted signed-in Playwright acceptance (owner-command only)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type TEST_GALAXY_P37_LOGIN to run two dedicated Galaxy test logins"
+        required: true
+        type: string
+  issue_comment:
+    types: [created]
+permissions:
+  contents: read
+jobs:
+  hosted-galaxy-auth:
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' &&
+      github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && inputs.confirm == 'TEST_GALAXY_P37_LOGIN') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 147 &&
+        github.event.comment.user.id == 80577424 &&
+        github.event.comment.body == 'TEST_GALAXY_P37_LOGIN'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: dev
+    concurrency:
+      group: galaxy-hosted-auth-acceptance
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install pinned browser
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install chromium
+      - name: Check browser suite syntax
+        run: python -m py_compile tests/hosted_p37_auth_playwright.py
+      - name: Run Galaxy-only signed-in Playwright acceptance
+        env:
+          GALAXY_AUTH_TEST_SITE: https://gengalaxy1429841605.z29.web.core.windows.net/
+          GALAXY_TEST_A_EMAIL: ${{ secrets.GALAXY_TEST_A_EMAIL }}
+          GALAXY_TEST_A_PASSWORD: ${{ secrets.GALAXY_TEST_A_PASSWORD }}
+          GALAXY_TEST_B_EMAIL: ${{ secrets.GALAXY_TEST_B_EMAIL }}
+          GALAXY_TEST_B_PASSWORD: ${{ secrets.GALAXY_TEST_B_PASSWORD }}
+        run: python tests/hosted_p37_auth_playwright.py
