@@ -1,31 +1,44 @@
 import React,{useRef,useMemo,useEffect} from 'react';
+import {Html} from '@react-three/drei';
+import curriculum from '../../../data/curriculum.json';
 import {useFrame,useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import {planetSurfaceTexture} from '../space/PlanetSurface.js';
 import {COLORS} from '../space/DeepGalaxy.jsx';
+import {galaxySpaceAt,launchAt,flightProgress} from '../space/worldOrbit.js';
 import {pickupAt,smooth,COLLECT_START_MS,PER_WORLD_MS,RELEASE} from '../journey/choreography.js';
 export {COLLECT_START_MS,PER_WORLD_MS};
 import './collection.css';
 
-function Miniature({world,order,rigPoseRef,clockRef,compact}){
+function Miniature({world,order,rigPoseRef,clockRef,compact,short}){
  const orb=useRef();
  const texture=useMemo(()=>planetSurfaceTexture(world.index,COLORS[world.index],compact),[world.index,compact]);
  useEffect(()=>()=>texture.dispose(),[texture]);
  useFrame(()=>{
   const pose=rigPoseRef.current,c=clockRef.current;if(!orb.current||!pose)return;
   const pick=pickupAt(c.ms,order),s=pose.scale;
-  const active=c.view?.activeIndex??0;
-  orb.current.visible=!pick.stored&&pose.phase!=='offering'&&c.ms>1450&&order<=Math.max(0,active)+2;
-  if(pick.t<0)orb.current.position.copy(pose.staging).add(new THREE.Vector3(-(order-Math.max(0,active))*.28*s,0,-.12*s));
-  else if(pick.t<.30)orb.current.position.copy(pose.staging);
-  else if(pick.attached&&pose.grip)orb.current.position.copy(pose.grip);
-  else orb.current.position.copy(pose.mouth).add(new THREE.Vector3(0,-.32*s*smooth((pick.t-RELEASE)/.14),0));
-  orb.current.scale.setScalar(s*(pick.t>=RELEASE?1-smooth((pick.t-.90)/.10):1));
+  const origin=galaxySpaceAt(world.index,launchAt(order),compact,short);
+  const source=new THREE.Vector3(origin.x,origin.y,origin.z);
+  // This rendered object is the same completed world pulled from its true atlas orbit.
+  // Before collection it remains in the main galaxy, not staged near the Genie.
+  orb.current.visible=pick.t>=0&&!pick.stored&&pose.phase!=='offering';
+  if(pick.t<.30){
+   const flight=flightProgress(pick.t);
+   orb.current.position.copy(source).lerp(pose.staging,flight);
+   orb.current.position.y+=Math.sin(Math.PI*flight)*.30*s;
+   orb.current.scale.setScalar(THREE.MathUtils.lerp(origin.scale/.135,s,flight));
+  }else if(pick.attached&&pose.grip){
+   orb.current.position.copy(pose.grip);
+   orb.current.scale.setScalar(s);
+  }else{
+   orb.current.position.copy(pose.mouth).add(new THREE.Vector3(0,-.32*s*smooth((pick.t-RELEASE)/.14),0));
+   orb.current.scale.setScalar(s*(pick.t>=RELEASE?1-smooth((pick.t-.90)/.10):1));
+  }
   orb.current.rotation.y=c.ms*.00018+order;
   const d=window.__galaxySkeletonDiagnostics;
   if(d){
    d.miniatures??={};d.miniatures[order]={stage:pick.stage,visible:orb.current.visible,
-    position:orb.current.position.toArray(),attached:pick.attached,
+    position:orb.current.position.toArray(),sourceWorldIndex:world.index,atlasOrigin:source.toArray(),attached:pick.attached,
     contactError:pick.attached&&pose.grip?orb.current.position.distanceTo(pose.grip):null};
   }
  },-1);
@@ -62,7 +75,7 @@ function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
   <mesh position={[.19,.04,.22]}><sphereGeometry args={[.023,8,6]}/><meshStandardMaterial color="#d4ad73" metalness={.45} roughness={.4}/></mesh>
  </group>;
 }
-function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion}){
+function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion,onSelect}){
  const orb=useRef();
  const color=COLORS[worldIndex];
  const texture=useMemo(()=>planetSurfaceTexture(worldIndex,color,compact),[worldIndex,color,compact]);
@@ -74,17 +87,26 @@ function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion}){
   orb.current.scale.setScalar(pose.scale*smooth((pose.offerReveal-.45)/.55));
   orb.current.rotation.y=reducedMotion?0:clockRef.current.ms*.00012;
  },-1);
- return <group ref={orb} visible={false}>
+ return <group ref={orb} visible={false}
+  onClick={e=>{e.stopPropagation();if(orb.current?.visible)onSelect?.(worldIndex)}}
+  onPointerOver={()=>{document.body.style.cursor='pointer'}}
+  onPointerOut={()=>{document.body.style.cursor=''}}>
   <mesh><sphereGeometry args={[.275,40,28]}/><meshStandardMaterial map={texture} roughness={.54} metalness={.06} emissive={color} emissiveIntensity={.12}/></mesh>
   <mesh scale={1.09}><sphereGeometry args={[.275,24,16]}/><meshBasicMaterial color={color} transparent opacity={.18} side={THREE.BackSide} depthWrite={false}/></mesh>
+  {/* Slightly oversized invisible pick surface so the offered planet is touch-friendly. */}
+  <mesh><sphereGeometry args={[.37,20,14]}/><meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false}/></mesh>
+  <Html center position={[0,-.47,0]} style={{pointerEvents:'none',whiteSpace:'nowrap'}}>
+   <span className="galaxy-offer-label">NEXT · {curriculum[worldIndex]?.title || 'Learning world'} ↗</span>
+  </Html>
   <pointLight intensity={1.4} color={color} distance={2.2}/>
  </group>;
 }
-export default function CollectionFX({completed=[],collectedCount,clockRef,reducedMotion=false,onOpenSack,nextWorldIndex=0,rigPoseRef}){
+export default function CollectionFX({completed=[],collectedCount,clockRef,reducedMotion=false,onOpenSack,onSelectWorld,nextWorldIndex=0,rigPoseRef}){
  const compact=useThree(s=>s.size.width<700);
+ const short=useThree(s=>s.size.height<780);
  return <>
   <Satchel onOpenSack={onOpenSack} count={collectedCount} rigPoseRef={rigPoseRef} clockRef={clockRef}/>
-  <OfferingOrb worldIndex={nextWorldIndex} rigPoseRef={rigPoseRef} clockRef={clockRef} compact={compact} reducedMotion={reducedMotion}/>
-  {completed.slice(0,17).map((world,order)=><Miniature key={world.index} world={world} order={order} rigPoseRef={rigPoseRef} clockRef={clockRef} compact={compact}/>)}
+  <OfferingOrb worldIndex={nextWorldIndex} rigPoseRef={rigPoseRef} clockRef={clockRef} compact={compact} reducedMotion={reducedMotion} onSelect={onSelectWorld}/>
+  {completed.slice(0,17).map((world,order)=><Miniature key={world.index} world={world} order={order} rigPoseRef={rigPoseRef} clockRef={clockRef} compact={compact} short={short}/>)}
  </>;
 }
