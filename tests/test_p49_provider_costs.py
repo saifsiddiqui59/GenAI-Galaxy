@@ -153,6 +153,17 @@ class PrivacyTelemetryTests(unittest.TestCase):
             'prompt_tokens_details':{'cached_tokens':9999}}})
         self.assertNotIn('cached_input_tokens',bad)
 
+    def test_conflicting_provider_totals_are_unknown_not_displayed_as_measured(self):
+        inconsistent = usage_counters({'usage': {
+            'prompt_tokens': 120, 'completion_tokens': 30,
+            'total_tokens': 999,
+            'prompt_tokens_details': {'cached_tokens': 20}}})
+        self.assertEqual(inconsistent, {})
+        self.assertIsNone(estimate_model_cost(inconsistent, RATES, today=DAY))
+        self.assertEqual(usage_counters({'usage': {
+            'prompt_tokens': 120, 'completion_tokens': 30,
+            'total_tokens': 150}})['total_tokens'], 150)
+
     def test_log_only_includes_estimate_not_tokens_or_user_content(self):
         sensitive='PRIVATE-CANDIDATE-NAME'
         amount=estimate_model_cost(USAGE,RATES,today=DAY)
