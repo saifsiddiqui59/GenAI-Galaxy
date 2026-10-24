@@ -202,3 +202,9 @@ V6 is hosted and verified in #40022442803; source CI, 18-file parity, unchanged 
 - P49 source PR [#180](https://github.com/saifsiddiqui59/GenAI-Galaxy/pull/180): shared Azure provider, response token counts and optional owner-verified INR token-rate estimates. No unverified prices embedded and no paid AI benchmark or Azure deployment.
 - **Next approvals (separate):** human-review grading against appropriate cases, approved backend/website release, authenticated hosted tutor/grade flow, real cost measurements and reconciliation against actual private Azure Cost Management reports. An offline green CI is not human grading validation or live hosted deployment. The 120-case golden suite is postponed at owner's request; production-quality signoff remains unavailable without human-reviewed validation.
 - Azure-Cost-Hub private offline/report workflows remain failed/unverified as of latest read-only 24 October check; troubleshoot privately and never copy cost secrets/reports into public Galaxy GitHub. See `docs/ai/AI_PROVIDER_FINOPS_P49.md`.
+
+## P50 — AI route acceptance / next execution gates (2026-10-24)
+
+- P49 provider telemetry merged; P50 PR #181 adds strictly offline HTTP handler acceptance and rejects inconsistent provider token totals as unknown. Details: `docs/ai/P50_OFFLINE_ROUTE_ACCEPTANCE.md`.
+- **Unfinished and gated:** separate owner-approved deployment of the updated Function/static frontend; hosted JWT and cross-user quota 429/503 smoke (avoid uncontrolled paid calls); verified owner-specific Indian-region token prices; private Azure-Cost-Hub completed actual Azure billing report; human-reviewed question-correctness grading/fairness calibration. No live production readiness claim yet.
+- The requested 120-case golden benchmark remains postponed. Maintain no-payment-provider and no-unapproved-paid-AI constraints. Do not modify V6 draft branches as part of AI grading or release readiness.
