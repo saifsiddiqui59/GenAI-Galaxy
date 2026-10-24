@@ -3,7 +3,7 @@
 begin;
 
 alter table galaxy_private.platform_admins
-  add column if not exists admin_role text not null default 'SUPER_ADMIN';
+  add column if not exists admin_role text not null default 'ADMIN';
 
 alter table galaxy_private.platform_admins
   add constraint galaxy_platform_admin_role_check
