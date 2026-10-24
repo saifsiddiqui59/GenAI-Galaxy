@@ -64,7 +64,16 @@ async def inspect(pw,url,name,width,height,reduced=False):
         assert any(m['map'] for m in diag['materials'])
         await page.get_by_role('button',name='Explore all 17 worlds').click()
         assert await page.locator('.galaxy-dock li').count()==17
-        await page.get_by_role('button',name='Close world navigator').click()
+        if width<700 and not reduced:
+            # Mobile uses the navigator for replay/skip so controls never cover the Genie.
+            await page.get_by_role('button',name='Replay Genie entrance ↻').click()
+            await page.wait_for_function("() => window.__galaxySkeletonDiagnostics.currentPhase==='arriving'")
+            assert await page.locator('.galaxy-dock').count()==0
+            await page.get_by_role('button',name='Explore all 17 worlds').click()
+            await page.get_by_role('button',name='Skip Genie introduction →').click()
+            await page.wait_for_function("() => window.__galaxySkeletonDiagnostics.currentPhase==='offering'")
+        else:
+            await page.get_by_role('button',name='Close world navigator').click()
         await page.locator('.guardian-sack').click()
         assert await page.locator('#guardian-sack-panel li').count()==3
         await page.get_by_role('button',name='Close satchel').click()
