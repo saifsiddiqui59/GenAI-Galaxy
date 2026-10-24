@@ -71,6 +71,13 @@ jobs:
                 --ref main -f confirm=READONLY
               echo 'Owner requested unauthenticated read-only API acceptance.'
               ;;
+            "PREVIEW_AI_$EVENT_SHA")
+              # Only an isolated nested prefix on the existing owner-approved
+              # account. Downstream manual workflow retains protected dev OIDC.
+              gh workflow run galaxy-ai-preview-p53.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=PREVIEW
+              echo 'Owner requested isolated AI frontend preview publication.'
+              ;;
             *)
               echo '::error::Unsupported exact owner command; no workflow dispatched'
               exit 1
