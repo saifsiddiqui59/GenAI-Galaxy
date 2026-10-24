@@ -12,7 +12,9 @@ export function pickupAt(ms,order){
  return {t,stage,attached:t>=CONTACT&&t<RELEASE,stored:t>=1};
 }
 export function entranceAt(ms,compact=false){
- const end=compact?-.48:-2.05,start=end-(compact?1.35:2.05);
+ // Keep the hat inside the narrow viewport by the mid-entrance frame.
+ // The full desktop walk-in is intentionally unchanged.
+ const end=compact?-.48:-2.05,start=end-(compact?.85:2.05);
  const travel=smoother(ms/1800);
  return {x:start+(end-start)*travel,yaw:Math.PI/2*(1-smoother((ms-1350)/850)),
    walkWeight:1-smooth((ms-1550)/650)};
