@@ -26,13 +26,13 @@
 @media(max-width:1000px) and (min-width:701px){.guardian-next{right:4%;width:260px}.guardian-journey-top{left:5%;max-width:350px}.guardian-live-status{left:29%}}
 @media(max-width:700px){
  .guardian-journey-top{top:112px;left:22px;max-width:88%}.guardian-eyebrow{font-size:8px;margin:0}
- .guardian-journey h1{font-size:35px;line-height:1.04;margin:12px 0}.guardian-subtitle{font-size:10px;line-height:1.5;margin:0;max-width:300px}
+ .guardian-journey h1{font-size:35px;line-height:1.04;margin:12px 0}.guardian-subtitle{font-size:11px;line-height:1.55;margin:0;max-width:300px}
  .guardian-mission{right:22px;top:19px}.guardian-sack{font-size:9px!important;padding:8px 10px;min-height:32px}.guardian-sack>span{margin-right:3px}
  .guardian-sack-panel{top:43px;max-height:55dvh;width:300px}
  .guardian-next{bottom:106px;left:22px;right:22px;width:auto;padding-top:16px;gap:9px}
- .guardian-next strong{font-size:26px}.guardian-next p{display:none}.guardian-label{font-size:8px}
+ .guardian-next strong{font-size:26px}.guardian-next p{display:none}.guardian-label{font-size:10px}
  .guardian-accept{padding:12px 15px;min-height:44px;font-size:11px!important}
- .guardian-skip,.guardian-replay{top:auto;bottom:77px;right:22px;padding:4px 8px;min-height:24px;font-size:8px!important}
+ .guardian-skip,.guardian-replay{display:none!important}
  .guardian-live-status{width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 }
 @media(max-width:700px) and (max-height:780px){.guardian-journey h1{font-size:31px}.guardian-subtitle{max-width:270px}}

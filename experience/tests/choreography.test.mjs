@@ -36,3 +36,11 @@ test('skip and reduced motion do not fake progress or replay pickups',()=>{
  assert.deepEqual(phaseAt(99999,17),{phase:'offering',visible:17,activeIndex:-1});
  assert.equal(phaseAt(COLLECT_START_MS+PER_WORLD_MS*17-1,17).visible,16);
 });
+
+test('Genie stays readable in compact mid-entrance without sacrificing desktop travel',()=>{
+ const phone=entranceAt(950,true),wide=entranceAt(950,false);
+ assert(phone.x>-.98,'mobile entrance should not crop the hat excessively');
+ assert.equal(entranceAt(2200,true).x,-.48);
+ assert.equal(entranceAt(2200,false).x,-2.05);
+ assert(wide.x<-2.8,'retain long cinematic desktop walk');
+});

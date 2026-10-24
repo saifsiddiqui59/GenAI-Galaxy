@@ -3,15 +3,11 @@ import {useFrame,useThree} from '@react-three/fiber';
 import {Html} from '@react-three/drei';
 import * as THREE from 'three';
 import {planetSurfaceTexture} from './PlanetSurface.js';
+import {atlasLayout} from './worldAnchors.js';
 import curriculum from '../../../data/curriculum.json';
 export const PLANET_COUNT=17;
 export const COLORS=['#74cce5','#b7a0e9','#e4b57c','#a8dfed','#7dceb3','#dfb77e','#c78d73','#91b4eb','#a7ca9c','#d3b1f0','#78b8dc','#deb28d','#9ad0c1','#b9a3e5','#e2bb8e','#83b8d6','#c894bf'];
-export function layoutWorlds(count=PLANET_COUNT){
- return Array.from({length:count},(_,index)=>{
-  const a=index*2.399963,radius=.7+Math.sqrt(index)*.69;
-  return {index,x:3.5+Math.cos(a)*radius*1.43,y:.35+Math.sin(a)*radius*.87,z:-2.6-(index%3)*.40,scale:.27+(index%4)*.065};
- });
-}
+export function layoutWorlds(count=PLANET_COUNT){return atlasLayout(count)}
 export function starData(count=920){
  const positions=new Float32Array(count*3);let seed=314159265;
  const rand=()=>((seed=(Math.imul(seed,1664525)+1013904223)>>>0)/4294967296);
@@ -55,15 +51,22 @@ function Planet({world,mastered,recommended,selected,onSelect,reducedMotion,lowP
  const surface=useMemo(()=>planetSurfaceTexture(world.index,color,lowPower),[world.index,color,lowPower]);
  useEffect(()=>()=>surface.dispose(),[surface]);
  useFrame(()=>{if(group.current&&!reducedMotion)group.current.rotation.y=clockRef.current.ms*.000045+world.index});
- return <group position={[world.x,world.y,world.z]}>
+ return <group position={[world.x,world.y,world.z]}
+  onClick={e=>{e.stopPropagation();onSelect?.(world.index)}}
+  onPointerOver={()=>{setHover(true);document.body.style.cursor='pointer'}}
+  onPointerOut={()=>{setHover(false);document.body.style.cursor=''}}>
   <group ref={group}>
-   <mesh onClick={e=>{e.stopPropagation();onSelect?.(world.index)}}
-    onPointerOver={()=>{setHover(true);document.body.style.cursor='pointer'}} onPointerOut={()=>{setHover(false);document.body.style.cursor=''}}>
+   <mesh>
     <sphereGeometry args={[world.scale,lowPower?28:40,lowPower?20:28]}/>
     <meshStandardMaterial map={surface} bumpMap={surface} bumpScale={.012} roughness={world.index%3===0?.54:.82} metalness={.02} emissive={color} emissiveIntensity={.025}/>
    </mesh>
   </group>
-  <mesh scale={1.085}><sphereGeometry args={[world.scale,24,16]}/><meshBasicMaterial color={color} transparent opacity={hover?.23:.12} depthWrite={false} side={THREE.BackSide}/></mesh>
+  {/* Invisible touch/pen target is larger than the rendered planet; navigator remains keyboard accessible. */}
+  <mesh>
+   <sphereGeometry args={[Math.max(world.scale*1.35,lowPower?.44:.38),16,12]}/>
+   <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false}/>
+  </mesh>
+  <mesh scale={1.085}><sphereGeometry args={[world.scale,24,16]}/><meshBasicMaterial color={color} transparent opacity={hover||selected?.25:.12} depthWrite={false} side={THREE.BackSide}/></mesh>
   {(mastered||recommended||world.index%6===5)&&<mesh rotation={[1.15,.16,.35]}>
    <ringGeometry args={[world.scale*1.32,world.scale*(recommended?1.41:1.72),64]}/>
    <meshBasicMaterial color={mastered?'#dfbc75':color} side={THREE.DoubleSide} transparent opacity={mastered?.8:.4} depthWrite={false}/>

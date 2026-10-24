@@ -2,13 +2,14 @@ import React,{useEffect,useMemo,useState} from 'react';
 import {phaseAt} from './story.js';
 import './journey.css';
 const MAX_COLLECTION_DISPLAY=17;
-export default function GuardianJourney({completed=[],nextIndex=0,nextName='',onAccept,onSelectCompleted,onPhase,onSequence,clockRef,ready=true,reducedMotion=false,openSackSignal=0,onReplay}){
+export default function GuardianJourney({completed=[],nextIndex=0,nextName='',onAccept,onSelectCompleted,onPhase,onSequence,clockRef,ready=true,reducedMotion=false,openSackSignal=0,onReplay,replaySignal=0}){
  const [elapsed,setElapsed]=useState(0);
  const [skipped,setSkipped]=useState(false);
  const [sackOpen,setSackOpen]=useState(false);
  const count=Math.min(MAX_COLLECTION_DISPLAY,completed.length);
  const view=useMemo(()=>phaseAt(skipped?99999:elapsed,count,reducedMotion),[skipped,elapsed,count,reducedMotion]);
  useEffect(()=>{setElapsed(0);setSkipped(false)},[nextIndex,count,reducedMotion]);
+ useEffect(()=>{setElapsed(0);setSkipped(false)},[replaySignal]);
  useEffect(()=>{
   if(reducedMotion||skipped)return undefined;
   const handle=setInterval(()=>setElapsed(clockRef.current.ms),80);
