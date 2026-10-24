@@ -45,3 +45,12 @@ Release command `PUBLISH_V6_REVIEWED_6614f79` is bound to owner 80577424, PR #13
 ## V6 hosted interface verification
 
 #40022442803 verified the actual V6 URL and bounded nested lesson handoff to `lesson/index.html?galaxyWorld=1`, all 17 navigation entries and visibly labeled demo progress. The presentation-only seek/clock never writes mastery. Real authenticated owner/progress contracts were preserved; signed-in V6 runtime acceptance was not performed.
+
+
+## P47–P49 AI endpoint additions (source, NOT hosted release)
+
+`POST /api/practice/evaluate` retains its existing authenticated request and response fields; additional model-assessed values include `score_breakdown` (weighted dimensions), `correct_points`, `incorrect_claims`, `why_score`, `score_provenance`, and optional measured `token_usage`. This is an LLM assessment, not validated human judgement. Malformed/inconsistent model output fails closed.
+
+`POST /api/practice/tutor` accepts authenticated JWT plus `{topic_key,mode,message,history?}`, mode in `reference|quiz|explain|clarify|followup`. `reference` and `quiz` are server-owned free answers; the other three reserve the same atomic per-user/global model quota and make at most one model call. Response: `{tutor_status,mode,reply,next_question,model_called,reference_only,token_usage?,estimated_model_cost?}`. Auth and topic allowlisting apply even to free modes.
+
+For the evaluator and tutor, `token_usage` is provider-reported input/output/total (+ optional cached) token counts, not invoice evidence. `estimated_model_cost` is omitted unless optional recently verified INR/1M rate metadata is provided in private backend configuration; its numeric-string cost is explicitly **not billed Azure Cost Management actuals**. No new frontend secrets, paid automatic CI, or public website release.
