@@ -63,7 +63,7 @@ function Planet({world,mastered,recommended,selected,onSelect,reducedMotion,lowP
   </group>
   {/* Invisible touch/pen target is larger than the rendered planet; navigator remains keyboard accessible. */}
   <mesh>
-   <sphereGeometry args={[Math.max(world.scale*1.35,lowPower?.44:.38),16,12]}/>
+   <sphereGeometry args={[Math.max(world.scale*1.28,lowPower?.42:.36),16,12]}/>
    <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false}/>
   </mesh>
   <mesh scale={1.085}><sphereGeometry args={[world.scale,24,16]}/><meshBasicMaterial color={color} transparent opacity={hover||selected?.25:.12} depthWrite={false} side={THREE.BackSide}/></mesh>
