@@ -21,13 +21,15 @@ class OwnerCommandGuard(unittest.TestCase):
 
     def test_dispatch_only_preexisting_manual_approved_workflows(self):
         text=BRIDGE.read_text()
-        self.assertEqual(text.count("gh workflow run "),3)
+        self.assertEqual(text.count("gh workflow run "),4)
         self.assertIn("galaxy-p3-flex-deploy.yml",text)
         self.assertIn("galaxy-ephemeral-rls.yml",text)
         self.assertIn("galaxy-ai-readonly-release-smoke.yml",text)
+        self.assertIn("galaxy-ai-preview-p53.yml",text)
         self.assertIn("--ref main -f confirm=DEPLOY",text)
         self.assertIn("--ref main -f confirm=TEST",text)
         self.assertIn("--ref main -f confirm=READONLY",text)
+        self.assertIn("--ref main -f confirm=PREVIEW",text)
         self.assertNotIn("galaxy-ephemeral-live-ai.yml",text)
         self.assertNotIn("galaxy-p3-model-provision.yml",text)
         self.assertNotIn("galaxy-p3-flex-provision.yml",text)

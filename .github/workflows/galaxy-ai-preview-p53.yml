@@ -1,0 +1,109 @@
+name: Galaxy P53 isolated AI preview (manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type PREVIEW for existing-storage-only isolated AI web preview"
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-ai-p53-preview
+  cancel-in-progress: false
+jobs:
+  isolated-static-preview:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'PREVIEW'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    env:
+      RG: GenAI_Galaxy
+      STORAGE: gengalaxy1429841605
+      BACKEND_PIN: 0be3c0d8f623f4141d26fee6952274607becf30e
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Check pinned deployed backend, current main CI and trusted frontend diff
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUB: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' &&
+             "$SUB" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || exit 1
+          [[ "$(git rev-parse HEAD)" == "$GITHUB_SHA" ]] || exit 1
+          ci="$(gh run list -R "$GITHUB_REPOSITORY" --workflow galaxy-ci.yml --branch main --event push --limit 30 --json headSha,conclusion --jq "[.[] | select(.headSha == \"$GITHUB_SHA\" and .conclusion == \"success\")] | length")"
+          [[ "$ci" =~ ^[0-9]+$ && "$ci" -gt 0 ]] || exit 1
+          backend="$(gh run list -R "$GITHUB_REPOSITORY" --workflow galaxy-p3-flex-deploy.yml --branch main --event workflow_dispatch --limit 50 --json headSha,conclusion --jq "[.[] | select(.headSha == \"$BACKEND_PIN\" and .conclusion == \"success\")] | length")"
+          [[ "$backend" =~ ^[0-9]+$ && "$backend" -gt 0 ]] || exit 1
+          git cat-file -e "$BACKEND_PIN^{commit}"
+          while IFS= read -r p; do
+            [[ -n "$p" ]] || continue
+            case "$p" in
+              .github/workflows/galaxy-ai-preview-p53.yml|\
+              .github/workflows/galaxy-ai-owner-command.yml|\
+              tests/test_p53_preview_release.py|\
+              tests/test_p52_owner_command_guards.py|\
+              docs/ai/P53_ISOLATED_AI_PREVIEW.md) ;;
+              *) echo "::error::Unreviewed source since pinned backend: $p"; exit 1 ;;
+            esac
+          done < <(git diff --name-only "$BACKEND_PIN" "$GITHUB_SHA")
+          python -m unittest discover -s tests -p 'test_p53_preview_release.py' -v
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Upload 15 allowlisted files to isolated prefix and byte-verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          prefix='previews/galaxy-ai-p53'
+          id="$(az storage account show -g "$RG" -n "$STORAGE" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Storage/storageAccounts/gengalaxy1429841605 ]] || exit 1
+          enabled="$(az storage account blob-service-properties show -g "$RG" --account-name "$STORAGE" --query staticWebsite.enabled -o tsv)"
+          [[ "$enabled" == true || "$enabled" == True ]] || exit 1
+          az storage container show --account-name "$STORAGE" --auth-mode login --name '$web' -o none
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          mkdir -p "$tmp/stage" "$tmp/verify"
+          az storage blob download --account-name "$STORAGE" --auth-mode login --container-name '$web' --name index.html --file "$tmp/root-before" --only-show-errors -o none
+          hash="$(sha256sum "$tmp/root-before" | cut -d' ' -f1)"
+          files='index.html styles.css app.js runtime-config.js data/curriculum.json data/lessons.json speech/azure-speech-adapter.js features/conversation-coach.js features/evaluation-evidence.js features/milestones.js features/offline-misconceptions.js features/private-study-plan.js features/saas-operations.js features/session-reports.js features/speaking-metrics.js'
+          for file in $files; do
+            mkdir -p "$(dirname "$tmp/stage/$file")" "$(dirname "$tmp/verify/$file")"
+            [[ -f "$file" ]] || exit 1
+            cp "$file" "$tmp/stage/$file"
+          done
+          python3 - "$tmp/stage/runtime-config.js" <<'PY'
+          from pathlib import Path
+          import sys
+          p=Path(sys.argv[1]); raw=p.read_text()
+          expected="window.GALAXY_EVALUATOR_URL='';"
+          assert raw.count(expected)==1
+          updated=raw.replace(expected,"window.GALAXY_EVALUATOR_URL='https://gengalaxy-p3-1429841605.azurewebsites.net/api/practice/evaluate';")
+          assert "service_role" not in updated.lower() and "AZURE_OPENAI_API_KEY" not in updated
+          p.write_text(updated)
+          PY
+          for file in $files; do
+            az storage blob upload --account-name "$STORAGE" --auth-mode login --container-name '$web' --name "$prefix/$file" --file "$tmp/stage/$file" --overwrite true --only-show-errors -o none
+          done
+          for file in $files; do
+            az storage blob download --account-name "$STORAGE" --auth-mode login --container-name '$web' --name "$prefix/$file" --file "$tmp/verify/$file" --only-show-errors -o none
+            cmp -s "$tmp/stage/$file" "$tmp/verify/$file" || { echo "::error::Preview differs: $file"; exit 1; }
+          done
+          az storage blob download --account-name "$STORAGE" --auth-mode login --container-name '$web' --name index.html --file "$tmp/root-after" --only-show-errors -o none
+          [[ "$hash" == "$(sha256sum "$tmp/root-after" | cut -d' ' -f1)" ]] || { echo '::error::Production homepage changed'; exit 1; }
+          echo 'Verified isolated AI preview; root homepage unchanged.'
+          echo 'https://gengalaxy1429841605.z29.web.core.windows.net/previews/galaxy-ai-p53/index.html'
+      - name: Log out of Azure
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
