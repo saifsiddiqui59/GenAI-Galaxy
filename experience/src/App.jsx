@@ -115,7 +115,7 @@ export default function App(){
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced}
          epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
          collectedCount={sequence.visible} clockRef={choreographyRef}
-         onOpenSack={()=>setSackOpenFrom3D(x=>x+1)} rigPoseRef={rigPoseRef}/>
+         onOpenSack={()=>setSackOpenFrom3D(x=>x+1)} onSelectWorld={select} rigPoseRef={rigPoseRef}/>
      </Canvas>
      {!modelReady&&<div className="guardian-loading" role="status">Preparing your galaxy<span>Loading the companion and learning worlds</span></div>}
    </div>}
