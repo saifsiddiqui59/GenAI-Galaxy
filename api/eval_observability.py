@@ -40,6 +40,11 @@ def usage_counters(result):
     )
     counters = {dest: bounded_tokens(usage.get(src)) for dest, src in pairs
                 if bounded_tokens(usage.get(src)) is not None}
+    # Provider usage must be internally consistent before displaying it as
+    # measured or using it in a configured-rate estimate. Unknown is not zero.
+    if all(key in counters for key in ("input_tokens", "output_tokens", "total_tokens")):
+        if counters["input_tokens"] + counters["output_tokens"] != counters["total_tokens"]:
+            return {}
     details = usage.get("prompt_tokens_details")
     if isinstance(details,dict):
         cached=bounded_tokens(details.get("cached_tokens"))
