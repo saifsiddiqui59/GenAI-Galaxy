@@ -1,0 +1,80 @@
+name: Galaxy Azure Cost Management (manual, read-only)
+
+# This repository is PUBLIC. Default CHECK never outputs monetary amounts.
+# REPORT_PUBLIC explicitly publishes the totals in GitHub Actions logs/summary.
+# No cron, PR or push triggers. Azure identity is limited to Galaxy resources.
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'CHECK verifies permission privately; REPORT_PUBLIC deliberately publishes costs to public Actions logs'
+        required: true
+        default: CHECK
+        type: choice
+        options:
+          - CHECK
+          - REPORT_PUBLIC
+
+permissions:
+  contents: read
+
+jobs:
+  galaxy-cost-read:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: dev
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Galaxy identity and selected reporting scope
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          REPORT_MODE: ${{ inputs.mode }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || { echo 'Wrong Galaxy identity'; exit 1; }
+          [[ "$SUBSCRIPTION" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || { echo 'Wrong Galaxy subscription'; exit 1; }
+          [[ "$REPORT_MODE" == 'CHECK' || "$REPORT_MODE" == 'REPORT_PUBLIC' ]] || exit 1
+          python -m py_compile scripts/report_galaxy_azure_cost.py
+      - name: Sign in with existing passwordless Azure OIDC
+        uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Query Galaxy resource group actual cost (read-only)
+        shell: bash
+        env:
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          REPORT_MODE: ${{ inputs.mode }}
+        run: |
+          set -euo pipefail
+          [[ "$(az account show --query state -o tsv)" == 'Enabled' ]] || exit 1
+          az group show --name GenAI_Galaxy --query name -o tsv >/dev/null
+          COST_URI="https://management.azure.com/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourceGroups/GenAI_Galaxy/providers/Microsoft.CostManagement/query?api-version=2025-03-01"
+          body_file="$(mktemp)"
+          response_file="$(mktemp)"
+          trap 'rm -f "$body_file" "$response_file"' EXIT
+          cat > "$body_file" <<'JSON'
+          {
+            "type": "ActualCost",
+            "timeframe": "MonthToDate",
+            "dataset": {
+              "granularity": "Daily",
+              "aggregation": {"totalCost": {"name": "Cost", "function": "Sum"}},
+              "grouping": [{"type": "Dimension", "name": "ServiceName"}]
+            }
+          }
+          JSON
+          # Never print the raw response: this is a public repository.
+          az rest --method post --url "$COST_URI" --headers "Content-Type=application/json" --body @"$body_file" --output json > "$response_file"
+          python scripts/report_galaxy_azure_cost.py --input "$response_file" --mode "$REPORT_MODE" --summary "$GITHUB_STEP_SUMMARY"
+      - name: Remove Azure runner login
+        if: always()
+        shell: bash
+        run: az logout >/dev/null 2>&1 || true
