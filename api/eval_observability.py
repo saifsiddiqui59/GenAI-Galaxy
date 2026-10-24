@@ -38,12 +38,18 @@ def usage_counters(result):
         ("output_tokens", "completion_tokens"),
         ("total_tokens", "total_tokens"),
     )
-    return {dest: bounded_tokens(usage.get(src)) for dest, src in pairs
-            if bounded_tokens(usage.get(src)) is not None}
+    counters = {dest: bounded_tokens(usage.get(src)) for dest, src in pairs
+                if bounded_tokens(usage.get(src)) is not None}
+    details = usage.get("prompt_tokens_details")
+    if isinstance(details,dict):
+        cached=bounded_tokens(details.get("cached_tokens"))
+        if cached is not None and cached <= counters.get("input_tokens",-1):
+            counters["cached_input_tokens"]=cached
+    return counters
 
 
 def record_evaluation(*, trace_id, status, stage, started_at, quota_result, usage=None,
-                      accuracy=None, clarity=None):
+                      accuracy=None, clarity=None, cost_estimate=None):
     """One bounded log event per accepted HTTP request, including failures.
 
     Does not persist traces or send to Azure Monitor; platform log retention and
@@ -61,11 +67,24 @@ def record_evaluation(*, trace_id, status, stage, started_at, quota_result, usag
         "quota": quota_result if quota_result in ("none", "reserved", "denied", "unavailable") else "unavailable",
     }
     for name, value in (usage or {}).items():
-        if name in ("input_tokens", "output_tokens", "total_tokens"):
+        if name in ("input_tokens", "output_tokens", "total_tokens", "cached_input_tokens"):
             token_count = bounded_tokens(value)
             if token_count is not None:
                 event[name] = token_count
-    # These are MODEL-REPORTED scores, not independent RAGAS/Foundry metrics.
+    # Published INR rates must be explicitly pinned to a verified rate source.
+    # The model request estimate is not a billed Azure Cost Management figure.
+    if isinstance(cost_estimate,dict):
+        amount=cost_estimate.get("model_cost_estimate_inr")
+        if (cost_estimate.get("currency")=="INR"
+            and cost_estimate.get("kind")=="configured_token_rate_estimate_not_azure_bill"
+            and isinstance(amount,str) and len(amount)<=24
+            and amount.replace(".","",1).isdigit()):
+            event["estimated_model_cost_inr"]=amount
+            # Intentionally omit per-user identifiers, raw requests and URLs.
+            event["cost_basis"]="configured_token_rates_not_billed"
+    # Backwards compatible field names: scores are MODEL-ASSESSMENT derived,
+    # even when the final weighted total is recomputed by the server.
+    # They are NOT independently verified RAGAS/Foundry metrics.
     for name, value in (("model_reported_accuracy", accuracy), ("model_reported_clarity", clarity)):
         if type(value) in (int, float) and math.isfinite(value) and 0 <= value <= 100:
             event[name] = round(value)
