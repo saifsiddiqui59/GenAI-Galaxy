@@ -12,7 +12,7 @@ const ids={'spoken-answer':field,'evaluate-btn':button};
 const cx=vm.createContext({console,window:{GALAXY_EVALUATOR_URL:'https://fake.example/api/eval'},
  document:{getElementById:id=>ids[id]||null},
  localStorage:{getItem:()=>null,setItem(){}},matchMedia:()=>({matches:false}),
- setTimeout,clearTimeout,Date,Math,JSON,performance:{now:()=>0},
+ setTimeout,clearTimeout,AbortController:globalThis.AbortController,Date,Math,JSON,performance:{now:()=>0},
  URL:globalThis.URL,location:{},navigator:{},addEventListener:()=>{},requestAnimationFrame:()=>0});
 vm.runInContext(src,cx,{filename:'app.js'});
 let saved=0,attempts=0,renders=0,notices=0,calls=0;

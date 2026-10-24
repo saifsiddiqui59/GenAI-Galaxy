@@ -17,7 +17,7 @@ const button={disabled:false,textContent:''};
 const ctx=vm.createContext({
  console,window:{},matchMedia:()=>({matches:false}),
  document:{getElementById:id=>({'spoken-answer':textarea,'evaluate-btn':button}[id]||null)},
- localStorage:{},setTimeout,clearTimeout,Date,Math,JSON,URL:globalThis.URL,
+ localStorage:{},setTimeout,clearTimeout,AbortController:globalThis.AbortController,Date,Math,JSON,URL:globalThis.URL,
  performance:{now:()=>0},requestAnimationFrame:()=>0,location:{},navigator:{},addEventListener:()=>{}
 });
 vm.runInContext(source,ctx,{filename:'app.js'});

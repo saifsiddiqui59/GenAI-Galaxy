@@ -196,6 +196,20 @@ const overview=t=>({simple:t.summary,technical:'A detailed verified technical tr
 function lessonMarkup(){const t=state.current||pickNext();state.current=t;const l=state.lessons[t.title]||overview(t),complete=!!state.lessons[t.title];const p=getP(t);const sections=[['Simple explanation',l.simple],['Technical explanation',l.technical],['Real-world example',l.example],['From your projects / resume',l.project],['30–60 second interview answer',l.answer],['Architecture / workflow',l.workflow],['Common mistakes',l.mistakes],['Follow-up questions',l.followups]];return `<div class="breadcrumb-text">${escapeHtml(t.phase)} › ${escapeHtml(t.branch)} › ${escapeHtml(t.group)}</div><div class="lesson-layout"><div class="lesson-column">${intro('DEEP DIVE · 8-PART LESSON',escapeHtml(t.title),t.question||'Master this topic and then speak your interview answer.')}<span class="lesson-badge ${complete?'expanded':''}">${complete?'Expanded · human editorial verification pending':'Overview only · detailed content incomplete'}</span>${sections.map(([heading,value],i)=>`<section class="content-block ${i===4?'answer':''}"><h3><span class="section-number">${String(i+1).padStart(2,'0')}</span>${escapeHtml(heading)}</h3>${Array.isArray(value)?value.length?`<${i===5?'ol':'ul'}>${value.map(a=>`<li>${escapeHtml(a)}</li>`).join('')}</${i===5?'ol':'ul'}>`:'<p>Pending editorial authoring and verification.</p>':`<p>${escapeHtml(value)}</p>`}</section>`).join('')}<div class="practice-actions"><button class="btn accent" id="practice-this">Practice this answer →</button><button class="btn ghost" id="lesson-teach">Teach me</button><button class="btn ghost" id="lesson-next">Next topic →</button><button class="btn ghost" data-view="galaxy">Back to galaxy</button></div></div><aside><div class="panel"><span class="eyebrow">MISSION PROGRESS</span><h2>${p.status===2?'Mastered':p.status===1?'In progress':'Not started'}</h2><div class="side-metric">Confidence <b>${p.confidence||0}/5</b></div><p class="footnote">${p.next_review_at?'Next review '+new Date(p.next_review_at).toLocaleDateString():'Review is scheduled after practice.'}</p><button class="btn accent" id="practice-this-side">Answer interview question</button></div><div class="panel" style="margin-top:14px"><span class="eyebrow">YOUR NOTES</span><textarea class="side-note" id="topic-note" maxlength="5000" placeholder="Write what you need to remember…">${escapeHtml(p.note||'')}</textarea><button id="save-note" class="btn">Save note</button></div></aside></div>`}
 function startPractice(){if(!state.current)state.current=pickNext();state.answerDraft='';state.feedback=null;state.tutorResponse=null;state.tutorPending=null;state.guideOpen=false;state.level=1;state.attemptQuestion=state.current.question||`Explain ${state.current.title} with an example.`;setView('practice')}
 function questionFor(t,level){const l=state.lessons[t.title];if(level===2&&l?.followups?.length)return l.followups[0];if(level===3&&l?.followups?.length>1)return l.followups[1];return t.question||`Explain ${t.title} with an example.`}
+// A timeout does not authorize retry: Azure may have reserved a quota unit.
+const AI_RESPONSE_TIMEOUT_MS=30000;
+async function aiJsonOnce(url,options,timeoutMs=AI_RESPONSE_TIMEOUT_MS){
+ const controller=new AbortController();
+ const clock=setTimeout(()=>controller.abort(),timeoutMs);
+ try{
+  const response=await fetch(url,{...options,signal:controller.signal});
+  if(!response.ok)throw Error('HTTP_'+response.status);
+  return await response.json();
+ }catch(err){
+  if(err?.name==='AbortError')throw Error('AI_TIMEOUT');
+  throw err;
+ }finally{clearTimeout(clock)}
+}
 // The deployed runtime-config.js contains only an approved public API URL.
 // Do not send an AI request without an authenticated session and a deliberate click.
 function modelAvailability(){
@@ -228,15 +242,15 @@ async function askAiTutor(mode='explain'){
   if(!session?.access_token)throw Error('NO_SESSION');
   const message=(state.tutorDraft||'').trim()||('Explain '+topic.title+' clearly for a technical interview with one practical example.');
   if(mode!=='reference'&&(message.length<3||message.length>1200))throw Error('INVALID_INPUT');
-  const response=await fetch(url,{
+  const json=await aiJsonOnce(url,{
    method:'POST',
    headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},
    body:JSON.stringify({topic_key:key(topic),mode,message:mode==='reference'?'':message,
     history:(state.session?.history||[]).slice(-4)})
   });
   if(!active())return;
-  if(!response.ok)throw Error('HTTP_'+response.status);
-  const json=await response.json();
+  
+  
   if(!active())return;
   if(!['reference_only','model_tutored'].includes(json.tutor_status)||
      json.mode!==mode||
@@ -252,6 +266,7 @@ async function askAiTutor(mode='explain'){
   const explanation=/^HTTP_\d{3}$/.test(code)?modelFailureMessage(Number(code.slice(5))):
    code==='INVALID_INPUT'?'Enter a tutor question between 3 and 1200 characters.':
    code==='NO_SESSION'?'Sign in again to ask the AI tutor.':
+    code==='AI_TIMEOUT'?'Tutor timed out after 30 seconds. The request may still count toward your daily quota. No AI reply was received; use the local lesson and do not retry immediately.':
    'Tutor request was not completed. The local lesson is still available.';
   state.tutorResponse={error:explanation};
  }finally{
@@ -550,15 +565,15 @@ async function submitAnswer(e,localOnly=false){
    const {data:{session}}=await state.client.auth.getSession();
    if(!active())return; // logout, account switch or topic change during authentication
    if(!session?.access_token)throw Error('NO_SESSION');
-   const req=await fetch(window.GALAXY_EVALUATOR_URL,{
+   const result=await aiJsonOnce(window.GALAXY_EVALUATOR_URL,{
     method:'POST',
     headers:{Authorization:'Bearer '+session.access_token,'Content-Type':'application/json'},
     body:JSON.stringify({topic_key:key(t),question:state.attemptQuestion,response:answer,rubric_version:'v4-m2',
      history:(state.session?.history||[]).slice(-4)})
    });
    if(!active())return; // Never display or persist a response for a different identity.
-   if(!req.ok)throw Error('HTTP_'+req.status);
-   const result=await req.json();
+   
+   
    if(!active())return;
    if(result.review_status!=='model_reviewed'||!Number.isFinite(result.accuracy)||!Number.isFinite(result.clarity)||!Array.isArray(result.missing_concepts)||typeof result.has_factual_errors!=='boolean')throw Error('INVALID_RESPONSE');
    const accuracy=Math.max(0,Math.min(100,result.accuracy)),clarity=Math.max(0,Math.min(100,result.clarity));
@@ -579,6 +594,7 @@ async function submitAnswer(e,localOnly=false){
    const error=String(err?.message||'');
    if(error==='NO_SESSION')score.localReason='Session expired. Sign in again; no authenticated AI review was returned.';
    else if(error==='INVALID_RESPONSE')score.localReason='AI returned an invalid response. Only the local keyword result is shown.';
+    else if(error==='AI_TIMEOUT')score.localReason='AI review timed out after 30 seconds. Azure may already have reserved a quota unit. Do not retry immediately; only the provisional local concept check is shown, not a factual grade.';
    else if(/^HTTP_\d{3}$/.test(error))score.localReason=modelFailureMessage(Number(error.slice(5)));
    else if(err instanceof TypeError)score.localReason='AI endpoint could not be reached by the browser. Verify the hosted API URL, CORS preflight for this site and HTTPS/network access. No model review was received.';
    else score.localReason='AI evaluation did not complete ('+error.slice(0,100)+'). Only the local concept check is shown; no factual grade was produced.';
