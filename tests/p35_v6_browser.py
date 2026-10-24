@@ -26,6 +26,14 @@ async def inspect(pw,url,name,width,height,reduced=False):
         await page.wait_for_function('() => window.__galaxySkeletonDiagnostics?.bones >= 40',timeout=45000)
         await page.wait_for_function('() => window.__galaxyV6 != null',timeout=10000)
         assert '3 SAMPLE MASTERED WORLDS' in await page.locator('.galaxy-mode-tag').inner_text()
+        await page.wait_for_timeout(400)
+        labels=await page.locator('[data-world-index]').evaluate_all('(nodes)=>nodes.map(n=>({index:n.dataset.worldIndex,name:n.title,text:n.textContent}))')
+        print(name,'Visible atlas label nodes',len(labels),'worlds',[x['index'] for x in labels],flush=True)
+        assert len(labels)>=12 and all(x['name'] and x['text'].strip() for x in labels),labels
+        if width>=700:
+            assert await page.locator('[data-world-label]').count()>=1,'Desktop must name the recommended world'
+        else:
+            assert await page.locator('[data-world-label]').count()==0,'Compact Galaxy must not obscure worlds with an oversized title'
         if name=='desktop' and not reduced:
             await page.wait_for_function("() => window.__galaxySkeletonDiagnostics.currentPhase==='offering' && window.__galaxySkeletonDiagnostics.pickupLog.length===3",timeout=60000)
             print('Natural timeline: three original PickUp cycles completed without seeking')
@@ -44,6 +52,10 @@ async def inspect(pw,url,name,width,height,reduced=False):
             return diag
         if not reduced:
             await capture('entrance',950)
+            flight=await capture('flight',2200+2600*.12)
+            first=flight['miniatures']['0']
+            assert first['sourceWorldIndex']==0 and first['visible'],first
+            assert math.dist(first['position'],first['atlasOrigin'])>.2,'Pickup must physically depart from original orbit'
             pickup=await capture('pickup',2200+2600*.38)
             assert pickup['miniatures']['0']['attached']
             assert pickup['miniatures']['0']['contactError']<.001
@@ -94,7 +106,14 @@ async def inspect(pw,url,name,width,height,reduced=False):
             after=await page.evaluate('window.__galaxyV6.frames')
             assert after-before<=2,('Motion-off should leave GPU idle',before,after)
             await page.get_by_role('button',name='Motion: off',exact=True).click()
-        await page.locator('.guardian-accept').click()
+        if not reduced:
+            offered=await page.evaluate('window.__galaxySkeletonDiagnostics')
+            assert offered.get('offeredWorldIndex')==1 and offered.get('offeredHitPoint'),offered
+            hit=offered['offeredHitPoint']
+            assert 0<hit[0]<width and 0<hit[1]<height,(name,hit)
+            await page.mouse.click(hit[0],hit[1])
+        else:
+            await page.locator('.guardian-accept').click()
         await page.wait_for_url('**/lesson/index.html?galaxyWorld=1',timeout=20000)
         await page.wait_for_function('() => window.GenAIGalaxyTest != null',timeout=15000)
         assert await page.locator('body').inner_text() # Verify actual lesson document loads.

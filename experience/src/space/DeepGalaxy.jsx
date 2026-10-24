@@ -4,6 +4,7 @@ import {Html} from '@react-three/drei';
 import * as THREE from 'three';
 import {planetSurfaceTexture} from './PlanetSurface.js';
 import {atlasLayout} from './worldAnchors.js';
+import {orbitAt,planetHiddenFromAtlas} from './worldOrbit.js';
 import curriculum from '../../../data/curriculum.json';
 export const PLANET_COUNT=17;
 export const COLORS=['#74cce5','#b7a0e9','#e4b57c','#a8dfed','#7dceb3','#dfb77e','#c78d73','#91b4eb','#a7ca9c','#d3b1f0','#78b8dc','#deb28d','#9ad0c1','#b9a3e5','#e2bb8e','#83b8d6','#c894bf'];
@@ -45,13 +46,17 @@ function NebulaCloud({reducedMotion,clockRef}){
   <planeGeometry/><shaderMaterial ref={mat} vertexShader={vertex} fragmentShader={fragment} uniforms={uniforms} depthWrite={false}/>
  </mesh>;
 }
-function Planet({world,mastered,recommended,selected,onSelect,reducedMotion,lowPower,clockRef}){
- const group=useRef(),[hover,setHover]=useState(false);
+function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect,reducedMotion,lowPower,clockRef}){
+ const group=useRef(),orbit=useRef(),[hover,setHover]=useState(false);
  const color=COLORS[world.index];
  const surface=useMemo(()=>planetSurfaceTexture(world.index,color,lowPower),[world.index,color,lowPower]);
  useEffect(()=>()=>surface.dispose(),[surface]);
- useFrame(()=>{if(group.current&&!reducedMotion)group.current.rotation.y=clockRef.current.ms*.000045+world.index});
- return <group position={[world.x,world.y,world.z]}
+ useFrame(()=>{
+  const ms=clockRef.current.ms;
+  if(orbit.current){const p=orbitAt(world,ms);orbit.current.position.set(p.x,p.y,p.z)}
+  if(group.current){group.current.rotation.y=reducedMotion?world.index:ms*.000045+world.index;group.current.visible=!planetHiddenFromAtlas(ms,collectionOrder,reducedMotion)}
+ });
+ return <group ref={orbit} position={[world.x,world.y,world.z]}
   onClick={e=>{e.stopPropagation();onSelect?.(world.index)}}
   onPointerOver={()=>{setHover(true);document.body.style.cursor='pointer'}}
   onPointerOut={()=>{setHover(false);document.body.style.cursor=''}}>
@@ -71,8 +76,14 @@ function Planet({world,mastered,recommended,selected,onSelect,reducedMotion,lowP
    <ringGeometry args={[world.scale*1.32,world.scale*(recommended?1.41:1.72),64]}/>
    <meshBasicMaterial color={mastered?'#dfbc75':color} side={THREE.DoubleSide} transparent opacity={mastered?.8:.4} depthWrite={false}/>
   </mesh>}
-  {(hover||recommended)&&!lowPower&&<Html center position={[0,-world.scale-.18,0]} style={{pointerEvents:'none',whiteSpace:'nowrap'}}>
-   <div className="planet-caption"><span>{String(world.index+1).padStart(2,'0')}</span>{curriculum[world.index].title}</div>
+  {/* Every world keeps a numbered, accessible marker; expand long names only when useful. */}
+  <Html center position={[0,-world.scale-.085,0]} style={{pointerEvents:'none'}}>
+   <span className="planet-index-caption" data-world-index={world.index} title={curriculum[world.index].title} aria-label={curriculum[world.index].title}>{String(world.index+1).padStart(2,'0')}</span>
+  </Html>
+  {!lowPower&&(hover||recommended||selected)&&<Html center position={[0,-world.scale-.34,0]} style={{pointerEvents:'none'}}>
+   <div className={'planet-caption'+(recommended?' planet-caption-next':'')} data-world-label={world.index} title={curriculum[world.index].title}>
+    <strong>{curriculum[world.index].title}</strong>
+   </div>
   </Html>}
  </group>;
 }
@@ -100,7 +111,7 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
   <Starfield lowPower={lowPower}/>
   <Observatory compact={lowPower} short={short}/>
   <group position={lowPower?[-1.8,short?.75:1.15,-2]:[0,0,0]} scale={lowPower?[.58,.58,.7]:[1,1,1]}>
-   {layoutWorlds().map(world=><Planet key={world.index} world={world} mastered={set.has(world.index)}
+   {layoutWorlds().map(world=><Planet key={world.index} world={world} mastered={set.has(world.index)} collectionOrder={masteredWorlds.findIndex(w=>(typeof w==='number'?w:w.index)===world.index)}
     recommended={world.index===recommendedIndex} selected={world.index===selectedIndex} onSelect={onSelect}
     reducedMotion={reducedMotion} lowPower={lowPower} clockRef={clockRef}/>)}
   </group>
