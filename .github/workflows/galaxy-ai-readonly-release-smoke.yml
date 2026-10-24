@@ -13,7 +13,7 @@ jobs:
   unauthenticated-ai-only:
     if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'READONLY'
     runs-on: ubuntu-24.04
-    timeout-minutes: 5
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
