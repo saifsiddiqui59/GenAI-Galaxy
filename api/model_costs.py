@@ -7,6 +7,7 @@ The rates must come from a separately verified pricing contract.
 from __future__ import annotations
 
 from datetime import date
+from collections.abc import Mapping
 from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import re
 
@@ -37,7 +38,7 @@ def estimate_model_cost(usage: object, settings: object, *, today: date | None =
     required whenever cached input is reported. The result is explicitly an
     estimate for *model tokens*, not full Azure/Foundry invoice spend.
     """
-    if not isinstance(usage, dict) or not isinstance(settings, dict):
+    if not isinstance(usage, dict) or not isinstance(settings, Mapping):
         return None
     input_tokens = _bounded_tokens(usage.get("input_tokens"))
     output_tokens = _bounded_tokens(usage.get("output_tokens"))
