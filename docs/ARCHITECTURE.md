@@ -38,3 +38,10 @@ Draft #131 hosts the R3F scene on its own source branch; production source remai
 ## V6 deployed preview snapshot
 
 The isolated `/previews/galaxy-3d-v6/` release now runs frozen source `6614f79`, including its nested P34 lesson snapshot and four public learning modules. Production main and homepage continue independently. #40022442803 verified 18 hosted files and four real Chromium variants; the frame-ordered clip/IK/prop implementation remains in draft #131, outside production source.
+
+
+## P47–P49 cost-first AI route (source-only milestone)
+
+Existing static Galaxy → signed-in Supabase session → HTTPS Azure Function → JWT validation → server-owned `api/rubrics.json` → atomic Galaxy-only per-user/global quota → single `api/model_provider.py` Azure OpenAI call. Interview feedback uses `api/interview_grading.py` dimensions/validated evidence. LangGraph tutor uses deterministic `reference` / `quiz` (no model) or one quota-gated `explain|clarify|followup` call. No checkpointer is persisted; conversation history stays bounded and untrusted. All secrets are backend-only. A model-assessed grade is not proof of technical truth.
+
+Provider token usage is recorded as privacy-safe request counters. `api/model_costs.py` calculates an optional INR estimate only from explicitly configured, recently verified regional token rates, and never equates that with billed spending. Public UI may display input/output tokens and an estimate labeled *not Azure billed*. Actual Azure spending remains private in Azure-Cost-Hub, whose source/report workflows have not been verified successful. Production routing, model response quality and invoice reconciliation require distinct acceptance checks.
