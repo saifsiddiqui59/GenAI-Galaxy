@@ -26,9 +26,10 @@ async def inspect(pw,url,name,width,height,reduced=False):
         await page.wait_for_function('() => window.__galaxySkeletonDiagnostics?.bones >= 40',timeout=45000)
         await page.wait_for_function('() => window.__galaxyV6 != null',timeout=10000)
         assert '3 SAMPLE MASTERED WORLDS' in await page.locator('.galaxy-mode-tag').inner_text()
-        await page.wait_for_function("() => document.querySelectorAll('[data-world-label]').length===17")
-        label_names=await page.locator('[data-world-label]').all_inner_texts()
-        assert len(label_names)==17 and all(len(n.strip())>3 for n in label_names),label_names
+        await page.wait_for_function("() => document.querySelectorAll('[data-world-index]').length===17")
+        labels=await page.locator('[data-world-index]').evaluate_all('(nodes)=>nodes.map(n=>({index:n.dataset.worldIndex,name:n.title,text:n.textContent}))')
+        assert len(labels)==17 and all(x['name'] and x['text'].strip() for x in labels),labels
+        assert await page.locator('[data-world-label]').count()>=1,'Recommended world must have visible full title'
         if name=='desktop' and not reduced:
             await page.wait_for_function("() => window.__galaxySkeletonDiagnostics.currentPhase==='offering' && window.__galaxySkeletonDiagnostics.pickupLog.length===3",timeout=60000)
             print('Natural timeline: three original PickUp cycles completed without seeking')
