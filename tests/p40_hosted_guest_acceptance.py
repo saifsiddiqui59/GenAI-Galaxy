@@ -41,6 +41,10 @@ async def verify(viewport,reduced=False):
   assert await page.locator('#sidebar-mastered').inner_text()=='0','Free guard must not grant mastery'
   assert not blocked,'Guest unexpectedly tried to call a paid model endpoint'
   assert not errors,'JavaScript exceptions: '+str(errors)
+  shots=ROOT/'artifacts'/'p40'
+  shots.mkdir(parents=True,exist_ok=True)
+  filename='reduced' if reduced else ('mobile' if viewport['width']<600 else 'desktop')
+  await page.screenshot(path=str(shots/(filename+'.png')),full_page=True)
   print('P40 HOSTED PASS',viewport,'reduced_motion=',reduced,'verified_files=',len(PINNED_FILES))
   await browser.close()
 
