@@ -17,7 +17,8 @@ class GalaxyPlatformContract(unittest.TestCase):
   self.assertIn("PLATFORM_ADMIN_REQUIRED",SQL)
   self.assertNotIn("service_role",JS)
   self.assertIn("galaxy_platform_summary",JS)
-  self.assertIn("galaxy_platform_assign_plan",JS)
+  self.assertIn("galaxy_platform_manage_subscription",JS)
+  self.assertIn("galaxy_platform_assign_plan",SQL)
   self.assertIn("state.platformAuthorized",JS)
  def test_no_user_self_upgrades(self):
   self.assertIn("grant execute on function public.galaxy_platform_assign_plan",SQL)

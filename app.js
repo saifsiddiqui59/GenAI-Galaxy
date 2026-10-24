@@ -16,7 +16,7 @@ const PALETTES=[
  ['#c5d3f6','#667ec8','#31326f','#adc1f6'],['#fbc2bd','#bd7677','#623045','#d88d94'],['#c1f2c1','#659d86','#224b53','#8bd9c4'],
  ['#eec3fa','#a15cbd','#402863','#d48ef0'],['#b3f6ff','#648add','#21346c','#7fbfff']
 ];
-const state={subjects:[],topics:[],lessons:{},current:null,chapter:0,view:'galaxy',progress:{},attempts:[],documents:[],user:null,client:null,isGuest:true,query:'',attemptQuestion:'',level:1,answerDraft:'',feedback:null,guideOpen:false,studyMode:'practice',targetRole:'GenAI Engineer',session:null,sessionReport:null,jobFocus:'',coachResume:'',coachJob:'',coachPlan:null,coachInsights:null,planInfo:null,planCatalog:[],platformSummary:null,platformPending:[],platformAuthorized:false,platformError:'',approvalInfo:null,motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,voice:null,voiceEvents:[],voiceStartedAt:null,voiceElapsedMs:null,recording:false,voicePending:false,starFrame:0,stars:[],galaxyFrame:0,lastFrame:0};
+const state={subjects:[],topics:[],lessons:{},current:null,chapter:0,view:'galaxy',progress:{},attempts:[],documents:[],user:null,client:null,isGuest:true,query:'',attemptQuestion:'',level:1,answerDraft:'',feedback:null,guideOpen:false,studyMode:'practice',targetRole:'GenAI Engineer',session:null,sessionReport:null,jobFocus:'',coachResume:'',coachJob:'',coachPlan:null,coachInsights:null,planInfo:null,planLifecycle:null,planCatalog:[],platformAccounts:null,platformOffset:0,platformAudit:null,platformDataError:'',platformSummary:null,platformPending:[],platformAuthorized:false,platformError:'',approvalInfo:null,motion:!matchMedia('(prefers-reduced-motion: reduce)').matches,voice:null,voiceEvents:[],voiceStartedAt:null,voiceElapsedMs:null,recording:false,voicePending:false,starFrame:0,stars:[],galaxyFrame:0,lastFrame:0};
 const total=()=>state.topics.length;
 const getP=t=>state.progress[key(t)]||{status:0,confidence:0,note:'',last_reviewed_at:null,next_review_at:null};
 const chapterTopics=c=>state.topics.filter(t=>t.branchIndex===c);
@@ -74,29 +74,57 @@ function plansMarkup(){
  const cap=state.planInfo?.allowed===false?'Access restricted':`${limit} model evaluations per UTC day`;
  const tiers=['FREE','PLUS','PRO'];
  return intro('ACCOUNT & CAPABILITIES','Your <span class="gradient-text">Galaxy plan.</span>','A transparent feature matrix. No payments or self-service upgrades are enabled; daily AI usage is enforced by the secure backend.')+
- `<div class="panel"><h2>${state.isGuest?'Guest preview':escapeHtml(state.user?.email||'Account')}</h2><p>Current entitlement: <strong>${escapeHtml(code)}</strong> · ${escapeHtml(cap)}</p><p>Galaxy onboarding: <strong>${escapeHtml(state.approvalInfo?.status||'Not checked')}</strong>${state.approvalInfo?.approval_required?' · Admin approval enforced':' · Review gate not yet enforced'}</p><p class="footnote">${state.isGuest?'Sign in to load your account entitlement.':'This is your server-owned subscription status, never a browser-controlled plan.'}</p><button class="btn accent" id="plan-refresh">Refresh plan</button>${state.isGuest?'<button class="btn ghost" id="plan-signin">Sign in</button>':''}</div>`+
+ `<div class="panel"><h2>${state.isGuest?'Guest preview':escapeHtml(state.user?.email||'Account')}</h2><p>Current entitlement: <strong>${escapeHtml(code)}</strong> · ${escapeHtml(cap)}</p><p>Galaxy onboarding: <strong>${escapeHtml(state.approvalInfo?.status||'Not checked')}</strong>${state.approvalInfo?.approval_required?' · Admin approval enforced':' · Review gate not yet enforced'}</p><p class="footnote">${state.isGuest?'Sign in to load your account entitlement.':'This is your server-owned subscription status, never a browser-controlled plan.'}</p><button class="btn accent" id="plan-refresh">Refresh plan</button>${state.isGuest?'<button class="btn ghost" id="plan-signin">Sign in</button>':''}</div>`+renewalNoticeMarkup()+
  `<div class="grid-two" style="margin-top:16px">${tiers.map((tier,i)=>`<section class="panel"><span class="eyebrow">${tier}</span><h2>${tier==='FREE'?'Free study':tier==='PLUS'?'Expanded practice':'Highest daily allowance'}</h2><p>${[5,10,20][i]} AI evaluations per day, subject to existing global quota</p><p class="footnote">${tier===code?'Your current plan':tier==='FREE'?'No payment needed':'No purchase or upgrade available yet'}</p></section>`).join('')}</div>`+
  `<div class="panel" style="margin-top:16px;overflow-x:auto"><h2>Capability comparison</h2><table style="width:100%;text-align:left"><thead><tr><th>Feature</th><th>FREE</th><th>PLUS</th><th>PRO</th></tr></thead><tbody>${PLAN_FEATURES.map(row=>`<tr>${row.map(cell=>`<td style="padding:10px;border-bottom:1px solid rgba(150,170,210,.18)">${cell===true?'✓':escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table><p class="footnote">Planned features are not currently included in any tier. Entitlements cannot be granted from browser JavaScript.</p></div>`;
 }
 async function refreshPlan(){
- if(state.isGuest||typeof state.client?.rpc!=='function'){state.planInfo=null;render();return}
+ if(state.isGuest||typeof state.client?.rpc!=='function'){state.planInfo=null;state.planLifecycle=null;render();return}
  const currentUser=state.user?.id;
- const result=await state.client.rpc('genai_study_my_subscription');
+ const [result,lifecycle]=await Promise.all([
+  state.client.rpc('genai_study_my_subscription'),
+  state.client.rpc('galaxy_my_plan_lifecycle')
+ ]);
  if(state.isGuest||state.user?.id!==currentUser)return;
  if(result.error){state.planInfo=null;notify('Plan unavailable: '+result.error.message)}
  else state.planInfo=result.data;
+ state.planLifecycle=lifecycle.error?null:lifecycle.data;
  render();
+}
+function renewalNoticeMarkup(){
+ if(state.isGuest)return '';
+ const notice=window.GalaxySaaSOperations?.renewal(state.planLifecycle);
+ if(!notice)return '';
+ return `<section class="panel" role="status" style="margin-top:12px"><strong>${escapeHtml(notice.title)}</strong><p>${escapeHtml(notice.message)}</p><p class="footnote">In-app reminder only. No automatic billing or email is sent.</p><button class="btn ghost" id="renewal-refresh" type="button">Check subscription</button></section>`;
 }
 // SaaS owner dashboard: server RPC always independently authorizes the active user.
 function platformMarkup(){
  if(state.isGuest)return intro('PLATFORM CONTROL','Administrator sign-in required.','Use your existing Galaxy account.')+'<div class="panel"><button class="btn accent" id="platform-signin">Sign in</button></div>';
- if(!state.platformAuthorized)return intro('PLATFORM CONTROL','Restricted administration.','Only approved Galaxy SaaS operators can access platform data.')+
+ if(!state.platformAuthorized)return intro('PLATFORM CONTROL','Restricted administration.','Only verified Galaxy platform operators can access customer data.')+
  `<div class="panel"><p>${escapeHtml(state.platformError||'No administrator authorization verified.')}</p><button id="platform-refresh" class="btn">Verify admin access</button></div>`;
- const sum=state.platformSummary||{};
- return intro('GALAXY SAAS OWNER','Platform control.','Admin-only account approvals and plan assignments. No payments, no public admin credentials.')+
- `<div class="cards">${[['Accounts',sum.accounts],['Pending review',sum.pending],['Active subscriptions',sum.active_subscriptions],['Suspended',sum.suspended]].map(([label,value])=>`<div class="panel metric"><span class="eyebrow">${escapeHtml(label)}</span><strong>${value??'—'}</strong></div>`).join('')}</div>`+
- `<section class="panel" style="margin-top:16px"><h2>Pending accounts</h2><button id="platform-refresh" class="btn">Refresh</button><p class="footnote">Approvals require an administrator decision. Email confirmation and account approval are separate.</p>${state.platformPending.length?state.platformPending.map(x=>`<div class="panel" style="margin-top:12px"><strong>${escapeHtml(x.email||'Account')}</strong><p class="footnote">${escapeHtml(x.user_id)}</p><div class="practice-actions"><button class="btn accent" data-platform-approve="${escapeHtml(x.user_id)}">Approve</button><button class="btn ghost" data-platform-reject="${escapeHtml(x.user_id)}">Reject</button></div></div>`).join(''):'<p>No pending requests.</p>'}</section>`+
- `<section class="panel" style="margin-top:16px"><h2>Manage account entitlements</h2><p class="footnote">Plan assignments are authorized and validated by the database, never by hidden frontend roles.</p><form id="platform-plan-form"><label>Registered account ID<input id="platform-target" type="text" required placeholder="User UUID"/></label><label>Plan<select id="platform-plan"><option>FREE</option><option>PLUS</option><option>PRO</option></select></label><label>Duration in days<input id="platform-days" type="number" min="1" max="365" value="30" required /></label><label>Reason<input id="platform-reason" type="text" minlength="10" maxlength="300" required placeholder="Why this plan is assigned"/></label><button class="btn accent" type="submit">Assign plan</button></form></section>`;
+ const sum=state.platformSummary,items=window.GalaxySaaSOperations?.warnings(sum,!sum)||[];
+ const metricKeys=[['accounts','Enrolled learners'],['pending','Pending approvals'],['approved','Approved'],['active_subscriptions','Active paid plans'],['expiring_in_7_days','Expiring in 7 days'],['suspended','Suspended'],['learning_users','Learners with progress'],['practice_attempts_7d','Practice attempts (7d)'],['ai_evaluations_today','AI evaluations today']];
+ const safeValue=value=>typeof value==='number'&&Number.isFinite(value)?value:'Unavailable';
+ const info=state.platformAccounts;
+ const rows=Array.isArray(info?.accounts)?info.accounts:null;
+ const accountTable=rows===null?'<p>Account directory unavailable. Refresh or check service authorization.</p>':rows.length===0?'<p>No Galaxy accounts in this page.</p>':
+  `<div style="overflow-x:auto"><table style="width:100%;text-align:left"><thead><tr><th>Learner</th><th>Approval</th><th>Plan</th><th>Expiry</th><th>Usage today</th><th>Manage</th></tr></thead><tbody>${rows.map(u=>{
+   const remaining=window.GalaxySaaSOperations?.daysUntil(u.expires_at);
+   const expiry=u.expires_at?(remaining===null?'Unverified':remaining<=0?'Expired':remaining+' days'):'Not set';
+   return `<tr><td style="padding:9px"><strong>${escapeHtml(u.email||'Unknown')}</strong><div class="footnote">${escapeHtml(u.user_id)}</div></td><td>${escapeHtml(u.approval)}</td><td>${escapeHtml(u.plan_code)} · ${escapeHtml(u.subscription_status)}</td><td>${escapeHtml(expiry)}</td><td>${safeValue(u.evaluations_today)}</td><td><button class="btn ghost" data-manage-user="${escapeHtml(u.user_id)}" data-manage-email="${escapeHtml(u.email||'')}">Manage</button></td></tr>`;
+  }).join('')}</tbody></table></div>`;
+ return intro('GALAXY SAAS OWNER','Platform control.','One login. Galaxy-only learner directory, approval decisions, subscription lifecycle and warnings. No billing processor is active.')+
+ `<div class="cards">${metricKeys.map(([key,label])=>`<div class="panel metric"><span class="eyebrow">${escapeHtml(label)}</span><strong>${safeValue(sum?.[key])}</strong></div>`).join('')}</div>`+
+ `<section class="panel" style="margin-top:16px"><h2>Operations & warnings</h2>${items.map(w=>`<p><strong>${escapeHtml(w.level.toUpperCase())} — ${escapeHtml(w.title)}</strong> · ${escapeHtml(w.message)}</p>`).join('')}${state.platformDataError?`<p class="footnote">${escapeHtml(state.platformDataError)}</p>`:''}<p class="footnote">Revenue, Azure costs, payment settlement and service-health alerts are unavailable until trusted data sources are connected.</p><button class="btn" id="platform-refresh">Refresh live counts</button></section>`+
+ `<section class="panel" style="margin-top:16px"><h2>Signup approval requests</h2><p class="footnote">Galaxy signups appear through the normal email/password flow. An in-app queue is not a delivered email or an enforced access gate. ${state.approvalInfo?.approval_required?'Approval enforcement is active.':'Approval enforcement has not been activated.'}</p>${state.platformPending.length?state.platformPending.map(x=>`<div class="panel" style="margin-top:12px"><strong>${escapeHtml(x.email||'Account')}</strong><p class="footnote">${escapeHtml(x.user_id)}</p><div class="practice-actions"><button class="btn accent" data-platform-approve="${escapeHtml(x.user_id)}">Approve</button><button class="btn ghost" data-platform-reject="${escapeHtml(x.user_id)}">Reject</button></div></div>`).join(''):'<p>No pending requests returned.</p>'}</section>`+
+ `<section class="panel" style="margin-top:16px"><h2>Learner account directory</h2><p class="footnote">Only Galaxy-enrolled learner identities; unrelated accounts in shared Supabase Auth are excluded.</p>${accountTable}<div class="practice-actions"><button class="btn ghost" id="platform-prev" ${!info||state.platformOffset===0?'disabled':''}>Previous</button><span>${info?state.platformOffset+1:0} – ${info?Math.min(state.platformOffset+25,info.total||0):0} of ${info?.total??'Unknown'}</span><button class="btn ghost" id="platform-next" ${!info||state.platformOffset+25>=info.total?'disabled':''}>Next</button></div></section>`+
+ `<section class="panel" style="margin-top:16px"><h2>Subscription management</h2><p class="footnote">Only APPROVED Galaxy accounts can be assigned a paid plan. All changes are checked and audited by the server. No automatic charges or renewal occur.</p><form id="platform-plan-form">
+ <label>Learner account UUID<input id="platform-target" type="text" required placeholder="Select Manage in account directory"/></label>
+ <label>Plan<select id="platform-plan"><option>FREE</option><option>PLUS</option><option>PRO</option></select></label>
+ <label>Status<select id="platform-status"><option>ACTIVE</option><option>PAST_DUE</option><option>SUSPENDED</option><option>CANCELLED</option><option>EXPIRED</option></select></label>
+ <label>Valid for days (manual renewal)<input id="platform-days" type="number" min="1" max="365" value="30" required/></label>
+ <label>Reason<input id="platform-reason" type="text" minlength="10" maxlength="300" required placeholder="Reason for audited entitlement update"/></label><button class="btn accent" type="submit">Save subscription decision</button></form></section>`+
+ `<section class="panel" style="margin-top:16px"><h2>Recent administrator decisions</h2>${state.platformAudit===null?'<p>Audit unavailable.</p>':state.platformAudit.length?state.platformAudit.map(e=>`<p class="footnote"><strong>${escapeHtml(e.action)}</strong> · ${escapeHtml(e.created_at||'')} · ${escapeHtml(e.target_id||'')} · ${escapeHtml(e.reason||'')}</p>`).join(''):'<p>No changes recorded yet.</p>'}</section>`;
 }
 async function requestGalaxyAccess(){
  if(state.isGuest||typeof state.client?.rpc!=='function')return;
@@ -114,13 +142,24 @@ async function platformRefresh(){
  const identity=state.user?.id;
  const result=await state.client.rpc('galaxy_platform_summary');
  if(state.user?.id!==identity)return;
- if(result.error){state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];state.platformError='Administrator access unavailable or not granted.';render();return}
- const pending=await state.client.rpc('galaxy_platform_pending',{p_limit:30});
+ if(result.error){
+  state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];
+  state.platformAccounts=null;state.platformAudit=null;state.platformError='Administrator access unavailable or not granted.';
+  render();return;
+ }
+ const firstAuthorization=!state.platformAuthorized;
+ state.platformAuthorized=true;state.platformSummary=result.data;state.platformError='';
+ const [pending,accounts,audit]=await Promise.all([
+  state.client.rpc('galaxy_platform_pending',{p_limit:30}),
+  state.client.rpc('galaxy_platform_accounts',{p_limit:25,p_offset:state.platformOffset}),
+  state.client.rpc('galaxy_platform_audit',{p_limit:12})
+ ]);
  if(state.user?.id!==identity)return;
- state.platformAuthorized=true;state.platformSummary=result.data;
- state.platformPending=pending.error?[]:(pending.data||[]);
- state.platformError=pending.error?'Pending request list unavailable.':'';
- render();
+ state.platformPending=pending.error?[]:Array.isArray(pending.data)?pending.data:[];
+ state.platformAccounts=accounts.error?null:accounts.data;
+ state.platformAudit=audit.error?null:Array.isArray(audit.data)?audit.data:null;
+ state.platformDataError=[pending.error&&'Approval inbox unavailable',accounts.error&&'Account directory unavailable',audit.error&&'Audit unavailable'].filter(Boolean).join(' · ');
+ if(firstAuthorization&&state.view==='galaxy')setView('platform');else render();
 }
 async function platformDecide(userId,approved){
  if(!state.platformAuthorized||!state.client)return;
@@ -135,8 +174,10 @@ async function platformAssign(event){
  const userId=DOM('platform-target').value.trim(),code=DOM('platform-plan').value;
  const reason=DOM('platform-reason').value.trim(),days=Number(DOM('platform-days').value);
  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId) || reason.length<10 || days<1 || days>365){notify('Invalid user, reason or duration');return}
- if(!window.confirm('Assign '+code+' for '+days+' days to '+userId+'?'))return;
- const out=await state.client.rpc('galaxy_platform_assign_plan',{p_user_id:userId,p_plan:code,p_reason:reason,p_days:days});
+ if(!window.confirm('Apply '+code+' / '+DOM('platform-status').value+' for '+days+' days to '+userId+'?'))return;
+ const status=DOM('platform-status').value;
+ if(code==='FREE'&&status!=='ACTIVE'){notify('FREE plan can only have ACTIVE status.');return}
+ const out=await state.client.rpc('galaxy_platform_manage_subscription',{p_user_id:userId,p_plan:code,p_status:status,p_reason:reason,p_days:days});
  notify(out.error?'Plan assignment failed: '+out.error.message:'Plan assignment accepted by server');
  await platformRefresh();
 }
@@ -296,11 +337,21 @@ function bind(){document.querySelectorAll('[data-view]').forEach(b=>{if(b.datase
  document.querySelectorAll('[data-chapter]').forEach(b=>b.addEventListener('click',()=>{state.chapter=Number(b.dataset.chapter);render()}));if(DOM('open-next'))DOM('open-next').onclick=()=>{const arr=chapterTopics(state.chapter);chooseTopic(arr.find(t=>getP(t).status<2)||arr[0])};if(DOM('pending-refresh'))DOM('pending-refresh').onclick=requestGalaxyAccess;
  if(DOM('pending-signout'))DOM('pending-signout').onclick=()=>DOM('signin-btn')?.click();
  if(DOM('platform-refresh'))DOM('platform-refresh').onclick=platformRefresh;
+ if(DOM('platform-prev'))DOM('platform-prev').onclick=()=>{state.platformOffset=Math.max(0,state.platformOffset-25);void platformRefresh()};
+ if(DOM('platform-next'))DOM('platform-next').onclick=()=>{state.platformOffset+=25;void platformRefresh()};
+ document.querySelectorAll('[data-manage-user]').forEach(el=>el.onclick=()=>{
+  const input=DOM('platform-target');if(!input)return;
+  input.value=el.dataset.manageUser;
+  const row=state.platformAccounts?.accounts?.find(x=>x.user_id===el.dataset.manageUser);
+  if(row){DOM('platform-plan').value=row.plan_code;DOM('platform-status').value=['ACTIVE','PAST_DUE','SUSPENDED','CANCELLED','EXPIRED'].includes(row.subscription_status)?row.subscription_status:'ACTIVE'}
+  input.focus();
+ });
  if(DOM('platform-signin'))DOM('platform-signin').onclick=()=>authOpen();
  if(DOM('platform-plan-form'))DOM('platform-plan-form').onsubmit=platformAssign;
  document.querySelectorAll('[data-platform-approve]').forEach(el=>el.onclick=()=>platformDecide(el.dataset.platformApprove,true));
  document.querySelectorAll('[data-platform-reject]').forEach(el=>el.onclick=()=>platformDecide(el.dataset.platformReject,false));
- if(DOM('coach-build'))DOM('coach-build').onclick=buildCoachPlan;if(DOM('coach-report'))DOM('coach-report').onclick=buildCoachReport;if(DOM('coach-export'))DOM('coach-export').onclick=()=>{if(state.coachInsights&&window.GalaxySessionReports)navigator.clipboard?.writeText(window.GalaxySessionReports.toCsv(state.coachInsights)).then(()=>notify('CSV copied')).catch(()=>notify('Clipboard unavailable'))};if(DOM('plan-refresh'))DOM('plan-refresh').onclick=refreshPlan;if(DOM('plan-signin'))DOM('plan-signin').onclick=()=>authOpen();if(DOM('next-lesson'))DOM('next-lesson').onclick=()=>chooseTopic(pickNext());if(DOM('practice-this'))DOM('practice-this').onclick=startPractice;if(DOM('practice-this-side'))DOM('practice-this-side').onclick=startPractice;if(DOM('save-note'))DOM('save-note').onclick=async()=>{const p=getP(state.current);p.note=DOM('topic-note').value.slice(0,5000);state.progress[key(state.current)]=p;const saved=await saveProgress(state.current);notify(saved?'Note saved':'Note not saved')};
+ if(DOM('coach-build'))DOM('coach-build').onclick=buildCoachPlan;if(DOM('coach-report'))DOM('coach-report').onclick=buildCoachReport;if(DOM('coach-export'))DOM('coach-export').onclick=()=>{if(state.coachInsights&&window.GalaxySessionReports)navigator.clipboard?.writeText(window.GalaxySessionReports.toCsv(state.coachInsights)).then(()=>notify('CSV copied')).catch(()=>notify('Clipboard unavailable'))};if(DOM('plan-refresh'))DOM('plan-refresh').onclick=refreshPlan;
+ if(DOM('renewal-refresh'))DOM('renewal-refresh').onclick=refreshPlan;if(DOM('plan-signin'))DOM('plan-signin').onclick=()=>authOpen();if(DOM('next-lesson'))DOM('next-lesson').onclick=()=>chooseTopic(pickNext());if(DOM('practice-this'))DOM('practice-this').onclick=startPractice;if(DOM('practice-this-side'))DOM('practice-this-side').onclick=startPractice;if(DOM('save-note'))DOM('save-note').onclick=async()=>{const p=getP(state.current);p.note=DOM('topic-note').value.slice(0,5000);state.progress[key(state.current)]=p;const saved=await saveProgress(state.current);notify(saved?'Note saved':'Note not saved')};
  if(DOM('answer-form')){DOM('answer-form').onsubmit=submitAnswer;if(DOM('top-teach'))DOM('top-teach').onclick=showGuidedExplanation;if(DOM('top-skip'))DOM('top-skip').onclick=advanceTopic;if(DOM('top-hint'))DOM('top-hint').onclick=()=>{state.guideOpen=true;render()};if(DOM('adaptive-teach'))DOM('adaptive-teach').onclick=showGuidedExplanation;if(DOM('adaptive-guided-try'))DOM('adaptive-guided-try').onclick=beginGuidedPractice;if(DOM('adaptive-skip'))DOM('adaptive-skip').onclick=advanceTopic;if(DOM('adaptive-next-topic'))DOM('adaptive-next-topic').onclick=advanceTopic;if(DOM('adaptive-explain'))DOM('adaptive-explain').onclick=showGuidedExplanation;if(DOM('evaluate-local'))DOM('evaluate-local').onclick=()=>submitAnswer({preventDefault(){}},true);if(DOM('practice-signin'))DOM('practice-signin').onclick=()=>authOpen();DOM('mic-control').onclick=toggleVoice;DOM('spoken-answer').oninput=e=>state.answerDraft=e.target.value;DOM('practice-retry').onclick=()=>{stopVoice();state.feedback=null;state.guideOpen=false;state.answerDraft='';render()};DOM('focus-topic').onchange=e=>{const t=state.topics.find(x=>key(x)===decodeURIComponent(e.target.value));if(t){stopVoice();state.current=t;state.level=1;state.attemptQuestion=questionFor(t,1);state.feedback=null;state.guideOpen=false;state.answerDraft='';render()}};if(DOM('adaptive-next'))DOM('adaptive-next').onclick=nextAdaptive}
  document.querySelectorAll('[data-study-mode]').forEach(b=>b.onclick=()=>{const mode=b.dataset.studyMode;if(!PRACTICE_MODES.includes(mode))return;if(mode==='mock'){startMockSession();return}state.studyMode=mode;state.session=null;state.sessionReport=null;state.guideOpen=mode==='learn';render()});
  if(DOM('target-role'))DOM('target-role').onchange=e=>{if(TARGET_ROLES.includes(e.target.value)){state.targetRole=e.target.value;render()}};
@@ -315,7 +366,7 @@ function approvalPendingMarkup(){
  return intro('ACCOUNT REVIEW','Your Galaxy account is awaiting approval.','Email verification and application approval are separate steps.')+
  '<section class="panel"><h2>Review requested</h2><p>Access to private synced learning features is held until a Galaxy administrator approves your account.</p><button class="btn accent" id="pending-refresh">Check approval status</button><button class="btn ghost" id="pending-signout">Sign out</button><p class="footnote">You can still explore the free guest preview after signing out. No subscription purchase is required.</p></section>';
 }
-function render(){updateNav();const pending=!state.isGuest&&state.approvalInfo?.approval_required===true&&state.approvalInfo?.status!=='APPROVED'&&!state.platformAuthorized&&state.view!=='plans';DOM('root').innerHTML=pending?approvalPendingMarkup():({galaxy:scene,dashboard,library,lesson:lessonMarkup,practice:practiceMarkup,review:revision,vault,plans:plansMarkup,platform:platformMarkup})[state.view]();bind();if(state.view==='galaxy'&&!pending)positionPlanets(performance.now())}
+function render(){updateNav();const pending=!state.isGuest&&state.approvalInfo?.approval_required===true&&state.approvalInfo?.status!=='APPROVED'&&!state.platformAuthorized&&state.view!=='plans';const content=pending?approvalPendingMarkup():({galaxy:scene,dashboard,library,lesson:lessonMarkup,practice:practiceMarkup,review:revision,vault,plans:plansMarkup,platform:platformMarkup})[state.view]();const renewal=!pending&&!state.isGuest&&state.view!=='plans'&&state.view!=='platform'?renewalNoticeMarkup():'';DOM('root').innerHTML=renewal+content;bind();if(state.view==='galaxy'&&!pending)positionPlanets(performance.now())}
 function positionPlanets(now){const el=DOM('universe');if(!el)return;if(matchMedia('(max-width: 660px)').matches)return;const w=el.clientWidth,h=el.clientHeight;const small=w<520;const nodes=el.querySelectorAll('[data-chapter]');for(let i=0;i<nodes.length;i++){const ring=i<5?0:i<11?1:2;const n=ring===0?5:6;const index=i-(ring===0?0:ring===1?5:11);const angle=2*Math.PI*index/n+[-1.35,-.8,-1.75][ring];const rX=(small?[.26,.36,.45]:[.23,.34,.44])[ring]*w;const rY=[.20,.33,.44][ring]*h;const movement=state.motion ? now*([.000016,-.000012,.000009][ring]):0;const a=angle+movement;const wobble=state.motion?Math.sin(now*.00045+i*1.8)*2:0;nodes[i].style.transform=`translate(calc(-50% + ${Math.cos(a)*rX}px),calc(-50% + ${Math.sin(a)*rY+wobble}px))`}}
 function cycle(now){if(state.motion&&state.view==='galaxy'&&!document.hidden&&now-state.lastFrame>58){positionPlanets(now);paintStars(now);state.lastFrame=now}state.galaxyFrame=requestAnimationFrame(cycle)}
 function drawStars(){const canvas=DOM('stars');const dpr=Math.min(devicePixelRatio||1,2),w=innerWidth,h=innerHeight;canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);canvas.style.width=w+'px';canvas.style.height=h+'px';let seed=424212;const random=()=>{seed=(Math.imul(seed,1664525)+1013904223)>>>0;return seed/4294967296};state.stars=Array.from({length:Math.min(650,Math.round(w*h/2500))},()=>({x:random()*w,y:random()*h,r:.35+random()*1.25,alpha:.16+random()*.5,phase:random()*6.283,speed:.00035+random()*.0013}));paintStars(0)}
@@ -577,7 +628,7 @@ function clearPrivateCoachState(){
 }
 function resetAuthToGuest(){
  stopVoice();authEpoch++;clearPrivateCoachState();
- state.user=null;state.isGuest=true;state.documents=[];state.planInfo=null;state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];state.approvalInfo=null;
+ state.user=null;state.isGuest=true;state.documents=[];state.planInfo=null;state.planLifecycle=null;state.platformAccounts=null;state.platformAudit=null;state.platformAuthorized=false;state.platformSummary=null;state.platformPending=[];state.platformAccounts=null;state.platformAudit=null;state.planLifecycle=null;state.approvalInfo=null;
  loadGuest();render();setEntryVisible(true);
 }
 async function signedIn(user){
@@ -623,6 +674,10 @@ async function initAuth(){
  try{
   const {createClient}=await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.1/+esm');
   state.client=createClient(SB_URL,SB_PUBLISHABLE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+  // WineShopPOS-style in-app entitlement refresh; no polling vendor or paid messaging.
+  window.addEventListener?.('focus',()=>{if(!state.isGuest)void refreshPlan()});
+  document.addEventListener?.('visibilitychange',()=>{if(!document.hidden&&!state.isGuest)void refreshPlan()});
+
   state.client.auth.onAuthStateChange((event,session)=>{
    if(event==='SIGNED_OUT'){resetAuthToGuest();return}
    if(event==='PASSWORD_RECOVERY'&&session?.user){setTimeout(()=>authOpen('recovery'),0);return}
