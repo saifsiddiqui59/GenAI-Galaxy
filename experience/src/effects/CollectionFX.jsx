@@ -9,7 +9,7 @@ export {COLLECT_START_MS,PER_WORLD_MS};
 import './collection.css';
 
 function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount,reducedMotion}){
- const orb=useRef(),trail=useRef(),sparks=useRef();
+ const orb=useRef(),trail=useRef(),sparks=useRef(),beam=useRef();
  const sparksGeometry=useMemo(()=>{
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(26*3),3));
@@ -50,6 +50,7 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
    const visible=!reducedMotion&&pick.t>.025&&pick.t<.30&&orb.current.visible;
    trail.current.visible=visible;
    if(sparks.current)sparks.current.visible=visible;
+   if(beam.current)beam.current.visible=visible;
    if(visible){
     const attr=trailGeometry.getAttribute('position'),end=orb.current.position;
     for(let j=0;j<16;j++){
@@ -61,6 +62,14 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
     }
     attr.needsUpdate=true;
     trailGeometry.computeBoundingSphere();
+    if(beam.current){
+     const direction=end.clone().sub(source),length=direction.length();
+     beam.current.position.copy(source).add(end).multiplyScalar(.5);
+     if(length>.001){
+      beam.current.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.multiplyScalar(1/length));
+      beam.current.scale.set(.032,length,.032);
+     }
+    }
     if(sparks.current){
      const sparkPos=sparksGeometry.getAttribute('position');
      const t=Math.max(0,Math.min(1,pick.t/.30));
@@ -93,9 +102,21 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
    <lineBasicMaterial color={COLORS[world.index]} transparent opacity={.65} depthWrite={false} blending={THREE.AdditiveBlending}/>
   </line>
   <points ref={sparks} geometry={sparksGeometry} visible={false}>
-   <pointsMaterial color={COLORS[world.index]} size={.075} sizeAttenuation
-     transparent opacity={.82} depthWrite={false} blending={THREE.AdditiveBlending}/>
+   <pointsMaterial color={COLORS[world.index]} size={.105} sizeAttenuation
+     transparent opacity={.88} depthWrite={false} blending={THREE.AdditiveBlending}/>
   </points>
+  <group ref={beam} visible={false}>
+   <mesh>
+    <cylinderGeometry args={[1,1,1,8,1,true]}/>
+    <meshBasicMaterial color="#b8eaff" transparent opacity={.77} depthWrite={false}
+      blending={THREE.AdditiveBlending}/>
+   </mesh>
+   <mesh scale={[3.0,1,3.0]}>
+    <cylinderGeometry args={[1,1,1,8,1,true]}/>
+    <meshBasicMaterial color={COLORS[world.index]} transparent opacity={.13} depthWrite={false}
+      blending={THREE.AdditiveBlending}/>
+   </mesh>
+  </group>
  </>;
 }
 function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
