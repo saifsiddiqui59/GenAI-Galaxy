@@ -1,0 +1,24 @@
+name: Galaxy P63 cold-start-tolerant zero-token Flex route diagnosis
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type READONLY: zero-token cold-start-tolerant probe of existing Galaxy Function'
+        required: true
+        type: string
+permissions:
+  contents: read
+jobs:
+  anonymous-existing-function:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'READONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate zero-cost route/redirect guard offline
+        run: python -m unittest discover -s tests -p 'test_p63_coldstart.py' -v
+      - name: Measure first cold-start versus warm anonymous 200/401 without model
+        run: python scripts/diagnose_flex_nocharge_latency.py --confirm READONLY
