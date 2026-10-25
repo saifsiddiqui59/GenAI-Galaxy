@@ -50,13 +50,20 @@ jobs:
         run: |
           set -euo pipefail
           id="$(az functionapp show -g "$RG" -n "$APP" --query id -o tsv)"
-          state="$(az functionapp show -g "$RG" -n "$APP" --query state -o tsv)"
-          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
-          [[ "$state" == Running ]] || exit 1
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || {
+            echo "::error::Existing app resource ID differs from exact Galaxy DEV target"; exit 1;
+          }
+          echo "Existing Galaxy-only resource identity verified."
+          state="$(az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites --query properties.state -o tsv)"
+          echo "Nonsecret Function state: ${state:-unknown}"
+          [[ "${state,,}" == running ]] || {
+            echo "::error::Existing Function is not Running; refusing unreviewed restart"; exit 1;
+          }
           config="$(az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites --query properties.functionAppConfig.scaleAndConcurrency -o json)"
           CONFIG="$config" python - <<'PY'
           import json,os
           cfg=json.loads(os.environ['CONFIG'])
+          print('Nonsecret pre-restart scale:',{k:cfg.get(k) for k in ('instanceMemoryMB','maximumInstanceCount','alwaysReady')})
           assert cfg.get('instanceMemoryMB') == 512
           assert cfg.get('maximumInstanceCount') == 2
           assert cfg.get('alwaysReady') in (None,[])
