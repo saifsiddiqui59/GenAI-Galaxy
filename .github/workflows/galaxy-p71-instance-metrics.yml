@@ -1,0 +1,70 @@
+name: Galaxy P71 no-cost Flex instance-count correlation during real warm-up test
+# Existing Azure Monitor platform metrics ONLY. No telemetry workspace or new bill.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        required: true
+        type: string
+        description: 'Type READONLY to inspect existing Flex instance metrics for P70 test window'
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-p71-readonly-instance-count
+  cancel-in-progress: false
+jobs:
+  read-existing-metrics:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'READONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RG: GenAI_Galaxy
+      APP: gengalaxy-p3-1429841605
+      TEST_START: '2026-10-25T08:40:00Z'
+      TEST_END: '2026-10-25T08:46:00Z'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Test scope and allowed platform metric names
+        run: python -m unittest discover -s tests -p 'test_p71_metrics.py' -v
+      - name: Check pinned existing Galaxy OIDC identity
+        shell: bash
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUB: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || exit 1
+          [[ "$SUB" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || exit 1
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Read existing Function Flex platform instance count and CPU without secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          id="$(az functionapp show -g "$RG" -n "$APP" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
+          echo 'P70 UTC test 08:42:22–08:43:29; read-only 08:40–08:46.'
+          echo 'InstanceCount MAXIMUM by minute (can indicate 1 vs 2 on-demand instances):'
+          az monitor metrics list --resource "$id" --metric InstanceCount \
+            --start-time "$TEST_START" --end-time "$TEST_END" \
+            --interval PT1M --aggregation Maximum \
+            --query 'value[].timeseries[].data[].{time:timeStamp,maximum:maximum}' -o json
+          echo 'OnDemandFunctionExecutionCount TOTAL by minute (zero means no Python invocation counted):'
+          az monitor metrics list --resource "$id" --metric OnDemandFunctionExecutionCount \
+            --start-time "$TEST_START" --end-time "$TEST_END" \
+            --interval PT1M --aggregation Total \
+            --query 'value[].timeseries[].data[].{time:timeStamp,total:total}' -o json
+          echo 'No per-request worker affinity can be proved from these aggregate metrics.'
+      - name: Clear OIDC session
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
