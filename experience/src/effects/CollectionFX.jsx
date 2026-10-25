@@ -9,7 +9,13 @@ export {COLLECT_START_MS,PER_WORLD_MS};
 import './collection.css';
 
 function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount,reducedMotion}){
- const orb=useRef();
+ const orb=useRef(),trail=useRef();
+ const trailGeometry=useMemo(()=>{
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(16*3),3));
+  return g;
+ },[]);
+ useEffect(()=>()=>trailGeometry.dispose(),[trailGeometry]);
  const texture=useMemo(()=>planetSurfaceTexture(world.index,COLORS[world.index],compact),[world.index,compact]);
  useEffect(()=>()=>texture.dispose(),[texture]);
  useFrame(()=>{
@@ -32,6 +38,24 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
    orb.current.position.copy(pose.mouth).add(new THREE.Vector3(0,-.32*s*smooth((pick.t-RELEASE)/.14),0));
    orb.current.scale.setScalar(s*(pick.t>=RELEASE?1-smooth((pick.t-.90)/.10):1));
   }
+  // A short luminous tether shows one unbroken journey from the real orbit
+  // into the hand. The source halo/ring is hidden when this flight begins.
+  if(trail.current){
+   const visible=!reducedMotion&&pick.t>.025&&pick.t<.30&&orb.current.visible;
+   trail.current.visible=visible;
+   if(visible){
+    const attr=trailGeometry.getAttribute('position'),end=orb.current.position;
+    for(let j=0;j<16;j++){
+     const a=j/15,arc=Math.sin(Math.PI*a)*.08;
+     attr.setXYZ(j,
+      source.x+(end.x-source.x)*a+Math.sin(a*12+c.ms*.012)*arc,
+      source.y+(end.y-source.y)*a+arc,
+      source.z+(end.z-source.z)*a);
+    }
+    attr.needsUpdate=true;
+    trailGeometry.computeBoundingSphere();
+   }
+  }
   orb.current.rotation.y=c.ms*.00018+order;
   const d=window.__galaxySkeletonDiagnostics;
   if(d){
@@ -40,10 +64,15 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
     contactError:pick.attached&&pose.grip?orb.current.position.distanceTo(pose.grip):null};
   }
  },-1);
- return <group ref={orb}>
-  <mesh><sphereGeometry args={[.135,24,16]}/><meshStandardMaterial map={texture} roughness={.62} metalness={.05}/></mesh>
-  <mesh scale={1.10}><sphereGeometry args={[.135,16,12]}/><meshBasicMaterial color={COLORS[world.index]} transparent opacity={.12} side={THREE.BackSide} depthWrite={false}/></mesh>
- </group>;
+ return <>
+  <group ref={orb}>
+   <mesh><sphereGeometry args={[.135,24,16]}/><meshStandardMaterial map={texture} roughness={.62} metalness={.05}/></mesh>
+   <mesh scale={1.10}><sphereGeometry args={[.135,16,12]}/><meshBasicMaterial color={COLORS[world.index]} transparent opacity={.12} side={THREE.BackSide} depthWrite={false}/></mesh>
+  </group>
+  <line ref={trail} geometry={trailGeometry} visible={false}>
+   <lineBasicMaterial color={COLORS[world.index]} transparent opacity={.55} depthWrite={false} blending={THREE.AdditiveBlending}/>
+  </line>
+ </>;
 }
 function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
  const bag=useRef();
