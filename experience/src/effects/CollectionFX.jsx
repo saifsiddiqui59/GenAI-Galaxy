@@ -9,7 +9,14 @@ export {COLLECT_START_MS,PER_WORLD_MS};
 import './collection.css';
 
 function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount,reducedMotion}){
- const orb=useRef(),trail=useRef();
+ const orb=useRef(),trail=useRef(),sparks=useRef(),beam=useRef();
+ const beamMatrices=useMemo(()=>({up:new THREE.Vector3(0,1,0),matrix:new THREE.Matrix4(),quat:new THREE.Quaternion(),scale:new THREE.Vector3(),mid:new THREE.Vector3()}),[]);
+ const sparksGeometry=useMemo(()=>{
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(26*3),3));
+  return g;
+ },[]);
+ useEffect(()=>()=>sparksGeometry.dispose(),[sparksGeometry]);
  const trailGeometry=useMemo(()=>{
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(16*3),3));
@@ -43,6 +50,8 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
   if(trail.current){
    const visible=!reducedMotion&&pick.t>.025&&pick.t<.30&&orb.current.visible;
    trail.current.visible=visible;
+   if(sparks.current)sparks.current.visible=visible;
+   if(beam.current)beam.current.visible=visible;
    if(visible){
     const attr=trailGeometry.getAttribute('position'),end=orb.current.position;
     for(let j=0;j<16;j++){
@@ -54,13 +63,48 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
     }
     attr.needsUpdate=true;
     trailGeometry.computeBoundingSphere();
+    if(beam.current){
+     // A faceted curved energy ribbon replaces the former rigid straight rod.
+     // Animate 16 GPU-instanced segments; no per-frame geometry allocations.
+     const strand=u=>{
+      const p=source.clone().lerp(end,u),arc=Math.sin(Math.PI*u);
+      p.x+=arc*(.24+Math.sin(u*11+c.ms*.009)*.035)*s;
+      p.y+=arc*.12*s;
+      p.z+=arc*Math.cos(u*9+c.ms*.012)*.055*s;
+      return p;
+     };
+     for(let k=0;k<16;k++){
+      const a=strand(k/16),b=strand((k+1)/16);
+      const direction=b.sub(a),length=direction.length(),u=(k+.5)/16;
+      beamMatrices.mid.copy(a).addScaledVector(direction,.5);
+      beamMatrices.quat.setFromUnitVectors(beamMatrices.up,direction.normalize());
+      const radius=.018+.018*Math.sin(Math.PI*u);
+      beamMatrices.scale.set(radius,length,radius);
+      beamMatrices.matrix.compose(beamMatrices.mid,beamMatrices.quat,beamMatrices.scale);
+      beam.current.setMatrixAt(k,beamMatrices.matrix);
+     }
+     beam.current.instanceMatrix.needsUpdate=true;
+    }
+    if(sparks.current){
+     const sparkPos=sparksGeometry.getAttribute('position');
+     const t=Math.max(0,Math.min(1,pick.t/.30));
+     for(let i=0;i<26;i++){
+      const u=((i/26+t*.9)%1),twist=u*12.56+i*2.4;
+      const spread=.07*(1-u)*s;
+      sparkPos.setXYZ(i,
+       source.x+(end.x-source.x)*u+Math.cos(twist)*spread,
+       source.y+(end.y-source.y)*u+Math.sin(Math.PI*u)*.12*s,
+       source.z+(end.z-source.z)*u+Math.sin(twist)*spread);
+     }
+     sparkPos.needsUpdate=true;sparksGeometry.computeBoundingSphere();
+    }
    }
   }
   orb.current.rotation.y=c.ms*.00018+order;
   const d=window.__galaxySkeletonDiagnostics;
   if(d){
    d.miniatures??={};d.miniatures[order]={stage:pick.stage,visible:orb.current.visible,
-    position:orb.current.position.toArray(),sourceWorldIndex:world.index,atlasOrigin:source.toArray(),attached:pick.attached,
+    position:orb.current.position.toArray(),sourceWorldIndex:world.index,atlasOrigin:source.toArray(),beamVisible:!!beam.current?.visible,attached:pick.attached,
     contactError:pick.attached&&pose.grip?orb.current.position.distanceTo(pose.grip):null};
   }
  },-1);
@@ -70,8 +114,17 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
    <mesh scale={1.10}><sphereGeometry args={[.135,16,12]}/><meshBasicMaterial color={COLORS[world.index]} transparent opacity={.12} side={THREE.BackSide} depthWrite={false}/></mesh>
   </group>
   <line ref={trail} geometry={trailGeometry} visible={false}>
-   <lineBasicMaterial color={COLORS[world.index]} transparent opacity={.55} depthWrite={false} blending={THREE.AdditiveBlending}/>
+   <lineBasicMaterial color={COLORS[world.index]} transparent opacity={.65} depthWrite={false} blending={THREE.AdditiveBlending}/>
   </line>
+  <points ref={sparks} geometry={sparksGeometry} visible={false}>
+   <pointsMaterial color={COLORS[world.index]} size={.105} sizeAttenuation
+     transparent opacity={.88} depthWrite={false} blending={THREE.AdditiveBlending}/>
+  </points>
+  <instancedMesh ref={beam} args={[null,null,16]} visible={false} frustumCulled={false}>
+   <cylinderGeometry args={[1,1,1,6,1,true]}/>
+   <meshBasicMaterial color="#a3dbff" transparent opacity={.48} depthWrite={false}
+     blending={THREE.AdditiveBlending}/>
+  </instancedMesh>
  </>;
 }
 function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
