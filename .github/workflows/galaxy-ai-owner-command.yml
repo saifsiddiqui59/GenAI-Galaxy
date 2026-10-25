@@ -127,6 +127,11 @@ jobs:
                 --ref main -f confirm=RESTART_EXISTING_ONCE
               echo 'Owner requested one controlled restart of existing 512 MB zero-idle Galaxy DEV Function.'
               ;;
+            "TEST_WARM_THEN_TUTOR_$EVENT_SHA")
+              gh workflow run galaxy-p70-warm-sequence.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=WARM_NOCHARGE
+              echo 'Owner requested bounded real Python warm-up then tutor, no paid model call.'
+              ;;
             "ROLLBACK_FLEX_512_$EVENT_SHA")
               gh workflow run galaxy-p57-flex-memory.yml -R saifsiddiqui59/GenAI-Galaxy \
                 --ref main -f confirm=ROLLBACK_512
