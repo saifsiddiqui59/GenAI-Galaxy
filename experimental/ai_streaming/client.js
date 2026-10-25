@@ -13,7 +13,7 @@ async function consumeGalaxySse(response,handlers={}){
  if(!/^text\/event-stream(?:\s*;|\s*$)/i.test(mime))throw new GalaxyStreamError('Response is not an event stream');
  const reader=response.body.getReader();
  const decoder=new TextDecoder('utf-8',{fatal:true});
- let buffer='',totalBytes=0,completed=false,answer='',frames=0;
+ let buffer='',totalBytes=0,completed=false,answer='',frames=0,terminal=null;
  const accepted=new Set(['status','delta','complete','error']);
  function one(frame){
    if(completed)throw new GalaxyStreamError('Trailing SSE frame after completion');
@@ -50,7 +50,7 @@ async function consumeGalaxySse(response,handlers={}){
      if(payload.completed!==true||payload.kind!=='tutor_draft'||payload.verified!==false||!answer)
        throw new GalaxyStreamError('Incomplete tutor stream');
      completed=true;
-     handlers.onComplete?.({reply:answer,usage:payload.usage??null,verified:false});
+     terminal={reply:answer,usage:payload.usage??null,verified:false};
    }
  }
  try{
@@ -69,7 +69,8 @@ async function consumeGalaxySse(response,handlers={}){
      if(buffer.length>STREAM_MAX_FRAME)throw new GalaxyStreamError('Unbounded SSE frame');
    }
    buffer+=decoder.decode();
-   if(buffer.trim()||!completed)throw new GalaxyStreamError('Stream ended without complete event');
+   if(buffer.trim()||!completed||!terminal)throw new GalaxyStreamError('Stream ended without complete event');
+   handlers.onComplete?.(terminal);
    return {reply:answer,verified:false};
  }finally{try{reader.releaseLock()}catch(_){}}
 }
