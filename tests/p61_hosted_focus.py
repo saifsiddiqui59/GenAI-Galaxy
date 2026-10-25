@@ -17,6 +17,9 @@ async def one(browser, width, height):
     page.on("pageerror",lambda e:errors.append(str(e)))
     await page.goto(BASE+"?version="+os.environ["GITHUB_SHA"],wait_until="domcontentloaded",timeout=60000)
     await page.get_by_role("button",name="Explore free guest preview").click(timeout=18000)
+    await page.locator('#entry-gate').wait_for(state="hidden",timeout=10000)
+    # Guest entry may precede async curriculum fetches; wait until navigation is bound.
+    await page.wait_for_function('document.querySelector(\'[data-view="practice"]\')?.dataset.bound === "1"',timeout=20000)
     await page.locator('[data-view="practice"]').first.click(timeout=15000)
     await page.locator('.practice-question').wait_for(timeout=12000)
     assert await page.locator('.practice-advanced').count()==1

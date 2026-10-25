@@ -39,8 +39,16 @@ jobs:
           [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' && "$SUB" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || exit 1
           ci="$(gh run list --workflow galaxy-ci.yml --branch main --event push --limit 35 --json headSha,conclusion --jq "[.[] | select(.headSha == \"$GITHUB_SHA\" and .conclusion == \"success\")] | length")"
           [[ "$ci" =~ ^[0-9]+$ && "$ci" -gt 0 ]] || { echo '::error::Missing current main CI'; exit 1; }
-          backend="$(gh run list --workflow galaxy-p3-flex-deploy.yml --branch main --event workflow_dispatch --limit 35 --json headSha,conclusion --jq "[.[] | select(.headSha == \"$GITHUB_SHA\" and .conclusion == \"success\")] | length")"
-          [[ "$backend" =~ ^[0-9]+$ && "$backend" -gt 0 ]] || { echo '::error::Current main backend has not been deployed/verified'; exit 1; }
+          # Release the current reviewed frontend without needless Azure Function
+          # redeployment if all actual backend code/config matches its known good
+          # protected deployment. Never bypass this check for backend changes.
+          backend_sha='5d32a1f66e5e0a414552f70c0bdeadd9ec8c5903'
+          git cat-file -e "$backend_sha^{commit}"
+          git diff --quiet "$backend_sha" "$GITHUB_SHA" -- api/ infra/azure/backend/ .github/workflows/galaxy-p3-flex-deploy.yml || {
+            echo '::error::Backend sources changed; fresh protected backend deployment required'; exit 1;
+          }
+          backend="$(gh run list --workflow galaxy-p3-flex-deploy.yml --branch main --event workflow_dispatch --limit 50 --json headSha,conclusion --jq "[.[] | select(.headSha == \"$backend_sha\" and .conclusion == \"success\")] | length")"
+          [[ "$backend" =~ ^[0-9]+$ && "$backend" -gt 0 ]] || { echo '::error::Verified existing backend deployment missing'; exit 1; }
           node --check app.js
           grep -Fq 'AI_RESPONSE_TIMEOUT_MS=30000' app.js
           grep -Fq '01 · AI QUESTION' app.js
