@@ -5,6 +5,12 @@ import {attachSkullMasterCloak} from './skullMasterMantle.js';
  * geometry, 95 original animation clips and original texture provenance.
  */
 export const STYLE_PROFILE='skullmaster-midnight-violet';
+// Reduce white toy-like shoes, gauntlets and plastic torso highlights.
+export function kitMeshTint(name){
+ if(/^Skeleton_Mage_(ArmLeft|ArmRight|LegLeft|LegRight)$/.test(name))return '#7b899f';
+ if(name==='Skeleton_Mage_Body')return '#7a6888';
+ return null;
+}
 export function isCostumeRed(r,g,b){return r>65&&r>g*1.35&&r>b*1.18&&r-g>36}
 export function isPaleBone(r,g,b){
  const cream=r>=198&&g>=160&&b>=132&&r>=g&&g>=b&&r-g<=58&&g-b<=64;
@@ -54,6 +60,7 @@ export function styleKayKit(source,THREE){
    if(styled)n.material.map=styled;
    // Direct per-mesh tint: cooler sculpted skull, without recoloring the glowing eyes.
    if(/Skeleton_Mage_(Skull|Jaw)$/.test(n.name))n.material.color.set('#879bad');
+   else if(kitMeshTint(n.name))n.material.color.set(kitMeshTint(n.name));
    n.material.roughness=.9;n.material.metalness=.02;
   }
  });

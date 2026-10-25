@@ -35,7 +35,14 @@ async def inspect(pw,url,name,width,height,reduced=False):
         else:
             assert await page.locator('[data-world-label]').count()==0,'Compact Galaxy must not obscure worlds with an oversized title'
         if name=='desktop' and not reduced:
-            await page.wait_for_function("() => window.__galaxySkeletonDiagnostics.currentPhase==='offering' && window.__galaxySkeletonDiagnostics.pickupLog.length===3",timeout=60000)
+            try:
+                await page.wait_for_function("() => window.__galaxySkeletonDiagnostics.currentPhase==='offering' && window.__galaxySkeletonDiagnostics.pickupLog.length===3",timeout=35000)
+            except Exception:
+                diag=await page.evaluate("() => window.__galaxySkeletonDiagnostics")
+                print('P218 natural timeline diagnostic',json.dumps({'time':diag.get('time'),'phase':diag.get('currentPhase'),
+                    'pickups':diag.get('pickupLog'),'errors':errors[-10:],'lastRequests':requests[-6:]}),flush=True)
+                await page.screenshot(path=str(OUT/'desktop-failed-natural-timeline.png'),full_page=True)
+                raise
             print('Natural timeline: three original PickUp cycles completed without seeking')
             await page.evaluate('window.__galaxyV6.reset()')
         snapshots=[]

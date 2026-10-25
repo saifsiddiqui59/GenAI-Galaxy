@@ -7,10 +7,12 @@ import {discoverRigAnchors,gripMidpoint} from './rigAnchors.js';
 import {styleKayKit,STYLE_PROFILE} from './styleKayKit.js';
 import {SKULLMASTER_PROFILE} from './skullMasterMantle.js';
 import {moveSkullMasterCloak} from './cloakMotion.js';
+import {mountDetailedSkull,SKULL_ASSET} from './detailSkull.js';
 import {moveWrist} from './handIK.js';
 import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS} from '../journey/choreography.js';
 import {phaseAt} from '../journey/story.js';
 const ASSET=import.meta.env.BASE_URL+'models/kaykit/Skeleton_Mage.glb';
+const DETAIL_ASSET=import.meta.env.BASE_URL+SKULL_ASSET;
 const observed=()=>import.meta.env.DEV||new URLSearchParams(window.location.search).get('demo')==='1';
 export function chooseKayKitAnimation(phase,names=[]){
  const preferred=phase==='arriving'?'Walking_A':phase==='collecting'?'PickUp':'Unarmed_Idle';
@@ -36,6 +38,7 @@ function solveBlended(chain,target,weight){
 }
 function Model({rigPoseRef,clockRef,completedCount=0,reducedMotion=false,onReady}){
  const {scene,animations}=useGLTF(ASSET);
+ const {scene:anatomicalSkull}=useGLTF(DETAIL_ASSET);
  const narrow=useThree(state=>state.size.width<700);
  const short=useThree(state=>state.size.height<780);
  const root=useRef(),lastIndex=useRef(-1),lastEpoch=useRef(-1),contactLocal=useRef(null);
@@ -47,8 +50,11 @@ function Model({rigPoseRef,clockRef,completedCount=0,reducedMotion=false,onReady
   object.position.set(-box.getCenter(new THREE.Vector3()).x*factor,-box.min.y*factor,-box.getCenter(new THREE.Vector3()).z*factor);
   object.userData.geometryHeight=height;
   object.userData.disposeStyle=styleKayKit(object,THREE);
+  const detailed=mountDetailedSkull(object,anatomicalSkull);
+  if(!detailed.active)throw Error('CC0 detailed skull failed to attach: original rig is incompatible');
+  object.userData.disposeDetail=detailed.dispose;
   return object;
- },[scene]);
+ },[scene,anatomicalSkull]);
  const rig=useMemo(()=>discoverRigAnchors(source),[source]);
  const arms=useMemo(()=>({left:armChain(rig.leftHand),right:armChain(rig.rightHand)}),[rig]);
  const mixer=useMemo(()=>new THREE.AnimationMixer(source),[source]);
@@ -62,12 +68,12 @@ function Model({rigPoseRef,clockRef,completedCount=0,reducedMotion=false,onReady
   if(observed()){
    const materials=[];let meshes=0;
    source.traverse(n=>{if(n.isMesh){meshes++;materials.push({name:n.material.name,map:!!n.material.map})}});
-   window.__galaxySkeletonDiagnostics={asset:'KayKit CC0 Skeleton_Mage.glb',styleProfile:STYLE_PROFILE,bones:rig.detectedBones,clips:animations.length,
+   window.__galaxySkeletonDiagnostics={asset:'KayKit CC0 Skeleton_Mage.glb',skullAsset:'Khronos ScatteringSkull CC0',styleProfile:STYLE_PROFILE,bones:rig.detectedBones,clips:animations.length,
     animationNames:animations.map(a=>a.name),meshes,materials,pickupLog:[],
     rig:{detectedBones:rig.detectedBones,canOffer:rig.readyToOffer,canCarry:rig.readyForSatchel},
     sourceDimensions:{height:source.userData.geometryHeight}};
   }
-  return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeStyle?.()};
+  return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeDetail?.();source.userData.disposeStyle?.()};
  },[source,rig,mixer,animations,onReady]);
  useFrame((state,dt)=>{
   if(!root.current)return;
@@ -159,3 +165,4 @@ function Model({rigPoseRef,clockRef,completedCount=0,reducedMotion=false,onReady
 }
 export default function KayKitGuardian(props){return <Suspense fallback={null}><Model {...props}/></Suspense>}
 useGLTF.preload(ASSET);
+useGLTF.preload(DETAIL_ASSET);

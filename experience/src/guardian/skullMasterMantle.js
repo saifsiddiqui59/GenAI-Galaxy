@@ -3,8 +3,8 @@
    The hood follows the real head bone; mantle follows chest; all 95 animations stay alive.
 */
 export const SKULLMASTER_PROFILE=Object.freeze({
-  headScale:.90,hoodFrontGap:.73,hoodRings:6,cloakLength:1.22,
-  outer:'#21132f',inner:'#0b1023',trim:'#4b385c'
+  headScale:.90,hoodFrontGap:.73,hoodRings:6,cloakLength:1.48,
+  outer:'#1b1429',inner:'#070a14',trim:'#4e3c61'
 });
 function surface(THREE,sections,start,end,segments=32){
  const vertices=[],uvs=[],indices=[];
