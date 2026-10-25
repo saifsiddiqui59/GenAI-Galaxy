@@ -3,9 +3,10 @@
 const fs=require("node:fs"),path=require("node:path"),
       vm=require("node:vm"),assert=require("node:assert/strict");
 const source=fs.readFileSync(path.join(__dirname,"..","app.js"),"utf8");
-const start=source.indexOf("const AI_RESPONSE_TIMEOUT_MS=30000;");
+const start=source.indexOf("const AI_RESPONSE_TIMEOUT_MS=90000;");
 const end=source.indexOf("// The deployed runtime-config.js",start);
 assert.ok(start>0 && end>start);
+assert.match(source, /const AI_RESPONSE_TIMEOUT_MS=90000;/);
 const helper=source.slice(start,end);
 const ctx={AbortController,setTimeout,clearTimeout,fetch:null};
 vm.runInNewContext(helper+"\nthis.callAi=aiJsonOnce;",ctx);
@@ -36,8 +37,8 @@ async function run(){
  assert.equal(n,1);
  assert.equal((source.match(/aiJsonOnce\(window.GALAXY_EVALUATOR_URL,/g)||[]).length,1);
  assert.equal((source.match(/aiJsonOnce\(url,\{/g)||[]).length,1);
- assert.match(source,/AI review timed out after 30 seconds/);
- assert.match(source,/Tutor timed out after 30 seconds/);
+ assert.match(source,/AI review timed out after 90 seconds/);
+ assert.match(source,/Tutor timed out after 90 seconds/);
  assert.match(source,/Do not retry immediately/);
  console.log("P59 mocked AI timeouts: abort, body timeout, quota, no paid retries PASS");
 }

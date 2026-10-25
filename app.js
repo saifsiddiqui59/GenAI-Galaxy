@@ -197,7 +197,7 @@ function lessonMarkup(){const t=state.current||pickNext();state.current=t;const 
 function startPractice(){if(!state.current)state.current=pickNext();state.answerDraft='';state.feedback=null;state.tutorResponse=null;state.tutorPending=null;state.guideOpen=false;state.level=1;state.attemptQuestion=state.current.question||`Explain ${state.current.title} with an example.`;setView('practice')}
 function questionFor(t,level){const l=state.lessons[t.title];if(level===2&&l?.followups?.length)return l.followups[0];if(level===3&&l?.followups?.length>1)return l.followups[1];return t.question||`Explain ${t.title} with an example.`}
 // A timeout does not authorize retry: Azure may have reserved a quota unit.
-const AI_RESPONSE_TIMEOUT_MS=30000;
+const AI_RESPONSE_TIMEOUT_MS=90000;
 async function aiJsonOnce(url,options,timeoutMs=AI_RESPONSE_TIMEOUT_MS){
  const controller=new AbortController();
  const clock=setTimeout(()=>controller.abort(),timeoutMs);
@@ -266,7 +266,7 @@ async function askAiTutor(mode='explain'){
   const explanation=/^HTTP_\d{3}$/.test(code)?modelFailureMessage(Number(code.slice(5))):
    code==='INVALID_INPUT'?'Enter a tutor question between 3 and 1200 characters.':
    code==='NO_SESSION'?'Sign in again to ask the AI tutor.':
-    code==='AI_TIMEOUT'?'Tutor timed out after 30 seconds. The request may still count toward your daily quota. No AI reply was received; use the local lesson and do not retry immediately.':
+    code==='AI_TIMEOUT'?'Tutor timed out after 90 seconds. The request may still count toward your daily quota. No AI reply was received; use the local lesson and do not retry immediately.':
    'Tutor request was not completed. The local lesson is still available.';
   state.tutorResponse={error:explanation};
  }finally{
@@ -594,7 +594,7 @@ async function submitAnswer(e,localOnly=false){
    const error=String(err?.message||'');
    if(error==='NO_SESSION')score.localReason='Session expired. Sign in again; no authenticated AI review was returned.';
    else if(error==='INVALID_RESPONSE')score.localReason='AI returned an invalid response. Only the local keyword result is shown.';
-    else if(error==='AI_TIMEOUT')score.localReason='AI review timed out after 30 seconds. Azure may already have reserved a quota unit. Do not retry immediately; only the provisional local concept check is shown, not a factual grade.';
+    else if(error==='AI_TIMEOUT')score.localReason='AI review timed out after 90 seconds. Azure may already have reserved a quota unit. Do not retry immediately; only the provisional local concept check is shown, not a factual grade.';
    else if(/^HTTP_\d{3}$/.test(error))score.localReason=modelFailureMessage(Number(error.slice(5)));
    else if(err instanceof TypeError)score.localReason='AI endpoint could not be reached by the browser. Verify the hosted API URL, CORS preflight for this site and HTTPS/network access. No model review was received.';
    else score.localReason='AI evaluation did not complete ('+error.slice(0,100)+'). Only the local concept check is shown; no factual grade was produced.';
