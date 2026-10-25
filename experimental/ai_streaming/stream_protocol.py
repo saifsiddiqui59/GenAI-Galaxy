@@ -90,6 +90,8 @@ def parse_azure_chat_sse(lines: Iterable[bytes|str]) -> Iterator[tuple[str,dict]
         line=line.rstrip("\r\n")
         if not line or line.startswith(":"):
             continue
+        if done:
+            raise StreamContractError("Unexpected provider data after DONE")
         if not line.startswith("data:"):
             raise StreamContractError("Unexpected upstream stream framing")
         payload=line[5:].strip()
@@ -97,9 +99,7 @@ def parse_azure_chat_sse(lines: Iterable[bytes|str]) -> Iterator[tuple[str,dict]
             if finish!="stop" or not text_len:
                 raise StreamContractError("Provider did not finish a valid answer")
             done=True
-            yield "complete",{"completed":True,"usage":token_usage,
-                              "verified":False,"kind":"tutor_draft"}
-            break
+            continue
         try:
             part=json.loads(payload)
         except (ValueError,TypeError):
@@ -137,6 +137,8 @@ def parse_azure_chat_sse(lines: Iterable[bytes|str]) -> Iterator[tuple[str,dict]
             yield "delta",{"text":chunk,"provisional":True}
     if not done:
         raise StreamContractError("Provider stream interrupted before DONE")
+    yield "complete",{"completed":True,"usage":token_usage,
+                      "verified":False,"kind":"tutor_draft"}
 
 def relay_tutor_sse(lines: Iterable[bytes|str]) -> Iterator[bytes]:
     """StreamingResponse-compatible iterator. Errors never become success."""
