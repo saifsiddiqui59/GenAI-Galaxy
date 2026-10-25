@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {makeDepthStars} from '../src/space/SpaceDepthFX.jsx';
+import {makeDepthStars} from '../src/space/starDepthData.js';
 test('deterministic sparse star positions keep near/middle/far depth independent',()=>{
  const first=makeDepthStars(22,-23,53),second=makeDepthStars(22,-23,53);
  assert.deepEqual(Array.from(first),Array.from(second));
