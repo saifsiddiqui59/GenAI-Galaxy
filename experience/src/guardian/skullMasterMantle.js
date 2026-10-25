@@ -4,7 +4,7 @@
 */
 export const SKULLMASTER_PROFILE=Object.freeze({
   headScale:.90,hoodFrontGap:.73,hoodRings:6,cloakLength:1.22,
-  outer:'#21132f',inner:'#0b1023',trim:'#7d4b9b'
+  outer:'#21132f',inner:'#0b1023',trim:'#4b385c'
 });
 function surface(THREE,sections,start,end,segments=32){
  const vertices=[],uvs=[],indices=[];
