@@ -60,6 +60,24 @@ export function attachSkullMasterCloak(source,THREE){
   const path=new THREE.CatmullRomCurve3(points);
   addCloth(hood,new THREE.TubeGeometry(path,24,.026,6,false),SKULLMASTER_PROFILE.trim,THREE,.65);
  }
+ // Angular brow visor shades the exposed flat forehead but leaves amber eyes visible.
+ // It is an actual 3D cloth overhang, not an HTML sticker or screen overlay.
+ const crest=new THREE.BufferGeometry();
+ const brow=[
+  -.38,.70,.30, 0,.87,.21, .38,.70,.30,
+  -.37,.44,.42, 0,.52,.53, .37,.44,.42
+ ];
+ crest.setAttribute('position',new THREE.Float32BufferAttribute(brow,3));
+ crest.setIndex([0,3,1,1,3,4,1,4,2,2,4,5]);
+ crest.computeVertexNormals();
+ addCloth(hood,crest,SKULLMASTER_PROFILE.outer,THREE,.84);
+ // Subtle faceted brow seam and deeper inner shading give the skull definition.
+ const browSeam=new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-.37,.44,.43),new THREE.Vector3(-.15,.51,.52),
+  new THREE.Vector3(0,.53,.54),new THREE.Vector3(.15,.51,.52),
+  new THREE.Vector3(.37,.44,.43)
+ ]);
+ addCloth(hood,new THREE.TubeGeometry(browSeam,24,.018,6,false),'#644181',THREE,.74);
  const cape=new THREE.Group();cape.name='SkullMasterMantle';
  chest.add(cape);attached.push([chest,cape]);
  // Back panel drapes from shoulder below waist. Real head/hand bones remain free.
