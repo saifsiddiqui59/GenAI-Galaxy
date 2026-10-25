@@ -88,6 +88,25 @@ jobs:
                 --ref main -f confirm=SCALE_2048
               echo 'Owner requested existing-only no-idle 2048 MB Flex rightsize.'
               ;;
+            "PREVIEW_AI_P61_$EVENT_SHA")
+              gh workflow run galaxy-ai-preview-p61.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=PREVIEW_P61
+              echo 'Owner requested isolated P61 source-matched frontend publication.'
+              ;;
+            "TEST_AI_ONE_$EVENT_SHA")
+              # Require at least two green no-charge run checks on the exact
+              # main SHA before the one-evaluator/one-tutor paid test.
+              healthy="$(gh run list --workflow galaxy-ai-readonly-release-smoke.yml \
+                --branch main --event workflow_dispatch --limit 20 \
+                --json headSha,conclusion \
+                --jq "[.[] | select(.headSha == \"$EVENT_SHA\" and .conclusion == \"success\")] | length")"
+              [[ "$healthy" =~ ^[0-9]+$ && "$healthy" -ge 2 ]] || {
+                echo '::error::Two independent successful no-charge hosted smokes required'; exit 1;
+              }
+              gh workflow run galaxy-ephemeral-live-ai.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=TEST
+              echo 'Owner requested at most one real evaluator and tutor call in protected dev.'
+              ;;
             "ROLLBACK_FLEX_512_$EVENT_SHA")
               gh workflow run galaxy-p57-flex-memory.yml -R saifsiddiqui59/GenAI-Galaxy \
                 --ref main -f confirm=ROLLBACK_512
