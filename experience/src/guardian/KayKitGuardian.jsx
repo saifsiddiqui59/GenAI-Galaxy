@@ -6,6 +6,7 @@ import * as THREE from 'three';
 import {discoverRigAnchors,gripMidpoint} from './rigAnchors.js';
 import {styleKayKit,STYLE_PROFILE} from './styleKayKit.js';
 import {SKULLMASTER_PROFILE} from './skullMasterMantle.js';
+import {moveSkullMasterCloak} from './cloakMotion.js';
 import {moveWrist} from './handIK.js';
 import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS} from '../journey/choreography.js';
 import {phaseAt} from '../journey/story.js';
@@ -130,6 +131,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,reducedMotion=false,onReady
    const right=offer.clone().add(new THREE.Vector3(-.225*scale,-.15*scale,-.025*scale));
    error=Math.max(solveBlended(arms.left,left,influence),solveBlended(arms.right,right,influence));
   }
+  moveSkullMasterCloak(source,ms,view.phase==='arriving');
   source.updateWorldMatrix(true,true);
   const rightHand=rig.rightHand?.getWorldPosition(new THREE.Vector3());
   const grip=rig.rightHand?.localToWorld(new THREE.Vector3(0,.045,.035));
