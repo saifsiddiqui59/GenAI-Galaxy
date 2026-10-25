@@ -16,6 +16,7 @@ async function consumeGalaxySse(response,handlers={}){
  let buffer='',totalBytes=0,completed=false,answer='',frames=0;
  const accepted=new Set(['status','delta','complete','error']);
  function one(frame){
+   if(completed)throw new GalaxyStreamError('Trailing SSE frame after completion');
    frames++;
    if(frames>4000||frame.length>STREAM_MAX_FRAME)throw new GalaxyStreamError('Event stream limit exceeded');
    const lines=frame.split('\n');
