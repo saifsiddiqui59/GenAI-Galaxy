@@ -13,11 +13,15 @@ export function cinematicLayoutAt(ms,compact=false,short=false,completedCount=0,
  const progress=reducedMotion?1:smoother((Math.max(0,Number(ms)||0)-start)/ATLAS_REVEAL_MS);
  // Keep each planet spherical (uniform xyz scale) and compensate depth with
  // the initial z-offset so spreading the orbit does not send it far from camera.
+ // Give Skull Master breathing room in front of the constellation.
+ // The large original opening was visually crowded despite being fullscreen.
  const from=compact?
-  {position:[-5.35,short?.48:.82,-1.6],scale:[1.2,1.2,1.2]}:
-  {position:[-13.3,0,5.0],scale:[3,3,3]};
+  {position:[-6.45,short?.48:.82,-1.5],scale:[1.45,1.45,1.45]}:
+  {position:[-10.6,0,1.2],scale:[2.4,2.4,2.4]};
+ // Portrait: atlas floats to the upper right, leaving the walking Genie
+ // legible on lower left while keeping each planet perfectly spherical.
  const to=compact?
-  {position:[-1.8,short?.75:1.15,-2],scale:[.58,.58,.7]}:
+  {position:[-.70,short?2.0:2.12,-2.3],scale:[.52,.52,.52]}:
   {position:[0,0,0],scale:[1,1,1]};
  const blend=(a,b)=>progress===1?b:progress===0?a:a+(b-a)*progress;
  return {progress,phase:progress===1?'atlas':progress===0?'immersive':'transition',

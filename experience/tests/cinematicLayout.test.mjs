@@ -34,7 +34,18 @@ test('mobile has immersive then right-aligned view; reduced motion skips motion'
  const mobile=cinematicLayoutAt(0,true,true,3);
  const finished=cinematicLayoutAt(12000,true,true,3);
  assert(mobile.position[0]<finished.position[0]);
- assert.equal(finished.position[0],-1.8);
+ assert.equal(finished.position[0],-.70);
+ assert(finished.position[1]>=2.0,'mobile atlas should stay above character');
+ assert(finished.scale.every(x=>x===finished.scale[0]),'mobile planets must stay spherical');
  assert.equal(cinematicLayoutAt(0,false,false,3,true).progress,1);
  assert.equal(cinematicLayoutAt(0,true,true,3,true).progress,1);
+});
+
+test('final art direction caps full-screen planet scale to preserve Skull Master silhouette',()=>{
+ const desktop=cinematicLayoutAt(0,false,false,3);
+ const phone=cinematicLayoutAt(0,true,true,3);
+ assert(desktop.scale[0]>=2&&desktop.scale[0]<=2.6);
+ assert(phone.scale[0]>=1.3&&phone.scale[0]<=1.5);
+ assert(desktop.scale.every(x=>x===desktop.scale[0]));
+ assert(phone.scale.every(x=>x===phone.scale[0]));
 });
