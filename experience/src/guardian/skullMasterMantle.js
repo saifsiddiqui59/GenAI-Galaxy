@@ -3,8 +3,8 @@
    The hood follows the real head bone; mantle follows chest; all 95 animations stay alive.
 */
 export const SKULLMASTER_PROFILE=Object.freeze({
-  headScale:.90,hoodFrontGap:.73,hoodRings:6,cloakLength:1.22,
-  outer:'#21132f',inner:'#0b1023',trim:'#4b385c'
+  headScale:.90,hoodFrontGap:.73,hoodRings:6,cloakLength:1.69,
+  outer:'#1b1429',inner:'#070a14',trim:'#4e3c61'
 });
 function surface(THREE,sections,start,end,segments=32){
  const vertices=[],uvs=[],indices=[];
@@ -111,6 +111,25 @@ export function attachSkullMasterCloak(source,THREE){
     new THREE.MeshStandardMaterial({color:'#2c1a40',roughness:.95,side:THREE.DoubleSide}));
   piece.position.set(side*.37,-.24,-.13);piece.rotation.z=side*.32;
   cape.add(piece);
+ }
+ // Asymmetric front mantle panels conceal the toy-like pale chest/hip armor
+ // without obstructing the separate hand IK, pouch or held planet.
+ for(const side of [-1,1]){
+  const geo=new THREE.PlaneGeometry(.51,1.28,6,9);
+  const positions=geo.attributes.position;
+  for(let i=0;i<positions.count;i++){
+   const x=positions.getX(i),y=positions.getY(i);
+   const end=Math.max(0,-y/.64);
+   positions.setZ(i,-.05*Math.cos(x*8)+.04*end*Math.sin(x*17+side));
+   if(y<-.48)positions.setY(i,y+.08*Math.sin(x*18+side*.8));
+  }
+  positions.needsUpdate=true;geo.computeVertexNormals();
+  const fabric=new THREE.MeshStandardMaterial({color:SKULLMASTER_PROFILE.outer,roughness:.96,side:THREE.DoubleSide});
+  const panel=new THREE.Mesh(geo,fabric);
+  panel.name=side<0?'SkullMasterLeftMantle':'SkullMasterRightMantle';
+  panel.position.set(side*.45,-.48,.12);
+  panel.rotation.y=side*-.20;panel.rotation.z=side*.12;
+  panel.castShadow=true;cape.add(panel);
  }
  // Restore only display-owned objects and generated GPU resources.
  return ()=>{
