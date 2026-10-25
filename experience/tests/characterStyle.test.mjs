@@ -1,13 +1,16 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {STYLE_PROFILE,isCostumeRed,remapCostumePixel} from '../src/guardian/styleKayKit.js';
+import {STYLE_PROFILE,isCostumeRed,isPaleBone,remapCostumePixel} from '../src/guardian/styleKayKit.js';
 import {SKULLMASTER_PROFILE} from '../src/guardian/skullMasterMantle.js';
 test('costume colors turn violet without painting skeleton bone or pale skin',()=>{
  assert.equal(STYLE_PROFILE,'skullmaster-midnight-violet');
  assert(isCostumeRed(215,44,65));
  assert(!isCostumeRed(230,205,175));
  assert(!isCostumeRed(40,190,210));
- assert.deepEqual(remapCostumePixel(230,205,175),[230,205,175]);
+ assert(isPaleBone(230,205,175));
+ const blue=remapCostumePixel(230,205,175);
+ assert(blue[2]>blue[0]&&blue[0]<200);
+ assert.deepEqual(remapCostumePixel(40,190,210),[40,190,210]);
  const [r,g,b]=remapCostumePixel(215,44,65);
  assert(b>r&&r>g);
 });

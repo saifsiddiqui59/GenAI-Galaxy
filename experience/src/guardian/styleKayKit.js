@@ -5,7 +5,17 @@ import {attachSkullMasterCloak} from './skullMasterMantle.js';
  */
 export const STYLE_PROFILE='skullmaster-midnight-violet';
 export function isCostumeRed(r,g,b){return r>65&&r>g*1.35&&r>b*1.18&&r-g>36}
+export function isPaleBone(r,g,b){
+ const cream=r>=198&&g>=160&&b>=132&&r>=g&&g>=b&&r-g<=58&&g-b<=64;
+ const white=r>=215&&g>=215&&b>=213&&Math.max(r,g,b)-Math.min(r,g,b)<=16;
+ return cream||white;
+}
 export function remapCostumePixel(r,g,b){
+ if(isPaleBone(r,g,b)){
+  // Blue-grey bone replaces bright ivory; untouched emissive eye material stays amber.
+  const tone=Math.max(.72,Math.min(1.12,(r+g+b)/650));
+  return [Math.round(135*tone),Math.round(152*tone),Math.round(185*tone)];
+ }
  if(!isCostumeRed(r,g,b))return [r,g,b];
  const light=Math.max(.35,Math.min(1.1,r/190));
  return [Math.min(255,Math.round(78*light)),Math.min(255,Math.round(50*light+g*.10)),Math.min(255,Math.round(157*light+b*.12))];
