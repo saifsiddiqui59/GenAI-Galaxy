@@ -39,6 +39,8 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
   assert await page.locator('[data-choice]').count()==0
   # Free adaptive tutoring: explain, guide, skip, and resume without a model.
   assert await page.locator('#adaptive-teach').count()==1
+  await page.locator('.practice-more-actions > summary').first.click()
+  assert await page.locator('#adaptive-teach').is_visible()
   await page.locator('#adaptive-teach').click()
   assert await page.locator('#adaptive-guide').count()==1
   assert 'Simple explanation' in await page.locator('#adaptive-guide').inner_text()
@@ -49,6 +51,8 @@ async def inspect(viewport=(1440,900),path='galaxy-desktop.png',reduced=False):
   assert await page.locator('#adaptive-guide').count()==1
   assert await page.locator('.score-panel').count()==0
   previous_topic = await page.locator('.panel h3').first.inner_text()
+  await page.locator('.practice-more-actions > summary').first.click()
+  assert await page.locator('#adaptive-skip').is_visible()
   await page.locator('#adaptive-skip').click()
   next_topic = await page.locator('.panel h3').first.inner_text()
   assert next_topic != previous_topic, 'Skip failed to advance topic'
