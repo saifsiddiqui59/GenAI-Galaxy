@@ -57,6 +57,15 @@ class StreamSafetyTests(unittest.TestCase):
             self.assertTrue(events[-1].startswith(b"event: error\n"))
             self.assertFalse(any(x.startswith(b"event: complete\n") for x in events))
 
+    def test_provider_trailing_data_cannot_create_success(self):
+        parts=[frame("provisional",finish="stop"),b"data: [DONE]\\n\\n",
+               frame("surprise")]
+        with self.assertRaises(StreamContractError):
+            list(parse_azure_chat_sse(parts))
+        wire=list(relay_tutor_sse(parts))
+        self.assertTrue(wire[-1].startswith(b"event: error\\n"))
+        self.assertFalse(any(item.startswith(b"event: complete\\n") for item in wire))
+
     def test_invalid_stream_events_fail_closed(self):
         bads=[
             [b'data: {"error":{"code":"invalid"}}\n'],
