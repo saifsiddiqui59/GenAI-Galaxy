@@ -51,7 +51,9 @@ export function styleKayKit(source,THREE){
    n.material.emissiveIntensity=3.2;n.material.toneMapped=false;
   }else{
    if(styled)n.material.map=styled;
-   n.material.roughness=.82;n.material.metalness=.04;
+   // Direct per-mesh tint: cooler sculpted skull, without recoloring the glowing eyes.
+   if(/Skeleton_Mage_(Skull|Jaw)$/.test(n.name))n.material.color.set('#879bad');
+   n.material.roughness=.9;n.material.metalness=.02;
   }
  });
  const disposeMantle=attachSkullMasterCloak(source,THREE);
