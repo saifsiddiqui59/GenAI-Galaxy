@@ -107,6 +107,11 @@ jobs:
                 --ref main -f confirm=TEST
               echo 'Owner requested at most one real evaluator and tutor call in protected dev.'
               ;;
+            "DIAG_COLDSTART_$EVENT_SHA")
+              gh workflow run galaxy-p63-coldstart-nocharge.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=READONLY
+              echo 'Owner requested zero-token cold-start tolerant anonymous endpoint diagnosis.'
+              ;;
             "ROLLBACK_FLEX_512_$EVENT_SHA")
               gh workflow run galaxy-p57-flex-memory.yml -R saifsiddiqui59/GenAI-Galaxy \
                 --ref main -f confirm=ROLLBACK_512
