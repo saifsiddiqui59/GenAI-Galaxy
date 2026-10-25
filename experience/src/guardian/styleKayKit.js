@@ -1,10 +1,21 @@
+import {attachSkullMasterCloak} from './skullMasterMantle.js';
 /* Non-destructive visual style over the preserved, rigged CC0 KayKit asset.
  * Recolors only saturated red/magenta costume texels; preserves bones, UVs,
  * geometry, 95 original animation clips and original texture provenance.
  */
-export const STYLE_PROFILE='midnight-violet-amber';
+export const STYLE_PROFILE='skullmaster-midnight-violet';
 export function isCostumeRed(r,g,b){return r>65&&r>g*1.35&&r>b*1.18&&r-g>36}
+export function isPaleBone(r,g,b){
+ const cream=r>=198&&g>=160&&b>=132&&r>=g&&g>=b&&r-g<=58&&g-b<=64;
+ const white=r>=215&&g>=215&&b>=213&&Math.max(r,g,b)-Math.min(r,g,b)<=16;
+ return cream||white;
+}
 export function remapCostumePixel(r,g,b){
+ if(isPaleBone(r,g,b)){
+  // Blue-grey bone replaces bright ivory; untouched emissive eye material stays amber.
+  const tone=Math.max(.72,Math.min(1.12,(r+g+b)/650));
+  return [Math.round(135*tone),Math.round(152*tone),Math.round(185*tone)];
+ }
  if(!isCostumeRed(r,g,b))return [r,g,b];
  const light=Math.max(.35,Math.min(1.1,r/190));
  return [Math.min(255,Math.round(78*light)),Math.min(255,Math.round(50*light+g*.10)),Math.min(255,Math.round(157*light+b*.12))];
@@ -36,15 +47,18 @@ export function styleKayKit(source,THREE){
   if(!n.isMesh||!n.material)return;
   n.material=n.material.clone();
   if(n.material.name==='Glow'){
-   n.material.color.set('#ffca65');n.material.emissive.set('#ff8a1e');
-   n.material.emissiveIntensity=3.2;n.material.toneMapped=false;
+   n.material.color.set('#ff8f2c');n.material.emissive.set('#f15c0f');
+   n.material.emissiveIntensity=2.65;n.material.toneMapped=false;
   }else{
    if(styled)n.material.map=styled;
-   n.material.roughness=.82;n.material.metalness=.04;
+   // Direct per-mesh tint: cooler sculpted skull, without recoloring the glowing eyes.
+   if(/Skeleton_Mage_(Skull|Jaw)$/.test(n.name))n.material.color.set('#879bad');
+   n.material.roughness=.9;n.material.metalness=.02;
   }
  });
+ const disposeMantle=attachSkullMasterCloak(source,THREE);
  const head=source.getObjectByName('head');
  const eyeLight=head?new THREE.PointLight('#ff8e30',.32,1.5):null;
  if(eyeLight){eyeLight.name='GalaxyEyeGlow';eyeLight.position.set(0,.12,.28);head.add(eyeLight)}
- return ()=>{if(eyeLight){head.remove(eyeLight);eyeLight.dispose?.()}styled?.dispose();};
+ return ()=>{disposeMantle();if(eyeLight){head.remove(eyeLight);eyeLight.dispose?.()}styled?.dispose();};
 }
