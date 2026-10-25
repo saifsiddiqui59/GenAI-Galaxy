@@ -10,11 +10,16 @@ Original visual reference: user-supplied hooded skeleton with glowing amber eyes
 - Git blob SHA-1: `9e1927babc5791067ccf2004bda7e59a40cac753`
 - Source file size: 8,959,044 bytes
 - Asset author: Vladimir Petkovic, per upstream README
+- Build-time deterministic CC0 derivative: 627,700 bytes, 17,311 vertices / 35,181 triangles
+- Verified optimized asset SHA256: `b702cf9bacb631c7c3133a7a480c2c5a15f5da3017de4895313f7e7fab8cea30`
+- Optimizer: `experience/scripts/simplify_cc0_skull.py`; vertex clustering at 4.5 mm, 16-bit indices, omits unused SSS textures/tangents while retaining anatomy
 - Original KayKit Skeleton Mage retains its existing separate CC0 source.
 
 ## Architecture
 - Pinned build-time downloader fails closed on hash/length changes.
-- Bundle asset under `experience/public/models/cc0/ScatteringSkull.glb` before Vite build; no public runtime fetch.
+- Bundle optimized asset under `experience/public/models/cc0/ScatteringSkull.glb` before Vite build; no public runtime fetch.
+- Expected GLB optimization shrinks original 8.96 MB to 0.63 MB for low-power 3D devices.
+- Scene-clock P220 fix is also included on the experimental branch and independently reviewed in PR #221.
 - Clone and normalize skull, parent it under original KayKit `head` bone.
 - Hide only KayKit original skull/jaw/eye display mesh, preserving original 95 animation clips, arm chain, hand IK, satchel origin, planet IDs, lessons and progress.
 - Restore original meshes and dispose replacement material on unmount.
