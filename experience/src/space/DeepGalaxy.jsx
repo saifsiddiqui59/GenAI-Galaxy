@@ -155,9 +155,10 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
   <color attach="background" args={['#050916']}/>
   <ambientLight intensity={.6}/>
   <hemisphereLight color="#d4e4ff" groundColor="#29243f" intensity={1.4}/>
-  <directionalLight position={[-3,5,8]} color="#fff0d7" intensity={3.6}/>
+  <directionalLight position={[-3,5,8]} color="#dfdcf4" intensity={3.05}/>
   <directionalLight position={[3,2,-3]} color="#849fee" intensity={2.1}/>
-  <pointLight position={[-2.6,.4,6.5]} color="#ffdfba" intensity={15} distance={9}/>
+  {/* Cooler, softer character fill creates recessed bone cavities and lets amber eyes lead. */}
+  <pointLight position={[-2.6,.4,6.5]} color="#aaa0d1" intensity={8.5} distance={8.3}/>
   <NebulaCloud reducedMotion={reducedMotion} clockRef={clockRef}/>
   <SpaceDepthFX compact={lowPower} clockRef={clockRef} reducedMotion={reducedMotion}/>
   <Starfield lowPower={lowPower}/>
