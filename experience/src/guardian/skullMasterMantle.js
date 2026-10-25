@@ -100,7 +100,11 @@ export function attachSkullMasterCloak(source,THREE){
  const geo=new THREE.BufferGeometry();
  geo.setIndex(indices);geo.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
  geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));geo.computeVertexNormals();
- addCloth(cape,geo,SKULLMASTER_PROFILE.outer,THREE);
+ const capeCloth=addCloth(cape,geo,SKULLMASTER_PROFILE.outer,THREE);
+ capeCloth.name='SkullMasterCapeCloth';
+ capeCloth.userData.restPositions=geo.attributes.position.array.slice();
+ capeCloth.userData.columns=segments+1;
+ geo.attributes.position.setUsage(THREE.DynamicDrawUsage);
  // Shoulder drapes soften pale arm/armor silhouettes without intercepting palm IK.
  for(const side of [-1,1]){
   const piece=new THREE.Mesh(new THREE.ConeGeometry(.29,.74,10,1,true),
