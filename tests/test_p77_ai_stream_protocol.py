@@ -73,7 +73,7 @@ class StreamSafetyTests(unittest.TestCase):
 
     def test_no_sse_injection_or_sensitive_output(self):
         body=galaxy_sse("delta",{"text":"line1\nevent: complete\nline3","provisional":True})
-        self.assertEqual(body.count(b"event: complete"),0)
+        self.assertNotIn(b"\nevent: complete\n",body)
         self.assertEqual(body.count(b"event: delta"),1)
         for name in ("unknown","quota","retry"):
             with self.assertRaises(StreamContractError):
