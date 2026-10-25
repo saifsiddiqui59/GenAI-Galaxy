@@ -135,6 +135,9 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
    atlasRoot.current.position.set(...layout.position);
    atlasRoot.current.scale.set(...layout.scale);
   }
+  if(window.__galaxySkeletonDiagnostics){
+   window.__galaxySkeletonDiagnostics.atlasReveal={progress:layout.progress,phase:layout.phase,position:layout.position};
+  }
  },-2);
  useEffect(()=>{camera.lookAt(0,lowPower?.05:.15,0);camera.updateProjectionMatrix()},[camera,lowPower]);
  return <>
