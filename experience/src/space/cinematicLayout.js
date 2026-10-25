@@ -19,7 +19,7 @@ export function cinematicLayoutAt(ms,compact=false,short=false,completedCount=0,
  const to=compact?
   {position:[-1.8,short?.75:1.15,-2],scale:[.58,.58,.7]}:
   {position:[0,0,0],scale:[1,1,1]};
- const blend=(a,b)=>a+(b-a)*progress;
+ const blend=(a,b)=>progress===1?b:progress===0?a:a+(b-a)*progress;
  return {progress,phase:progress===1?'atlas':progress===0?'immersive':'transition',
   position:from.position.map((v,i)=>blend(v,to.position[i])),
   scale:from.scale.map((v,i)=>blend(v,to.scale[i]))};
