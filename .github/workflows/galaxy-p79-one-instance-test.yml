@@ -126,7 +126,7 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      - name: Independently confirm no lasting scale change
+      - name: Independently restore and verify original scale if interrupted
         shell: bash
         run: |
           set -euo pipefail
@@ -134,6 +134,18 @@ jobs:
           CONFIG="$cfg" python3 - <<'PY'
           import json,os
           d=json.loads(os.environ["CONFIG"])
+          assert d.get("instanceMemoryMB")==512 and d.get("alwaysReady")==[], "P79 ALERT: unexpected memory/idle settings"
+          assert d.get("maximumInstanceCount") in (1,2), "P79 ALERT: unexpected cap"
+          PY
+          current="$(CFG="$cfg" python3 -c 'import json,os;print(json.loads(os.environ["CFG"])["maximumInstanceCount"])')"
+          if [[ "$current" == 1 ]]; then
+            echo "P79 interrupted: independently restoring exact prior maximum=2"
+            az functionapp scale config set -g GenAI_Galaxy -n gengalaxy-p3-1429841605 --instance-memory 512 --maximum-instance-count 2 -o none
+          fi
+          restored="$(az resource show -g GenAI_Galaxy -n gengalaxy-p3-1429841605 --resource-type Microsoft.Web/sites --query 'properties.functionAppConfig.scaleAndConcurrency' -o json)"
+          RESTORED="$restored" python3 - <<'PY'
+          import json,os
+          d=json.loads(os.environ["RESTORED"])
           assert d.get("maximumInstanceCount")==2 and d.get("instanceMemoryMB")==512 and d.get("alwaysReady")==[], "P79 ALERT: original scale settings NOT restored"
           print("P79 VERIFIED second job: original 512MB, max2, no Always Ready")
           PY
