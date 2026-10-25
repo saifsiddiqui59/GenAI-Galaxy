@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {atlasLayout} from '../src/space/worldAnchors.js';
-import {galaxySpaceAt,orbitAt,launchAt,flightProgress,planetHiddenFromAtlas} from '../src/space/worldOrbit.js';
+import {galaxySpaceAt,orbitAt,launchAt,flightProgress,planetHiddenFromAtlas,ORBIT_PERIOD_MS,PLANET_SPIN_PERIOD_MS,planetSpinAt} from '../src/space/worldOrbit.js';
 test('all 17 original worlds orbit deterministically without swapping indexes',()=>{
  const worlds=atlasLayout();assert.equal(worlds.length,17);
  for(const [index,world] of worlds.entries()){
@@ -29,17 +29,28 @@ test('original planet is transferred exactly once at its collection start',()=>{
 test('all 17 worlds complete a continuous elliptical 360° revolution',()=>{
  const anchors=atlasLayout();
  for(const w of anchors){
-  const start=orbitAt(w,0),quarter=orbitAt(w,36000),half=orbitAt(w,72000),end=orbitAt(w,144000);
+  const start=orbitAt(w,0),quarter=orbitAt(w,ORBIT_PERIOD_MS/4),half=orbitAt(w,ORBIT_PERIOD_MS/2),end=orbitAt(w,ORBIT_PERIOD_MS);
   assert(Math.hypot(quarter.x-start.x,quarter.y-start.y)>.7,`no visible travel ${w.index}`);
   assert(Math.hypot(half.x-start.x,half.y-start.y)>.5,`not orbiting ${w.index}`);
   assert(Math.hypot(end.x-start.x,end.y-start.y)<1e-9,`orbit did not close ${w.index}`);
  }
- for(let moment=0;moment<=144000;moment+=2000){
+ for(let moment=0;moment<=ORBIT_PERIOD_MS;moment+=2000){
   const positions=anchors.map(w=>orbitAt(w,moment));
   for(let i=0;i<positions.length;i++)for(let j=0;j<i;j++){
    const a=positions[i],b=positions[j];
    assert(Math.hypot(a.x-b.x,a.y-b.y)>a.scale+b.scale+.12,
     `collision at ${moment}ms: worlds ${a.index}/${b.index}`);
   }
+ }
+});
+
+test('worlds visibly orbit during a short visit while each planet spins independently',()=>{
+ assert.equal(ORBIT_PERIOD_MS,90000);
+ assert.equal(PLANET_SPIN_PERIOD_MS,36000);
+ for(const w of atlasLayout()){
+  const initial=orbitAt(w,0),later=orbitAt(w,8000);
+  assert(Math.hypot(later.x-initial.x,later.y-initial.y)>.18,`too little orbital travel for ${w.index}`);
+  assert(Math.abs(planetSpinAt(w.index,PLANET_SPIN_PERIOD_MS/4)-w.index-Math.PI/2)<1e-9);
+  assert.equal(planetSpinAt(w.index,20000,true),w.index,'reduced-motion must freeze surface spin');
  }
 });
