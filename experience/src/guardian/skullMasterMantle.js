@@ -60,18 +60,26 @@ export function attachSkullMasterCloak(source,THREE){
   const path=new THREE.CatmullRomCurve3(points);
   addCloth(hood,new THREE.TubeGeometry(path,24,.026,6,false),SKULLMASTER_PROFILE.trim,THREE,.65);
  }
- // Angular brow visor shades the exposed flat forehead but leaves amber eyes visible.
- // It is an actual 3D cloth overhang, not an HTML sticker or screen overlay.
- const crest=new THREE.BufferGeometry();
- const brow=[
-  -.39,.92,.41, 0,1.00,.47, .39,.92,.41,
-  -.43,.53,.61, 0,.58,.69, .43,.53,.61
+ // A rounded, tapering front canopy completes the hood above the eyes.
+ // Unlike a flat visor it has changing curvature across both X and Y.
+ const canopySections=[
+  {y:.51,r:.62,z:.08},{y:.66,r:.56,z:.045},
+  {y:.81,r:.40,z:-.01},{y:.96,r:.18,z:-.055},{y:1.02,r:.024,z:-.07}
  ];
- crest.setAttribute('position',new THREE.Float32BufferAttribute(brow,3));
- crest.setIndex([0,3,1,1,3,4,1,4,2,2,4,5]);
- crest.computeVertexNormals();
- addCloth(hood,crest,SKULLMASTER_PROFILE.outer,THREE,.92);
- // Matte under-hood shadow is intentionally above the moving eyes, not a visor.
+ const frontHood=addCloth(hood,surface(THREE,canopySections,
+   2*Math.PI-SKULLMASTER_PROFILE.hoodFrontGap,
+   2*Math.PI+SKULLMASTER_PROFILE.hoodFrontGap,24),SKULLMASTER_PROFILE.outer,THREE,.9);
+ frontHood.name='SkullMasterCurvedCanopy';
+ // Delicate dark roll around the facial opening; do not cross the eye line.
+ const frontRimPoints=[];
+ for(let k=0;k<=20;k++){
+  const phi=-SKULLMASTER_PROFILE.hoodFrontGap+
+   2*SKULLMASTER_PROFILE.hoodFrontGap*k/20;
+  frontRimPoints.push(new THREE.Vector3(.624*Math.sin(phi),.51,
+    .624*Math.cos(phi)+.08));
+ }
+ const frontRim=new THREE.CatmullRomCurve3(frontRimPoints);
+ addCloth(hood,new THREE.TubeGeometry(frontRim,24,.018,6,false),'#3d2750',THREE,.88);
  const cape=new THREE.Group();cape.name='SkullMasterMantle';
  chest.add(cape);attached.push([chest,cape]);
  // Back panel drapes from shoulder below waist. Real head/hand bones remain free.
