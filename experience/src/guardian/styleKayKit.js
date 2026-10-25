@@ -1,8 +1,9 @@
+import {attachSkullMasterCloak} from './skullMasterMantle.js';
 /* Non-destructive visual style over the preserved, rigged CC0 KayKit asset.
  * Recolors only saturated red/magenta costume texels; preserves bones, UVs,
  * geometry, 95 original animation clips and original texture provenance.
  */
-export const STYLE_PROFILE='midnight-violet-amber';
+export const STYLE_PROFILE='skullmaster-midnight-violet';
 export function isCostumeRed(r,g,b){return r>65&&r>g*1.35&&r>b*1.18&&r-g>36}
 export function remapCostumePixel(r,g,b){
  if(!isCostumeRed(r,g,b))return [r,g,b];
@@ -43,8 +44,9 @@ export function styleKayKit(source,THREE){
    n.material.roughness=.82;n.material.metalness=.04;
   }
  });
+ const disposeMantle=attachSkullMasterCloak(source,THREE);
  const head=source.getObjectByName('head');
  const eyeLight=head?new THREE.PointLight('#ff8e30',.32,1.5):null;
  if(eyeLight){eyeLight.name='GalaxyEyeGlow';eyeLight.position.set(0,.12,.28);head.add(eyeLight)}
- return ()=>{if(eyeLight){head.remove(eyeLight);eyeLight.dispose?.()}styled?.dispose();};
+ return ()=>{disposeMantle();if(eyeLight){head.remove(eyeLight);eyeLight.dispose?.()}styled?.dispose();};
 }

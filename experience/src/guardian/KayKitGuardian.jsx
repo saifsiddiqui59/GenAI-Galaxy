@@ -5,6 +5,7 @@ import {clone} from 'three/examples/jsm/utils/SkeletonUtils.js';
 import * as THREE from 'three';
 import {discoverRigAnchors,gripMidpoint} from './rigAnchors.js';
 import {styleKayKit,STYLE_PROFILE} from './styleKayKit.js';
+import {SKULLMASTER_PROFILE} from './skullMasterMantle.js';
 import {moveWrist} from './handIK.js';
 import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS} from '../journey/choreography.js';
 import {phaseAt} from '../journey/story.js';
@@ -94,7 +95,11 @@ function Model({rigPoseRef,clockRef,completedCount=0,reducedMotion=false,onReady
   sample('Unarmed_Idle',(ms/1000)%1.0666667,Math.max(0,1-walk-pickupWeight));
   // Unlike useAnimations' independent delta, sample clips on the prop clock.
   // Weighted sampling replaces fadeIn/fadeOut without restarting PickUp at contact.
-  mixer.update(0);body.updateWorldMatrix(true,true);
+  mixer.update(0);
+  // Clip sampling controls all 95 animations; keep the skull/hood proportion aligned.
+  const headBone=source.getObjectByName('head');
+  if(headBone)headBone.scale.setScalar(SKULLMASTER_PROFILE.headScale);
+  body.updateWorldMatrix(true,true);
   const hip=rig.waist?.getWorldPosition(new THREE.Vector3());
   if(!hip)return;
   const scale=compactScale;
