@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import {planetSurfaceTexture} from './PlanetSurface.js';
 import {atlasLayout} from './worldAnchors.js';
 import {orbitAt,planetHiddenFromAtlas} from './worldOrbit.js';
+import {overlapsGuardian} from './markerClearance.js';
 import curriculum from '../../../data/curriculum.json';
 export const PLANET_COUNT=17;
 export const COLORS=['#74cce5','#b7a0e9','#e4b57c','#a8dfed','#7dceb3','#dfb77e','#c78d73','#91b4eb','#a7ca9c','#d3b1f0','#78b8dc','#deb28d','#9ad0c1','#b9a3e5','#e2bb8e','#83b8d6','#c894bf'];
@@ -47,13 +48,22 @@ function NebulaCloud({reducedMotion,clockRef}){
  </mesh>;
 }
 function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect,reducedMotion,lowPower,clockRef}){
- const group=useRef(),orbit=useRef(),[hover,setHover]=useState(false);
+ const group=useRef(),orbit=useRef(),indexMarker=useRef(),titleMarker=useRef(),projection=useRef(new THREE.Vector3()),[hover,setHover]=useState(false);
  const color=COLORS[world.index];
  const surface=useMemo(()=>planetSurfaceTexture(world.index,color,lowPower),[world.index,color,lowPower]);
  useEffect(()=>()=>surface.dispose(),[surface]);
- useFrame(()=>{
+ useFrame(state=>{
   const ms=clockRef.current.ms;
-  if(orbit.current){const p=orbitAt(world,ms);orbit.current.position.set(p.x,p.y,p.z)}
+  if(orbit.current){
+   const p=orbitAt(world,ms);orbit.current.position.set(p.x,p.y,p.z);
+   // Drei Html elements render on top of WebGL, so use projected bounding
+   // coordinates to prevent labels painting over the skull or its dark hood.
+   const pos=orbit.current.localToWorld(projection.current.set(0,-world.scale-.085,0)).project(state.camera);
+   const x=(pos.x+1)*state.size.width/2,y=(1-pos.y)*state.size.height/2;
+   const hidden=overlapsGuardian(x,y,state.size.width,state.size.height,lowPower);
+   if(indexMarker.current)indexMarker.current.style.visibility=hidden?'hidden':'visible';
+   if(titleMarker.current)titleMarker.current.style.visibility=hidden?'hidden':'visible';
+  }
   if(group.current){group.current.rotation.y=reducedMotion?world.index:ms*.000045+world.index;group.current.visible=!planetHiddenFromAtlas(ms,collectionOrder,reducedMotion)}
  });
  return <group ref={orbit} position={[world.x,world.y,world.z]}
@@ -78,10 +88,10 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
   </mesh>}
   {/* Every world keeps a numbered, accessible marker; expand long names only when useful. */}
   <Html center position={[0,-world.scale-.085,0]} style={{pointerEvents:'none'}}>
-   <span className="planet-index-caption" data-world-index={world.index} title={curriculum[world.index].title} aria-label={curriculum[world.index].title}>{String(world.index+1).padStart(2,'0')}</span>
+   <span ref={indexMarker} className="planet-index-caption" data-world-index={world.index} title={curriculum[world.index].title} aria-label={curriculum[world.index].title}>{String(world.index+1).padStart(2,'0')}</span>
   </Html>
   {!lowPower&&(hover||recommended||selected)&&<Html center position={[0,-world.scale-.34,0]} style={{pointerEvents:'none'}}>
-   <div className={'planet-caption'+(recommended?' planet-caption-next':'')} data-world-label={world.index} title={curriculum[world.index].title}>
+   <div ref={titleMarker} className={'planet-caption'+(recommended?' planet-caption-next':'')} data-world-label={world.index} title={curriculum[world.index].title}>
     <strong>{curriculum[world.index].title}</strong>
    </div>
   </Html>}
