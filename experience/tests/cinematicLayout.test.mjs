@@ -34,7 +34,9 @@ test('mobile has immersive then right-aligned view; reduced motion skips motion'
  const mobile=cinematicLayoutAt(0,true,true,3);
  const finished=cinematicLayoutAt(12000,true,true,3);
  assert(mobile.position[0]<finished.position[0]);
- assert.equal(finished.position[0],-1.8);
+ assert.equal(finished.position[0],-.70);
+ assert(finished.position[1]>=2.0,'mobile atlas should stay above character');
+ assert(finished.scale.every(x=>x===finished.scale[0]),'mobile planets must stay spherical');
  assert.equal(cinematicLayoutAt(0,false,false,3,true).progress,1);
  assert.equal(cinematicLayoutAt(0,true,true,3,true).progress,1);
 });
