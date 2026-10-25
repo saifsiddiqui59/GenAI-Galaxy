@@ -1,0 +1,91 @@
+name: Galaxy P68 one-time DEV Flex Function worker restart and free verification
+# One owner-triggered existing-only restart. No Always Ready, scaling, redeploy or AI calls.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type RESTART_EXISTING_ONCE: one existing Galaxy Function restart only'
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-p68-one-time-existing-function
+  cancel-in-progress: false
+jobs:
+  bounded-restart:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'RESTART_EXISTING_ONCE'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      RG: GenAI_Galaxy
+      APP: gengalaxy-p3-1429841605
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify exact owner OIDC and zero-idle policy before restart
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == 737d67b7-4984-48bb-bb1f-5f62599f645c ]] || exit 1
+          [[ "$SUBSCRIPTION" == 3a5e8018-40a4-49e3-bcba-a9af3344f50e ]] || exit 1
+          [[ "$RG" == GenAI_Galaxy && "$APP" == gengalaxy-p3-1429841605 ]] || exit 1
+          python -m unittest discover -s tests -p 'test_p68_restart.py' -v
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Verify one existing running 512MB Flex app and no Always Ready before restart
+        shell: bash
+        run: |
+          set -euo pipefail
+          id="$(az functionapp show -g "$RG" -n "$APP" --query id -o tsv)"
+          state="$(az functionapp show -g "$RG" -n "$APP" --query state -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
+          [[ "$state" == Running ]] || exit 1
+          config="$(az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites --query properties.functionAppConfig.scaleAndConcurrency -o json)"
+          CONFIG="$config" python - <<'PY'
+          import json,os
+          cfg=json.loads(os.environ['CONFIG'])
+          assert cfg.get('instanceMemoryMB') == 512
+          assert cfg.get('maximumInstanceCount') == 2
+          assert cfg.get('alwaysReady') in (None,[])
+          print("Verified existing 512 MB, max 2, Always Ready disabled.")
+          PY
+      - name: Restart only the verified existing Function App exactly once
+        shell: bash
+        run: |
+          set -euo pipefail
+          az functionapp restart -g "$RG" -n "$APP" -o none
+          echo "One controlled existing Function restart completed; no scale or app settings changed."
+      - name: Verify same resource and zero idle settings after restart
+        shell: bash
+        run: |
+          set -euo pipefail
+          id="$(az functionapp show -g "$RG" -n "$APP" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
+          config="$(az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites --query properties.functionAppConfig.scaleAndConcurrency -o json)"
+          CONFIG="$config" python - <<'PY'
+          import json,os
+          cfg=json.loads(os.environ['CONFIG'])
+          assert cfg.get('instanceMemoryMB') == 512
+          assert cfg.get('maximumInstanceCount') == 2
+          assert cfg.get('alwaysReady') in (None,[])
+          print("Post restart confirmed 512 MB, maximum two and zero Always Ready.")
+          PY
+      - name: Test two anonymous AI routes with 100s cold-start allowance and no paid model calls
+        shell: bash
+        run: python scripts/diagnose_long_unauth_nocharge.py --confirm LONG_READONLY
+      - name: Clear protected Azure login
+        if: always()
+        run: az logout >/dev/null 2>&1 || true

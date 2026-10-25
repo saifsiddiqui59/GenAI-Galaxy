@@ -122,6 +122,11 @@ jobs:
                 --ref main -f confirm=LONG_READONLY
               echo 'Owner requested one-shot long anonymous Function startup diagnosis.'
               ;;
+            "RESTART_ONCE_$EVENT_SHA")
+              gh workflow run galaxy-p68-one-time-restart.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=RESTART_EXISTING_ONCE
+              echo 'Owner requested one controlled restart of existing 512 MB zero-idle Galaxy DEV Function.'
+              ;;
             "ROLLBACK_FLEX_512_$EVENT_SHA")
               gh workflow run galaxy-p57-flex-memory.yml -R saifsiddiqui59/GenAI-Galaxy \
                 --ref main -f confirm=ROLLBACK_512
