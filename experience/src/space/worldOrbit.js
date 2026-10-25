@@ -5,10 +5,16 @@
 import {atlasLayout} from './worldAnchors.js';
 import {COLLECT_START_MS,PER_WORLD_MS,smooth} from '../journey/choreography.js';
 import {cinematicLayoutAt} from './cinematicLayout.js';
-// One cinematic revolution of the entire constellation every 144 seconds.
+// One cinematic revolution of the constellation every 90 seconds so the 17 worlds visibly travel during short visits.
 // Keeping the SAME angular speed for all worlds preserves ordering and prevents
 // planets colliding while still giving each a full visible 360° orbital path.
-export const ORBIT_PERIOD_MS=144000;
+export const ORBIT_PERIOD_MS=90000;
+// Surface spin is faster than orbital travel and remains deterministic across refreshes.
+export const PLANET_SPIN_PERIOD_MS=36000;
+export function planetSpinAt(index,ms,reducedMotion=false){
+ const time=reducedMotion?0:Math.max(0,Number.isFinite(ms)?ms:0);
+ return index+(time/PLANET_SPIN_PERIOD_MS)*2*Math.PI;
+}
 export const ORBIT_CENTER=Object.freeze({x:4.48,y:.10});
 export const ORBIT_Y_ASPECT=.76;
 export function orbitAt(world,ms){
