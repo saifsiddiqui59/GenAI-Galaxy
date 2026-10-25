@@ -10,6 +10,7 @@ import './collection.css';
 
 function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount,reducedMotion}){
  const orb=useRef(),trail=useRef(),sparks=useRef(),beam=useRef();
+ const beamMatrices=useMemo(()=>({up:new THREE.Vector3(0,1,0),matrix:new THREE.Matrix4(),quat:new THREE.Quaternion(),scale:new THREE.Vector3(),mid:new THREE.Vector3()}),[]);
  const sparksGeometry=useMemo(()=>{
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(26*3),3));
@@ -63,12 +64,26 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
     attr.needsUpdate=true;
     trailGeometry.computeBoundingSphere();
     if(beam.current){
-     const direction=end.clone().sub(source),length=direction.length();
-     beam.current.position.copy(source).add(end).multiplyScalar(.5);
-     if(length>.001){
-      beam.current.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.multiplyScalar(1/length));
-      beam.current.scale.set(.032,length,.032);
+     // A faceted curved energy ribbon replaces the former rigid straight rod.
+     // Animate 16 GPU-instanced segments; no per-frame geometry allocations.
+     const strand=u=>{
+      const p=source.clone().lerp(end,u),arc=Math.sin(Math.PI*u);
+      p.x+=arc*(.24+Math.sin(u*11+c.ms*.009)*.035)*s;
+      p.y+=arc*.12*s;
+      p.z+=arc*Math.cos(u*9+c.ms*.012)*.055*s;
+      return p;
+     };
+     for(let k=0;k<16;k++){
+      const a=strand(k/16),b=strand((k+1)/16);
+      const direction=b.sub(a),length=direction.length(),u=(k+.5)/16;
+      beamMatrices.mid.copy(a).addScaledVector(direction,.5);
+      beamMatrices.quat.setFromUnitVectors(beamMatrices.up,direction.normalize());
+      const radius=.018+.018*Math.sin(Math.PI*u);
+      beamMatrices.scale.set(radius,length,radius);
+      beamMatrices.matrix.compose(beamMatrices.mid,beamMatrices.quat,beamMatrices.scale);
+      beam.current.setMatrixAt(k,beamMatrices.matrix);
      }
+     beam.current.instanceMatrix.needsUpdate=true;
     }
     if(sparks.current){
      const sparkPos=sparksGeometry.getAttribute('position');
@@ -105,18 +120,11 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
    <pointsMaterial color={COLORS[world.index]} size={.105} sizeAttenuation
      transparent opacity={.88} depthWrite={false} blending={THREE.AdditiveBlending}/>
   </points>
-  <group ref={beam} visible={false}>
-   <mesh>
-    <cylinderGeometry args={[1,1,1,8,1,true]}/>
-    <meshBasicMaterial color="#b8eaff" transparent opacity={.77} depthWrite={false}
-      blending={THREE.AdditiveBlending}/>
-   </mesh>
-   <mesh scale={[3.0,1,3.0]}>
-    <cylinderGeometry args={[1,1,1,8,1,true]}/>
-    <meshBasicMaterial color={COLORS[world.index]} transparent opacity={.13} depthWrite={false}
-      blending={THREE.AdditiveBlending}/>
-   </mesh>
-  </group>
+  <instancedMesh ref={beam} args={[null,null,16]} visible={false} frustumCulled={false}>
+   <cylinderGeometry args={[1,1,1,6,1,true]}/>
+   <meshBasicMaterial color="#a3dbff" transparent opacity={.48} depthWrite={false}
+     blending={THREE.AdditiveBlending}/>
+  </instancedMesh>
  </>;
 }
 function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
