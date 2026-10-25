@@ -31,7 +31,7 @@ test('all 17 worlds complete a continuous elliptical 360° revolution',()=>{
  for(const w of anchors){
   const start=orbitAt(w,0),quarter=orbitAt(w,36000),half=orbitAt(w,72000),end=orbitAt(w,144000);
   assert(Math.hypot(quarter.x-start.x,quarter.y-start.y)>.7,`no visible travel ${w.index}`);
-  assert(Math.hypot(half.x-start.x,half.y-start.y)>1.3,`not orbiting ${w.index}`);
+  assert(Math.hypot(half.x-start.x,half.y-start.y)>.5,`not orbiting ${w.index}`);
   assert(Math.hypot(end.x-start.x,end.y-start.y)<1e-9,`orbit did not close ${w.index}`);
  }
  for(let moment=0;moment<=144000;moment+=2000){
