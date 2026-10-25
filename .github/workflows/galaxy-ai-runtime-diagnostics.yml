@@ -54,6 +54,21 @@ jobs:
           if ! az functionapp function list -g "$RG" -n "$APP" --query '[].name' -o json; then
             echo '::warning::Function listing failed; check host indexing / control-plane reachability.'
           fi
+      - name: Correlate Python health before evaluator and tutor probes
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          code="$(curl --http1.1 --silent --show-error --max-time 75 --dump-header "$tmp/headers" -o /dev/null -w '%{http_code}' "$API/api/health" || true)"
+          trace_present=false
+          if grep -Eiq '^X-Galaxy-Trace-Id: *[0-9a-f-]{36}' "$tmp/headers"; then
+            trace_present=true
+          fi
+          echo "Python health GET http=$code app_trace_present=$trace_present"
+          if [[ "$code" != 200 || "$trace_present" != true ]]; then
+            echo '::error::Python liveness unverified; no model call'; exit 1
+          fi
       - name: Probe anonymous routes without model credentials or quota
         shell: bash
         run: |

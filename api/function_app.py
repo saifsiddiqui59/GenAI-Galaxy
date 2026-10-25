@@ -141,6 +141,19 @@ def model_review(rubric, question, response, history=None):
     return reviewed,usage
 
 
+@app.route(route='health',methods=['GET'])
+def health(req:func.HttpRequest)->func.HttpResponse:
+    """Minimal no-model Python liveness probe, independent of JWT/LLM/Supabase.
+
+    A 200 plus app-generated trace establishes that the request reached Python.
+    A gateway 503/no trace leaves host startup, scheduling and routing unresolved.
+    The route does not include host identity, runtime settings or private data.
+    """
+    trace_id=new_trace_id()
+    return make_response(req,{'status':'ok','component':'galaxy-ai-function',
+                              'model_called':False},200,trace_id=trace_id)
+
+
 @app.route(route='practice/evaluate',methods=['POST','OPTIONS'])
 def evaluate(req:func.HttpRequest)->func.HttpResponse:
     pending=preflight(req)
