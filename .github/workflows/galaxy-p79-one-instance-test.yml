@@ -1,0 +1,153 @@
+name: Galaxy P79 one-instance routing diagnosis with guaranteed reset (manual)
+# Only the existing Flex DEV Function. Scale max 2 -> 1 -> 2 temporarily,
+# keeping 512MB/alwaysReady zero. Anonymous, model-free HTTP probes only.
+# NEVER a scheduled keeper, no new instance, paid LLM, project or resource.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type ROUTE_1_RESET to test one-instance routing then restore max 2"
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-p79-existing-flex-scaling-diagnostic
+  cancel-in-progress: false
+jobs:
+  one-instance-test:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'ROUTE_1_RESET'
+    environment: dev
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      RG: GenAI_Galaxy
+      APP: gengalaxy-p3-1429841605
+      API: https://gengalaxy-p3-1429841605.azurewebsites.net
+    steps:
+      - uses: actions/checkout@v4
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Temporarily cap scale to one, test no-charge, restore to two on exit
+        shell: bash
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUB: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || exit 1
+          [[ "$SUB" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || exit 1
+          [[ "$RG" == 'GenAI_Galaxy' && "$APP" == 'gengalaxy-p3-1429841605' ]] || exit 1
+          id="$(az functionapp show -g "$RG" -n "$APP" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
+          config="$(az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites --query 'properties.functionAppConfig.scaleAndConcurrency' -o json)"
+          CONFIG="$config" python3 - <<'PY'
+          import json,os
+          d=json.loads(os.environ["CONFIG"])
+          assert d.get("instanceMemoryMB")==512, "Unexpected existing instance memory"
+          assert d.get("maximumInstanceCount")==2, "Original max is not 2"
+          assert d.get("alwaysReady")==[], "Original alwaysReady is not zero"
+          print("P79 VERIFIED original: 512MB, max 2, zero Always Ready")
+          PY
+          changed=0
+          restore() {
+            rc=$?
+            trap - EXIT TERM INT
+            if [[ "$changed" == 1 ]]; then
+              echo "P79 restoring approved maximum instance count=2"
+              az functionapp scale config set -g "$RG" -n "$APP" --instance-memory 512 --maximum-instance-count 2 -o none || rc=1
+              restored="$(az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites --query 'properties.functionAppConfig.scaleAndConcurrency' -o json)" || rc=1
+              if [[ -n "${restored:-}" ]]; then
+                RESTORED="$restored" python3 - <<'PY' || rc=1
+          import json,os
+          d=json.loads(os.environ["RESTORED"])
+          assert d.get("instanceMemoryMB")==512 and d.get("maximumInstanceCount")==2 and d.get("alwaysReady")==[]
+          print("P79 VERIFIED RESTORE: 512MB, max 2, alwaysReady zero")
+          PY
+              fi
+            fi
+            exit "$rc"
+          }
+          trap restore EXIT TERM INT
+          # Set trap intent BEFORE the scale command in case update partially applies.
+          changed=1
+          az functionapp scale config set -g "$RG" -n "$APP" --instance-memory 512 --maximum-instance-count 1 -o none
+          capped="$(az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites --query 'properties.functionAppConfig.scaleAndConcurrency' -o json)"
+          CAPPED="$capped" python3 - <<'PY'
+          import json,os
+          d=json.loads(os.environ["CAPPED"])
+          assert d.get("instanceMemoryMB")==512 and d.get("maximumInstanceCount")==1 and d.get("alwaysReady")==[]
+          print("P79 VERIFIED temporary cap 1; zero paid idle capacity")
+          PY
+          tmp="$(mktemp -d)"
+          failures=0
+          # This sequence intentionally tests real Python routing, not Azure-handled preflight.
+          for route in health practice/evaluate practice/tutor practice/evaluate; do
+            rm -f "$tmp/headers"
+            if [[ "$route" == health ]]; then
+              status="$(curl --silent --show-error --http1.1 --max-time 72 --dump-header "$tmp/headers" -o /dev/null -w '%{http_code}' "$API/api/health" || true)"
+              expected=200
+            else
+              status="$(curl --silent --show-error --http1.1 --max-time 72 --dump-header "$tmp/headers" -o /dev/null -w '%{http_code}' -X POST "$API/api/$route" -H 'Content-Type: application/json' --data '{"topic_key":"NO_AUTH","mode":"reference"}' || true)"
+              expected=401
+            fi
+            trace=false
+            if [[ -f "$tmp/headers" ]] && grep -Eiq '^X-Galaxy-Trace-Id:[[:space:]]*[0-9a-f-]{36}[[:space:]]*$' "$tmp/headers"; then trace=true; fi
+            echo "P79 anonymous route=$route status=$status app_trace_present=$trace expected=$expected"
+            if [[ "$status" != "$expected" || "$trace" != true ]]; then failures=$((failures+1)); fi
+          done
+          rm -rf "$tmp"
+          if [[ "$failures" -gt 0 ]]; then
+            echo "::error::P79 found $failures failed requests; no streaming deployment is authorized."
+            exit 1
+          fi
+          echo "P79 4/4 anonymous Python handler calls passed with temporary max1. One run does not establish sustained reliability."
+      - name: Clear Azure login
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
+  verify-original-config:
+    needs: one-instance-test
+    if: always() && (needs.one-instance-test.result == 'success' || needs.one-instance-test.result == 'failure')
+    environment: dev
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Independently restore and verify original scale if interrupted
+        shell: bash
+        run: |
+          set -euo pipefail
+          cfg="$(az resource show -g GenAI_Galaxy -n gengalaxy-p3-1429841605 --resource-type Microsoft.Web/sites --query 'properties.functionAppConfig.scaleAndConcurrency' -o json)"
+          CONFIG="$cfg" python3 - <<'PY'
+          import json,os
+          d=json.loads(os.environ["CONFIG"])
+          assert d.get("instanceMemoryMB")==512 and d.get("alwaysReady")==[], "P79 ALERT: unexpected memory/idle settings"
+          assert d.get("maximumInstanceCount") in (1,2), "P79 ALERT: unexpected cap"
+          PY
+          current="$(CFG="$cfg" python3 -c 'import json,os;print(json.loads(os.environ["CFG"])["maximumInstanceCount"])')"
+          if [[ "$current" == 1 ]]; then
+            echo "P79 interrupted: independently restoring exact prior maximum=2"
+            az functionapp scale config set -g GenAI_Galaxy -n gengalaxy-p3-1429841605 --instance-memory 512 --maximum-instance-count 2 -o none
+          fi
+          restored="$(az resource show -g GenAI_Galaxy -n gengalaxy-p3-1429841605 --resource-type Microsoft.Web/sites --query 'properties.functionAppConfig.scaleAndConcurrency' -o json)"
+          RESTORED="$restored" python3 - <<'PY'
+          import json,os
+          d=json.loads(os.environ["RESTORED"])
+          assert d.get("maximumInstanceCount")==2 and d.get("instanceMemoryMB")==512 and d.get("alwaysReady")==[], "P79 ALERT: original scale settings NOT restored"
+          print("P79 VERIFIED second job: original 512MB, max2, no Always Ready")
+          PY
+      - if: always()
+        run: az logout >/dev/null 2>&1 || true
