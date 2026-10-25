@@ -4,11 +4,21 @@
  */
 import {atlasLayout} from './worldAnchors.js';
 import {COLLECT_START_MS,PER_WORLD_MS,smooth} from '../journey/choreography.js';
-export const ORBIT_PERIOD_MS=48000;
+// One cinematic revolution of the entire constellation every 144 seconds.
+// Keeping the SAME angular speed for all worlds preserves ordering and prevents
+// planets colliding while still giving each a full visible 360° orbital path.
+export const ORBIT_PERIOD_MS=144000;
+export const ORBIT_CENTER=Object.freeze({x:4.48,y:.10});
+export const ORBIT_Y_ASPECT=.76;
 export function orbitAt(world,ms){
- const t=Math.max(0,Number(ms)||0)/ORBIT_PERIOD_MS*2*Math.PI;
- const a=t+(world.index*2.399963229728653);
- return {...world,x:world.x+.13*Math.cos(a),y:world.y+.11*Math.sin(a),z:world.z+.06*Math.sin(a*.7)};
+ const time=Math.max(0,Number.isFinite(ms)?ms:0);
+ const theta=time/ORBIT_PERIOD_MS*2*Math.PI;
+ const dx=world.x-ORBIT_CENTER.x,dy=(world.y-ORBIT_CENTER.y)/ORBIT_Y_ASPECT;
+ const cosine=Math.cos(theta),sine=Math.sin(theta);
+ return {...world,
+  x:ORBIT_CENTER.x+dx*cosine-dy*sine,
+  y:ORBIT_CENTER.y+(dx*sine+dy*cosine)*ORBIT_Y_ASPECT,
+  z:world.z+.22*Math.sin(theta+world.index*.24)};
 }
 export function galaxySpaceAt(worldIndex,ms,compact=false,short=false){
  if(!Number.isInteger(worldIndex)||worldIndex<0||worldIndex>=17)throw Error('Invalid world');
