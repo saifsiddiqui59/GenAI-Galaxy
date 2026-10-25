@@ -25,3 +25,21 @@ test('original planet is transferred exactly once at its collection start',()=>{
  assert.equal(flightProgress(0),0);
  assert.equal(flightProgress(.30),1);
 });
+
+test('all 17 worlds complete a continuous elliptical 360° revolution',()=>{
+ const anchors=atlasLayout();
+ for(const w of anchors){
+  const start=orbitAt(w,0),quarter=orbitAt(w,36000),half=orbitAt(w,72000),end=orbitAt(w,144000);
+  assert(Math.hypot(quarter.x-start.x,quarter.y-start.y)>.7,`no visible travel ${w.index}`);
+  assert(Math.hypot(half.x-start.x,half.y-start.y)>1.3,`not orbiting ${w.index}`);
+  assert(Math.hypot(end.x-start.x,end.y-start.y)<1e-9,`orbit did not close ${w.index}`);
+ }
+ for(let moment=0;moment<=144000;moment+=2000){
+  const positions=anchors.map(w=>orbitAt(w,moment));
+  for(let i=0;i<positions.length;i++)for(let j=0;j<i;j++){
+   const a=positions[i],b=positions[j];
+   assert(Math.hypot(a.x-b.x,a.y-b.y)>a.scale+b.scale+.12,
+    `collision at ${moment}ms: worlds ${a.index}/${b.index}`);
+  }
+ }
+});
