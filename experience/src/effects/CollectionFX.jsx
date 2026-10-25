@@ -9,7 +9,13 @@ export {COLLECT_START_MS,PER_WORLD_MS};
 import './collection.css';
 
 function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount,reducedMotion}){
- const orb=useRef(),trail=useRef();
+ const orb=useRef(),trail=useRef(),sparks=useRef();
+ const sparksGeometry=useMemo(()=>{
+  const g=new THREE.BufferGeometry();
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(26*3),3));
+  return g;
+ },[]);
+ useEffect(()=>()=>sparksGeometry.dispose(),[sparksGeometry]);
  const trailGeometry=useMemo(()=>{
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(16*3),3));
@@ -43,6 +49,7 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
   if(trail.current){
    const visible=!reducedMotion&&pick.t>.025&&pick.t<.30&&orb.current.visible;
    trail.current.visible=visible;
+   if(sparks.current)sparks.current.visible=visible;
    if(visible){
     const attr=trailGeometry.getAttribute('position'),end=orb.current.position;
     for(let j=0;j<16;j++){
@@ -54,6 +61,19 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
     }
     attr.needsUpdate=true;
     trailGeometry.computeBoundingSphere();
+    if(sparks.current){
+     const sparkPos=sparksGeometry.getAttribute('position');
+     const t=Math.max(0,Math.min(1,pick.t/.30));
+     for(let i=0;i<26;i++){
+      const u=((i/26+t*.9)%1),twist=u*12.56+i*2.4;
+      const spread=.07*(1-u)*s;
+      sparkPos.setXYZ(i,
+       source.x+(end.x-source.x)*u+Math.cos(twist)*spread,
+       source.y+(end.y-source.y)*u+Math.sin(Math.PI*u)*.12*s,
+       source.z+(end.z-source.z)*u+Math.sin(twist)*spread);
+     }
+     sparkPos.needsUpdate=true;sparksGeometry.computeBoundingSphere();
+    }
    }
   }
   orb.current.rotation.y=c.ms*.00018+order;
@@ -70,8 +90,12 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
    <mesh scale={1.10}><sphereGeometry args={[.135,16,12]}/><meshBasicMaterial color={COLORS[world.index]} transparent opacity={.12} side={THREE.BackSide} depthWrite={false}/></mesh>
   </group>
   <line ref={trail} geometry={trailGeometry} visible={false}>
-   <lineBasicMaterial color={COLORS[world.index]} transparent opacity={.55} depthWrite={false} blending={THREE.AdditiveBlending}/>
+   <lineBasicMaterial color={COLORS[world.index]} transparent opacity={.65} depthWrite={false} blending={THREE.AdditiveBlending}/>
   </line>
+  <points ref={sparks} geometry={sparksGeometry} visible={false}>
+   <pointsMaterial color={COLORS[world.index]} size={.075} sizeAttenuation
+     transparent opacity={.82} depthWrite={false} blending={THREE.AdditiveBlending}/>
+  </points>
  </>;
 }
 function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
