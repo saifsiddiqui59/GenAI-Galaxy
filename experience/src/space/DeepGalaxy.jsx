@@ -8,6 +8,7 @@ import {orbitAt,planetHiddenFromAtlas,ORBIT_CENTER,ORBIT_Y_ASPECT} from './world
 import {overlapsGuardian} from './markerClearance.js';
 import {cinematicLayoutAt} from './cinematicLayout.js';
 import SpaceDepthFX from './SpaceDepthFX.jsx';
+import {guardianStageScale,guardianFloorY} from '../guardian/guardianFraming.js';
 import curriculum from '../../../data/curriculum.json';
 export const PLANET_COUNT=17;
 export const COLORS=['#74cce5','#b7a0e9','#e4b57c','#a8dfed','#7dceb3','#dfb77e','#c78d73','#91b4eb','#a7ca9c','#d3b1f0','#78b8dc','#deb28d','#9ad0c1','#b9a3e5','#e2bb8e','#83b8d6','#c894bf'];
@@ -126,7 +127,7 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
  </group>;
 }
 function Observatory({compact,short}){
- const x=compact?-.48:-2.05,y=compact?(short?-.96:-1.59):-2.26,scale=compact?(short?.68:.77):1;
+ const x=compact?-.48:-2.05,y=guardianFloorY(compact,short)-.01,scale=guardianStageScale(compact,short);
  return <group position={[x,y,3.2]} scale={scale}>
   <mesh rotation={[-Math.PI/2,0,0]}><circleGeometry args={[1.4,64]}/><meshStandardMaterial color="#152139" metalness={.5} roughness={.7} transparent opacity={.8}/></mesh>
   <mesh rotation={[-Math.PI/2,0,0]} position={[0,.005,0]}><ringGeometry args={[1.35,1.365,80]}/><meshBasicMaterial color="#8bb2c9" transparent opacity={.4}/></mesh>
@@ -154,9 +155,10 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
   <color attach="background" args={['#050916']}/>
   <ambientLight intensity={.6}/>
   <hemisphereLight color="#d4e4ff" groundColor="#29243f" intensity={1.4}/>
-  <directionalLight position={[-3,5,8]} color="#fff0d7" intensity={3.6}/>
+  <directionalLight position={[-3,5,8]} color="#dfdcf4" intensity={3.05}/>
   <directionalLight position={[3,2,-3]} color="#849fee" intensity={2.1}/>
-  <pointLight position={[-2.6,.4,6.5]} color="#ffdfba" intensity={15} distance={9}/>
+  {/* Cooler, softer character fill creates recessed bone cavities and lets amber eyes lead. */}
+  <pointLight position={[-2.6,.4,6.5]} color="#aaa0d1" intensity={8.5} distance={8.3}/>
   <NebulaCloud reducedMotion={reducedMotion} clockRef={clockRef}/>
   <SpaceDepthFX compact={lowPower} clockRef={clockRef} reducedMotion={reducedMotion}/>
   <Starfield lowPower={lowPower}/>

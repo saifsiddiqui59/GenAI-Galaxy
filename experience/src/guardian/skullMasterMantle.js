@@ -4,7 +4,7 @@
 */
 export const SKULLMASTER_PROFILE=Object.freeze({
   headScale:.90,hoodFrontGap:.73,hoodRings:6,cloakLength:1.48,
-  outer:'#1b1429',inner:'#070a14',trim:'#4e3c61'
+  outer:'#14111e',inner:'#040710',trim:'#352a40'
 });
 function surface(THREE,sections,start,end,segments=32){
  const vertices=[],uvs=[],indices=[];
@@ -58,7 +58,7 @@ export function attachSkullMasterCloak(source,THREE){
  for(const phi of [SKULLMASTER_PROFILE.hoodFrontGap,2*Math.PI-SKULLMASTER_PROFILE.hoodFrontGap]){
   const points=ring.map(({y,r,z})=>new THREE.Vector3(Math.sin(phi)*r,y,Math.cos(phi)*r+z));
   const path=new THREE.CatmullRomCurve3(points);
-  addCloth(hood,new THREE.TubeGeometry(path,24,.026,6,false),SKULLMASTER_PROFILE.trim,THREE,.65);
+  addCloth(hood,new THREE.TubeGeometry(path,24,.016,6,false),SKULLMASTER_PROFILE.trim,THREE,.65);
  }
  // A rounded, tapering front canopy completes the hood above the eyes.
  // Unlike a flat visor it has changing curvature across both X and Y.
@@ -70,16 +70,7 @@ export function attachSkullMasterCloak(source,THREE){
    2*Math.PI-SKULLMASTER_PROFILE.hoodFrontGap,
    2*Math.PI+SKULLMASTER_PROFILE.hoodFrontGap,24),SKULLMASTER_PROFILE.outer,THREE,.9);
  frontHood.name='SkullMasterCurvedCanopy';
- // Delicate dark roll around the facial opening; do not cross the eye line.
- const frontRimPoints=[];
- for(let k=0;k<=20;k++){
-  const phi=-SKULLMASTER_PROFILE.hoodFrontGap+
-   2*SKULLMASTER_PROFILE.hoodFrontGap*k/20;
-  frontRimPoints.push(new THREE.Vector3(.624*Math.sin(phi),.51,
-    .624*Math.cos(phi)+.08));
- }
- const frontRim=new THREE.CatmullRomCurve3(frontRimPoints);
- addCloth(hood,new THREE.TubeGeometry(frontRim,24,.018,6,false),'#3d2750',THREE,.88);
+ // No thick forehead bar: the dark canopy itself frames the anatomical skull.
  const cape=new THREE.Group();cape.name='SkullMasterMantle';
  chest.add(cape);attached.push([chest,cape]);
  // Back panel drapes from shoulder below waist. Real head/hand bones remain free.
@@ -89,7 +80,8 @@ export function attachSkullMasterCloak(source,THREE){
   for(let j=0;j<=segments;j++){
    const u=j/segments,x=(u*2-1)*halfWidth;
    const ripple=Math.sin(u*Math.PI*7+t*2.8)*.027*t;
-   vertices.push(x+ripple,y,(-.33-.18*t)-.055*Math.sin(u*Math.PI));
+   const hemTear=t>.80?(t-.80)*.33*Math.sin(u*37+Math.sin(u*17)):0;
+   vertices.push(x+ripple,y+hemTear,(-.33-.18*t)-.055*Math.sin(u*Math.PI));
    uvs.push(u,t);
   }
  }
@@ -108,7 +100,7 @@ export function attachSkullMasterCloak(source,THREE){
  // Shoulder drapes soften pale arm/armor silhouettes without intercepting palm IK.
  for(const side of [-1,1]){
   const piece=new THREE.Mesh(new THREE.ConeGeometry(.29,.74,10,1,true),
-    new THREE.MeshStandardMaterial({color:'#2c1a40',roughness:.95,side:THREE.DoubleSide}));
+    new THREE.MeshStandardMaterial({color:'#241a30',roughness:.95,side:THREE.DoubleSide}));
   piece.position.set(side*.37,-.24,-.13);piece.rotation.z=side*.32;
   cape.add(piece);
  }

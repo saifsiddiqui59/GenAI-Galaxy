@@ -43,8 +43,7 @@ export function addSkullMasterDetail(source,THREE){
   mesh.material.roughness=.94;mesh.material.needsUpdate=true;
  });
  // Raised ribbing follows the head instead of appearing as a fixed-screen mask.
- const trim=curve(THREE,[[-.46,.70,.04],[-.38,.84,.16],[0,.96,.10],[.38,.84,.16],[.46,.70,.04]],'#46345e',.022);
- trim.name='SkullMasterHoodSeam';hood.add(trim);added.push([hood,trim]);
+ // Avoid the hovering ornamental ridge that previously made the hood look like a toy.
  // Dim bronze clasps and collar in place of bright toy-like chest armour.
  const collar=new THREE.Group();collar.name='SkullMasterCollar';
  chest.add(collar);added.push([chest,collar]);
