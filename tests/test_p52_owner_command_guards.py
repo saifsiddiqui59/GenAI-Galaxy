@@ -21,7 +21,7 @@ class OwnerCommandGuard(unittest.TestCase):
 
     def test_dispatch_only_preexisting_manual_approved_workflows(self):
         text=BRIDGE.read_text()
-        self.assertEqual(text.count("gh workflow run "),10)
+        self.assertEqual(text.count("gh workflow run "),11)
         self.assertIn("galaxy-p3-flex-deploy.yml",text)
         self.assertIn("galaxy-ephemeral-rls.yml",text)
         self.assertIn("galaxy-ai-readonly-release-smoke.yml",text)
@@ -38,6 +38,8 @@ class OwnerCommandGuard(unittest.TestCase):
         self.assertIn("galaxy-ephemeral-live-ai.yml",text)
         self.assertIn('"TEST_AI_ONE_$EVENT_SHA"',text)
         self.assertIn('"DIAG_COLDSTART_$EVENT_SHA"',text)
+        self.assertIn('"DIAG_HTTP_PHASES_$EVENT_SHA"',text)
+        self.assertIn("galaxy-p65-http-phase-readonly.yml",text)
         self.assertIn('galaxy-p63-coldstart-nocharge.yml',text)
         self.assertIn('"PREVIEW_AI_P61_$EVENT_SHA"',text)
         self.assertIn('"$healthy" -ge 2',text)
