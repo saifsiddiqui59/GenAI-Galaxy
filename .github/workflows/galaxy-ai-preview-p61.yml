@@ -59,6 +59,7 @@ jobs:
           node tests/test_p60_interview_layout.cjs
           node tests/test_p59_ai_timeout.cjs
           node tests/test_p73_focused_interview.cjs
+          node tests/test_p74_lesson_ai_wait.cjs
       - uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}

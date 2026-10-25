@@ -36,6 +36,18 @@ async def one(browser, width, height):
     assert await page.locator('#top-skip').count()==1
     assert await page.locator('#tutor-reference').count()==1
     assert await page.locator('[data-choice]').count()==0
+    # Check the screenshot-reported mobile lesson cards before interview.
+    await page.locator('[data-view="galaxy"]').first.click()
+    await page.locator('#open-next').click()
+    assert await page.locator('.lesson-content-card').count()==8
+    assert await page.locator('.lesson-more').count()==1
+    assert not await page.locator('.lesson-more').evaluate('e=>e.open')
+    assert await page.locator('#practice-this').is_visible()
+    assert await page.evaluate('document.documentElement.scrollWidth <= innerWidth+2'), 'Lesson horizontal overflow'
+    OUT.mkdir(parents=True,exist_ok=True)
+    await page.screenshot(path=str(OUT/f'lesson-{width}x{height}.png'),full_page=True,animations='disabled',timeout=15000)
+    await page.locator('#practice-this').click()
+    assert await page.locator('#evaluate-btn').is_visible()
     # Capture the uncluttered entry state before submitting; never trigger a model.
     OUT.mkdir(parents=True,exist_ok=True)
     await page.screenshot(path=str(OUT/f'interview-question-{width}x{height}.png'),full_page=True,animations='disabled',timeout=15000)

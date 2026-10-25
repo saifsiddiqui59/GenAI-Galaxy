@@ -132,3 +132,79 @@
  .interview-focus .practice-help>summary,.interview-focus .practice-more-actions>summary,
  .interview-focus .practice-evidence>summary{min-height:44px}
 }
+
+/* P74 — compact, mobile-first lesson reading flow, without changing content. */
+.lesson-workspace{max-width:1280px;margin-inline:auto}
+.lesson-workspace .breadcrumb-text{margin:14px 0 10px;overflow-wrap:anywhere}
+.lesson-workspace .section-head{padding-top:9px;margin-bottom:12px}
+.lesson-workspace .section-head h1{margin-bottom:8px;line-height:1.12}
+.lesson-workspace .section-head p{margin-top:5px;max-width:65ch}
+.lesson-workspace .lesson-layout{grid-template-columns:minmax(0,1fr) minmax(230px,270px);gap:16px;align-items:start}
+.lesson-workspace .lesson-column{min-width:0}
+.lesson-reading-meta{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin:10px 0 14px}
+.lesson-reading-hint{font-size:12px;color:#a9b8d6;line-height:1.4}
+.lesson-workspace .lesson-content-card{margin:10px 0;padding:18px 20px;border-radius:15px;
+ background:linear-gradient(145deg,rgba(20,29,59,.93),rgba(11,21,44,.93));border-color:#37496e}
+.lesson-workspace .lesson-content-card h3{margin:0 0 10px;gap:10px;font-size:16px;line-height:1.35;
+ color:#f0f4ff}
+.lesson-workspace .lesson-content-card p,
+.lesson-workspace .lesson-content-card li{font-size:13px;line-height:1.65;margin:7px 0;color:#b9c8e2}
+.lesson-workspace .lesson-content-card .section-number{height:28px;min-width:28px;
+ border-color:#5e76ab;color:#bad6ff}
+.lesson-workspace .lesson-more{margin:14px 0;border:1px solid #465981;
+ background:rgba(13,26,54,.72);border-radius:14px;overflow:hidden}
+.lesson-workspace .lesson-more>summary{cursor:pointer;list-style-position:inside;
+ color:#e4edff;font-size:14px;font-weight:750;padding:15px 18px;line-height:1.35}
+.lesson-workspace .lesson-more>summary span{display:block;padding-left:20px;font-size:11px;
+ font-weight:450;color:#96abc9;margin-top:4px}
+.lesson-workspace .lesson-more[open]>summary{border-bottom:1px solid #364e75}
+.lesson-more-content{padding:8px 12px 12px}
+.lesson-workspace .lesson-more .lesson-content-card{margin:9px 0}
+.lesson-workspace .lesson-primary-actions{padding:10px 0;gap:9px}
+.lesson-workspace .lesson-primary-actions #practice-this{min-height:47px;font-weight:800}
+.lesson-workspace .lesson-tools>.panel{padding:19px}
+.lesson-workspace .lesson-tools .lesson-notes{margin-top:14px}
+.lesson-workspace .lesson-tools .side-note{min-height:110px}
+.lesson-workspace .lesson-more>summary:focus-visible,
+.lesson-workspace .lesson-primary-actions .btn:focus-visible{outline:3px solid #9ad2ff;outline-offset:3px}
+@media(max-width:900px){
+ .lesson-workspace .lesson-layout{grid-template-columns:minmax(0,1fr);gap:13px}
+ .lesson-workspace .lesson-tools{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+ .lesson-workspace .lesson-tools>.panel{margin:0!important}
+}
+@media(max-width:660px){
+ .lesson-workspace .breadcrumb-text{margin:10px 0 8px;font-size:10px;line-height:1.5}
+ .lesson-workspace .section-head{padding-top:4px;margin-bottom:9px}
+ .lesson-workspace .section-head h1{font-size:clamp(25px,7vw,32px);line-height:1.12;letter-spacing:-.02em}
+ .lesson-workspace .section-head p{font-size:12px;line-height:1.5}
+ .lesson-workspace .lesson-reading-meta{margin:8px 0 12px;gap:6px}
+ .lesson-workspace .lesson-reading-hint{font-size:11px}
+ .lesson-workspace .lesson-content-card{margin:8px 0;padding:14px 15px;border-radius:13px}
+ .lesson-workspace .lesson-content-card h3{font-size:15px;gap:9px;margin:0 0 7px}
+ .lesson-workspace .lesson-content-card p,
+ .lesson-workspace .lesson-content-card li{font-size:13px;line-height:1.52;margin:5px 0}
+ .lesson-workspace .lesson-content-card .section-number{min-width:27px;height:27px}
+ .lesson-workspace .lesson-more{margin:10px 0}
+ .lesson-workspace .lesson-more>summary{padding:13px 14px;font-size:13px}
+ .lesson-more-content{padding:6px 9px 10px}
+ .lesson-workspace .lesson-primary-actions{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+ .lesson-workspace .lesson-primary-actions #practice-this{grid-column:1/-1}
+ .lesson-workspace .lesson-primary-actions .btn{min-height:43px;padding:10px 8px;font-size:12px}
+ .lesson-workspace .lesson-tools{grid-template-columns:1fr}
+ .lesson-workspace .lesson-tools>.panel{padding:16px}
+}
+/* AI progress describes browser wait, not verified Azure worker/model stages. */
+.ai-live-status{position:relative;margin:11px 0;padding:12px 14px 12px 39px;
+ background:rgba(19,38,75,.82);border:1px solid #6383b4;border-radius:12px;
+ color:#d9e9ff;font-size:12px;line-height:1.45;min-height:43px}
+.ai-live-status[hidden]{display:none!important}
+.ai-live-status:before{content:"";position:absolute;left:14px;top:15px;
+ width:11px;height:11px;border-radius:100%;border:2px solid #6c85b9;
+ border-top-color:#99e9ff;animation:galaxy-ai-progress .9s linear infinite}
+.ai-live-status[data-phase="waiting"]{border-color:#ab8a6c;color:#f0d8b9}
+.ai-answer-appear{animation:galaxy-ai-reveal .4s ease-out both}
+@keyframes galaxy-ai-progress{to{transform:rotate(360deg)}}
+@keyframes galaxy-ai-reveal{from{opacity:.35;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media(prefers-reduced-motion:reduce){
+ .ai-live-status:before,.ai-answer-appear{animation:none!important}
+}
