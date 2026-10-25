@@ -65,6 +65,8 @@ async def inspect(pw,url,name,width,height,reduced=False):
             deposit=await capture('deposit',2200+2600*.79)
             assert deposit['miniatures']['0']['stage']=='deposit'
             assert deposit['atlasReveal']['progress']==0,'Atlas must not move until first pickup is finished'
+            sweep=await capture('galaxy-shift',4800+1750/2)
+            assert .4<sweep['atlasReveal']['progress']<.6,'Galaxy must transition across screen after the first pickup'
             # All three independent real source clip cycles must be observed.
             for order in [1,2]:
                 ms=2200+(order+.38)*2600
