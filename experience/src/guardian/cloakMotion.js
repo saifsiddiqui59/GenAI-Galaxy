@@ -5,6 +5,7 @@ export function cloakSway(timeMs,rowFraction,columnFraction,moving=true){
  const row=Math.min(1,Math.max(0,Number(rowFraction)||0));
  const col=Math.min(1,Math.max(0,Number(columnFraction)||0));
  const hem=row*row;
+ if(hem===0)return {x:0,z:0};
  const walk=moving?1:.32;
  return {
   x:hem*walk*.045*Math.sin(t*5.2+col*5.8),
