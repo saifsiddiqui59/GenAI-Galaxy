@@ -8,14 +8,14 @@ import {pickupAt,smooth,COLLECT_START_MS,PER_WORLD_MS,RELEASE} from '../journey/
 export {COLLECT_START_MS,PER_WORLD_MS};
 import './collection.css';
 
-function Miniature({world,order,rigPoseRef,clockRef,compact,short}){
+function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount,reducedMotion}){
  const orb=useRef();
  const texture=useMemo(()=>planetSurfaceTexture(world.index,COLORS[world.index],compact),[world.index,compact]);
  useEffect(()=>()=>texture.dispose(),[texture]);
  useFrame(()=>{
   const pose=rigPoseRef.current,c=clockRef.current;if(!orb.current||!pose)return;
   const pick=pickupAt(c.ms,order),s=pose.scale;
-  const origin=galaxySpaceAt(world.index,launchAt(order),compact,short);
+  const origin=galaxySpaceAt(world.index,launchAt(order),compact,short,completedCount,reducedMotion);
   const source=new THREE.Vector3(origin.x,origin.y,origin.z);
   // This rendered object is the same completed world pulled from its true atlas orbit.
   // Before collection it remains in the main galaxy, not staged near the Genie.
@@ -108,6 +108,6 @@ export default function CollectionFX({completed=[],collectedCount,clockRef,reduc
  return <>
   <Satchel onOpenSack={onOpenSack} count={collectedCount} rigPoseRef={rigPoseRef} clockRef={clockRef}/>
   <OfferingOrb worldIndex={nextWorldIndex} rigPoseRef={rigPoseRef} clockRef={clockRef} compact={compact} reducedMotion={reducedMotion} onSelect={onSelectWorld}/>
-  {completed.slice(0,17).map((world,order)=><Miniature key={world.index} world={world} order={order} rigPoseRef={rigPoseRef} clockRef={clockRef} compact={compact} short={short}/>)}
+  {completed.slice(0,17).map((world,order)=><Miniature key={world.index} world={world} order={order} rigPoseRef={rigPoseRef} clockRef={clockRef} compact={compact} short={short} completedCount={completed.length} reducedMotion={reducedMotion}/>)}
  </>;
 }
