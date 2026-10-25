@@ -1,0 +1,29 @@
+name: Galaxy P70 real warm-up versus tutor, anonymous no-model acceptance
+# Manual-only, no Azure login or resource changes. Cost: at most four bounded
+# on-demand anonymous Function requests, no Azure OpenAI token calls.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type WARM_NOCHARGE to test real POST warm-up then tutor 401 without model calls"
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-p70-anonymous-sequence
+  cancel-in-progress: false
+jobs:
+  warm-and-verify:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'WARM_NOCHARGE'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify no paid model calls and ordered POST-only contracts
+        run: python -m unittest discover -s tests -p 'test_p70_warm_sequence.py' -v
+      - name: Warm Python worker using anonymous evaluator and immediately query tutor
+        run: python scripts/p70_warm_then_tutor_nocharge.py --confirm WARM_NOCHARGE
