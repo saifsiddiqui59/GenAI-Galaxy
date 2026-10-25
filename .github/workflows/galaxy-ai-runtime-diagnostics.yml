@@ -54,6 +54,54 @@ jobs:
           if ! az functionapp function list -g "$RG" -n "$APP" --query '[].name' -o json; then
             echo '::warning::Function listing failed; check host indexing / control-plane reachability.'
           fi
+      - name: Correlate real Python health before evaluator/tutor probes
+        shell: bash
+        run: |
+          set -euo pipefail
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          # Trace present only if Python wrote the response; no headers are logged.
+          code="$(curl --http1.1 --silent --show-error --max-time 75 \
+            --dump-header "$tmp/headers" -o /dev/null -w '%{http_code}' \
+            "$API/api/health" || true)"
+          trace_present=false
+          if grep -Eiq '^X-Galaxy-Trace-Id:[[:space:]]*[0-9a-f-]{36}[[:space:]]*        shell: bash
+        run: |
+          set -euo pipefail
+          for suffix in practice/evaluate practice/tutor; do
+            for method in OPTIONS POST; do
+              echo "Unprivileged probe path=$suffix method=$method"
+              if [[ "$method" == OPTIONS ]]; then
+                # OPTIONS includes only the approved public static Origin.
+                code="$(curl --silent --show-error --max-time 40 -o /dev/null \
+                  -w '%{http_code}' -X OPTIONS "$API/api/$suffix" \
+                  -H 'Origin: https://gengalaxy1429841605.z29.web.core.windows.net')"
+              else
+                # No bearer token, no provider request. Auth must return 401.
+                code="$(curl --silent --show-error --max-time 40 -o /dev/null \
+                  -w '%{http_code}' -X POST "$API/api/$suffix" \
+                  -H 'Content-Type: application/json' -H 'Origin: https://gengalaxy1429841605.z29.web.core.windows.net' \
+                  --data '{"topic_key":"NO_AUTH","mode":"reference","question":"ignored","response":"no bearer"}')"
+              fi
+              echo "Anonymous result path=$suffix method=$method http=$code"
+              if [[ "$method" == POST && "$code" != 401 ]]; then
+                echo '::error::Unprivileged POST was not correctly rejected with 401'; exit 1
+              fi
+              if [[ "$method" == OPTIONS && "$code" != 200 ]]; then
+                echo '::error::Expected authorized Origin CORS 200'; exit 1
+              fi
+            done
+          done
+      - name: Clear Azure runner login
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
+ "$tmp/headers"; then
+            trace_present=true
+          fi
+          echo "Python health GET http=$code app_trace_present=$trace_present"
+          if [[ "$code" != 200 || "$trace_present" != true ]]; then
+            echo '::error::Application health not reached; host/worker routing unproven, no model call.'; exit 1
+          fi
       - name: Probe anonymous routes without model credentials or quota
         shell: bash
         run: |
