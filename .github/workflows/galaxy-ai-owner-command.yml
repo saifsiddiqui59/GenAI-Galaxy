@@ -132,6 +132,11 @@ jobs:
                 --ref main -f confirm=WARM_NOCHARGE
               echo 'Owner requested bounded real Python warm-up then tutor, no paid model call.'
               ;;
+            "METRICS_P70_$EVENT_SHA")
+              gh workflow run galaxy-p71-instance-metrics.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=READONLY
+              echo 'Owner requested read-only existing Flex instance metrics for actual warm-up failure window.'
+              ;;
             "ROLLBACK_FLEX_512_$EVENT_SHA")
               gh workflow run galaxy-p57-flex-memory.yml -R saifsiddiqui59/GenAI-Galaxy \
                 --ref main -f confirm=ROLLBACK_512
