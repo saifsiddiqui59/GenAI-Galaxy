@@ -1,0 +1,71 @@
+name: Galaxy P65 existing Flex HTTP phase and platform metrics diagnosis
+# On-demand only; observes existing resources without mutating Azure or AI quota.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        required: true
+        type: string
+        description: 'Type READONLY to diagnose anonymous HTTP timing and platform metrics'
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-p65-phase-diagnosis
+  cancel-in-progress: false
+jobs:
+  diagnose:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'READONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 14
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      APP: gengalaxy-p3-1429841605
+      RG: GenAI_Galaxy
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify strict anonymous outbound allowlist and no paid-call routes
+        run: python -m unittest discover -s tests -p 'test_p65_http_phases.py' -v
+      - name: Record exact host-control-plane settings using protected read-only Azure OIDC
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == 737d67b7-4984-48bb-bb1f-5f62599f645c ]] || exit 1
+          [[ "$SUBSCRIPTION" == 3a5e8018-40a4-49e3-bcba-a9af3344f50e ]] || exit 1
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Record existing Flex host scale and nonsecret platform metrics
+        shell: bash
+        run: |
+          set -euo pipefail
+          id="$(az functionapp show --resource-group "$RG" --name "$APP" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
+          az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites \
+            --query '{state:properties.state,region:location,scale:properties.functionAppConfig.scaleAndConcurrency,runtime:properties.functionAppConfig.runtime,functionsExtensionVersion:properties.functionsExtensionVersion}' -o json
+          echo 'Known platform metrics (no application logs or content):'
+          if ! az monitor metrics list-definitions --resource "$id" \
+              --query "[?name.value=='Requests' || name.value=='Http5xx' || name.value=='HttpResponseTime'].{metric:name.value,unit:unit}" -o json; then
+            echo '::warning::Platform metric definitions unavailable under this read-only identity'
+          fi
+          echo 'Recent aggregate request/failure counters (no personal data):'
+          start="$(date -u -d '45 minutes ago' +%Y-%m-%dT%H:%M:%SZ)"
+          if ! az monitor metrics list --resource "$id" --metric Requests,Http5xx \
+                --interval PT5M --aggregation Count --start-time "$start" \
+                --query "value[].{metric:name.value,totals:timeseries[].data[].total}" -o json; then
+            echo '::warning::No platform counters available; do not claim clean runtime'
+          fi
+      - name: Probe exact browser preflight plus anonymous evaluator/tutor request timing
+        run: python scripts/diagnose_http_phases_nocharge.py --confirm READONLY
+      - name: Clear credentials
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
