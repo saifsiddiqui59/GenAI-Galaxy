@@ -1,10 +1,10 @@
-name: Galaxy disposable account and real AI smoke (manual, one paid model call)
+name: Galaxy disposable account and real AI smoke (manual, one evaluator and one tutor model call)
 # Never triggered by push/PR. Runs only after backend deployment and valid secrets.
 on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: 'Type TEST to create two temporary confirmed users, verify Supabase RLS/subscriptions and issue one paid model evaluation'
+        description: 'Type TEST to create two temporary confirmed users, verify Supabase RLS/subscriptions and issue exactly one evaluator and one tutor call'
         type: string
         required: true
 permissions:
@@ -31,7 +31,7 @@ jobs:
         run: |
           set -euo pipefail
           [[ -n "$PUBLIC_KEY" && -n "$ADMIN_KEY" ]] || { echo '::error::Missing Galaxy dev Supabase test secrets'; exit 1; }
-      - name: Test real login, two-user isolation, subscriptions and one AI scoring call
+      - name: Test real login, two-user isolation, subscriptions and one evaluator and one tutor scoring call
         env:
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_REF: ${{ github.ref }}
