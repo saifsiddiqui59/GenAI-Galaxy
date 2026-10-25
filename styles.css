@@ -35,3 +35,22 @@
 .entry-card .btn{width:100%;justify-content:center;min-height:48px}.entry-card .text-button{margin:0 auto;color:#c9bbff}
 .entry-gate.is-hidden{display:none!important}
 @media(max-width:850px){.entry-gate{grid-template-columns:1fr}.entry-story{min-height:270px;padding:28px}.entry-story-copy{margin:22px 0}.entry-story-copy h1{font-size:32px}.entry-story:after{right:0;top:12%;width:160px;opacity:.4}.entry-story small,.entry-proofs{display:none}.entry-form-area{min-height:0;padding:20px 18px 32px}.entry-card{padding:25px}}
+
+/* P60: focus interview practice on one clear question, answer and feedback. */
+.practice-advanced{margin:0 0 14px;border:1px solid #34436b;border-radius:14px;background:rgba(11,21,45,.62);overflow:hidden}
+.practice-advanced>summary,.practice-reference>summary{cursor:pointer;padding:13px 16px;color:#d6e2fb;font-size:13px;font-weight:650;list-style-position:inside}
+.practice-advanced[open]>summary,.practice-reference[open]>summary{border-bottom:1px solid #34436b}
+.practice-advanced>.panel{border:0;box-shadow:none;margin-bottom:0!important;background:transparent}
+.practice-advanced .grid-two{margin:12px}
+.practice-core-grid{grid-template-columns:minmax(0,1fr) minmax(205px,265px);align-items:start}
+.practice-core-grid>.panel:first-child{min-width:0}
+.practice-core-grid .practice-step{letter-spacing:.09em;color:#9bd6fe;font-size:11px;margin:16px 0 10px}
+.practice-core-grid .practice-question{font-size:clamp(18px,2vw,23px);line-height:1.5;max-width:64ch}
+.practice-core-grid #spoken-answer{min-height:150px;font-size:15px;line-height:1.6}
+.practice-side{padding:0;overflow:hidden}
+.practice-reference>.eyebrow,.practice-reference>.footnote,.practice-reference>select,.practice-reference>.content-block{margin-left:14px;margin-right:14px}
+.practice-reference>select{width:calc(100% - 28px)!important}
+.practice-reference>.content-block{padding:14px}
+.practice-feedback{margin-top:22px;border-color:#648ed3;overflow-wrap:anywhere}
+.practice-advanced summary:focus-visible,.practice-reference summary:focus-visible{outline:3px solid #9bd6fe;outline-offset:-3px}
+@media(max-width:900px){.practice-core-grid{grid-template-columns:1fr}.practice-side{margin-top:12px}}
