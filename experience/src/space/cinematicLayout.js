@@ -11,9 +11,11 @@ export function atlasRevealStart(completedCount=0){
 export function cinematicLayoutAt(ms,compact=false,short=false,completedCount=0,reducedMotion=false){
  const start=atlasRevealStart(completedCount);
  const progress=reducedMotion?1:smoother((Math.max(0,Number(ms)||0)-start)/ATLAS_REVEAL_MS);
+ // Keep each planet spherical (uniform xyz scale) and compensate depth with
+ // the initial z-offset so spreading the orbit does not send it far from camera.
  const from=compact?
-  {position:[-2.78,short?.55:.87,-3.65],scale:[.65,.65,.65]}:
-  {position:[-7.45,-.04,-1.3],scale:[1.65,1.65,1.65]};
+  {position:[-5.35,short?.48:.82,-1.6],scale:[1.2,1.2,1.2]}:
+  {position:[-13.3,0,5.0],scale:[3,3,3]};
  const to=compact?
   {position:[-1.8,short?.75:1.15,-2],scale:[.58,.58,.7]}:
   {position:[0,0,0],scale:[1,1,1]};
