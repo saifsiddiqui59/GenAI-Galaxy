@@ -4,7 +4,7 @@ import {Html} from '@react-three/drei';
 import * as THREE from 'three';
 import {planetSurfaceTexture} from './PlanetSurface.js';
 import {atlasLayout} from './worldAnchors.js';
-import {orbitAt,planetHiddenFromAtlas,ORBIT_CENTER,ORBIT_Y_ASPECT} from './worldOrbit.js';
+import {orbitAt,planetSpinAt,planetHiddenFromAtlas,ORBIT_CENTER,ORBIT_Y_ASPECT} from './worldOrbit.js';
 import {overlapsGuardian} from './markerClearance.js';
 import {cinematicLayoutAt} from './cinematicLayout.js';
 import SpaceDepthFX from './SpaceDepthFX.jsx';
@@ -85,7 +85,7 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
    if(titleMarker.current)titleMarker.current.style.visibility=hidden?'hidden':'visible';
   }
   const transferred=planetHiddenFromAtlas(ms,collectionOrder,reducedMotion);
-  if(group.current){group.current.rotation.y=reducedMotion?world.index:ms*.000045+world.index;group.current.visible=!transferred}
+  if(group.current){group.current.rotation.y=planetSpinAt(world.index,ms,reducedMotion);group.current.visible=!transferred}
   if(halo.current)halo.current.visible=!transferred;
   if(ring.current)ring.current.visible=!transferred;
   if(collectedBeacon.current)collectedBeacon.current.visible=transferred;
