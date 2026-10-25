@@ -17,7 +17,8 @@ test('new commercial-ready CC0 skull is sourced and mounted without modifying an
  const attachment=mountDetailedSkull(root,detailed);
  assert(attachment.active);
  assert(attachment.model.parent===head);
- assert(originals.every(x=>x.visible===false));
+ assert(originals.slice(0,2).every(x=>x.visible===false));
+ assert(originals[2].visible,'Original glowing eyes should stay animated and visible');
  assert(attachment.model.scale.x>.1&&attachment.model.scale.x<1);
  attachment.dispose();
  assert(originals.every(x=>x.visible===true));
