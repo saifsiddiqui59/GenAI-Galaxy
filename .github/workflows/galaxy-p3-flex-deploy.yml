@@ -106,7 +106,12 @@ jobs:
             SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE" \
             AZURE_OPENAI_ENDPOINT="$OPENAI_ENDPOINT" \
             AZURE_OPENAI_DEPLOYMENT="$llm_deploy" \
-            AZURE_OPENAI_API_KEY="$OPENAI_API_KEY"
+            AZURE_OPENAI_API_KEY="$OPENAI_API_KEY" \
+            GALAXY_PRICE_SOURCE=azure-official-verified \
+            GALAXY_PRICE_ASOF=2026-10-25 \
+            GALAXY_INPUT_INR_PER_1M=42.2 \
+            GALAXY_OUTPUT_INR_PER_1M=168.9 \
+            GALAXY_CACHED_INR_PER_1M=10.6
           unset OPENAI_API_KEY
           echo 'Dedicated Galaxy endpoint and deployment resolved from Azure; model key stored only as private Function app setting.'
       - name: Deploy only Galaxy backend source, without publish profile
