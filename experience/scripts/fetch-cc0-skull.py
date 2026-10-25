@@ -8,10 +8,13 @@ import hashlib
 import json
 import struct
 import urllib.request
+from simplify_cc0_skull import repack
 
 REPO_SHA = "8f492390ddc7a2ae221a1369ef560589cf8c70fb"
 GIT_BLOB_SHA = "9e1927babc5791067ccf2004bda7e59a40cac753"
 EXPECTED_BYTES = 8959044
+OPTIMIZED_SIZE = 627700
+OPTIMIZED_SHA256 = 'b702cf9bacb631c7c3133a7a480c2c5a15f5da3017de4895313f7e7fab8cea30'
 SOURCE = (
  "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/"
  f"{REPO_SHA}/Models/ScatteringSkull/glTF-Binary/ScatteringSkull.glb"
@@ -44,15 +47,23 @@ def inspect(raw):
     }))
     return scene
 
+def verify_optimized(output):
+    actual=hashlib.sha256(output).hexdigest()
+    if len(output)!=OPTIMIZED_SIZE or actual!=OPTIMIZED_SHA256:
+        raise ValueError(f"LOD output changed unexpectedly: {len(output)} bytes, sha256={actual}")
+
 if __name__=="__main__":
     if DEST.exists():
-        raw=DEST.read_bytes()
+        built=DEST.read_bytes()
+        verify_optimized(built)
+        print("Verified existing optimized CC0 Skull",len(built))
     else:
         req=urllib.request.Request(SOURCE,headers={"User-Agent":"GenAI-Galaxy-CC0-Skull-Asset-Verifier/1.0"})
         with urllib.request.urlopen(req,timeout=60) as response:
             raw=response.read(EXPECTED_BYTES+1)
-    inspect(raw)
-    if not DEST.exists():
+        inspect(raw)
+        built,vertices,faces=repack(raw)
+        verify_optimized(built)
         DEST.parent.mkdir(parents=True,exist_ok=True)
-        DEST.write_bytes(raw)
-        print("Bundled",DEST)
+        DEST.write_bytes(built)
+        print("Bundled optimized CC0 Skull",DEST,vertices,"verts",faces,"triangles")
