@@ -1,0 +1,97 @@
+name: Galaxy P61 focused AI preview to existing storage (manual)
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        type: string
+        required: true
+        description: "Type PREVIEW_P61: publish exact tested main to isolated AI prefix only"
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-p61-existing-only-preview
+  cancel-in-progress: false
+jobs:
+  publish-isolated-ai:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'PREVIEW_P61'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+      actions: read
+    env:
+      RG: GenAI_Galaxy
+      STORAGE: gengalaxy1429841605
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require approved Galaxy only current main CI and backend deployment
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUB: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ "$GITHUB_SHA" == "$(git rev-parse HEAD)" ]] || exit 1
+          [[ "$(git ls-remote origin refs/heads/main | cut -f1)" == "$GITHUB_SHA" ]] || exit 1
+          [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' && "$SUB" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || exit 1
+          ci="$(gh run list --workflow galaxy-ci.yml --branch main --event push --limit 35 --json headSha,conclusion --jq "[.[] | select(.headSha == \"$GITHUB_SHA\" and .conclusion == \"success\")] | length")"
+          [[ "$ci" =~ ^[0-9]+$ && "$ci" -gt 0 ]] || { echo '::error::Missing current main CI'; exit 1; }
+          backend="$(gh run list --workflow galaxy-p3-flex-deploy.yml --branch main --event workflow_dispatch --limit 35 --json headSha,conclusion --jq "[.[] | select(.headSha == \"$GITHUB_SHA\" and .conclusion == \"success\")] | length")"
+          [[ "$backend" =~ ^[0-9]+$ && "$backend" -gt 0 ]] || { echo '::error::Current main backend has not been deployed/verified'; exit 1; }
+          node --check app.js
+          grep -Fq 'AI_RESPONSE_TIMEOUT_MS=30000' app.js
+          grep -Fq '01 · AI QUESTION' app.js
+          grep -Fq '03 · AI FEEDBACK' app.js
+          test -f tests/test_p60_interview_layout.cjs
+          node tests/test_p60_interview_layout.cjs
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Stage reviewed frontend, byte-verify cloud and preserve production root
+        shell: bash
+        run: |
+          set -euo pipefail
+          prefix='previews/galaxy-ai-p61'
+          id="$(az storage account show -g "$RG" -n "$STORAGE" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Storage/storageAccounts/gengalaxy1429841605 ]] || exit 1
+          az storage container show --account-name "$STORAGE" --auth-mode login --name '$web' -o none
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          mkdir -p "$tmp/stage" "$tmp/verify"
+          az storage blob download --account-name "$STORAGE" --auth-mode login --container-name '$web' --name index.html --file "$tmp/root-before" --only-show-errors -o none
+          root_hash="$(sha256sum "$tmp/root-before" | cut -d' ' -f1)"
+          files='index.html styles.css app.js runtime-config.js data/curriculum.json data/lessons.json speech/azure-speech-adapter.js features/conversation-coach.js features/evaluation-evidence.js features/milestones.js features/offline-misconceptions.js features/private-study-plan.js features/saas-operations.js features/session-reports.js features/speaking-metrics.js'
+          for file in $files; do
+            [[ -f "$file" ]] || exit 1
+            mkdir -p "$(dirname "$tmp/stage/$file")" "$(dirname "$tmp/verify/$file")"
+            cp "$file" "$tmp/stage/$file"
+          done
+          python - "$tmp/stage/runtime-config.js" <<'PY'
+          import sys
+          from pathlib import Path
+          p=Path(sys.argv[1]);raw=p.read_text()
+          expected="window.GALAXY_EVALUATOR_URL='';"
+          assert raw.count(expected)==1
+          p.write_text(raw.replace(expected,"window.GALAXY_EVALUATOR_URL='https://gengalaxy-p3-1429841605.azurewebsites.net/api/practice/evaluate';"))
+          PY
+          for file in $files; do
+            az storage blob upload --account-name "$STORAGE" --auth-mode login --container-name '$web' --name "$prefix/$file" --file "$tmp/stage/$file" --overwrite true --only-show-errors -o none
+            az storage blob download --account-name "$STORAGE" --auth-mode login --container-name '$web' --name "$prefix/$file" --file "$tmp/verify/$file" --only-show-errors -o none
+            cmp -s "$tmp/stage/$file" "$tmp/verify/$file" || { echo "::error::Hosted file differs: $file"; exit 1; }
+          done
+          az storage blob download --account-name "$STORAGE" --auth-mode login --container-name '$web' --name index.html --file "$tmp/root-after" --only-show-errors -o none
+          [[ "$root_hash" == "$(sha256sum "$tmp/root-after" | cut -d' ' -f1)" ]] || { echo '::error::Production root changed'; exit 1; }
+          host='https://gengalaxy1429841605.z29.web.core.windows.net/previews/galaxy-ai-p61'
+          curl --fail --silent --show-error --max-time 35 "$host/app.js?version=$GITHUB_SHA" -o "$tmp/hosted-app"
+          cmp -s "$tmp/stage/app.js" "$tmp/hosted-app" || { echo '::error::Public preview does not match tested app'; exit 1; }
+          curl --fail --silent --show-error --max-time 35 "$host/index.html?version=$GITHUB_SHA" -o "$tmp/hosted-index"
+          cmp -s "$tmp/stage/index.html" "$tmp/hosted-index" || { echo '::error::Public preview index mismatch'; exit 1; }
+          echo "Verified isolated P61 frontend. Existing homepage unchanged. $host/index.html?version=$GITHUB_SHA"
+      - name: Clear Azure runner login
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
