@@ -47,8 +47,8 @@ export function styleKayKit(source,THREE){
   if(!n.isMesh||!n.material)return;
   n.material=n.material.clone();
   if(n.material.name==='Glow'){
-   n.material.color.set('#ffca65');n.material.emissive.set('#ff8a1e');
-   n.material.emissiveIntensity=3.2;n.material.toneMapped=false;
+   n.material.color.set('#ff8f2c');n.material.emissive.set('#f15c0f');
+   n.material.emissiveIntensity=2.65;n.material.toneMapped=false;
   }else{
    if(styled)n.material.map=styled;
    // Direct per-mesh tint: cooler sculpted skull, without recoloring the glowing eyes.
