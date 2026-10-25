@@ -52,17 +52,22 @@ jobs:
           [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
           az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites \
             --query '{state:properties.state,region:location,scale:properties.functionAppConfig.scaleAndConcurrency,runtime:properties.functionAppConfig.runtime,functionsExtensionVersion:properties.functionsExtensionVersion}' -o json
-          echo 'Known platform metrics (no application logs or content):'
+          echo 'Azure Function built-in platform metrics (no logs or content):'
           if ! az monitor metrics list-definitions --resource "$id" \
-              --query "[?name.value=='Requests' || name.value=='Http5xx' || name.value=='HttpResponseTime'].{metric:name.value,unit:unit}" -o json; then
-            echo '::warning::Platform metric definitions unavailable under this read-only identity'
+              --query "[?name.value=='OnDemandFunctionExecutionCount' || name.value=='InstanceCount' || name.value=='CpuPercentage' || name.value=='MemoryWorkingSet'].{metric:name.value,unit:unit}" -o json; then
+            echo '::warning::Read-only platform metric definitions unavailable'
           fi
-          echo 'Recent aggregate request/failure counters (no personal data):'
+          echo 'Recent aggregate execution counts, not HTTP result codes:'
           start="$(date -u -d '45 minutes ago' +%Y-%m-%dT%H:%M:%SZ)"
-          if ! az monitor metrics list --resource "$id" --metric Requests,Http5xx \
-                --interval PT5M --aggregation Count --start-time "$start" \
+          if ! az monitor metrics list --resource "$id" --metric OnDemandFunctionExecutionCount \
+                --interval PT5M --aggregation Total --start-time "$start" \
                 --query "value[].{metric:name.value,totals:timeseries[].data[].total}" -o json; then
-            echo '::warning::No platform counters available; do not claim clean runtime'
+            echo '::warning::No valid on-demand execution counter available'
+          fi
+          echo 'Configured platform CORS origins (nonsecret allowlist):'
+          if ! az functionapp cors show -g "$RG" -n "$APP" \
+                --query '{allowedOrigins:allowedOrigins,supportCredentials:supportCredentials}' -o json; then
+            echo '::warning::Existing platform CORS configuration unavailable'
           fi
       - name: Probe exact browser preflight plus anonymous evaluator/tutor request timing
         run: python scripts/diagnose_http_phases_nocharge.py --confirm READONLY

@@ -1,0 +1,25 @@
+name: Galaxy P66 one-shot 100s anonymous Function cold start classification
+# Manual-only, no Azure login or cloud mutation, no model credentials or calls.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type LONG_READONLY: two bounded 100s unauthorized requests without retries'
+        type: string
+        required: true
+permissions:
+  contents: read
+jobs:
+  two-anonymous-posts:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'LONG_READONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate no paid requests or retries
+        run: python -m unittest discover -s tests -p 'test_p66_long_unauth.py' -v
+      - name: Classify first-byte latency on existing routes without user JWT
+        run: python scripts/diagnose_long_unauth_nocharge.py --confirm LONG_READONLY
