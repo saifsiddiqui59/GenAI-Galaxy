@@ -8,6 +8,7 @@ import {styleKayKit,STYLE_PROFILE} from './styleKayKit.js';
 import {SKULLMASTER_PROFILE} from './skullMasterMantle.js';
 import {moveSkullMasterCloak} from './cloakMotion.js';
 import {mountDetailedSkull,SKULL_ASSET} from './detailSkull.js';
+import {guardianStageScale,guardianFloorY} from './guardianFraming.js';
 import {moveWrist} from './handIK.js';
 import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS} from '../journey/choreography.js';
 import {phaseAt} from '../journey/story.js';
@@ -78,9 +79,9 @@ function Model({rigPoseRef,clockRef,completedCount=0,reducedMotion=false,onReady
  useFrame((state,dt)=>{
   if(!root.current)return;
   const c=clockRef.current,ms=c.ms,view=phaseAt(ms,completedCount,reducedMotion);
-  const compactScale=narrow?(short?.68:.77):1,body=root.current;
+  const compactScale=guardianStageScale(narrow,short),body=root.current;
   const entrance=entranceAt(reducedMotion?99999:ms,narrow);
-  body.position.set(entrance.x,narrow?(short?-.95:-1.58):-2.25,3.2);
+  body.position.set(entrance.x,guardianFloorY(narrow,short),3.2);
   body.scale.setScalar(compactScale);
   const pickup=view.activeIndex>=0?pickupAt(ms,view.activeIndex):null;
   const turn=pickup?Math.sin(smooth((pickup.t-.46)/.4)*Math.PI)*-.20:0;
