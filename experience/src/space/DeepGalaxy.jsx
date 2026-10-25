@@ -66,7 +66,7 @@ function OrbitLanes(){
  </group>;
 }
 function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect,reducedMotion,lowPower,clockRef}){
- const group=useRef(),orbit=useRef(),indexMarker=useRef(),titleMarker=useRef(),projection=useRef(new THREE.Vector3()),[hover,setHover]=useState(false);
+ const group=useRef(),halo=useRef(),ring=useRef(),collectedBeacon=useRef(),orbit=useRef(),indexMarker=useRef(),titleMarker=useRef(),projection=useRef(new THREE.Vector3()),[hover,setHover]=useState(false);
  const color=COLORS[world.index];
  const surface=useMemo(()=>planetSurfaceTexture(world.index,color,lowPower),[world.index,color,lowPower]);
  useEffect(()=>()=>surface.dispose(),[surface]);
@@ -82,7 +82,11 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
    if(indexMarker.current)indexMarker.current.style.visibility=hidden?'hidden':'visible';
    if(titleMarker.current)titleMarker.current.style.visibility=hidden?'hidden':'visible';
   }
-  if(group.current){group.current.rotation.y=reducedMotion?world.index:ms*.000045+world.index;group.current.visible=!planetHiddenFromAtlas(ms,collectionOrder,reducedMotion)}
+  const transferred=planetHiddenFromAtlas(ms,collectionOrder,reducedMotion);
+  if(group.current){group.current.rotation.y=reducedMotion?world.index:ms*.000045+world.index;group.current.visible=!transferred}
+  if(halo.current)halo.current.visible=!transferred;
+  if(ring.current)ring.current.visible=!transferred;
+  if(collectedBeacon.current)collectedBeacon.current.visible=transferred;
  });
  return <group ref={orbit} position={[world.x,world.y,world.z]}
   onClick={e=>{e.stopPropagation();onSelect?.(world.index)}}
@@ -99,10 +103,15 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
    <sphereGeometry args={[Math.max(world.scale*1.28,lowPower?.42:.36),16,12]}/>
    <meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false}/>
   </mesh>
-  <mesh scale={1.085}><sphereGeometry args={[world.scale,24,16]}/><meshBasicMaterial color={color} transparent opacity={hover||selected?.25:.12} depthWrite={false} side={THREE.BackSide}/></mesh>
-  {(mastered||recommended||world.index%6===5)&&<mesh rotation={[1.15,.16,.35]}>
+  <mesh ref={halo} scale={1.085}><sphereGeometry args={[world.scale,24,16]}/><meshBasicMaterial color={color} transparent opacity={hover||selected?.25:.12} depthWrite={false} side={THREE.BackSide}/></mesh>
+  {(mastered||recommended||world.index%6===5)&&<mesh ref={ring} rotation={[1.15,.16,.35]}>
    <ringGeometry args={[world.scale*1.32,world.scale*(recommended?1.41:1.72),64]}/>
    <meshBasicMaterial color={mastered?'#dfbc75':color} side={THREE.DoubleSide} transparent opacity={mastered?.8:.4} depthWrite={false}/>
+  </mesh>}
+  {/* A mastered world becomes a tiny named navigation beacon, not an empty giant ring. */}
+  {mastered&&<mesh ref={collectedBeacon} visible={false}>
+   <sphereGeometry args={[world.scale*.18,12,9]}/>
+   <meshBasicMaterial color="#d4c39f" transparent opacity={.65} depthWrite={false}/>
   </mesh>}
   {/* Every world keeps a numbered, accessible marker; expand long names only when useful. */}
   <Html center position={[0,-world.scale-.085,0]} style={{pointerEvents:'none'}}>
