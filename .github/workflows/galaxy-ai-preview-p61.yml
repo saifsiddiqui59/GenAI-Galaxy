@@ -52,11 +52,12 @@ jobs:
           backend="$(gh run list --workflow galaxy-p3-flex-deploy.yml --branch main --event workflow_dispatch --limit 50 --json headSha,conclusion --jq "[.[] | select(.headSha == \"$backend_sha\" and .conclusion == \"success\")] | length")"
           [[ "$backend" =~ ^[0-9]+$ && "$backend" -gt 0 ]] || { echo '::error::Verified existing backend deployment missing'; exit 1; }
           node --check app.js
-          grep -Fq 'AI_RESPONSE_TIMEOUT_MS=30000' app.js
+          grep -Fq 'AI_RESPONSE_TIMEOUT_MS=90000' app.js
           grep -Fq '01 · AI QUESTION' app.js
           grep -Fq '03 · AI FEEDBACK' app.js
           test -f tests/test_p60_interview_layout.cjs
           node tests/test_p60_interview_layout.cjs
+          node tests/test_p59_ai_timeout.cjs
       - uses: azure/login@v3
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
