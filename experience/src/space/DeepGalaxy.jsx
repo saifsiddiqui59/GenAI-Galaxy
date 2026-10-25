@@ -6,6 +6,7 @@ import {planetSurfaceTexture} from './PlanetSurface.js';
 import {atlasLayout} from './worldAnchors.js';
 import {orbitAt,planetHiddenFromAtlas,ORBIT_CENTER,ORBIT_Y_ASPECT} from './worldOrbit.js';
 import {overlapsGuardian} from './markerClearance.js';
+import {cinematicLayoutAt} from './cinematicLayout.js';
 import curriculum from '../../../data/curriculum.json';
 export const PLANET_COUNT=17;
 export const COLORS=['#74cce5','#b7a0e9','#e4b57c','#a8dfed','#7dceb3','#dfb77e','#c78d73','#91b4eb','#a7ca9c','#d3b1f0','#78b8dc','#deb28d','#9ad0c1','#b9a3e5','#e2bb8e','#83b8d6','#c894bf'];
@@ -125,7 +126,19 @@ function Observatory({compact,short}){
 }
 export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=null,onSelect,reducedMotion=false,clockRef}){
  const {size,camera}=useThree();const lowPower=size.width<700,short=size.height<780;
+ const atlasRoot=useRef();
  const set=new Set(masteredWorlds.map(x=>typeof x==='number'?x:x?.index).filter(Number.isInteger));
+ const startingLayout=cinematicLayoutAt(0,lowPower,short,masteredWorlds.length,reducedMotion);
+ useFrame(()=>{
+  const layout=cinematicLayoutAt(clockRef.current.ms,lowPower,short,masteredWorlds.length,reducedMotion);
+  if(atlasRoot.current){
+   atlasRoot.current.position.set(...layout.position);
+   atlasRoot.current.scale.set(...layout.scale);
+  }
+  if(window.__galaxySkeletonDiagnostics){
+   window.__galaxySkeletonDiagnostics.atlasReveal={progress:layout.progress,phase:layout.phase,position:layout.position};
+  }
+ },-2);
  useEffect(()=>{camera.lookAt(0,lowPower?.05:.15,0);camera.updateProjectionMatrix()},[camera,lowPower]);
  return <>
   <color attach="background" args={['#050916']}/>
@@ -137,7 +150,7 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
   <NebulaCloud reducedMotion={reducedMotion} clockRef={clockRef}/>
   <Starfield lowPower={lowPower}/>
   <Observatory compact={lowPower} short={short}/>
-  <group position={lowPower?[-1.8,short?.75:1.15,-2]:[0,0,0]} scale={lowPower?[.58,.58,.7]:[1,1,1]}>
+  <group ref={atlasRoot} position={startingLayout.position} scale={startingLayout.scale}>
    <OrbitLanes/>
    {layoutWorlds().map(world=><Planet key={world.index} world={world} mastered={set.has(world.index)} collectionOrder={masteredWorlds.findIndex(w=>(typeof w==='number'?w:w.index)===world.index)}
     recommended={world.index===recommendedIndex} selected={world.index===selectedIndex} onSelect={onSelect}

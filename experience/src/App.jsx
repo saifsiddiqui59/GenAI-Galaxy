@@ -136,7 +136,7 @@ export default function App(){
      onSequence={sequenceUpdate} clockRef={choreographyRef} ready={modelReady}
      openSackSignal={sackOpenFrom3D} onReplay={triggerReplay} replaySignal={replayEpoch}
      reducedMotion={!animationEnabled||reduced}/>
-   <div className="galaxy-atlas-label" aria-hidden="true"><span>THE LEARNING ATLAS</span><p>Seventeen worlds. Infinite connections.</p></div>
+   {modelPhase==='offering'&&<div className="galaxy-atlas-label" aria-hidden="true"><span>THE LEARNING ATLAS</span><p>Seventeen worlds. Infinite connections.</p></div>}
    <div className="galaxy-view-actions">
      <button type="button" aria-expanded={menuOpen} aria-controls="galaxy-world-menu"
        onClick={()=>setMenuOpen(v=>!v)}>Explore all 17 worlds</button>

@@ -1,5 +1,6 @@
 import React,{useEffect,useMemo,useState} from 'react';
 import {phaseAt} from './story.js';
+import {cinematicLayoutAt} from '../space/cinematicLayout.js';
 import './journey.css';
 const MAX_COLLECTION_DISPLAY=17;
 export default function GuardianJourney({completed=[],nextIndex=0,nextName='',onAccept,onSelectCompleted,onPhase,onSequence,clockRef,ready=true,reducedMotion=false,openSackSignal=0,onReplay,replaySignal=0}){
@@ -9,6 +10,8 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
  const count=Math.min(MAX_COLLECTION_DISPLAY,completed.length);
  const view=useMemo(()=>phaseAt(skipped?99999:elapsed,count,reducedMotion),[skipped,elapsed,count,reducedMotion]);
  const stored=completed.slice(0,view.visible);
+ const atlasSettled=cinematicLayoutAt(skipped?99999:elapsed,false,false,count,reducedMotion).progress>=.999;
+ const stageRevealed=atlasSettled&&view.phase==='offering';
  useEffect(()=>{setElapsed(0);setSkipped(false)},[nextIndex,count,reducedMotion]);
  useEffect(()=>{setElapsed(0);setSkipped(false)},[replaySignal]);
  useEffect(()=>{
@@ -19,7 +22,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
  useEffect(()=>onPhase?.(view.phase),[view.phase,onPhase]);
  useEffect(()=>onSequence?.({activeIndex:view.activeIndex,visible:view.visible,skipped}),[view.activeIndex,view.visible,skipped,onSequence]);
  useEffect(()=>{if(openSackSignal>0)setSackOpen(true)},[openSackSignal]);
- return <div className="guardian-journey" aria-label="Your Galaxy Guardian">
+ return <div className={'guardian-journey '+(stageRevealed?'is-revealed':'is-entering')} aria-label="Your Galaxy Guardian">
     <div className="guardian-journey-top">
       <p className="guardian-eyebrow">CURIOSITY IS YOUR COMPASS</p>
       <h1>A universe of<br/><em>possibility.</em></h1>
