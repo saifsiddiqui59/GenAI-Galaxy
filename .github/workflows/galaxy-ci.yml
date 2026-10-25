@@ -36,6 +36,7 @@ jobs:
           node tests/test_p60_interview_layout.cjs
           node tests/test_p73_focused_interview.cjs
           node tests/test_p74_lesson_ai_wait.cjs
+          node tests/test_p77_stream_client.cjs
           node --check app.js
           node --check runtime-config.js
           node --check speech/azure-speech-adapter.js
