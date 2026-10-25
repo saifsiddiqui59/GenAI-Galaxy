@@ -132,6 +132,13 @@ jobs:
                 --ref main -f confirm=WARM_NOCHARGE
               echo 'Owner requested bounded real Python warm-up then tutor, no paid model call.'
               ;;
+            "DIAG_SINGLE_INSTANCE_$EVENT_SHA")
+              # Reversible, existing Galaxy Flex only. Protected DEV workflow
+              # resets 512MB/max2/zero-idle even if its anonymous probe fails.
+              gh workflow run galaxy-p79-one-instance-test.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=ROUTE_1_RESET
+              echo 'Owner requested one 512MB/max2 -> max1 -> max2 guarded routing hypothesis test.'
+              ;;
             "METRICS_P70_$EVENT_SHA")
               gh workflow run galaxy-p71-instance-metrics.yml -R saifsiddiqui59/GenAI-Galaxy \
                 --ref main -f confirm=READONLY
