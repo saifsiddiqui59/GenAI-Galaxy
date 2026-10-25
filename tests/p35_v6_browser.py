@@ -58,6 +58,9 @@ async def inspect(pw,url,name,width,height,reduced=False):
             first=flight['miniatures']['0']
             assert first['sourceWorldIndex']==0 and first['visible'],first
             assert math.dist(first['position'],first['atlasOrigin'])>.2,'Pickup must physically depart from original orbit'
+            energy=await capture('energy-pull',2200+2600*.24)
+            assert energy['miniatures']['0']['beamVisible'],'World extraction beam must be visible mid-transfer'
+            assert math.dist(energy['miniatures']['0']['position'],energy['miniatures']['0']['atlasOrigin'])>.5,'Energy beam should span actual orbital-to-hand travel'
             pickup=await capture('pickup',2200+2600*.38)
             assert pickup['miniatures']['0']['attached']
             assert pickup['miniatures']['0']['contactError']<.001
