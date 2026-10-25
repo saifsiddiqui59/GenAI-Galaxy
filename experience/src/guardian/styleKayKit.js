@@ -1,3 +1,4 @@
+import {addSkullMasterDetail} from './skullMasterDetail.js';
 import {attachSkullMasterCloak} from './skullMasterMantle.js';
 /* Non-destructive visual style over the preserved, rigged CC0 KayKit asset.
  * Recolors only saturated red/magenta costume texels; preserves bones, UVs,
@@ -57,8 +58,9 @@ export function styleKayKit(source,THREE){
   }
  });
  const disposeMantle=attachSkullMasterCloak(source,THREE);
+ const disposeDetail=addSkullMasterDetail(source,THREE);
  const head=source.getObjectByName('head');
  const eyeLight=head?new THREE.PointLight('#ff8e30',.32,1.5):null;
  if(eyeLight){eyeLight.name='GalaxyEyeGlow';eyeLight.position.set(0,.12,.28);head.add(eyeLight)}
- return ()=>{disposeMantle();if(eyeLight){head.remove(eyeLight);eyeLight.dispose?.()}styled?.dispose();};
+ return ()=>{disposeDetail();disposeMantle();if(eyeLight){head.remove(eyeLight);eyeLight.dispose?.()}styled?.dispose();};
 }
