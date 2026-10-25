@@ -34,6 +34,15 @@ async function run(){
     fakeResponse([event('delta',{text:'ok',provisional:true}),event('complete',{completed:true,kind:'tutor_draft',verified:false}),event('delta',{text:'late',provisional:true})])
  ];
  for(const response of failed)await assert.rejects(consumeGalaxySse(response),GalaxyStreamError);
+ let prematureComplete=0;
+ const extraAfterComplete=fakeResponse([
+    event('delta',{text:'provisional',provisional:true}),
+    event('complete',{completed:true,kind:'tutor_draft',verified:false}),
+    event('delta',{text:'unauthorized later content',provisional:true})
+ ]);
+ await assert.rejects(consumeGalaxySse(extraAfterComplete,
+    {onComplete:()=>{prematureComplete++;}}),GalaxyStreamError);
+ assert.equal(prematureComplete,0,'Never announce success before checking stream EOF');
  await assert.rejects(consumeGalaxySse(fakeResponse([], {ok:false})),GalaxyStreamError);
  await assert.rejects(consumeGalaxySse(fakeResponse([], {mime:'application/json'})),GalaxyStreamError);
  console.log('P77 real SSE incremental UTF-8 decoding, completion, and failure contract PASS');
