@@ -31,7 +31,7 @@ def build_command(path: str, method: str, seconds: int) -> list[str]:
         raise ValueError("Only bounded anonymous requests to approved Galaxy routes allowed")
     cmd = [
         "curl", "--http1.1", "--silent", "--show-error", "--max-time", str(seconds),
-        "--connect-timeout", "8", "--location-trusted" if False else "--globoff",
+        "--connect-timeout", "8", "--globoff",
         "--output", "/dev/null", "--write-out", PHASE_TEMPLATE,
         "--request", method, HOST + path,
         "--header", "Origin: " + ORIGIN,
@@ -68,7 +68,7 @@ def sample(path: str, method: str, seconds: int = 20, *, runner=subprocess.run) 
     code = str(detail.get("code","000"))
     if not re.fullmatch(r"[0-9]{3}", code):
         code = "000"
-    expected = "200" if method == "OPTIONS" else "401"
+    expected = "200/204" if method == "OPTIONS" else "401"
     return {
         "route": path, "method": method, "expected": expected,
         "http_code": code, "curl_exit": int(result.returncode),
@@ -76,7 +76,9 @@ def sample(path: str, method: str, seconds: int = 20, *, runner=subprocess.run) 
         "tls_s": duration("tls"), "ttfb_s": duration("ttfb"),
         "total_s": duration("total"), "azure_peer": _safe_ip(detail.get("ip")),
         "http_version": str(detail.get("http_ver", ""))[:8],
-        "passed": result.returncode == 0 and code == expected,
+        # Actual browser CORS preflight can be answered with 204 by Azure's
+        # platform CORS module before the Python route executes (200).
+        "passed": result.returncode == 0 and (code in ("200", "204") if method == "OPTIONS" else code == "401"),
     }
 
 def cases():
@@ -100,7 +102,7 @@ def main() -> int:
         try:
             value = sample(p, method, timeout)
         except (OSError, subprocess.TimeoutExpired, subprocess.SubprocessError):
-            value = {"route":p,"method":method,"expected":"200" if method=="OPTIONS" else "401",
+            value = {"route":p,"method":method,"expected":"200/204" if method=="OPTIONS" else "401",
                      "http_code":"000","curl_exit":124,"dns_s":0,"tcp_s":0,"tls_s":0,
                      "ttfb_s":0,"total_s":float(timeout),"azure_peer":"unknown",
                      "http_version":"","passed":False}
