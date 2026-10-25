@@ -10,6 +10,8 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
+from pathlib import Path
 
 HOST = "https://gengalaxy-p3-1429841605.azurewebsites.net"
 ORIGIN = "https://gengalaxy1429841605.z29.web.core.windows.net"
@@ -53,7 +55,17 @@ def _safe_ip(value: object) -> str:
 
 def sample(path: str, method: str, seconds: int = 20, *, runner=subprocess.run) -> dict:
     cmd = build_command(path, method, seconds)
-    result = runner(cmd, capture_output=True, text=True, timeout=seconds+8)
+    # Never publish raw response headers: they may contain routing cookies,
+    # trace identifiers or infrastructure details. Record one boolean only.
+    with tempfile.TemporaryDirectory(prefix="galaxy-http-") as scratch:
+        header_file = Path(scratch) / "headers"
+        result = runner(cmd + ["--dump-header", str(header_file)],
+                        capture_output=True, text=True, timeout=seconds+8)
+        try:
+            headers_text = header_file.read_text(encoding="utf-8", errors="replace")
+        except OSError:
+            headers_text = ""
+    app_trace_present = bool(re.search(r"(?im)^x-galaxy-trace-id:\s*[0-9a-f-]{36}\s*$", headers_text))
     # Curl stderr can contain infrastructure details: do NOT log or return it.
     try:
         detail = json.loads(result.stdout)
@@ -76,6 +88,7 @@ def sample(path: str, method: str, seconds: int = 20, *, runner=subprocess.run) 
         "tls_s": duration("tls"), "ttfb_s": duration("ttfb"),
         "total_s": duration("total"), "azure_peer": _safe_ip(detail.get("ip")),
         "http_version": str(detail.get("http_ver", ""))[:8],
+        "app_trace_present": app_trace_present,
         # Actual browser CORS preflight can be answered with 204 by Azure's
         # platform CORS module before the Python route executes (200).
         "passed": result.returncode == 0 and (code in ("200", "204") if method == "OPTIONS" else code == "401"),
