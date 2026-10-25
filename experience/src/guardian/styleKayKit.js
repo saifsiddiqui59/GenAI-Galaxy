@@ -1,3 +1,4 @@
+import {attachSculptedSkull} from './skullMasterFace.js';
 import {addSkullMasterDetail} from './skullMasterDetail.js';
 import {attachSkullMasterCloak} from './skullMasterMantle.js';
 /* Non-destructive visual style over the preserved, rigged CC0 KayKit asset.
@@ -59,8 +60,9 @@ export function styleKayKit(source,THREE){
  });
  const disposeMantle=attachSkullMasterCloak(source,THREE);
  const disposeDetail=addSkullMasterDetail(source,THREE);
+ const disposeFace=attachSculptedSkull(source,THREE);
  const head=source.getObjectByName('head');
  const eyeLight=head?new THREE.PointLight('#ff8e30',.32,1.5):null;
  if(eyeLight){eyeLight.name='GalaxyEyeGlow';eyeLight.position.set(0,.12,.28);head.add(eyeLight)}
- return ()=>{disposeDetail();disposeMantle();if(eyeLight){head.remove(eyeLight);eyeLight.dispose?.()}styled?.dispose();};
+ return ()=>{disposeFace();disposeDetail();disposeMantle();if(eyeLight){head.remove(eyeLight);eyeLight.dispose?.()}styled?.dispose();};
 }
