@@ -92,6 +92,23 @@ jobs:
           curl --fail --silent --show-error --max-time 35 "$host/index.html?version=$GITHUB_SHA" -o "$tmp/hosted-index"
           cmp -s "$tmp/stage/index.html" "$tmp/hosted-index" || { echo '::error::Public preview index mismatch'; exit 1; }
           echo "Verified isolated P61 frontend. Existing homepage unchanged. $host/index.html?version=$GITHUB_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Check real hosted P61 desktop and phone without AI model calls
+        shell: bash
+        run: |
+          python -m pip install playwright==1.57.0
+          python -m playwright install chromium
+          python tests/p61_hosted_focus.py
+      - name: Preserve hosted viewport screenshots for human visual QA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: p61-hosted-interview-review
+          path: artifacts/p61-hosted-interview/*.png
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Clear Azure runner login
         if: always()
         run: az logout >/dev/null 2>&1 || true
