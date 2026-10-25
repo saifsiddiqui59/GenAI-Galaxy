@@ -54,3 +54,81 @@
 .practice-feedback{margin-top:22px;border-color:#648ed3;overflow-wrap:anywhere}
 .practice-advanced summary:focus-visible,.practice-reference summary:focus-visible{outline:3px solid #9bd6fe;outline-offset:-3px}
 @media(max-width:900px){.practice-core-grid{grid-template-columns:1fr}.practice-side{margin-top:12px}}
+
+/* P73 · Focused interview workspace. Inspired by small-step practice,
+   contextual coaching and mastery feedback; independent original styling. */
+.interview-focus{width:min(100%,940px);margin:0 auto 40px;min-width:0}
+.interview-journey{display:flex;align-items:center;justify-content:space-between;gap:18px;
+  padding:15px 20px;margin-bottom:16px;border:1px solid #414c79;border-radius:17px;
+  background:linear-gradient(115deg,rgba(32,42,84,.96),rgba(10,24,50,.94));box-shadow:0 12px 32px #03071934}
+.interview-journey-tag{flex:0 0 auto;font-size:10px;letter-spacing:.12em;font-weight:800;color:#a6c2ff}
+.interview-journey-steps{display:flex;flex:1;justify-content:flex-end;flex-wrap:wrap;gap:7px}
+.interview-journey-steps span{border:1px solid #344766;background:#101e39;border-radius:100px;
+  padding:7px 11px;font-size:11px;font-weight:720;color:#95a8c9}
+.interview-journey-steps .is-current{border-color:#8cbbff;background:#253b70;color:#f5faff}
+.interview-journey-steps .is-done{border-color:#558c84;color:#9ce6d4}
+.interview-journey-steps .is-next{border-color:#827ad4;color:#d3cdff}
+.interview-focus .practice-advanced{border-color:#303d60;margin-bottom:14px;background:#0d1830a8}
+.interview-focus .practice-core-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:14px;max-width:none}
+.interview-focus .practice-core-grid>.panel:first-child{padding:clamp(18px,3vw,33px);
+  background:linear-gradient(135deg,#151f3c 0%,#0c162e 56%,#121a37 100%);
+  border-color:#3d5078;box-shadow:0 18px 54px #03071538}
+.interview-focus .practice-core-grid>.panel:first-child>h3{font-size:clamp(16px,2vw,19px);margin:12px 0 16px}
+.interview-focus .practice-core-grid .practice-step{margin:22px 0 11px;font-weight:850;color:#94d6f4}
+.interview-focus .practice-question{padding:clamp(19px,3vw,30px);max-width:none;
+  background:linear-gradient(115deg,#222c5c,#111e3e);border:1px solid #627bbe;
+  border-left:4px solid #92baff;border-radius:15px;box-shadow:0 10px 28px #060b2466}
+.interview-focus .practice-help,.interview-focus .practice-more-actions,.interview-focus .practice-evidence{
+  margin:14px 0;border:1px solid #35496e;background:rgba(15,27,52,.77);border-radius:13px}
+.interview-focus .practice-help>summary,.interview-focus .practice-more-actions>summary,
+.interview-focus .practice-evidence>summary{cursor:pointer;list-style-position:inside;
+  padding:13px 16px;color:#c3d6f3;font-size:12px;font-weight:740}
+.interview-focus .practice-help>summary span{float:right;font-size:10px;color:#8aa5cc}
+.interview-focus .practice-help[open]>.practice-actions,
+.interview-focus .practice-more-actions[open]>.practice-actions{padding:4px 14px 15px}
+.interview-focus .practice-help[open]>.practice-actions>*{max-width:100%}
+.interview-focus .practice-help #tutor-question{flex:1 1 220px}
+.interview-focus .practice-question-footer{display:flex;justify-content:space-between;
+  align-items:center;gap:12px;flex-wrap:wrap;padding:0 0 14px}
+.interview-focus #top-skip{color:#c0cfff;border-color:#445478;background:transparent}
+.interview-focus .interview-answer{border-top:1px solid #354665;padding-top:22px;margin-top:10px;gap:13px}
+.interview-focus .interview-answer>label{display:block;font-weight:820;letter-spacing:.06em;
+  font-size:11px;color:#aee0fb}
+.interview-focus #spoken-answer{min-height:190px;font-size:15px;line-height:1.75;
+  padding:18px;background:#0b1630;border:1px solid #50638c;border-radius:13px;color:#f6f9ff}
+.interview-focus #spoken-answer:focus-visible{outline:3px solid #8db9ff;outline-offset:2px}
+.interview-focus .practice-submit-actions{margin-top:4px}
+.interview-focus .practice-submit-actions #evaluate-btn{min-height:52px;min-width:min(100%,320px);
+  font-size:14px;font-weight:820;border-radius:12px}
+.interview-focus .practice-secondary-actions{gap:9px}
+.interview-focus .practice-feedback{border:1px solid #7188bd;border-left:4px solid #8bcbff;
+  background:linear-gradient(135deg,#152b49,#111b36 64%,#1c2049);
+  border-radius:16px;margin-top:23px;padding:clamp(19px,3vw,28px)}
+.interview-focus .practice-feedback>p{line-height:1.7;overflow-wrap:anywhere}
+.interview-focus .practice-feedback>span.eyebrow{display:inline-block;line-height:1.6}
+.interview-focus .practice-evidence{border-color:#385071;background:#0a1930}
+.interview-focus .practice-evidence[open]{padding-bottom:15px}
+.interview-focus .practice-evidence[open]>*:not(summary){margin-left:16px;margin-right:16px}
+.interview-focus .practice-evidence h3{font-size:15px}
+.interview-focus .interview-improved-heading{margin-top:21px;color:#e7f2ff;font-size:18px}
+.interview-focus .interview-next-actions{display:flex;margin-top:20px}
+.interview-focus .interview-next-actions #adaptive-next{min-height:51px;padding:13px 21px;font-weight:820}
+.interview-focus .practice-side{background:#0e1a33aa;border:1px solid #354362;border-radius:13px}
+.interview-focus .practice-side summary{color:#afc1de;padding:13px 16px}
+.interview-focus .practice-help summary:focus-visible,.interview-focus .practice-more-actions summary:focus-visible,
+.interview-focus .practice-evidence summary:focus-visible,.interview-focus #top-skip:focus-visible,
+.interview-focus #evaluate-btn:focus-visible{outline:3px solid #95d1ff;outline-offset:3px}
+@media(max-width:760px){
+ .interview-focus{margin-bottom:22px}
+ .interview-journey{display:block;padding:13px 14px}
+ .interview-journey-steps{justify-content:flex-start;margin-top:10px;gap:6px}
+ .interview-journey-steps span{padding:6px 8px;font-size:10px}
+ .interview-focus .practice-question-footer{align-items:flex-start}
+ .interview-focus .practice-core-grid>.panel:first-child{padding:18px 15px}
+ .interview-focus .practice-submit-actions #evaluate-btn,
+ .interview-focus .interview-next-actions #adaptive-next{width:100%;min-width:0}
+ .interview-focus #spoken-answer{min-height:190px;font-size:16px}
+ .interview-focus .practice-help>summary span{float:none;margin-left:4px}
+ .interview-focus .practice-help>summary,.interview-focus .practice-more-actions>summary,
+ .interview-focus .practice-evidence>summary{min-height:44px}
+}
