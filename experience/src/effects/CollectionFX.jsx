@@ -89,7 +89,7 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
   const d=window.__galaxySkeletonDiagnostics;
   if(d){
    d.miniatures??={};d.miniatures[order]={stage:pick.stage,visible:orb.current.visible,
-    position:orb.current.position.toArray(),sourceWorldIndex:world.index,atlasOrigin:source.toArray(),attached:pick.attached,
+    position:orb.current.position.toArray(),sourceWorldIndex:world.index,atlasOrigin:source.toArray(),beamVisible:!!beam.current?.visible,attached:pick.attached,
     contactError:pick.attached&&pose.grip?orb.current.position.distanceTo(pose.grip):null};
   }
  },-1);
