@@ -37,7 +37,7 @@ async def one(browser, width, height):
     assert await page.locator('#tutor-reference').count()==1
     assert await page.locator('[data-choice]').count()==0
     # Check the screenshot-reported mobile lesson cards before interview.
-    await page.locator('[data-view="galaxy"]').first.click()
+    await page.locator('button.navlink[data-view="galaxy"]').click()
     await page.locator('#open-next').click()
     assert await page.locator('.lesson-content-card').count()==8
     assert await page.locator('.lesson-more').count()==1
