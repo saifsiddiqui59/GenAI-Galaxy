@@ -15,6 +15,7 @@ class StartupAndRelease(unittest.TestCase):
  def test_reuse_existing_backend_only_if_sources_unchanged(self):
   text=(ROOT/'.github/workflows/galaxy-ai-preview-p61.yml').read_text()
   self.assertIn('backend_sha=\'5d32a1f66e5e0a414552f70c0bdeadd9ec8c5903\'',text)
+  self.assertIn('fetch-depth: 0',text)
   self.assertIn('git diff --quiet "$backend_sha" "$GITHUB_SHA" -- api/ infra/azure/backend/',text)
   self.assertIn('galaxy-p3-flex-deploy.yml',text)
   self.assertIn('existing backend deployment missing',text)

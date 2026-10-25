@@ -26,6 +26,8 @@ jobs:
       STORAGE: gengalaxy1429841605
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # required for fail-closed review against pinned previously deployed backend commit
       - name: Require approved Galaxy only current main CI and backend deployment
         shell: bash
         env:
