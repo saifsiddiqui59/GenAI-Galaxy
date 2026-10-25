@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import json
 import sys
+import subprocess
 from diagnose_http_phases_nocharge import PATHS, sample
 
 # Deliberately use real POSTs, NOT preflights. All deny before model calls.
@@ -25,7 +26,7 @@ def run(probe=sample):
     for label, path, method, seconds in CASES:
         try:
             result = probe(path, method, seconds)
-        except (OSError, TimeoutError, ValueError):
+        except (OSError, TimeoutError, ValueError, subprocess.SubprocessError):
             result = {"route":path, "method":method,"http_code":"000",
                       "total_s":seconds,"app_trace_present":False,"passed":False}
         # Application trace means the request actually reached Python, and
