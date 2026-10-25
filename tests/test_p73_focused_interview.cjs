@@ -14,7 +14,7 @@ for(const marker of [
  'class="interview-journey-steps"',
  'class="practice-help"',
  'class="practice-question-footer"',
- 'class="practice-submit-actions"',
+ 'practice-submit-actions',
  'class="practice-more-actions"',
  'class="practice-evidence"',
  "Why this feedback? Review the evidence",
