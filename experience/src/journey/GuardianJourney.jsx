@@ -40,7 +40,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
           <button type="button" onClick={()=>onSelectCompleted?.(w.index)}>
             <span aria-hidden="true" className="guardian-gem">✧</span>{w.name}
           </button>
-        </li>)}</ul>:<p>No planets stored yet. The Genie collects your mastered worlds as the introduction plays.</p>}
+        </li>)}</ul>:<p>No planets stored yet. The Skull Master approaches each mastered world in orbit and collects it before the atlas moves aside.</p>}
       </div>}
     </div>
     <div className="guardian-next">
