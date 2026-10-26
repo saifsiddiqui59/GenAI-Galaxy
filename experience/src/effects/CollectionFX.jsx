@@ -188,8 +188,10 @@ function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
   </mesh>
  </group>;
 }
+// The sphere's offered geometry is radius .275 and root scale follows the rig.
+function poseRadius(group){return .37*group.scale.x}
 function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion,onSelect}){
- const orb=useRef();
+ const orb=useRef(),hit=useRef();
  const color=COLORS[worldIndex];
  const texture=useMemo(()=>planetSurfaceTexture(worldIndex,color,compact),[worldIndex,color,compact]);
  useEffect(()=>()=>texture.dispose(),[texture]);
@@ -206,7 +208,39 @@ function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion,onSel
    diagnostics.offeredWorldIndex=worldIndex;
   }
  },-1);
- return <group ref={orb} visible={false}
+ // The normal globe can be behind a larger atlas world's invisible hit area.
+ // Put an invisible, precisely aligned touch sphere on the SAME camera ray but
+ // closer to the camera. It wins depth-ordered R3F pointer intersections only
+ // inside the actual offered-planet screen footprint, not over the whole atlas.
+ // Run after camera tracking (+2) to avoid stale hit coordinates during pans.
+ const ray=useMemo(()=>new THREE.Vector3(),[]);
+ useFrame(state=>{
+  if(!hit.current||!orb.current)return;
+  const shown=orb.current.visible;
+  hit.current.visible=shown;
+  if(!shown)return;
+  const center=orb.current.getWorldPosition(ray);
+  const camera=state.camera;
+  const distance=camera.position.distanceTo(center);
+  const near=2.0;
+  hit.current.position.copy(camera.position).lerp(center,near/Math.max(distance,.001));
+  hit.current.scale.setScalar(Math.max(.045,poseRadius(orb.current)*near/Math.max(distance,.001)));
+  const diagnostics=window.__galaxySkeletonDiagnostics;
+  if(diagnostics){
+   const projected=center.clone().project(camera);
+   diagnostics.offeredHitPoint=[(projected.x+1)*state.size.width/2,(1-projected.y)*state.size.height/2];
+   diagnostics.offeredHitProxy=true;
+  }
+ },3);
+ return <>
+ <mesh ref={hit} visible={false}
+  onClick={e=>{e.stopPropagation();if(orb.current?.visible)onSelect?.(worldIndex)}}
+  onPointerOver={()=>{document.body.style.cursor='pointer'}}
+  onPointerOut={()=>{document.body.style.cursor=''}}>
+  <sphereGeometry args={[1,18,12]}/>
+  <meshBasicMaterial transparent opacity={0} colorWrite={false} depthWrite={false}/>
+ </mesh>
+ <group ref={orb} visible={false}
   onClick={e=>{e.stopPropagation();if(orb.current?.visible)onSelect?.(worldIndex)}}
   onPointerOver={()=>{document.body.style.cursor='pointer'}}
   onPointerOut={()=>{document.body.style.cursor=''}}>
@@ -215,7 +249,7 @@ function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion,onSel
   {/* Slightly oversized invisible pick surface so the offered planet is touch-friendly. */}
   <mesh><sphereGeometry args={[.37,20,14]}/><meshBasicMaterial transparent opacity={0} depthWrite={false} colorWrite={false}/></mesh>
   <pointLight intensity={1.4} color={color} distance={2.2}/>
- </group>;
+ </group></>;
 }
 export default function CollectionFX({completed=[],collectedCount,clockRef,reducedMotion=false,onOpenSack,onSelectWorld,nextWorldIndex=0,rigPoseRef}){
  const compact=useThree(s=>s.size.width<700);
