@@ -62,6 +62,8 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   if(ANATOMY_MODE){
    const anatomy=attachAnatomicalSkeleton(object,anatomicalBody,THREE);
    object.userData.disposeAnatomy=anatomy.dispose;
+   object.userData.updateSpectral=anatomy.update;
+   object.userData.spectralActive=anatomy.spectralActive;
    object.userData.anatomicalParts=anatomy.attached;
    object.userData.anatomicalClusters=anatomy.clusters;
   }
@@ -86,13 +88,15 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     sourceDimensions:{height:source.userData.geometryHeight},
     toyEyesHidden:!source.getObjectByName('Skeleton_Mage_Eyes')?.visible,
     anatomyEnabled:ANATOMY_MODE,anatomicalParts:source.userData.anatomicalParts||0,
-    anatomicalClusters:source.userData.anatomicalClusters||0};
+    anatomicalClusters:source.userData.anatomicalClusters||0,
+    spectralActive:!!source.userData.spectralActive};
   }
   return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeAnatomy?.();source.userData.disposeDetail?.();source.userData.disposeStyle?.()};
  },[source,rig,mixer,animations,onReady]);
  useFrame((state,dt)=>{
   if(!root.current)return;
   const c=clockRef.current,ms=c.ms,view=phaseAt(ms,completedCount,reducedMotion);
+  source.userData.updateSpectral?.(ms);
   const compactScale=guardianStageScale(narrow,short),body=root.current;
   const entrance=entranceAt(reducedMotion?99999:ms,narrow);
   body.position.set(entrance.x,guardianFloorY(narrow,short),3.2);
