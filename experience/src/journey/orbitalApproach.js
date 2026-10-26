@@ -18,7 +18,7 @@ export function guardianApproachAt(ms,indexes=[],gripLocal={x:0,y:1.4,z:.3},comp
  // Raise only the FINAL phone presentation a little. Approach / contact
  // coordinates remain untouched and the shoulder-to-orbit reach still matches.
  const homeEnd={...home,x:entranceAt(COLLECT_START_MS,compact).x,
-  y:home.y+(compact?.34:0)};
+  y:home.y+(compact?(short?.26:.34):0)};
  const homePose={...home,y:reduced&&compact?homeEnd.y:home.y,
   scale,walkWeight:initial.walkWeight,travel:0,orbitalTarget:null};
  if(reduced||!safe.length||ms<COLLECT_START_MS)return homePose;
