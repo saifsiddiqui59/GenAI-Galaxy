@@ -25,7 +25,7 @@ const bonesByRegion={
 export function classifyAnatomicalPart(name,centerX=0){
  if(/cranium|mandible|tooth/i.test(name))return null; // existing anatomical skull is more detailed
  const side=centerX>=0?0:1; // CC0 source +X corresponds to KayKit .l
- const pick=(region)=>({region,bone:bonesByRegion[region][side]});
+ const pick=(region)=>({region,bone:bonesByRegion[region][side]||bonesByRegion[region][0]});
  if(/^(Humerus|Humeral head)/i.test(name))return pick('upperArm');
  if(/^(Radius|Ulna)/i.test(name))return pick('lowerArm');
  if(/^(Carpal|Metacarpal|Finger phalanx)/i.test(name))return pick('hand');
