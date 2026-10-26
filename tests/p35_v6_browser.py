@@ -5,6 +5,7 @@ Screenshots and numeric diagnostics are evidence, not a substitute for opening i
 """
 import asyncio,functools,http.server,json,math,os,threading
 from pathlib import Path
+from PIL import Image
 from playwright.async_api import async_playwright
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -53,6 +54,17 @@ async def inspect(pw,url,name,width,height,reduced=False):
             await page.wait_for_timeout(180)
             file=OUT/f'{name}-{stage}.png'
             await page.screenshot(path=str(file),full_page=True,timeout=30000)
+            # Protect against a subtle R3F failure: a positive useFrame priority
+            # takes over WebGL rendering while HTML captions still look alive.
+            # The actual planets fill far more than 12% of this middle field;
+            # an empty black canvas has under 2% bright pixels.
+            image=Image.open(file).convert('RGB')
+            iw,ih=image.size
+            sampled=[max(image.getpixel((x,y)))>80
+              for y in range(int(ih*.25),int(ih*.72),5)
+              for x in range(int(iw*.12),int(iw*.88),5)]
+            bright=sum(sampled)/len(sampled)
+            assert bright>.12,(name,stage,'WebGL scene blank',round(bright,4))
             diag=await page.evaluate('window.__galaxySkeletonDiagnostics')
             snapshots.append({'stage':stage,'time':diag['time'],'ikError':diag.get('ikError'),'pickupTargetError':diag.get('pickupTargetError'),'miniatures':diag.get('miniatures',{})})
             print(name,stage,'IK',diag.get('ikError'))
