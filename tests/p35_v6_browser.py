@@ -112,6 +112,7 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert diag.get('anatomyEnabled') and diag.get('anatomicalParts',0)>=280,\
                 ('New anatomical GLB must actually render in this browser run',diag.get('anatomicalParts'),diag.get('anatomyEnabled'))
             assert 10<=diag.get('anatomicalClusters',0)<=16,diag.get('anatomicalClusters')
+            assert diag.get('spectralActive') and diag.get('articulatedArms'),('Only the floating anatomical rig with connected palms is accepted',diag)
         assert diag.get('toyEyesHidden'),'Oversized KayKit toy eyes must stay hidden in the rendered Skull Master'
         if diag.get('offeringCenter') and diag.get('waistPosition'):
             # Both coordinates are world space. The globe may not sit inside
