@@ -11,7 +11,7 @@ test('mobile-width world pickup follows moving skull near orbit',()=>{
  const c=cameraTrackingAt(COLLECT_START_MS+PER_WORLD_MS*.5,p,0,3);
  assert(c.x<-3 && c.x>-7,'negative x follow brings offscreen skull to middle');
  assert(c.y>.5,'follow actual orbital altitude');
- assert(c.z<12.5,'cinematic framing moves closer during grasp');
+ assert(c.z<10,'cinematic framing must move visibly closer for a legible grab');
 });
 test('camera returns home after all collections before offering',()=>{
  const last=COLLECT_START_MS+PER_WORLD_MS*3;
