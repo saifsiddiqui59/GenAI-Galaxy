@@ -4,8 +4,8 @@
  * real right-palm IK work without writing new animation data.
  */
 export const BARE_SKULL_PROFILE=Object.freeze({
- ribs:6,bone:'#9aa4a0',shadow:'#3a4650',sternum:'#b2b8ad',
- hiddenMeshes:Object.freeze(['Skeleton_Mage_Hat','Skeleton_Mage_Body',])
+ ribs:6,bone:'#c0b5a4',shadow:'#3a4650',sternum:'#d2c5b0',
+ hiddenMeshes:Object.freeze(['Skeleton_Mage_Hat','Skeleton_Mage_Body','Skeleton_Mage_ArmLeft','Skeleton_Mage_ArmRight','Skeleton_Mage_LegLeft','Skeleton_Mage_LegRight'])
 });
 export function attachBareSkullTorso(source,THREE){
  const chest=source.getObjectByName('chest');
@@ -41,7 +41,16 @@ export function attachBareSkullTorso(source,THREE){
  for(const side of [-1,1]){
   pipe(torso,[[0,.37,.38],[side*.19,.40,.33],[side*.41,.32,.13]],.028,boneMat,'SkullMasterClavicle');
  }
- pipe(torso,[[0,.38,-.14],[0,.1,-.18],[0,-.26,-.18]],.038,shadowMat,'SkullMasterSpine');
+ pipe(torso,[[0,.38,-.14],[0,.1,-.18],[0,-.26,-.18]],.049,shadowMat,'SkullMasterSpine');
+ // Exposed pelvis and serrated lower ribs, not a fabric waistband or plate.
+ const hips=source.getObjectByName('hips');
+ if(hips?.isBone){
+  for(const sign of [-1,1]){
+   pipe(hips,[[0,.22,.11],[sign*.20,.14,.13],
+     [sign*.29,-.08,.045],[sign*.17,-.21,.015]],.045,boneMat,'SkullMasterIlium');
+  }
+  pipe(hips,[[0,.15,.12],[0,-.19,.13]],.04,sternumMat,'SkullMasterSacrum');
+ }
  // Replace oversized KayKit boots/limb sleeves with sculpted humerus, radius,
  // femur and tibia segments parented directly to their animated bones.
  function segment(parentName,childName,startRadius,endRadius,label){
@@ -60,22 +69,44 @@ export function attachBareSkullTorso(source,THREE){
   return true;
  }
  for(const side of ['l','r']){
-  segment('upperarm.'+side,'lowerarm.'+side,.039,.031,'SkullMasterHumerus');
-  segment('lowerarm.'+side,'wrist.'+side,.031,.025,'SkullMasterRadiusUlna');
-  segment('wrist.'+side,'hand.'+side,.027,.035,'SkullMasterWrist');
-  segment('upperleg.'+side,'lowerleg.'+side,.056,.046,'SkullMasterFemur');
-  segment('lowerleg.'+side,'foot.'+side,.047,.029,'SkullMasterTibia');
-  segment('foot.'+side,'toes.'+side,.030,.022,'SkullMasterFoot');
+  // The old KayKit glove and boot shells are genuinely hidden. Thicker real
+  // articulated bone silhouettes are used instead; keep all bones/IK in place.
+  segment('upperarm.'+side,'lowerarm.'+side,.087,.060,'SkullMasterHumerus');
+  segment('lowerarm.'+side,'wrist.'+side,.060,.047,'SkullMasterRadiusUlna');
+  segment('wrist.'+side,'hand.'+side,.047,.055,'SkullMasterWrist');
+  segment('upperleg.'+side,'lowerleg.'+side,.109,.077,'SkullMasterFemur');
+  segment('lowerleg.'+side,'foot.'+side,.075,.052,'SkullMasterTibia');
+  segment('foot.'+side,'toes.'+side,.074,.043,'SkullMasterMetatarsal');
+  const forearm=source.getObjectByName('lowerarm.'+side);
+  const wrist=source.getObjectByName('wrist.'+side);
+  if(forearm?.isBone&&wrist?.isBone&&wrist.parent===forearm){
+   const v=wrist.position;
+   pipe(forearm,[[.037,0,0],[.04,v.y*.48,0],[.027,v.y*.96,0]],
+    .023,sternumMat,'SkullMasterUlna');
+   pipe(forearm,[[-.037,0,0],[-.04,v.y*.48,0],[-.027,v.y*.96,0]],
+    .023,boneMat,'SkullMasterRadius');
+  }
+  const foot=source.getObjectByName('foot.'+side);
+  if(foot?.isBone){
+   for(let i=-2;i<=2;i++){
+    const spread=i*.045;
+    pipe(foot,[[spread*.55,.015,.025],[spread,.12,.065],
+      [spread*1.15,.19,.09]],.016,i===0?sternumMat:boneMat,'SkullMasterToe');
+   }
+  }
   const hand=source.getObjectByName('hand.'+side);
   if(hand?.isBone){
-   const palm=new THREE.Mesh(new THREE.DodecahedronGeometry(.064,1),boneMat);
+   const palm=new THREE.Mesh(new THREE.DodecahedronGeometry(.085,1),boneMat);
    palm.name='SkullMasterPalm';palm.scale.set(.85,1.16,.55);
    palm.position.y=.052;add(hand,palm);
    for(let i=0;i<4;i++){
-    const x=(i-1.5)*.028;
-    pipe(hand,[[x,.07,.022],[x*1.17,.135,.025],[x*1.24,.176-(i===3?.022:0),.024]],
-     .010,sternumMat,'SkullMasterFinger');
+    const x=(i-1.5)*.044;
+    pipe(hand,[[x,.065,.035],[x*1.20,.155,.03],
+      [x*1.28,.215-(i===3?.027:0),.027],[x*1.32,.245-(i===3?.035:0),.045]],
+     .016,sternumMat,'SkullMasterLongClaw');
    }
+   pipe(hand,[[-.10,.065,.04],[-.15,.095,.12],[-.19,.13,.155]],
+     .018,boneMat,'SkullMasterThumb');
   }
  }
  // Keep one tiny occult glow INSIDE the sternum cavity, not a jacket ornament.
