@@ -131,18 +131,29 @@ function Observatory({compact,short,rigPoseRef}){
  useFrame(()=>{
   const pose=rigPoseRef?.current;
   if(!pose?.bodyPosition||!platform.current)return;
-  // An orbiting foothold keeps the legs grounded during zero-gravity travel;
-  // the old static platform was left empty while the character floated away.
+  // No solid game-platform chasing a flying skeleton through space. A faint
+  // floor sigil appears only at the final lesson handoff to visually ground it.
+  platform.current.visible=pose.phase==='offering';
   platform.current.position.copy(pose.bodyPosition);
-  platform.current.position.y-=.025;
-  platform.current.scale.setScalar(pose.scale*(pose.phase==='collecting'?.70:1));
+  platform.current.position.y-=.035;
+  platform.current.scale.setScalar(pose.scale*.82);
  },-1);
  const x=compact?-.48:-2.05,y=guardianFloorY(compact,short)-.01,scale=guardianStageScale(compact,short);
- return <group ref={platform} position={[x,y,3.2]} scale={scale}>
-  <mesh rotation={[-Math.PI/2,0,0]}><circleGeometry args={[1.4,64]}/><meshStandardMaterial color="#152139" metalness={.5} roughness={.7} transparent opacity={.8}/></mesh>
-  <mesh rotation={[-Math.PI/2,0,0]} position={[0,.005,0]}><ringGeometry args={[1.35,1.365,80]}/><meshBasicMaterial color="#8bb2c9" transparent opacity={.4}/></mesh>
-  <mesh rotation={[-Math.PI/2,0,0]} position={[0,.009,0]} scale={[1,.65,1]}><circleGeometry args={[.72,48]}/><meshBasicMaterial color="#010510" transparent opacity={.52}/></mesh>
-  <mesh position={[-.68,.02,.72]} rotation={[-Math.PI/2,0,0]}><ringGeometry args={[.20,.215,40]}/><meshBasicMaterial color="#e5c68a" transparent opacity={.7}/></mesh>
+ return <group ref={platform} position={[x,y,3.2]} scale={scale} visible={false}>
+  <mesh rotation={[-Math.PI/2,0,0]}>
+   <ringGeometry args={[.76,.775,96]}/>
+   <meshBasicMaterial color="#9c83ae" transparent opacity={.24} depthWrite={false} side={THREE.DoubleSide}/>
+  </mesh>
+  <mesh rotation={[-Math.PI/2,0,0]} position={[0,.007,0]}>
+   <ringGeometry args={[.55,.56,96]}/>
+   <meshBasicMaterial color="#baa277" transparent opacity={.13} depthWrite={false} side={THREE.DoubleSide}/>
+  </mesh>
+  {[0,1,2,3,4,5].map(i=><mesh key={i}
+    rotation={[-Math.PI/2,0,i*Math.PI/3]}
+    position={[Math.cos(i*Math.PI/3)*.77,.012,Math.sin(i*Math.PI/3)*.77]}>
+   <planeGeometry args={[.12,.016]}/>
+   <meshBasicMaterial color="#dab88b" transparent opacity={.38} side={THREE.DoubleSide} depthWrite={false}/>
+  </mesh>)}
  </group>;
 }
 export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=null,onSelect,reducedMotion=false,clockRef,rigPoseRef}){
