@@ -31,6 +31,11 @@ test('bad rig remains untouched and invalid GLB bounds fail closed',()=>{
  assert.throws(()=>normalizedSkullTransform({min:{x:0,y:0,z:0},max:{x:0,y:0,z:0}}),/no usable size/);
 });
 
+test('Anatomical Skull Master head stays proportionate to body',()=>{
+ const tr=normalizedSkullTransform({min:{x:-.11,y:0,z:-.17},max:{x:.11,y:.25,z:.17}});
+ assert(tr.scale*.34<.6,'Skull must not overwhelm the human ribcage');
+ assert(tr.position[1]<.15,'Skull should sit near the cervical spine');
+});
 test('new bone weathering is deterministic, bounded, and leaves CC0 geometry intact',()=>{
  const x=weatheredBoneColor(.17,.44,-.21),y=weatheredBoneColor(.17,.44,-.21);
  assert.deepEqual(x,y);
