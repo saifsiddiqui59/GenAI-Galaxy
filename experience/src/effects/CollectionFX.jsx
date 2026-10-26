@@ -148,7 +148,13 @@ function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
   new THREE.Vector3(-.28,.63,-.12),new THREE.Vector3(.20,.64,-.12),
   new THREE.Vector3(.31,.22,-.04)
  ]),24,.021,7,false),[]);
- useEffect(()=>()=>{pouchGeometry.dispose();strapGeometry.dispose()},[pouchGeometry,strapGeometry]);
+ const flapGeometry=useMemo(()=>{
+  const shape=new THREE.Shape();
+  shape.moveTo(-.25,.12);shape.lineTo(.25,.12);shape.lineTo(.22,-.05);
+  shape.quadraticCurveTo(0,-.18,-.22,-.05);shape.closePath();
+  return new THREE.ExtrudeGeometry(shape,{depth:.022,bevelEnabled:true,bevelSize:.012,bevelThickness:.008,bevelSegments:2,curveSegments:16});
+ },[]);
+ useEffect(()=>()=>{pouchGeometry.dispose();strapGeometry.dispose();flapGeometry.dispose()},[pouchGeometry,strapGeometry,flapGeometry]);
  useFrame(()=>{
   const pose=rigPoseRef.current;if(!bag.current||!pose)return;
   bag.current.position.copy(pose.bag);
@@ -165,17 +171,12 @@ function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
   <mesh geometry={pouchGeometry} position={[0,0,-.08]}>
    <meshStandardMaterial color="#24272f" roughness={.91} metalness={.02}/>
   </mesh>
-  <mesh position={[0,.09,.065]} scale={[1.0,.78,.65]}>
-   <sphereGeometry args={[.285,28,16]}/>
-   <meshStandardMaterial color="#303440" roughness={.96}/>
-  </mesh>
-  <mesh position={[0,.185,.11]}>
-   <boxGeometry args={[.49,.018,.068]}/>
+  <mesh position={[0,.185,.078]}>
+   <boxGeometry args={[.48,.012,.026]}/>
    <meshStandardMaterial color="#090b13" roughness={1}/>
   </mesh>
-  <mesh position={[0,.065,.146]} scale={[1,.57,.2]}>
-   <sphereGeometry args={[.235,24,12]}/>
-   <meshStandardMaterial color="#353743" roughness={.93}/>
+  <mesh geometry={flapGeometry} position={[0,0,.075]}>
+   <meshStandardMaterial color="#343943" roughness={.94} metalness={.015}/>
   </mesh>
   <mesh position={[0,-.035,.19]}>
    <boxGeometry args={[.073,.062,.016]}/>
