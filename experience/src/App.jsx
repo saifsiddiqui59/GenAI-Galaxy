@@ -109,7 +109,7 @@ export default function App(){
        <JourneyTimeline clockRef={choreographyRef} count={collected.length} ready={modelReady}
          reducedMotion={!animationEnabled||reduced} active={visible}/>
        <GalaxyScene masteredWorlds={collected} selectedIndex={selected} recommendedIndex={nextIndex}
-         onSelect={select} reducedMotion={!animationEnabled||reduced} clockRef={choreographyRef}/>
+         onSelect={select} reducedMotion={!animationEnabled||reduced} clockRef={choreographyRef} rigPoseRef={rigPoseRef}/>
        <Guardian rigPoseRef={rigPoseRef} clockRef={choreographyRef} completedCount={collected.length} worldIndexes={collected.map(w=>w.index)}
          onReady={ready} reducedMotion={!animationEnabled||reduced}/>
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced}
