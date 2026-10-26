@@ -23,7 +23,7 @@ def verify(raw):
     if raw[:4]!=b"glTF" or struct.unpack_from("<II",raw,4)[0]!=2 or struct.unpack_from("<I",raw,8)[0]!=len(raw):
         raise ValueError("Invalid GLB")
     length,tag=struct.unpack_from("<II",raw,12)
-    if tag!=0x4e4f534a or length>100000:
+    if tag!=0x4e4f534a or length>300000:
         raise ValueError("Missing or oversized GLB JSON")
     obj=json.loads(raw[20:20+length])
     if len(obj.get('nodes',[]))!=322 or len(obj.get('meshes',[]))!=322 or obj.get('skins') or obj.get('animations'):
