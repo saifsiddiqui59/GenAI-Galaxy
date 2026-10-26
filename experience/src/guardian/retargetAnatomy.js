@@ -43,16 +43,16 @@ export function classifyAnatomicalPart(name,centerX=0){
 function groupAnchor(region,side){
  const sign=side===0?1:-1;
  switch(region){
-  case 'upperArm':return {source:[sign*.21,1.40,0],scale:.81,angle:sign*Math.PI/2};
-  case 'lowerArm':return {source:[sign*.26,1.105,0],scale:1.03,angle:sign*Math.PI/2};
-  case 'hand':return {source:[sign*.28,.865,0],scale:.94,angle:sign*Math.PI/2};
-  case 'upperLeg':return {source:[sign*.122,.86,0],scale:.62,angle:0};
-  case 'lowerLeg':return {source:[sign*.113,.48,0],scale:.43,angle:0};
-  case 'foot':return {source:[sign*.114,.14,0],scale:.82,angle:0};
-  case 'hips':return {source:[0,.93,0],scale:1.08,angle:0};
-  case 'spine':return {source:[0,1.09,0],scale:1.35,angle:0};
-  case 'neck':return {source:[0,1.47,0],scale:.83,angle:0};
-  default:return {source:[0,1.30,0],scale:1.24,angle:0};
+  case 'upperArm':return {source:[sign*.21,1.40,0],scale:1.13,angle:sign*Math.PI/2};
+  case 'lowerArm':return {source:[sign*.26,1.105,0],scale:1.16,angle:sign*Math.PI/2};
+  case 'hand':return {source:[sign*.28,.865,0],scale:1.09,angle:sign*Math.PI/2};
+  case 'upperLeg':return {source:[sign*.122,.86,0],scale:.83,angle:0};
+  case 'lowerLeg':return {source:[sign*.113,.48,0],scale:.66,angle:0};
+  case 'foot':return {source:[sign*.114,.14,0],scale:1.04,angle:0};
+  case 'hips':return {source:[0,.93,0],scale:1.28,angle:0};
+  case 'spine':return {source:[0,1.09,0],scale:1.48,angle:0};
+  case 'neck':return {source:[0,1.47,0],scale:1.04,angle:0};
+  default:return {source:[0,1.30,0],scale:1.46,angle:0};
  }
 }
 export function desiredPartTransform(THREE,region,bone,root,side){
@@ -106,7 +106,7 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
   classified++;
  });
  if(classified<100||missed)throw Error('Incomplete anatomical rigging: '+classified+' assigned, '+missed+' unmatched; missing '+JSON.stringify(missing.slice(0,30))+' skipped '+JSON.stringify(skipped.slice(0,30)));
- const material=new THREE.MeshStandardMaterial({color:'#c7b9a6',roughness:.93,metalness:0});
+ const material=new THREE.MeshStandardMaterial({color:'#a89b8a',roughness:.97,metalness:0});
  for(const [name,parts] of mergedParts){
   const bone=getBone(name);
   const combined=mergeGeometries(parts,false);
