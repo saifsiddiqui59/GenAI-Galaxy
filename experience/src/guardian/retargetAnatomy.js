@@ -8,6 +8,7 @@
  * This is a side branch visual experiment, NOT an approved final character.
  */
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import {attachRiggedSkeletalArms} from './riggedSkeletalArms.js';
 
 export const ANATOMY_ASSET='models/cc0/InnersceneAnatomicalSkeleton.glb';
 export const ANATOMY_SHA256='e52d1b23cf15b574885846a7da30354defc0a3a51b679ded6cbc7c0c1965d996';
@@ -187,7 +188,7 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
   mesh.name='SkullMasterAnatomy_'+name;
   // Keep animated genuine pelvis/spine/ribs/hands/arms; replace ill-fitting
   // crossed-knee KayKit leg poses with a volumetric ethereal lower silhouette.
-  const isLeg=/^(hips|upperleg|lowerleg|foot)/i.test(name);
+  const isLeg=/^(hips|upperleg|lowerleg|foot|upperarm|lowerarm|hand)/i.test(name);
   mesh.visible=!isLeg;
   mesh.userData.concealedBySpectralVapor=isLeg;
   mesh.castShadow=!isLeg;
@@ -195,11 +196,12 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
   owned.push(mesh);geos.push(combined);
  }
  const spectral=attachSpectralLowerBody(source,THREE);
+ const arms=attachRiggedSkeletalArms(source,THREE);
  return {
-  attached:classified,clusters:owned.length,skinsUntouched:true,spectralActive:true,
+  attached:classified,clusters:owned.length,skinsUntouched:true,spectralActive:true,articulatedArms:true,
   update:ms=>spectral.update(ms),
   dispose(){
-   spectral.dispose();
+   spectral.dispose();arms.dispose();
    for(const mesh of owned)mesh.parent?.remove(mesh);
    geos.forEach(g=>g.dispose());material.dispose();
   }
