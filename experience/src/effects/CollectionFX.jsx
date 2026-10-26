@@ -129,61 +129,72 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
  </>;
 }
 function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
- const vault=useRef(),iris=useRef(),outer=useRef();
+ const bag=useRef();
+ const cloth=useMemo(()=>{
+  const s=new THREE.Shape();
+  s.moveTo(-.22,.155);
+  s.bezierCurveTo(-.28,.13,-.275,.035,-.255,-.12);
+  s.bezierCurveTo(-.265,-.30,-.18,-.37,-.02,-.375);
+  s.bezierCurveTo(.19,-.39,.265,-.30,.263,-.12);
+  s.bezierCurveTo(.27,.015,.25,.125,.21,.155);
+  s.bezierCurveTo(.06,.13,-.07,.135,-.22,.155);
+  return new THREE.ExtrudeGeometry(s,{depth:.09,steps:1,curveSegments:20,
+   bevelEnabled:true,bevelSize:.035,bevelThickness:.035,bevelSegments:4});
+ },[]);
+ const fold=useMemo(()=>{
+  const geom=new THREE.Shape();
+  geom.moveTo(-.20,.145);geom.quadraticCurveTo(0,.18,.19,.145);
+  geom.lineTo(.17,-.085);geom.quadraticCurveTo(-.02,-.15,-.18,-.06);
+  geom.closePath();
+  return new THREE.ExtrudeGeometry(geom,{depth:.017,bevelEnabled:true,
+   bevelSize:.014,bevelThickness:.009,bevelSegments:3,curveSegments:18});
+ },[]);
+ const strap=useMemo(()=>new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-.21,.14,-.06),new THREE.Vector3(-.34,.36,-.08),
+  new THREE.Vector3(-.21,.54,-.15),new THREE.Vector3(.14,.52,-.14),
+  new THREE.Vector3(.24,.14,-.06)]),32,.022,8,false),[]);
+ const wrinkles=useMemo(()=>[
+  [[-.14,.005,.15],[-.10,-.12,.15],[-.07,-.31,.14]],
+  [[-.025,.01,.15],[.012,-.13,.15],[.035,-.32,.14]],
+  [[.13,.015,.15],[.10,-.14,.15],[.075,-.29,.14]]
+ ].map(pts=>new THREE.TubeGeometry(new THREE.CatmullRomCurve3(
+  pts.map(x=>new THREE.Vector3(...x))),18,.004,5,false)),[]);
+ useEffect(()=>()=>{cloth.dispose();fold.dispose();strap.dispose();wrinkles.forEach(w=>w.dispose())},
+  [cloth,fold,strap,wrinkles]);
  useFrame(()=>{
   const pose=rigPoseRef.current;
-  if(!vault.current||!pose)return;
-  // This is a small dimensional pocket tethered to the living rig, not
-  // a solid cylindrical 'pot' or rectangular cartoon prop.
-  vault.current.position.copy(pose.bag);
+  if(!bag.current||!pose)return;
+  bag.current.position.copy(pose.bag);
   const order=clockRef.current.view?.activeIndex??-1;
   const t=order<0?0:pickupAt(clockRef.current.ms,order).t;
-  const depositPulse=t>=RELEASE?Math.sin(Math.min(1,(t-RELEASE)/.16)*Math.PI):0;
-  const scale=pose.scale*(.87+depositPulse*.13);
-  vault.current.scale.setScalar(scale);
-  const seconds=clockRef.current.ms/1000;
-  if(iris.current)iris.current.rotation.z=-seconds*.85;
-  if(outer.current)outer.current.rotation.z=seconds*.31;
+  const pulse=t>=RELEASE?Math.sin(Math.min(1,(t-RELEASE)/.16)*Math.PI)*.045:0;
+  // Compact, fabric-looking hip pouch; soft squash on each deposit.
+  bag.current.scale.set(pose.scale*(.78+pulse),pose.scale*(.78-pulse*.5),pose.scale*.78);
+  bag.current.rotation.z=Math.sin(clockRef.current.ms*.0013)*.035;
  },-1);
- return <group ref={vault} onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
-  {/* Hollow void portal: flat and otherworldly, not a sack, bucket or pot.
-      It is the entrance for mastered worlds and opens the same collection UI. */}
-  <group position={[0,.19,.13]} rotation={[-.23,0,-.1]}>
-   <mesh>
-    <circleGeometry args={[.20,48]}/>
-    <meshBasicMaterial color="#040711" side={THREE.DoubleSide}
-      transparent opacity={.97} depthWrite={false}/>
-   </mesh>
-   <mesh>
-    <ringGeometry args={[.145,.185,64]}/>
-    <meshBasicMaterial color="#423259" side={THREE.DoubleSide}
-      transparent opacity={.72} depthWrite={false}/>
-   </mesh>
-   <mesh ref={outer} position={[0,0,.015]}>
-    <torusGeometry args={[.225,.013,9,56]}/>
-    <meshBasicMaterial color="#a882d3" transparent opacity={.74}
-      depthWrite={false}/>
-   </mesh>
-   <mesh ref={iris} position={[0,0,.029]}>
-    <torusGeometry args={[.13,.011,8,48]}/>
-    <meshBasicMaterial color="#e6a35c" transparent opacity={.92}
-      depthWrite={false}/>
-   </mesh>
-   {Array.from({length:6},(_,i)=>{
-     const angle=Math.PI*2*i/6;
-     return <mesh key={i} position={[Math.cos(angle)*.217,Math.sin(angle)*.217,.031]}
-       rotation={[0,0,angle]}>
-      <octahedronGeometry args={[.028,0]}/>
-      <meshBasicMaterial color={i%2?'#b5a8f5':'#cf9b62'}/>
-     </mesh>;
-   })}
-   {/* Invisible touch area is local to the vault; it cannot steal planet clicks. */}
-   <mesh position={[0,0,.033]}>
-    <circleGeometry args={[.29,32]}/>
-    <meshBasicMaterial transparent opacity={0} colorWrite={false}
-      side={THREE.DoubleSide} depthWrite={false}/>
-   </mesh>
-  </group>
+ return <group ref={bag} onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
+  <mesh geometry={strap}>
+   <meshStandardMaterial color="#352b30" roughness={1} metalness={0}/>
+  </mesh>
+  <mesh geometry={cloth} position={[0,0,-.085]}>
+   <meshStandardMaterial color="#39303a" roughness={1} metalness={0}/>
+  </mesh>
+  {/* Slouching cloth flap and seams, no rigid pot rim or circular portal. */}
+  <mesh geometry={fold} position={[0,0,.069]}>
+   <meshStandardMaterial color="#51414a" roughness={1} metalness={0}/>
+  </mesh>
+  <mesh position={[0,.142,.085]}>
+   <boxGeometry args={[.38,.015,.013]}/>
+   <meshStandardMaterial color="#171219" roughness={1}/>
+  </mesh>
+  {wrinkles.map((geometry,i)=><mesh key={i} geometry={geometry}>
+   <meshStandardMaterial color={i===1?"#66535b":"#4b3d45"} roughness={1}
+    transparent opacity={.65}/>
+  </mesh>)}
+  <mesh position={[0,-.07,.131]}>
+   <sphereGeometry args={[.027,8,6]}/>
+   <meshStandardMaterial color="#968371" metalness={.12} roughness={.84}/>
+  </mesh>
  </group>;
 }
 function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion,onSelect}){
