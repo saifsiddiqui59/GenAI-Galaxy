@@ -3,7 +3,7 @@
  * hand IK and the separately licensed anatomical skull remain intact.
  */
 export const BARE_SKULL_PROFILE=Object.freeze({
-  ribs:6,bone:'#9ca8ac',shadow:'#3e4b58',sternum:'#89959c'
+  ribs:6,bone:'#68747a',shadow:'#252f3a',sternum:'#7f8992'
 });
 export function attachBareSkullTorso(source,THREE){
  const chest=source.getObjectByName('chest');
@@ -28,13 +28,13 @@ export function attachBareSkullTorso(source,THREE){
   for(const side of [-1,1]){
    pipe([[side*.055,y,.43],[side*.19,y+.045,.45],
       [side*span,y+.01,.29],[side*(span+.035),y-.045,.08],
-      [side*(span-.07),y-.085,-.13]],.023,
+      [side*(span-.07),y-.085,-.13 ]],.014,
       i%3===0?sternumMat:boneMat);
   }
  }
- pipe([[0,.40,.40],[0,.15,.45],[0,-.15,.46],[0,-.43,.42]],.056,sternumMat);
+ pipe([[0,.40,.40],[0,.15,.45],[0,-.15,.46],[0,-.43,.42]],.036,sternumMat);
  // Short collarbones and visible dark spine replace costume shoulder pads.
- for(const side of [-1,1])pipe([[0,.42,.40],[side*.22,.48,.36],[side*.43,.42,.18]],.041,boneMat);
+ for(const side of [-1,1])pipe([[0,.42,.40],[side*.22,.48,.36],[side*.43,.42,.18]],.029,boneMat);
  pipe([[0,.42,-.14],[0,.10,-.21],[0,-.30,-.20],[0,-.49,-.12]],.047,shadowMat);
  const glow=new THREE.PointLight('#e76c28',.18,1.2);glow.position.set(0,.02,.38);torso.add(glow);
  return ()=>{
