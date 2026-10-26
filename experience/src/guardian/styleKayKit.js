@@ -1,5 +1,4 @@
-import {addSkullMasterDetail} from './skullMasterDetail.js';
-import {attachSkullMasterCloak} from './skullMasterMantle.js';
+import {attachBareSkullTorso} from './bareSkull.js';
 /* Non-destructive visual style over the preserved, rigged CC0 KayKit asset.
  * Recolors only saturated red/magenta costume texels; preserves bones, UVs,
  * geometry, 95 original animation clips and original texture provenance.
@@ -7,8 +6,8 @@ import {attachSkullMasterCloak} from './skullMasterMantle.js';
 export const STYLE_PROFILE='skullmaster-midnight-violet';
 // Reduce white toy-like shoes, gauntlets and plastic torso highlights.
 export function kitMeshTint(name){
- if(/^Skeleton_Mage_(ArmLeft|ArmRight|LegLeft|LegRight)$/.test(name))return '#7b899f';
- if(name==='Skeleton_Mage_Body')return '#7a6888';
+ if(/^Skeleton_Mage_(ArmLeft|ArmRight|LegLeft|LegRight)$/.test(name))return '#8b99a4';
+ if(name==='Skeleton_Mage_Body')return '#52616d';
  return null;
 }
 export function isCostumeRed(r,g,b){return r>65&&r>g*1.35&&r>b*1.18&&r-g>36}
@@ -64,10 +63,10 @@ export function styleKayKit(source,THREE){
    n.material.roughness=.9;n.material.metalness=.02;
   }
  });
- const disposeMantle=attachSkullMasterCloak(source,THREE);
- const disposeDetail=addSkullMasterDetail(source,THREE);
+ // Remove the mage costume, hood and cloak; keep original animated limbs.
+ const disposeBareTorso=attachBareSkullTorso(source,THREE);
  const head=source.getObjectByName('head');
  const eyeLight=head?new THREE.PointLight('#ff8e30',.32,1.5):null;
  if(eyeLight){eyeLight.name='GalaxyEyeGlow';eyeLight.position.set(0,.12,.28);head.add(eyeLight)}
- return ()=>{disposeDetail();disposeMantle();if(eyeLight){head.remove(eyeLight);eyeLight.dispose?.()}styled?.dispose();};
+ return ()=>{disposeBareTorso();if(eyeLight){head.remove(eyeLight);eyeLight.dispose?.()}styled?.dispose();};
 }
