@@ -3,7 +3,7 @@
  * orb at the guardian's feet. No account data or local persistence is involved.
  */
 import {atlasLayout} from './worldAnchors.js';
-import {COLLECT_START_MS,PER_WORLD_MS,smooth} from '../journey/choreography.js';
+import {COLLECT_START_MS,PER_WORLD_MS,CONTACT,smooth} from '../journey/choreography.js';
 import {cinematicLayoutAt} from './cinematicLayout.js';
 // One cinematic revolution of the constellation every 90 seconds so the 17 worlds visibly travel during short visits.
 // Keeping the SAME angular speed for all worlds preserves ordering and prevents
@@ -45,5 +45,5 @@ export function flightProgress(t){return smooth(t/.30)};
 export function planetHiddenFromAtlas(ms,order,reducedMotion=false){
  if(order<0)return false;
  if(reducedMotion)return true;
- return ms>=launchAt(order);
+ return ms>=launchAt(order)+CONTACT*PER_WORLD_MS;
 }
