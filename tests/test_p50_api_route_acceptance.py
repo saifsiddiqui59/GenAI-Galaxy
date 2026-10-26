@@ -58,10 +58,10 @@ if "azure.functions" not in sys.modules:
 import function_app as api
 from consumption_security import QuotaExceeded, QuotaUnavailable
 
-TOPIC = next(iter(api.RUBRICS))
+TOPIC = next(iter(api.rubric_catalog()))
 IDENTITY = ("synthetic-jwt-only", "00000000-0000-4000-8000-000000000001",
             "https://vfoghlhtnifpnbevgufa.supabase.co", "synthetic-anon-key")
-QUESTION = api.RUBRICS[TOPIC]["question"]
+QUESTION = api.rubric_catalog()[TOPIC]["question"]
 
 
 def request(payload, headers=None, method="POST"):

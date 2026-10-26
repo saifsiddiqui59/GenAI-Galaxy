@@ -5,6 +5,7 @@ rate limiting configured at an API gateway. Do not put model keys in Blob site.
 """
 import json
 import os
+from functools import lru_cache
 from pathlib import Path
 from urllib.parse import quote, urlencode, urlparse
 from urllib.request import Request, urlopen, build_opener, HTTPRedirectHandler
@@ -23,7 +24,12 @@ from model_provider import chat_json, ProviderUnavailable
 from model_costs import estimate_model_cost
 
 app=func.FunctionApp(http_auth_level=func.AuthLevel.ANONYMOUS)
-RUBRICS=json.loads((Path(__file__).parent/'rubrics.json').read_text())
+# Keep worker indexing and anonymous/CORS requests independent of the 394 KB
+# technical rubric catalog. Load it only for a successfully authenticated
+# evaluator/tutor invocation; cache once per process thereafter.
+@lru_cache(maxsize=1)
+def rubric_catalog():
+    return json.loads((Path(__file__).parent/'rubrics.json').read_text(encoding='utf-8'))
 
 class UpstreamError(RuntimeError):
     pass
@@ -178,7 +184,8 @@ def evaluate(req:func.HttpRequest)->func.HttpResponse:
         stage='validation'
         body=req.get_json()
         if not isinstance(body,dict):raise InputError('Invalid request JSON')
-        k=topic_key(body.get('topic_key'),set(RUBRICS))
+        rubrics=rubric_catalog()
+        k=topic_key(body.get('topic_key'),set(rubrics))
         response=body.get('response','')
         question=body.get('question','')
         if not isinstance(response,str) or not 15<=len(response)<=2000:
@@ -194,7 +201,7 @@ def evaluate(req:func.HttpRequest)->func.HttpResponse:
         elif os.environ.get('GALAXY_EVAL_GATEWAY_RATE_LIMIT')!='active':
             return result({'error':'Evaluation quota gateway is not configured'},503)
         stage='model'
-        review,usage=model_review(RUBRICS[k],question,response,history=history)
+        review,usage=model_review(rubrics[k],question,response,history=history)
         accuracy=review.get('accuracy')
         clarity=review.get('clarity')
         stage='completed'
@@ -282,8 +289,9 @@ def tutor(req:func.HttpRequest)->func.HttpResponse:
         # force expensive LangGraph imports/graph compilation on a cold worker.
         from tutor_graph import invoke_tutor, validate_tutor_request, FREE_MODES
         stage='validation'
-        validated=validate_tutor_request(req.get_json(),set(RUBRICS))
-        rubric=RUBRICS[validated['topic_key']]
+        rubrics=rubric_catalog()
+        validated=validate_tutor_request(req.get_json(),set(rubrics))
+        rubric=rubrics[validated['topic_key']]
         def paid_model_call(graph_state):
             nonlocal quota,stage
             stage='quota'
