@@ -7,6 +7,7 @@ import {discoverRigAnchors,gripMidpoint} from './rigAnchors.js';
 import {styleKayKit,STYLE_PROFILE} from './styleKayKit.js';
 import {SKULLMASTER_PROFILE} from './skullMasterMantle.js';
 import {guardianApproachAt} from '../journey/orbitalApproach.js';
+import {orbitalPluckPose} from '../journey/orbitalPluckPose.js';
 import {mountDetailedSkull,SKULL_ASSET} from './detailSkull.js';
 import {ANATOMY_ASSET,ANATOMY_MODE,attachAnatomicalSkeleton} from './retargetAnatomy.js';
 import {guardianStageScale,guardianFloorY} from './guardianFraming.js';
@@ -18,7 +19,7 @@ const DETAIL_ASSET=import.meta.env.BASE_URL+SKULL_ASSET;
 const BODY_ASSET=import.meta.env.BASE_URL+(ANATOMY_MODE?ANATOMY_ASSET:SKULL_ASSET);
 const observed=()=>import.meta.env.DEV||new URLSearchParams(window.location.search).get('demo')==='1';
 export function chooseKayKitAnimation(phase,names=[]){
- const preferred=phase==='arriving'?'Walking_A':phase==='collecting'?'Interact':'Idle';
+ const preferred=phase==='arriving'?'Walking_A':'Idle';
  return names.includes(preferred)?preferred:names.find(n=>/^Idle$/i.test(n))||names[0];
 }
 function armChain(hand){
@@ -71,6 +72,18 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   return object;
  },[scene,anatomicalSkull,anatomicalBody]);
  const rig=useMemo(()=>discoverRigAnchors(source),[source]);
+ // Freeze the axial skeleton and legs in the verified rest pose during each
+ // orbit flight. The collector glides upright through space: its shoulders and
+ // right hand may turn through IK, but the waist NEVER crouches to the floor.
+ const uprightBones=useMemo(()=>{
+  const list=[];
+  source.traverse(node=>{
+   if(node.isBone&&/^(hips|spine|chest|upperleg[._]|lowerleg[._]|foot[._])/i.test(node.name)){
+    list.push({bone:node,rest:node.quaternion.clone()});
+   }
+  });
+  return list;
+ },[source]);
  const arms=useMemo(()=>({left:armChain(rig.leftHand),right:armChain(rig.rightHand)}),[rig]);
  const mixer=useMemo(()=>new THREE.AnimationMixer(source),[source]);
  const actions=useMemo(()=>Object.fromEntries(animations.map(clip=>{
@@ -120,15 +133,19 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   body.position.set(approach.x,approach.y,approach.z);
   body.scale.setScalar(approach.scale);
   body.rotation.y=pickup?0:entrance.yaw;
-  let pickupWeight=0;
-  if(pickup)pickupWeight=smooth((pickup.t-(CONTACT-.20))/.17)*(1-smooth((pickup.t-.68)/.20));
-  const walk=view.phase==='arriving'?entrance.walkWeight:(pickup?approach.walkWeight:approach.walkWeight);
-  sample('Walking_A',((ms/1000)*.82)%1.0666667,Math.max(0,walk*(1-pickupWeight)));
-  sample('Interact',pickup?Math.min(.86,pickup.t/CONTACT*.58):0,pickupWeight);
-  sample('Idle',(ms/1000)%1.0666667,Math.max(0,1-walk-pickupWeight));
+  const pluck=pickup?orbitalPluckPose(pickup.t):null;
+  // Walking_A and Interact have source keyframes that look like bending or
+  // ground pickup. They are NEVER rendered while visiting an orbital planet.
+  // Interact above is used once, invisibly, only to calibrate right-hand reach.
+  const walk=view.phase==='arriving'?entrance.walkWeight:0;
+  sample('Walking_A',((ms/1000)*.82)%1.0666667,Math.max(0,walk));
+  sample('Idle',view.phase==='collecting'?.14:(ms/1000)%1.0666667,Math.max(0,1-walk));
   // Unlike useAnimations' independent delta, sample clips on the prop clock.
   // Weighted sampling replaces fadeIn/fadeOut without restarting PickUp at contact.
   mixer.update(0);
+  if(view.phase==='collecting'){
+   for(const {bone,rest} of uprightBones)bone.quaternion.copy(rest);
+  }
   // Clip sampling controls all 95 animations; keep the skull/hood proportion aligned.
   const headBone=source.getObjectByName('head');
   if(headBone)headBone.scale.setScalar(SKULLMASTER_PROFILE.headScale);
@@ -147,7 +164,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    if(pickup.t>=CONTACT&&pickup.t<.64)palmTarget.lerp(lift,smooth((pickup.t-CONTACT)/.14));
    else if(pickup.t>=.64&&pickup.t<.74)palmTarget.copy(lift).lerp(above,smooth((pickup.t-.64)/.10));
    else if(pickup.t>=.74)palmTarget.copy(above).lerp(mouth,smooth((pickup.t-.74)/.10));
-   const weight=smooth((pickup.t-(CONTACT-.18))/.16)*(1-smooth((pickup.t-RELEASE)/.12));
+   const weight=pluck.reachWeight;
    const before=arms.right.slice(0,2).map(b=>b.quaternion.clone());
    for(let pass=0;pass<3;pass++){
     const gripOffset=rig.rightHand.localToWorld(new THREE.Vector3(0,.045,.035)).sub(rig.rightHand.getWorldPosition(new THREE.Vector3()));
@@ -175,14 +192,20 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    const d=window.__galaxySkeletonDiagnostics;
    if(lastEpoch.current!==c.epoch){lastEpoch.current=c.epoch;lastIndex.current=-1;d.pickupLog=[];}
    if(view.activeIndex>=0&&view.activeIndex!==lastIndex.current){
-    lastIndex.current=view.activeIndex;d.pickupLog.push({index:view.activeIndex,clip:'Interact'});
+    lastIndex.current=view.activeIndex;d.pickupLog.push({index:view.activeIndex,clip:'OrbitalPluckIK'});
    }
    Object.assign(d,{currentPhase:view.phase,currentClip:chooseKayKitAnimation(view.phase,animations.map(a=>a.name)),
     currentPickupIndex:view.activeIndex,pickupStage:pickup?.stage||view.phase,time:ms,
     ikError:error,hasArmIK:!!(arms.left&&arms.right),gripMidpoint:hand?.toArray(),
     pickupTargetError:pickup&&grip?grip.distanceTo(palmTarget):null,staging:staging.toArray(),
     rightGrip:grip?.toArray(),waistPosition:hip.toArray(),bagMouth:mouth.toArray(),
-    worldPosition:body.position.toArray(),orbitalContact:approach.orbitalTarget?[approach.orbitalTarget.x,approach.orbitalTarget.y,approach.orbitalTarget.z]:null,approachTravel:approach.travel,offeringCenter:offer.toArray()});
+    worldPosition:body.position.toArray(),orbitalContact:approach.orbitalTarget?[approach.orbitalTarget.x,approach.orbitalTarget.y,approach.orbitalTarget.z]:null,approachTravel:approach.travel,offeringCenter:offer.toArray(),
+    movementMode:view.phase==='collecting'?'upright-orbital-pluck':view.phase,
+    groundWalkWeight:view.phase==='collecting'?actions['Walking_A']?.getEffectiveWeight()??0:walk,
+    groundPickupWeight:actions['PickUp']?.getEffectiveWeight()??0,
+    torsoBendRadians:view.phase==='collecting'?uprightBones.reduce((m,{bone,rest})=>Math.max(m,bone.quaternion.angleTo(rest)),0):null,
+    pluckReachWeight:pluck?.reachWeight??0,
+    palmContactInOrbit:!!pluck?.palmContact});
    const top=body.position.clone().add(new THREE.Vector3(0,3.6*scale,0)).project(state.camera);
    const bottom=body.position.clone().project(state.camera);
    d.screenBody={top:(1-top.y)*state.size.height/2,bottom:(1-bottom.y)*state.size.height/2};
