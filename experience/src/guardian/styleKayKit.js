@@ -65,8 +65,7 @@ export function styleKayKit(source,THREE){
  });
  // Remove the mage costume, hood and cloak; keep original animated limbs.
  const disposeBareTorso=attachBareSkullTorso(source,THREE);
- const head=source.getObjectByName('head');
- const eyeLight=head?new THREE.PointLight('#ff8e30',.32,1.5):null;
- if(eyeLight){eyeLight.name='GalaxyEyeGlow';eyeLight.position.set(0,.12,.28);head.add(eyeLight)}
- return ()=>{disposeBareTorso();if(eyeLight){head.remove(eyeLight);eyeLight.dispose?.()}styled?.dispose();};
+ // Anatomical head attachment owns its own low-intensity socket fill.
+ // The old bright broad head light made the face look like orange buttons.
+ return ()=>{disposeBareTorso();styled?.dispose();};
 }
