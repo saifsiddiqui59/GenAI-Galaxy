@@ -1,4 +1,4 @@
-import {attachBareSkullTorso} from './bareSkull.js';
+import {attachBareSkullTorso,BARE_SKULL_PROFILE} from './bareSkull.js';
 /* Non-destructive visual style over the preserved, rigged CC0 KayKit asset.
  * Recolors only saturated red/magenta costume texels; preserves bones, UVs,
  * geometry, 95 original animation clips and original texture provenance.
@@ -45,7 +45,7 @@ export function createStyledAtlas(original,THREE){
  map.generateMipmaps=original.generateMipmaps;map.needsUpdate=true;
  return map;
 }
-export function styleKayKit(source,THREE){
+export function styleKayKit(source,THREE,{anatomical=false}={}){
  const mats=[];source.traverse(n=>{if(n.isMesh&&n.material)mats.push(n.material)});
  const map=mats.find(m=>m.name!=='Glow'&&m.map)?.map;
  const styled=createStyledAtlas(map,THREE);
@@ -63,9 +63,16 @@ export function styleKayKit(source,THREE){
    n.material.roughness=.9;n.material.metalness=.02;
   }
  });
- // Remove the mage costume, hood and cloak; keep original animated limbs.
- const disposeBareTorso=attachBareSkullTorso(source,THREE);
- // Anatomical head attachment owns its own low-intensity socket fill.
- // The old bright broad head light made the face look like orange buttons.
- return ()=>{disposeBareTorso();styled?.dispose();};
+ // Hide the same original KayKit clothing in both cases. Only the
+ // experimental real CC0 anatomical body skips the fake pipe-shaped bones.
+ const hidden=anatomical?BARE_SKULL_PROFILE.hiddenMeshes
+  .map(name=>source.getObjectByName(name)).filter(Boolean):[];
+ const previous=hidden.map(node=>node.visible);
+ if(anatomical)hidden.forEach(node=>{node.visible=false});
+ const disposeBareTorso=anatomical?()=>{}:attachBareSkullTorso(source,THREE);
+ return ()=>{
+  disposeBareTorso();
+  hidden.forEach((node,i)=>{node.visible=previous[i]});
+  styled?.dispose();
+ };
 }
