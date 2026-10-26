@@ -98,6 +98,12 @@ async def inspect(pw,url,name,width,height,reduced=False):
         assert diag['atlasReveal']['progress']==1 and diag['atlasReveal']['phase']=='atlas',diag['atlasReveal']
         assert await page.locator('.guardian-journey.is-revealed').count()==1,'Show existing atlas UI after cinematic reveal'
         assert diag['clips']==95 and diag['bones']==41,diag
+        assert diag.get('toyEyesHidden'),'Oversized KayKit toy eyes must stay hidden in the rendered Skull Master'
+        if diag.get('offeringCenter') and diag.get('waistPosition'):
+            # Both coordinates are world space. The globe may not sit inside
+            # the skeletal rib cage as it did in rejected visual QA images.
+            assert diag['waistPosition'][0]-diag['offeringCenter'][0]>.30,\
+                (name,'offered planet overlaps torso',diag['offeringCenter'],diag['waistPosition'])
         assert diag['hasArmIK'] and math.isfinite(diag['ikError']) and diag['ikError']<.18,diag.get('ikError')
         assert all(not m['visible'] for m in diag.get('miniatures',{}).values()),'Stored planets must be inside the bag'
         if not reduced:
