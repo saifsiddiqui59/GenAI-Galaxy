@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main, 'feat/**'] # Supports reviewed stacked PRs before retargeting.
   push:
-    branches: [main, 'feat/**', 'fix/**', 'chore/**']
+    branches: [main, 'feat/**', '!feat/v6-p234-orbit-approach-bare-skull-messenger-satchel', 'fix/**', 'chore/**']
   workflow_dispatch:
 permissions:
   contents: read
