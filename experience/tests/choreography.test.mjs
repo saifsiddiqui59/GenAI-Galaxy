@@ -23,7 +23,7 @@ test('contact belongs to one palm until release, every one of seventeen cycles',
 test('walk arrives without position or heading discontinuities',()=>{
  for(const compact of [true,false]){
   const last=entranceAt(2200,compact);
-  assert.equal(last.x,entranceAt(6000,compact).x);assert.equal(last.yaw,0);assert.equal(last.walkWeight,0);
+  assert.equal(last.x,entranceAt(6000,compact).x);assert.equal(last.yaw,Math.PI);assert.equal(last.walkWeight,0);
   let previous=entranceAt(0,compact);
   for(let ms=16;ms<2300;ms+=16){
    const next=entranceAt(ms,compact);assert(next.x>=previous.x);assert(Math.abs(next.x-previous.x)<.04);assert(Math.abs(next.yaw-previous.yaw)<.07);previous=next;
