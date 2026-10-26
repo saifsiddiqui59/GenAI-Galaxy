@@ -52,7 +52,7 @@ function groupAnchor(region,side){
   case 'hips':return {source:[0,.93,0],scale:1.28,angle:0};
   case 'spine':return {source:[0,1.09,0],scale:1.48,angle:0};
   case 'neck':return {source:[0,1.47,0],scale:1.04,angle:0};
-  default:return {source:[0,1.30,0],scale:1.46,angle:0};
+  default:return {source:[0,1.30,0],scale:1.28,angle:0};
  }
 }
 export function desiredPartTransform(THREE,region,bone,root,side){
