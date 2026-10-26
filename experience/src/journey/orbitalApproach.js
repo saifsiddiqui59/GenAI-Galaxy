@@ -20,9 +20,14 @@ export function guardianApproachAt(ms,indexes=[],gripLocal={x:0,y:1.4,z:.3},comp
  if(reduced||!safe.length||ms<COLLECT_START_MS)return homePose;
  const toPosition=(index,order)=>{
   const world=orbitContactAt(index,order,compact,short,safe.length,reduced);
-  return {x:world.x-gripLocal.x*scale,
+  // The guardian faces the viewer at the moment of the grasp (yaw PI).
+  // Calculate the wrist-to-root translation in the same rotated frame.
+  const yaw=Math.PI,cos=Math.cos(yaw),sin=Math.sin(yaw);
+  const offsetX=(gripLocal.x*cos+gripLocal.z*sin)*scale;
+  const offsetZ=(-gripLocal.x*sin+gripLocal.z*cos)*scale;
+  return {x:world.x-offsetX,
           y:world.y-gripLocal.y*scale,
-          z:world.z-gripLocal.z*scale,
+          z:world.z-offsetZ,
           world};
  };
  const endOfCollections=COLLECT_START_MS+safe.length*PER_WORLD_MS;
