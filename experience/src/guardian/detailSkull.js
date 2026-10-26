@@ -26,8 +26,9 @@ export function weatherSkullGeometry(geometry,THREE){
  clone.setAttribute('color',new THREE.BufferAttribute(colors,3));
  return clone;
 }
-// Reuse the original rigged emissive eyes while replacing the flat skull and jaw.
-const REPLACED=['Skeleton_Mage_Skull','Skeleton_Mage_Jaw'];
+// Original KayKit eyes are oversized bright game-art circles. They are hidden
+// with the toy skull/jaw and replaced with two small recessed slit embers.
+const REPLACED=['Skeleton_Mage_Skull','Skeleton_Mage_Jaw','Skeleton_Mage_Eyes'];
 const MIN_SIZE=.01;
 
 export function normalizedSkullTransform(bounds,options={}){
@@ -45,7 +46,7 @@ export function mountDetailedSkull(rig,skullSource,options={}){
  const head=rig?.getObjectByName('head');
  if(!head?.isBone||!skullSource)return {active:false,dispose:()=>{}};
  const original=REPLACED.map(name=>rig.getObjectByName(name)).filter(Boolean);
- if(original.length!==2)return {active:false,dispose:()=>{}};
+ if(original.length!==3)return {active:false,dispose:()=>{}};
  const model=skullSource.clone(true);
  model.name='SkullMasterCC0RealisticHead';
  model.updateMatrixWorld(true);
@@ -79,15 +80,34 @@ export function mountDetailedSkull(rig,skullSource,options={}){
  head.add(model);
  const originalVisibility=original.map(o=>o.visible);
  original.forEach(o=>{o.visible=false});
- // Emissive in-socket highlights will be calibrated to the actual GLB screen
- // review, never used to cover the geometry with oversized round pupils.
- const light=new THREE.PointLight('#ff6c1d',.25,1.1);
- light.position.set(0,.23,.39);light.name='SkullMasterEyeFill';
+ // Actual hollows of the CC0 skull remain dark; a tiny deep-red slit is
+ // suspended just within each socket. No large pupil spheres or orange ears.
+ const sockets=new THREE.Group();sockets.name='SkullMasterRecessedEyes';head.add(sockets);
+ const emberMat=new THREE.MeshBasicMaterial({color:'#db572a',toneMapped:false});
+ const lowGlowMat=new THREE.MeshBasicMaterial({color:'#3b0c12',toneMapped:false});
+ const embers=[];
+ for(const side of [-1,1]){
+  const root=new THREE.Group();
+  root.position.set(side*.162,.347,.38);
+  root.rotation.z=-side*.23; // angry brow: outer edge tilts slightly down
+  const shadow=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),lowGlowMat);
+  shadow.name='SkullMasterEyeSocketShadow';
+  shadow.scale.set(.086,.051,.008);root.add(shadow);
+  const slit=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),emberMat);
+  slit.name='SkullMasterEyeEmber';
+  slit.position.z=.012;slit.scale.set(.045,.014,.007);
+  root.add(slit);sockets.add(root);embers.push(slit);
+ }
+ const light=new THREE.PointLight('#ff5c32',.12,.75);
+ light.position.set(0,.34,.35);light.name='SkullMasterSubtleEyeFill';
  head.add(light);
  return {
   active:true,model,source:SKULL_SOURCE,
   dispose:()=>{
-   head.remove(model);head.remove(light);light.dispose?.();
+   head.remove(model);head.remove(light);head.remove(sockets);light.dispose?.();
+   for(const ember of embers)ember.geometry.dispose();
+   sockets.traverse(obj=>{if(obj.isMesh&&obj.name==='SkullMasterEyeSocketShadow')obj.geometry.dispose()});
+   emberMat.dispose();lowGlowMat.dispose();
    original.forEach((o,i)=>{o.visible=originalVisibility[i]});
    for(const material of owned)material.dispose();
    for(const geometry of ownedGeometries)geometry.dispose();
