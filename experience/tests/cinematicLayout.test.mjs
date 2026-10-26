@@ -1,10 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {ATLAS_REVEAL_MS,atlasRevealStart,cinematicLayoutAt} from '../src/space/cinematicLayout.js';
+import {PER_WORLD_MS} from '../src/journey/choreography.js';
 import {atlasLayout} from '../src/space/worldAnchors.js';
 import {galaxySpaceAt,launchAt,orbitAt} from '../src/space/worldOrbit.js';
 test('the galaxy opens full-screen and shifts right only after first collected planet',()=>{
- assert.equal(atlasRevealStart(3),launchAt(0)+2600);
+ assert.equal(atlasRevealStart(3),launchAt(0)+PER_WORLD_MS);
  assert.equal(atlasRevealStart(0),launchAt(0));
  const before=cinematicLayoutAt(1000,false,false,3);
  const firstContact=cinematicLayoutAt(launchAt(0)+1900,false,false,3);
