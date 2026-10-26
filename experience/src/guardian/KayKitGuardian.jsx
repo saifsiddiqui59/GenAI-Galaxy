@@ -8,12 +8,14 @@ import {styleKayKit,STYLE_PROFILE} from './styleKayKit.js';
 import {SKULLMASTER_PROFILE} from './skullMasterMantle.js';
 import {guardianApproachAt} from '../journey/orbitalApproach.js';
 import {mountDetailedSkull,SKULL_ASSET} from './detailSkull.js';
+import {ANATOMY_ASSET,ANATOMY_MODE,attachAnatomicalSkeleton} from './retargetAnatomy.js';
 import {guardianStageScale,guardianFloorY} from './guardianFraming.js';
 import {moveWrist} from './handIK.js';
 import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS,OFFER_SETTLE_MS} from '../journey/choreography.js';
 import {phaseAt} from '../journey/story.js';
 const ASSET=import.meta.env.BASE_URL+'models/kaykit/Skeleton_Mage.glb';
 const DETAIL_ASSET=import.meta.env.BASE_URL+SKULL_ASSET;
+const BODY_ASSET=import.meta.env.BASE_URL+(ANATOMY_MODE?ANATOMY_ASSET:SKULL_ASSET);
 const observed=()=>import.meta.env.DEV||new URLSearchParams(window.location.search).get('demo')==='1';
 export function chooseKayKitAnimation(phase,names=[]){
  const preferred=phase==='arriving'?'Walking_A':phase==='collecting'?'Interact':'Unarmed_Idle';
@@ -40,6 +42,9 @@ function solveBlended(chain,target,weight){
 function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMotion=false,onReady}){
  const {scene,animations}=useGLTF(ASSET);
  const {scene:anatomicalSkull}=useGLTF(DETAIL_ASSET);
+ // The default build reuses the cached skull; only isolated V6 art preview
+ // loads the verified 322-mesh anatomical model, packaged at build time.
+ const {scene:anatomicalBody}=useGLTF(BODY_ASSET);
  const narrow=useThree(state=>state.size.width<700);
  const short=useThree(state=>state.size.height<780);
  const root=useRef(),lastIndex=useRef(-1),lastEpoch=useRef(-1),contactLocal=useRef(null);
@@ -50,12 +55,18 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   object.scale.setScalar(factor);
   object.position.set(-box.getCenter(new THREE.Vector3()).x*factor,-box.min.y*factor,-box.getCenter(new THREE.Vector3()).z*factor);
   object.userData.geometryHeight=height;
-  object.userData.disposeStyle=styleKayKit(object,THREE);
+  object.userData.disposeStyle=styleKayKit(object,THREE,{anatomical:ANATOMY_MODE});
   const detailed=mountDetailedSkull(object,anatomicalSkull);
   if(!detailed.active)throw Error('CC0 detailed skull failed to attach: original rig is incompatible');
   object.userData.disposeDetail=detailed.dispose;
+  if(ANATOMY_MODE){
+   const anatomy=attachAnatomicalSkeleton(object,anatomicalBody,THREE);
+   object.userData.disposeAnatomy=anatomy.dispose;
+   object.userData.anatomicalParts=anatomy.attached;
+   object.userData.anatomicalClusters=anatomy.clusters;
+  }
   return object;
- },[scene,anatomicalSkull]);
+ },[scene,anatomicalSkull,anatomicalBody]);
  const rig=useMemo(()=>discoverRigAnchors(source),[source]);
  const arms=useMemo(()=>({left:armChain(rig.leftHand),right:armChain(rig.rightHand)}),[rig]);
  const mixer=useMemo(()=>new THREE.AnimationMixer(source),[source]);
@@ -73,9 +84,11 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     animationNames:animations.map(a=>a.name),meshes,materials,pickupLog:[],
     rig:{detectedBones:rig.detectedBones,canOffer:rig.readyToOffer,canCarry:rig.readyForSatchel},
     sourceDimensions:{height:source.userData.geometryHeight},
-    toyEyesHidden:!source.getObjectByName('Skeleton_Mage_Eyes')?.visible};
+    toyEyesHidden:!source.getObjectByName('Skeleton_Mage_Eyes')?.visible,
+    anatomyEnabled:ANATOMY_MODE,anatomicalParts:source.userData.anatomicalParts||0,
+    anatomicalClusters:source.userData.anatomicalClusters||0};
   }
-  return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeDetail?.();source.userData.disposeStyle?.()};
+  return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeAnatomy?.();source.userData.disposeDetail?.();source.userData.disposeStyle?.()};
  },[source,rig,mixer,animations,onReady]);
  useFrame((state,dt)=>{
   if(!root.current)return;
@@ -174,3 +187,4 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
 export default function KayKitGuardian(props){return <Suspense fallback={null}><Model {...props}/></Suspense>}
 useGLTF.preload(ASSET);
 useGLTF.preload(DETAIL_ASSET);
+if(ANATOMY_MODE)useGLTF.preload(BODY_ASSET);
