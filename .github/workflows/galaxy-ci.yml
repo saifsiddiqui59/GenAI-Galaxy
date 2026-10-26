@@ -51,6 +51,18 @@ jobs:
           path: experience/dist/
           retention-days: 7
           if-no-files-found: error
+      - name: Inspect alternative CC0 anatomical GLB (isolated PR research, no app code)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel'
+        continue-on-error: true
+        run: python scripts/v6/inspect_cc0_candidate.py
+      - name: Preserve CC0 model topology report
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel'
+        uses: actions/upload-artifact@v4
+        with:
+          name: galaxy-v6-cc0-anatomy-research
+          path: artifacts/v6-cc0-anatomy-research/
+          retention-days: 3
+          if-no-files-found: ignore
       - name: Verify server-owned rubrics are reproducible
         run: |
           python scripts/build_api_rubrics.py
