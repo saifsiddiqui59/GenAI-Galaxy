@@ -6,7 +6,7 @@ import {attachBareSkullTorso} from './bareSkull.js';
 export const STYLE_PROFILE='skullmaster-midnight-violet';
 // Reduce white toy-like shoes, gauntlets and plastic torso highlights.
 export function kitMeshTint(name){
- if(/^Skeleton_Mage_(ArmLeft|ArmRight|LegLeft|LegRight)$/.test(name))return '#606b7a';
+ if(/^Skeleton_Mage_(ArmLeft|ArmRight|LegLeft|LegRight)$/.test(name))return '#293241';
  if(name==='Skeleton_Mage_Body')return '#52616d';
  return null;
 }
@@ -54,7 +54,7 @@ export function styleKayKit(source,THREE){
   n.material=n.material.clone();
   if(n.material.name==='Glow'){
    n.material.color.set('#ff8f2c');n.material.emissive.set('#f15c0f');
-   n.material.emissiveIntensity=2.65;n.material.toneMapped=false;
+   n.material.emissiveIntensity=1.85;n.material.toneMapped=false;
   }else{
    if(styled)n.material.map=styled;
    // Direct per-mesh tint: cooler sculpted skull, without recoloring the glowing eyes.
