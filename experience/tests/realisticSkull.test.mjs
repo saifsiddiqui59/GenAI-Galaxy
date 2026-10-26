@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import {SKULL_SOURCE,SKULL_LICENSE,SKULL_ASSET,normalizedSkullTransform,mountDetailedSkull}
+import {SKULL_SOURCE,SKULL_LICENSE,SKULL_ASSET,normalizedSkullTransform,mountDetailedSkull,weatheredBoneColor,weatherSkullGeometry}
  from '../src/guardian/detailSkull.js';
 test('new commercial-ready CC0 skull is sourced and mounted without modifying animation clips',()=>{
  assert.equal(SKULL_LICENSE,'CC0-1.0');
@@ -27,4 +27,17 @@ test('new commercial-ready CC0 skull is sourced and mounted without modifying an
 test('bad rig remains untouched and invalid GLB bounds fail closed',()=>{
  assert.equal(mountDetailedSkull(new THREE.Group(),new THREE.Group()).active,false);
  assert.throws(()=>normalizedSkullTransform({min:{x:0,y:0,z:0},max:{x:0,y:0,z:0}}),/no usable size/);
+});
+
+test('new bone weathering is deterministic, bounded, and leaves CC0 geometry intact',()=>{
+ const x=weatheredBoneColor(.17,.44,-.21),y=weatheredBoneColor(.17,.44,-.21);
+ assert.deepEqual(x,y);
+ assert(x[0]>=.46&&x[0]<=1&&x[1]<x[0]&&x[2]<x[1]);
+ const original=new THREE.BufferGeometry();
+ original.setAttribute('position',new THREE.Float32BufferAttribute([0,0,0,.2,.3,.1],3));
+ const decorated=weatherSkullGeometry(original,THREE);
+ assert.equal(decorated.getAttribute('color').count,2);
+ assert.notEqual(decorated,original);
+ assert.equal(original.getAttribute('color'),undefined);
+ decorated.dispose();original.dispose();
 });
