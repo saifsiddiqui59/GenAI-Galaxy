@@ -24,7 +24,17 @@ async def inspect(pw,url,name,width,height,reduced=False):
     try:
         response=await page.goto(url,wait_until='networkidle',timeout=60000)
         assert response.status==200,response.status
-        await page.wait_for_function('() => window.__galaxySkeletonDiagnostics?.bones >= 40',timeout=45000)
+        try:
+            await page.wait_for_function('() => window.__galaxySkeletonDiagnostics?.bones >= 40',timeout=45000)
+        except Exception:
+            print('GUARDIAN STARTUP FAILURE:',json.dumps({
+              'errors':errors[-12:],
+              'recentRequests':requests[-20:],
+              'body':(await page.locator('body').inner_text())[:900],
+              'anatomyMode':os.environ.get('GALAXY_V6_ANATOMY'),
+            }),flush=True)
+            await page.screenshot(path=str(OUT/f'{name}-startup-failure.png'),full_page=True)
+            raise
         await page.wait_for_function('() => window.__galaxyV6 != null',timeout=10000)
         assert '3 SAMPLE MASTERED WORLDS' in await page.locator('.galaxy-mode-tag').inner_text()
         await page.wait_for_timeout(400)
