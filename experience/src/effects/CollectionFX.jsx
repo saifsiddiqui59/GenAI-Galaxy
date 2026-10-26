@@ -129,67 +129,63 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
  </>;
 }
 function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
- const bag=useRef();
- const pouchGeometry=useMemo(()=>{
-  const outline=new THREE.Shape();
-  outline.moveTo(-.27,.17);
-  outline.quadraticCurveTo(-.31,.17,-.31,.09);
-  outline.lineTo(-.28,-.24);
-  outline.quadraticCurveTo(-.22,-.33,-.12,-.33);
-  outline.lineTo(.12,-.33);
-  outline.quadraticCurveTo(.23,-.33,.28,-.23);
-  outline.lineTo(.31,.10);
-  outline.quadraticCurveTo(.31,.17,.25,.17);
-  outline.closePath();
-  return new THREE.ExtrudeGeometry(outline,{depth:.09,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.025,bevelThickness:.025,curveSegments:16});
- },[]);
- const strapGeometry=useMemo(()=>new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
-  new THREE.Vector3(-.27,.15,-.025),new THREE.Vector3(-.39,.42,-.06),
-  new THREE.Vector3(-.28,.63,-.12),new THREE.Vector3(.20,.64,-.12),
-  new THREE.Vector3(.31,.22,-.04)
- ]),24,.021,7,false),[]);
- const flapGeometry=useMemo(()=>{
-  const shape=new THREE.Shape();
-  shape.moveTo(-.25,.12);shape.lineTo(.25,.12);shape.lineTo(.22,-.05);
-  shape.quadraticCurveTo(0,-.18,-.22,-.05);shape.closePath();
-  return new THREE.ExtrudeGeometry(shape,{depth:.022,bevelEnabled:true,bevelSize:.012,bevelThickness:.008,bevelSegments:2,curveSegments:16});
- },[]);
- useEffect(()=>()=>{pouchGeometry.dispose();strapGeometry.dispose();flapGeometry.dispose()},[pouchGeometry,strapGeometry,flapGeometry]);
+ const vault=useRef(),iris=useRef(),outer=useRef();
  useFrame(()=>{
-  const pose=rigPoseRef.current;if(!bag.current||!pose)return;
-  bag.current.position.copy(pose.bag);
+  const pose=rigPoseRef.current;
+  if(!vault.current||!pose)return;
+  // This is a small dimensional pocket tethered to the living rig, not
+  // a solid cylindrical 'pot' or rectangular cartoon prop.
+  vault.current.position.copy(pose.bag);
   const order=clockRef.current.view?.activeIndex??-1;
   const t=order<0?0:pickupAt(clockRef.current.ms,order).t;
-  const pulse=t>=RELEASE?Math.sin(Math.min(1,(t-RELEASE)/.16)*Math.PI)*.025:0;
-  bag.current.scale.set(pose.scale*(1+pulse),pose.scale*(1-pulse*.3),pose.scale);
+  const depositPulse=t>=RELEASE?Math.sin(Math.min(1,(t-RELEASE)/.16)*Math.PI):0;
+  const scale=pose.scale*(.87+depositPulse*.13);
+  vault.current.scale.setScalar(scale);
+  const seconds=clockRef.current.ms/1000;
+  if(iris.current)iris.current.rotation.z=-seconds*.85;
+  if(outer.current)outer.current.rotation.z=seconds*.31;
  },-1);
- return <group ref={bag} onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
-  {/* Flat, slouching cross-body messenger bag with a slit opening, not a pot. */}
-  <mesh geometry={strapGeometry}>
-   <meshStandardMaterial color="#34343d" roughness={.94}/>
-  </mesh>
-  <mesh geometry={pouchGeometry} position={[0,0,-.08]}>
-   <meshStandardMaterial color="#24272f" roughness={.91} metalness={.02}/>
-  </mesh>
-  <mesh position={[0,.185,.078]}>
-   <boxGeometry args={[.48,.012,.026]}/>
-   <meshStandardMaterial color="#090b13" roughness={1}/>
-  </mesh>
-  <mesh geometry={flapGeometry} position={[0,0,.075]}>
-   <meshStandardMaterial color="#343943" roughness={.94} metalness={.015}/>
-  </mesh>
-  <mesh position={[0,-.035,.19]}>
-   <boxGeometry args={[.073,.062,.016]}/>
-   <meshStandardMaterial color="#9c9885" roughness={.5} metalness={.44}/>
-  </mesh>
-  <mesh position={[-.22,-.28,.065]}>
-   <sphereGeometry args={[.022,8,6]}/>
-   <meshStandardMaterial color="#4d5260" metalness={.1} roughness={.8}/>
-  </mesh>
+ return <group ref={vault} onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
+  {/* Hollow void portal: flat and otherworldly, not a sack, bucket or pot.
+      It is the entrance for mastered worlds and opens the same collection UI. */}
+  <group position={[0,.19,.13]} rotation={[-.23,0,-.1]}>
+   <mesh>
+    <circleGeometry args={[.20,48]}/>
+    <meshBasicMaterial color="#040711" side={THREE.DoubleSide}
+      transparent opacity={.97} depthWrite={false}/>
+   </mesh>
+   <mesh>
+    <ringGeometry args={[.145,.185,64]}/>
+    <meshBasicMaterial color="#423259" side={THREE.DoubleSide}
+      transparent opacity={.72} depthWrite={false}/>
+   </mesh>
+   <mesh ref={outer} position={[0,0,.015]}>
+    <torusGeometry args={[.225,.013,9,56]}/>
+    <meshBasicMaterial color="#a882d3" transparent opacity={.74}
+      depthWrite={false}/>
+   </mesh>
+   <mesh ref={iris} position={[0,0,.029]}>
+    <torusGeometry args={[.13,.011,8,48]}/>
+    <meshBasicMaterial color="#e6a35c" transparent opacity={.92}
+      depthWrite={false}/>
+   </mesh>
+   {Array.from({length:6},(_,i)=>{
+     const angle=Math.PI*2*i/6;
+     return <mesh key={i} position={[Math.cos(angle)*.217,Math.sin(angle)*.217,.031]}
+       rotation={[0,0,angle]}>
+      <octahedronGeometry args={[.028,0]}/>
+      <meshBasicMaterial color={i%2?'#b5a8f5':'#cf9b62'}/>
+     </mesh>;
+   })}
+   {/* Invisible touch area is local to the vault; it cannot steal planet clicks. */}
+   <mesh position={[0,0,.033]}>
+    <circleGeometry args={[.29,32]}/>
+    <meshBasicMaterial transparent opacity={0} colorWrite={false}
+      side={THREE.DoubleSide} depthWrite={false}/>
+   </mesh>
+  </group>
  </group>;
 }
-// The sphere's offered geometry is radius .275 and root scale follows the rig.
-function poseRadius(group){return .37*group.scale.x}
 function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion,onSelect}){
  const orb=useRef();
  const color=COLORS[worldIndex];
