@@ -84,7 +84,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   body.position.set(entrance.x,guardianFloorY(narrow,short),3.2);
   body.scale.setScalar(compactScale);
   const pickup=view.activeIndex>=0?pickupAt(ms,view.activeIndex):null;
-  body.rotation.y=pickup?0:entrance.yaw;
+  body.rotation.y=pickup?Math.PI:entrance.yaw;
   Object.values(actions).forEach(a=>a.setEffectiveWeight(0));
   function sample(name,time,weight){const a=actions[name];if(!a)return;a.enabled=true;a.time=Math.max(0,Math.min(a.getClip().duration-.00001,time));a.setEffectiveWeight(weight)}
   if(!contactLocal.current&&rig.rightHand){
@@ -146,7 +146,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   const rightHand=rig.rightHand?.getWorldPosition(new THREE.Vector3());
   const grip=rig.rightHand?.localToWorld(new THREE.Vector3(0,.045,.035));
   const hand=gripMidpoint(rig,THREE.Vector3);
-  rigPoseRef.current={hand,hip,bag,mouth,staging,grip,rightHand,offer,offerReveal,scale,
+  rigPoseRef.current={hand,hip,bag,mouth,staging,grip,rightHand,offer,offerReveal,scale,bodyPosition:body.position.clone(),
    rigReady:rig.readyToOffer,waistReady:rig.readyForSatchel,ikError:error,phase:view.phase};
   if(observed()&&window.__galaxySkeletonDiagnostics){
    const d=window.__galaxySkeletonDiagnostics;
