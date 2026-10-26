@@ -4,7 +4,8 @@ import GalaxyAuth from './auth/GalaxyAuth.jsx';
 import CollectionFX from './effects/CollectionFX.jsx';
 import WorldDock from './navigation/WorldDock.jsx';
 import {lessonHref,powerBudget,validWorld} from './navigation/navigation.js';
-import {Canvas} from '@react-three/fiber';
+import {Canvas,useFrame,useThree} from '@react-three/fiber';
+import {cameraTrackingAt} from './space/cameraTracking.js';
 import Guardian from './guardian/KayKitGuardian.jsx';
 import {GalaxyScene} from './space/DeepGalaxy.jsx';
 import GuardianJourney from './journey/GuardianJourney.jsx';
@@ -45,6 +46,17 @@ function canWebGL(){
   const canvas=document.createElement('canvas');
   return !!(canvas.getContext('webgl2')||canvas.getContext('webgl'));
  }catch{return false;}
+}
+function GalaxyCameraFollow({clockRef,rigPoseRef,collectedCount=0,reducedMotion=false}){
+ const {camera}=useThree();
+ useFrame(()=>{
+  const c=clockRef.current;
+  const pose=rigPoseRef.current;
+  const next=cameraTrackingAt(c.ms,pose?.bodyPosition,c.view?.activeIndex??-1,collectedCount,reducedMotion);
+  camera.position.set(next.x,next.y,next.z);
+  camera.lookAt(next.x,next.y+.12,0);
+ },2);
+ return null;
 }
 export default function App(){
  const budget=useMemo(powerBudget,[]);
@@ -112,6 +124,8 @@ export default function App(){
          onSelect={select} reducedMotion={!animationEnabled||reduced} clockRef={choreographyRef} rigPoseRef={rigPoseRef}/>
        <Guardian rigPoseRef={rigPoseRef} clockRef={choreographyRef} completedCount={collected.length} worldIndexes={collected.map(w=>w.index)}
          onReady={ready} reducedMotion={!animationEnabled||reduced}/>
+       <GalaxyCameraFollow clockRef={choreographyRef} rigPoseRef={rigPoseRef}
+         collectedCount={collected.length} reducedMotion={!animationEnabled||reduced}/>
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced}
          epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
          collectedCount={sequence.visible} clockRef={choreographyRef}
