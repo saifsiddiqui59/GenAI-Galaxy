@@ -87,7 +87,7 @@ export default function App(){
  useEffect(()=>{
   if(!SHOW_SAMPLE)return;
   window.__galaxyV6={
-   seek(ms){if(!Number.isFinite(ms)||ms<0||ms>60000)throw Error('Invalid preview time');choreographyRef.current.ms=ms;choreographyRef.current.hold=true;invalidateRef.current()},
+   seek(ms){if(!Number.isFinite(ms)||ms<0||ms>150000)throw Error('Invalid preview time');choreographyRef.current.ms=ms;choreographyRef.current.hold=true;invalidateRef.current()},
    resume(){choreographyRef.current.hold=false;invalidateRef.current()},
    reset:resetClock
   };
@@ -110,7 +110,7 @@ export default function App(){
          reducedMotion={!animationEnabled||reduced} active={visible}/>
        <GalaxyScene masteredWorlds={collected} selectedIndex={selected} recommendedIndex={nextIndex}
          onSelect={select} reducedMotion={!animationEnabled||reduced} clockRef={choreographyRef}/>
-       <Guardian rigPoseRef={rigPoseRef} clockRef={choreographyRef} completedCount={collected.length}
+       <Guardian rigPoseRef={rigPoseRef} clockRef={choreographyRef} completedCount={collected.length} worldIndexes={collected.map(w=>w.index)}
          onReady={ready} reducedMotion={!animationEnabled||reduced}/>
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced}
          epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
