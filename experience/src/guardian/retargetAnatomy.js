@@ -73,16 +73,16 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
  anatomy.updateMatrixWorld(true);
  const invRoot=source.matrixWorld.clone().invert();
  const mergedParts=new Map(),owned=[],geos=[];
- let classified=0,missed=0;
+ let classified=0,missed=0;const missing=[],skipped=[];
  const center=new THREE.Vector3(),bounds=new THREE.Box3();
  anatomy.traverse(o=>{
   if(!o.isMesh||!o.geometry)return;
   o.updateWorldMatrix(true,false);
   bounds.setFromObject(o);bounds.getCenter(center);
   const kind=classifyAnatomicalPart(o.name,center.x);
-  if(!kind)return; // original CC0 detailed skull remains
+  if(!kind){skipped.push(o.name);return;} // original CC0 detailed skull remains
   const bone=source.getObjectByName(kind.bone);
-  if(!bone?.isBone){missed++;return}
+  if(!bone?.isBone){missed++;missing.push(o.name+'=>'+String(kind.bone));return}
   const side=kind.bone.endsWith('.r')?1:0;
   const transform=desiredPartTransform(THREE,kind.region,bone,source,side);
   const boneRelative=invRoot.clone().multiply(bone.matrixWorld);
@@ -98,7 +98,7 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
   mergedParts.get(kind.bone).push(geom);
   classified++;
  });
- if(classified<100||missed)throw Error('Incomplete anatomical rigging: '+classified+' assigned, '+missed+' unmatched');
+ if(classified<100||missed)throw Error('Incomplete anatomical rigging: '+classified+' assigned, '+missed+' unmatched; missing '+JSON.stringify(missing.slice(0,30))+' skipped '+JSON.stringify(skipped.slice(0,30)));
  const material=new THREE.MeshStandardMaterial({color:'#c7b9a6',roughness:.93,metalness:0});
  for(const [name,parts] of mergedParts){
   const bone=source.getObjectByName(name);
