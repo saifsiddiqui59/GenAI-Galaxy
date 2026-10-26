@@ -21,7 +21,7 @@ class OwnerCommandGuard(unittest.TestCase):
 
     def test_dispatch_only_preexisting_manual_approved_workflows(self):
         text=BRIDGE.read_text()
-        self.assertEqual(text.count("gh workflow run "),16)
+        self.assertEqual(text.count("gh workflow run "),17)
         self.assertIn("galaxy-p3-flex-deploy.yml",text)
         self.assertIn("galaxy-ephemeral-rls.yml",text)
         self.assertIn("galaxy-ai-readonly-release-smoke.yml",text)
@@ -43,6 +43,9 @@ class OwnerCommandGuard(unittest.TestCase):
         self.assertIn('"RESTART_ONCE_$EVENT_SHA"',text)
         self.assertIn('"TEST_WARM_THEN_TUTOR_$EVENT_SHA"',text)
         self.assertIn('"METRICS_P70_$EVENT_SHA"',text)
+        self.assertIn('"DIAG_HOST_EVIDENCE_$EVENT_SHA"',text)
+        self.assertIn("galaxy-p81-host-evidence.yml",text)
+        self.assertIn("--ref main -f confirm=HOST_READONLY",text)
         self.assertIn('"DIAG_SINGLE_INSTANCE_$EVENT_SHA"',text)
         self.assertIn("galaxy-p79-one-instance-test.yml",text)
         self.assertIn("--ref main -f confirm=ROUTE_1_RESET",text)
