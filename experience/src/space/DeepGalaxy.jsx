@@ -126,16 +126,26 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
   </Html>}
  </group>;
 }
-function Observatory({compact,short}){
+function Observatory({compact,short,rigPoseRef}){
+ const platform=useRef();
+ useFrame(()=>{
+  const pose=rigPoseRef?.current;
+  if(!pose?.bodyPosition||!platform.current)return;
+  // An orbiting foothold keeps the legs grounded during zero-gravity travel;
+  // the old static platform was left empty while the character floated away.
+  platform.current.position.copy(pose.bodyPosition);
+  platform.current.position.y-=.025;
+  platform.current.scale.setScalar(pose.scale*(pose.phase==='collecting'?.70:1));
+ },-1);
  const x=compact?-.48:-2.05,y=guardianFloorY(compact,short)-.01,scale=guardianStageScale(compact,short);
- return <group position={[x,y,3.2]} scale={scale}>
+ return <group ref={platform} position={[x,y,3.2]} scale={scale}>
   <mesh rotation={[-Math.PI/2,0,0]}><circleGeometry args={[1.4,64]}/><meshStandardMaterial color="#152139" metalness={.5} roughness={.7} transparent opacity={.8}/></mesh>
   <mesh rotation={[-Math.PI/2,0,0]} position={[0,.005,0]}><ringGeometry args={[1.35,1.365,80]}/><meshBasicMaterial color="#8bb2c9" transparent opacity={.4}/></mesh>
   <mesh rotation={[-Math.PI/2,0,0]} position={[0,.009,0]} scale={[1,.65,1]}><circleGeometry args={[.72,48]}/><meshBasicMaterial color="#010510" transparent opacity={.52}/></mesh>
   <mesh position={[-.68,.02,.72]} rotation={[-Math.PI/2,0,0]}><ringGeometry args={[.20,.215,40]}/><meshBasicMaterial color="#e5c68a" transparent opacity={.7}/></mesh>
  </group>;
 }
-export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=null,onSelect,reducedMotion=false,clockRef}){
+export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=null,onSelect,reducedMotion=false,clockRef,rigPoseRef}){
  const {size,camera}=useThree();const lowPower=size.width<700,short=size.height<780;
  const atlasRoot=useRef();
  const set=new Set(masteredWorlds.map(x=>typeof x==='number'?x:x?.index).filter(Number.isInteger));
@@ -162,7 +172,7 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
   <NebulaCloud reducedMotion={reducedMotion} clockRef={clockRef}/>
   <SpaceDepthFX compact={lowPower} clockRef={clockRef} reducedMotion={reducedMotion}/>
   <Starfield lowPower={lowPower}/>
-  <Observatory compact={lowPower} short={short}/>
+  <Observatory compact={lowPower} short={short} rigPoseRef={rigPoseRef}/>
   <group ref={atlasRoot} position={startingLayout.position} scale={startingLayout.scale}>
    <OrbitLanes/>
    {layoutWorlds().map(world=><Planet key={world.index} world={world} mastered={set.has(world.index)} collectionOrder={masteredWorlds.findIndex(w=>(typeof w==='number'?w:w.index)===world.index)}
