@@ -125,7 +125,8 @@ async def inspect(pw,url,name,width,height,reduced=False):
             await page.get_by_role('button',name='Motion: off',exact=True).click()
         if not reduced:
             offered=await page.evaluate('window.__galaxySkeletonDiagnostics')
-            assert offered.get('offeredWorldIndex')==1 and offered.get('offeredHitPoint') and offered.get('offeredHitProxy'),offered
+            assert offered.get('offeredWorldIndex')==1 and offered.get('offeredHitPoint') and offered.get('offeredDomTarget'),offered
+            assert await page.get_by_role('button',name='Explore offered planet: Prompt Engineering').is_visible(), 'Touch target must be visible at offered planet'
             hit=offered['offeredHitPoint']
             assert 0<hit[0]<width and 0<hit[1]<height,(name,hit)
             await page.mouse.click(hit[0],hit[1])
