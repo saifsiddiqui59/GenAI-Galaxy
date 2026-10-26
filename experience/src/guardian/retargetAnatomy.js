@@ -93,7 +93,7 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
   // Strip heterogeneous attributes, preserve actual surface normals.
   for(const attr of Object.keys(geom.attributes))
    if(!['position','normal'].includes(attr))geom.deleteAttribute(attr);
-  if(!geom.hasAttribute('normal'))geom.computeVertexNormals();
+  if(!geom.getAttribute('normal'))geom.computeVertexNormals();
   if(!mergedParts.has(kind.bone))mergedParts.set(kind.bone,[]);
   mergedParts.get(kind.bone).push(geom);
   classified++;
