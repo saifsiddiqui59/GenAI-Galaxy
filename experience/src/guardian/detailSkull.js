@@ -43,7 +43,7 @@ export function mountDetailedSkull(rig,skullSource,options={}){
   const prior=o.material;
   const originalMaterial=Array.isArray(prior)?prior[0]:prior;
   const mat=new THREE.MeshStandardMaterial({
-   color:'#546b83',map:null,
+   color:'#747d84',map:null,
    normalMap:originalMaterial?.normalMap||null,
    roughness:.96,metalness:.02,
    side:THREE.FrontSide
