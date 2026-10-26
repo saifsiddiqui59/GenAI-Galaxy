@@ -72,7 +72,8 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    window.__galaxySkeletonDiagnostics={asset:'KayKit CC0 Skeleton_Mage.glb',skullAsset:'Khronos ScatteringSkull CC0',styleProfile:STYLE_PROFILE,bones:rig.detectedBones,clips:animations.length,
     animationNames:animations.map(a=>a.name),meshes,materials,pickupLog:[],
     rig:{detectedBones:rig.detectedBones,canOffer:rig.readyToOffer,canCarry:rig.readyForSatchel},
-    sourceDimensions:{height:source.userData.geometryHeight}};
+    sourceDimensions:{height:source.userData.geometryHeight},
+    toyEyesHidden:!source.getObjectByName('Skeleton_Mage_Eyes')?.visible};
   }
   return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeDetail?.();source.userData.disposeStyle?.()};
  },[source,rig,mixer,animations,onReady]);
