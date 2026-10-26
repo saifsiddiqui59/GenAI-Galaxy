@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import * as THREE from 'three';
-import {attachBareSkullTorso,BARE_SKULL_PROFILE} from '../src/guardian/bareSkull.js';
+import {attachBareSkullTorso,BARE_SKULL_PROFILE,anatomicalShaftGeometry} from '../src/guardian/bareSkull.js';
 
 function sampleRig(){
  const root=new THREE.Group();
@@ -49,4 +49,22 @@ test('full skeleton replaces toy costume, gloves and boots without touching the 
  assert.equal(root.getObjectByName('SkullMasterBareRibCage'),undefined);
  for(const n of ['SkullMasterHumerus','SkullMasterToe','SkullMasterIlium'])
   assert.equal(root.getObjectByName(n),undefined);
+});
+
+
+test('sculpted femur shaft narrows in the middle instead of reading as a straight cylinder',()=>{
+ const shaft=anatomicalShaftGeometry(THREE,.45,.11,.075);
+ assert.equal(shaft.type,'LatheGeometry');
+ const positions=shaft.getAttribute('position');
+ const bands=new Map();
+ for(let i=0;i<positions.count;i++){
+  const y=positions.getY(i).toFixed(3);
+  const r=Math.hypot(positions.getX(i),positions.getZ(i));
+  bands.set(y,Math.max(bands.get(y)||0,r));
+ }
+ const ring=Array.from(bands.entries()).sort((a,b)=>Number(a[0])-Number(b[0]));
+ assert(ring[Math.floor(ring.length/2)][1]<ring[0][1]*.8,'shaft needs a natural narrow midsection');
+ assert(ring[Math.floor(ring.length/2)][1]<ring[ring.length-1][1]*.8);
+ shaft.dispose();
+ assert.throws(()=>anatomicalShaftGeometry(THREE,-.2,.1,.1),/Invalid skeletal segment/);
 });
