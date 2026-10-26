@@ -64,6 +64,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    object.userData.disposeAnatomy=anatomy.dispose;
    object.userData.updateSpectral=anatomy.update;
    object.userData.spectralActive=anatomy.spectralActive;
+   object.userData.articulatedArms=anatomy.articulatedArms;
    object.userData.anatomicalParts=anatomy.attached;
    object.userData.anatomicalClusters=anatomy.clusters;
   }
@@ -89,7 +90,8 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     toyEyesHidden:!source.getObjectByName('Skeleton_Mage_Eyes')?.visible,
     anatomyEnabled:ANATOMY_MODE,anatomicalParts:source.userData.anatomicalParts||0,
     anatomicalClusters:source.userData.anatomicalClusters||0,
-    spectralActive:!!source.userData.spectralActive};
+    spectralActive:!!source.userData.spectralActive,
+    articulatedArms:!!source.userData.articulatedArms};
   }
   return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeAnatomy?.();source.userData.disposeDetail?.();source.userData.disposeStyle?.()};
  },[source,rig,mixer,animations,onReady]);
