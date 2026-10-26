@@ -18,7 +18,7 @@ const DETAIL_ASSET=import.meta.env.BASE_URL+SKULL_ASSET;
 const BODY_ASSET=import.meta.env.BASE_URL+(ANATOMY_MODE?ANATOMY_ASSET:SKULL_ASSET);
 const observed=()=>import.meta.env.DEV||new URLSearchParams(window.location.search).get('demo')==='1';
 export function chooseKayKitAnimation(phase,names=[]){
- const preferred=phase==='arriving'?'Walking_A':phase==='collecting'?'Interact':'Unarmed_Idle';
+ const preferred=phase==='arriving'?'Walking_A':phase==='collecting'?'Interact':'Idle';
  return names.includes(preferred)?preferred:names.find(n=>/^Idle$/i.test(n))||names[0];
 }
 function armChain(hand){
@@ -119,7 +119,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   const walk=view.phase==='arriving'?entrance.walkWeight:(pickup?approach.walkWeight:approach.walkWeight);
   sample('Walking_A',((ms/1000)*.82)%1.0666667,Math.max(0,walk*(1-pickupWeight)));
   sample('Interact',pickup?Math.min(.86,pickup.t/CONTACT*.58):0,pickupWeight);
-  sample('Unarmed_Idle',(ms/1000)%1.0666667,Math.max(0,1-walk-pickupWeight));
+  sample('Idle',(ms/1000)%1.0666667,Math.max(0,1-walk-pickupWeight));
   // Unlike useAnimations' independent delta, sample clips on the prop clock.
   // Weighted sampling replaces fadeIn/fadeOut without restarting PickUp at contact.
   mixer.update(0);
