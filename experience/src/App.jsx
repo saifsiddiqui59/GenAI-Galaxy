@@ -81,7 +81,7 @@ function GalaxyCameraFollow({clockRef,rigPoseRef,offeredButtonRef,collectedCount
    diag.offeredDomTarget=true;
    diag.offeredDomTargetRect={x:x-radius,y:y-radius,w:radius*2,h:radius*2};
   }
- },2);
+ },0); // priority 0 preserves R3F's automatic scene rendering.
  return null;
 }
 export default function App(){
