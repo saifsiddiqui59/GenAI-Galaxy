@@ -5,7 +5,7 @@
  */
 export const BARE_SKULL_PROFILE=Object.freeze({
  ribs:6,bone:'#778187',shadow:'#3a4650',sternum:'#8c9697',
- hiddenMeshes:Object.freeze(['Skeleton_Mage_Hat','Skeleton_Mage_Body','Skeleton_Mage_ArmLeft','Skeleton_Mage_ArmRight','Skeleton_Mage_LegLeft','Skeleton_Mage_LegRight'])
+ hiddenMeshes:Object.freeze(['Skeleton_Mage_Hat','Skeleton_Mage_Body',])
 });
 export function attachBareSkullTorso(source,THREE){
  const chest=source.getObjectByName('chest');
