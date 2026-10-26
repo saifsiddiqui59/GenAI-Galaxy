@@ -48,7 +48,7 @@ function canWebGL(){
   return !!(canvas.getContext('webgl2')||canvas.getContext('webgl'));
  }catch{return false;}
 }
-function GalaxyCameraFollow({clockRef,rigPoseRef,collectedCount=0,reducedMotion=false}){
+function GalaxyCameraFollow({clockRef,rigPoseRef,offeredButtonRef,collectedCount=0,reducedMotion=false}){
  const {camera,size}=useThree();
  const projected=useRef(new THREE.Vector3());
  useFrame(()=>{
@@ -58,15 +58,28 @@ function GalaxyCameraFollow({clockRef,rigPoseRef,collectedCount=0,reducedMotion=
   camera.position.set(next.x,next.y,next.z);
   camera.lookAt(next.x,next.y+.12,0);
   camera.updateMatrixWorld();
-  // Final ray target must be projected AFTER camera tracking. Otherwise a stale
-  // pre-follow coordinate can click a different background learning planet.
+  // Keep a 2D accessible hit surface aligned with the rendered offered globe.
+  // The original 3D raycaster was picking larger background planet hit areas.
+  const button=offeredButtonRef.current;
+  const showing=!!pose&&pose.offerReveal>.45&&c.view?.activeIndex===-1;
+  if(!button)return;
+  if(!showing){button.style.display='none';return;}
+  projected.current.copy(pose.offer).project(camera);
+  const x=(projected.current.x+1)*size.width/2;
+  const y=(1-projected.current.y)*size.height/2;
+  const edge=new THREE.Vector3(pose.offer.x+pose.scale*.37,pose.offer.y,pose.offer.z).project(camera);
+  const radius=Math.max(28,Math.min(56,Math.abs(edge.x-projected.current.x)*size.width*.68));
+  const onScreen=Number.isFinite(x)&&Number.isFinite(y)&&
+   x>=-radius&&x<size.width+radius&&y>=-radius&&y<size.height+radius;
+  button.style.display=onScreen?'block':'none';
+  if(!onScreen)return;
+  button.style.left=x+'px';button.style.top=y+'px';
+  button.style.width=radius*2+'px';button.style.height=radius*2+'px';
   const diag=window.__galaxySkeletonDiagnostics;
-  if(diag?.offeringCenter&&diag.offeredWorldIndex!=null){
-   projected.current.set(...diag.offeringCenter).project(camera);
-   diag.offeredHitPoint=[
-    (projected.current.x+1)*size.width/2,
-    (1-projected.current.y)*size.height/2
-   ];
+  if(diag){
+   diag.offeredHitPoint=[x,y];
+   diag.offeredDomTarget=true;
+   diag.offeredDomTargetRect={x:x-radius,y:y-radius,w:radius*2,h:radius*2};
   }
  },2);
  return null;
@@ -77,6 +90,7 @@ export default function App(){
  const [animationEnabled,setAnimationEnabled]=useState(!reduced);
  const [modelPhase,setModelPhase]=useState('arriving');
  const rigPoseRef=useRef(null);
+ const offeredButtonRef=useRef(null);
  const choreographyRef=useRef({ms:0,epoch:0,hold:false});
  const invalidateRef=useRef(()=>{});
  const [modelReady,setModelReady]=useState(false);
@@ -137,13 +151,20 @@ export default function App(){
          onSelect={select} reducedMotion={!animationEnabled||reduced} clockRef={choreographyRef} rigPoseRef={rigPoseRef}/>
        <Guardian rigPoseRef={rigPoseRef} clockRef={choreographyRef} completedCount={collected.length} worldIndexes={collected.map(w=>w.index)}
          onReady={ready} reducedMotion={!animationEnabled||reduced}/>
-       <GalaxyCameraFollow clockRef={choreographyRef} rigPoseRef={rigPoseRef}
+       <GalaxyCameraFollow clockRef={choreographyRef} rigPoseRef={rigPoseRef} offeredButtonRef={offeredButtonRef}
          collectedCount={collected.length} reducedMotion={!animationEnabled||reduced}/>
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced}
          epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
          collectedCount={sequence.visible} clockRef={choreographyRef}
          onOpenSack={()=>setSackOpenFrom3D(x=>x+1)} onSelectWorld={select} rigPoseRef={rigPoseRef}/>
      </Canvas>
+     {/* This transparent target covers ONLY the glowing globe, not other worlds. */}
+     <button type="button" ref={offeredButtonRef} onClick={()=>select(nextIndex)}
+       aria-label={'Explore offered planet: '+LABELS[nextIndex]}
+       className="galaxy-offered-touch-target"
+       style={{position:'absolute',display:'none',zIndex:12,
+         transform:'translate(-50%,-50%)',border:0,borderRadius:'50%',
+         padding:0,background:'transparent',cursor:'pointer',touchAction:'manipulation'}}/>
      {!modelReady&&<div className="guardian-loading" role="status">Preparing your galaxy<span>Loading the companion and learning worlds</span></div>}
    </div>}
    {!available3D&&<div className="galaxy-no-webgl" role="status">
