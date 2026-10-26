@@ -16,7 +16,7 @@ const ASSET=import.meta.env.BASE_URL+'models/kaykit/Skeleton_Mage.glb';
 const DETAIL_ASSET=import.meta.env.BASE_URL+SKULL_ASSET;
 const observed=()=>import.meta.env.DEV||new URLSearchParams(window.location.search).get('demo')==='1';
 export function chooseKayKitAnimation(phase,names=[]){
- const preferred=phase==='arriving'?'Walking_A':phase==='collecting'?'PickUp':'Unarmed_Idle';
+ const preferred=phase==='arriving'?'Walking_A':phase==='collecting'?'Interact':'Unarmed_Idle';
  return names.includes(preferred)?preferred:names.find(n=>/^Idle$/i.test(n))||names[0];
 }
 function armChain(hand){
@@ -89,7 +89,8 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   function sample(name,time,weight){const a=actions[name];if(!a)return;a.enabled=true;a.time=Math.max(0,Math.min(a.getClip().duration-.00001,time));a.setEffectiveWeight(weight)}
   if(!contactLocal.current&&rig.rightHand){
    // Stage the miniature at the exact source clip's palm contact, not a guessed waypoint.
-   sample('PickUp',CONTACT/.49*1.3,1);mixer.update(0);body.updateWorldMatrix(true,true);
+   // Interact reaches outward; PickUp bends to the feet and made orbital grabs look wrong.
+   sample('Interact',.58,1);mixer.update(0);body.updateWorldMatrix(true,true);
    contactLocal.current=body.worldToLocal(rig.rightHand.localToWorld(new THREE.Vector3(0,.045,.035)));
    Object.values(actions).forEach(a=>a.setEffectiveWeight(0));
   }
@@ -103,7 +104,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   if(pickup)pickupWeight=smooth((pickup.t-(CONTACT-.20))/.17)*(1-smooth((pickup.t-.68)/.20));
   const walk=view.phase==='arriving'?entrance.walkWeight:(pickup?approach.walkWeight:approach.walkWeight);
   sample('Walking_A',((ms/1000)*.82)%1.0666667,Math.max(0,walk*(1-pickupWeight)));
-  sample('PickUp',pickup?Math.min(1,pickup.t/CONTACT)*1.3:0,pickupWeight);
+  sample('Interact',pickup?Math.min(.86,pickup.t/CONTACT*.58):0,pickupWeight);
   sample('Unarmed_Idle',(ms/1000)%1.0666667,Math.max(0,1-walk-pickupWeight));
   // Unlike useAnimations' independent delta, sample clips on the prop clock.
   // Weighted sampling replaces fadeIn/fadeOut without restarting PickUp at contact.
@@ -152,7 +153,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    const d=window.__galaxySkeletonDiagnostics;
    if(lastEpoch.current!==c.epoch){lastEpoch.current=c.epoch;lastIndex.current=-1;d.pickupLog=[];}
    if(view.activeIndex>=0&&view.activeIndex!==lastIndex.current){
-    lastIndex.current=view.activeIndex;d.pickupLog.push({index:view.activeIndex,clip:'PickUp'});
+    lastIndex.current=view.activeIndex;d.pickupLog.push({index:view.activeIndex,clip:'Interact'});
    }
    Object.assign(d,{currentPhase:view.phase,currentClip:chooseKayKitAnimation(view.phase,animations.map(a=>a.name)),
     currentPickupIndex:view.activeIndex,pickupStage:pickup?.stage||view.phase,time:ms,
