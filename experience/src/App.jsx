@@ -5,6 +5,7 @@ import CollectionFX from './effects/CollectionFX.jsx';
 import WorldDock from './navigation/WorldDock.jsx';
 import {lessonHref,powerBudget,validWorld} from './navigation/navigation.js';
 import {Canvas,useFrame,useThree} from '@react-three/fiber';
+import * as THREE from 'three';
 import {cameraTrackingAt} from './space/cameraTracking.js';
 import Guardian from './guardian/KayKitGuardian.jsx';
 import {GalaxyScene} from './space/DeepGalaxy.jsx';
@@ -48,13 +49,25 @@ function canWebGL(){
  }catch{return false;}
 }
 function GalaxyCameraFollow({clockRef,rigPoseRef,collectedCount=0,reducedMotion=false}){
- const {camera}=useThree();
+ const {camera,size}=useThree();
+ const projected=useRef(new THREE.Vector3());
  useFrame(()=>{
   const c=clockRef.current;
   const pose=rigPoseRef.current;
   const next=cameraTrackingAt(c.ms,pose?.bodyPosition,c.view?.activeIndex??-1,collectedCount,reducedMotion);
   camera.position.set(next.x,next.y,next.z);
   camera.lookAt(next.x,next.y+.12,0);
+  camera.updateMatrixWorld();
+  // Final ray target must be projected AFTER camera tracking. Otherwise a stale
+  // pre-follow coordinate can click a different background learning planet.
+  const diag=window.__galaxySkeletonDiagnostics;
+  if(diag?.offeringCenter&&diag.offeredWorldIndex!=null){
+   projected.current.set(...diag.offeringCenter).project(camera);
+   diag.offeredHitPoint=[
+    (projected.current.x+1)*size.width/2,
+    (1-projected.current.y)*size.height/2
+   ];
+  }
  },2);
  return null;
 }
