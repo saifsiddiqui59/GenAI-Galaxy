@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import {planetSurfaceTexture} from '../space/PlanetSurface.js';
 import {COLORS} from '../space/DeepGalaxy.jsx';
 import {galaxySpaceAt,launchAt,flightProgress} from '../space/worldOrbit.js';
-import {pickupAt,smooth,COLLECT_START_MS,PER_WORLD_MS,RELEASE} from '../journey/choreography.js';
+import {pickupAt,smooth,COLLECT_START_MS,PER_WORLD_MS,CONTACT,RELEASE} from '../journey/choreography.js';
 export {COLLECT_START_MS,PER_WORLD_MS};
 import './collection.css';
 
@@ -28,27 +28,27 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
  useFrame(()=>{
   const pose=rigPoseRef.current,c=clockRef.current;if(!orb.current||!pose)return;
   const pick=pickupAt(c.ms,order),s=pose.scale;
-  const origin=galaxySpaceAt(world.index,launchAt(order),compact,short,completedCount,reducedMotion);
+  const origin=galaxySpaceAt(world.index,launchAt(order)+CONTACT*PER_WORLD_MS,compact,short,completedCount,reducedMotion);
   const source=new THREE.Vector3(origin.x,origin.y,origin.z);
-  // This rendered object is the same completed world pulled from its true atlas orbit.
-  // Before collection it remains in the main galaxy, not staged near the Genie.
-  orb.current.visible=pick.t>=0&&!pick.stored&&pose.phase!=='offering';
-  if(pick.t<.30){
-   const flight=flightProgress(pick.t);
-   orb.current.position.copy(source).lerp(pose.staging,flight);
-   orb.current.position.y+=Math.sin(Math.PI*flight)*.30*s;
-   orb.current.scale.setScalar(THREE.MathUtils.lerp(origin.scale/.135,s,flight));
+  // The sphere stays in its orbit until the Skull Master's real hand arrives.
+  // At palm contact, the orbital planet becomes a handheld miniature in place:
+  // there is no fabricated flight to the character's legs or a dummy pickup.
+  orb.current.visible=pick.t>=CONTACT&&!pick.stored&&pose.phase!=='offering';
+  if(pick.t<CONTACT){
+   orb.current.position.copy(source);
+   orb.current.scale.setScalar(origin.scale/.135);
   }else if(pick.attached&&pose.grip){
-   orb.current.position.copy(pose.grip);
-   orb.current.scale.setScalar(s);
+   const take=smooth((pick.t-CONTACT)/.11);
+   orb.current.position.copy(source).lerp(pose.grip,take);
+   orb.current.scale.setScalar(THREE.MathUtils.lerp(origin.scale/.135,s,take));
   }else{
-   orb.current.position.copy(pose.mouth).add(new THREE.Vector3(0,-.32*s*smooth((pick.t-RELEASE)/.14),0));
+   orb.current.position.copy(pose.mouth).add(new THREE.Vector3(0,-.24*s*smooth((pick.t-RELEASE)/.14),0));
    orb.current.scale.setScalar(s*(pick.t>=RELEASE?1-smooth((pick.t-.90)/.10):1));
   }
   // A short luminous tether shows one unbroken journey from the real orbit
   // into the hand. The source halo/ring is hidden when this flight begins.
   if(trail.current){
-   const visible=!reducedMotion&&pick.t>.025&&pick.t<.30&&orb.current.visible;
+   const visible=!reducedMotion&&pick.t>CONTACT+.01&&pick.t<CONTACT+.11&&orb.current.visible;
    trail.current.visible=visible;
    if(sparks.current)sparks.current.visible=visible;
    if(beam.current)beam.current.visible=visible;
@@ -87,7 +87,7 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
     }
     if(sparks.current){
      const sparkPos=sparksGeometry.getAttribute('position');
-     const t=Math.max(0,Math.min(1,pick.t/.30));
+     const t=Math.max(0,Math.min(1,(pick.t-CONTACT)/.11));
      for(let i=0;i<26;i++){
       const u=((i/26+t*.9)%1),twist=u*12.56+i*2.4;
       const spread=.07*(1-u)*s;
@@ -129,30 +129,61 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
 }
 function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
  const bag=useRef();
+ const pouchGeometry=useMemo(()=>{
+  const outline=new THREE.Shape();
+  outline.moveTo(-.27,.17);
+  outline.quadraticCurveTo(-.31,.17,-.31,.09);
+  outline.lineTo(-.28,-.24);
+  outline.quadraticCurveTo(-.22,-.33,-.12,-.33);
+  outline.lineTo(.12,-.33);
+  outline.quadraticCurveTo(.23,-.33,.28,-.23);
+  outline.lineTo(.31,.10);
+  outline.quadraticCurveTo(.31,.17,.25,.17);
+  outline.closePath();
+  return new THREE.ExtrudeGeometry(outline,{depth:.09,bevelEnabled:true,bevelSegments:3,steps:1,bevelSize:.025,bevelThickness:.025,curveSegments:16});
+ },[]);
+ const strapGeometry=useMemo(()=>new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+  new THREE.Vector3(-.27,.15,-.025),new THREE.Vector3(-.39,.42,-.06),
+  new THREE.Vector3(-.28,.63,-.12),new THREE.Vector3(.20,.64,-.12),
+  new THREE.Vector3(.31,.22,-.04)
+ ]),24,.021,7,false),[]);
+ useEffect(()=>()=>{pouchGeometry.dispose();strapGeometry.dispose()},[pouchGeometry,strapGeometry]);
  useFrame(()=>{
   const pose=rigPoseRef.current;if(!bag.current||!pose)return;
   bag.current.position.copy(pose.bag);
   const order=clockRef.current.view?.activeIndex??-1;
   const t=order<0?0:pickupAt(clockRef.current.ms,order).t;
-  const pulse=t>=RELEASE?Math.sin(Math.min(1,(t-RELEASE)/.16)*Math.PI)*.055:0;
-  bag.current.scale.set(pose.scale*(1+pulse),pose.scale*(1-pulse*.5),pose.scale*(1+pulse));
+  const pulse=t>=RELEASE?Math.sin(Math.min(1,(t-RELEASE)/.16)*Math.PI)*.025:0;
+  bag.current.scale.set(pose.scale*(1+pulse),pose.scale*(1-pulse*.3),pose.scale);
  },-1);
  return <group ref={bag} onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
-  {/* Soft leather profile, rather than a rigid bucket silhouette. Keep the mouth open for genuine deposits. */}
-  <mesh scale={[1.10,.70,.80]}><sphereGeometry args={[.305,20,14]}/><meshStandardMaterial color="#85543f" roughness={.93}/></mesh>
-  <mesh position={[0,-.10,.201]} scale={[1,.8,1]}><boxGeometry args={[.40,.18,.038]}/><meshStandardMaterial color="#a26c50" roughness={.91}/></mesh>
-  <mesh position={[0,.22,0]} rotation={[-Math.PI/2,0,0]} scale={[1,.72,1]}>
-   <circleGeometry args={[.245,28]}/><meshBasicMaterial color="#140f19" side={THREE.DoubleSide}/>
+  {/* Flat, slouching cross-body messenger bag with a slit opening, not a pot. */}
+  <mesh geometry={strapGeometry}>
+   <meshStandardMaterial color="#34343d" roughness={.94}/>
   </mesh>
-  <mesh position={[0,.237,0]} rotation={[Math.PI/2,0,0]} scale={[1,.72,1]}>
-   <torusGeometry args={[.248,.022,8,32]}/><meshStandardMaterial color="#e8b76e" metalness={.55} roughness={.4}/>
+  <mesh geometry={pouchGeometry} position={[0,0,-.08]}>
+   <meshStandardMaterial color="#24272f" roughness={.91} metalness={.02}/>
   </mesh>
-  <mesh position={[0,-.015,.183]} rotation={[Math.PI/2,0,0]}>
-   <cylinderGeometry args={[.075,.075,.025,6]}/><meshStandardMaterial color="#eac780" metalness={.55} roughness={.32} emissive="#9d6621" emissiveIntensity={count?.12:0}/>
+  <mesh position={[0,.09,.065]} scale={[1.0,.78,.65]}>
+   <sphereGeometry args={[.285,28,16]}/>
+   <meshStandardMaterial color="#303440" roughness={.96}/>
   </mesh>
-  <mesh position={[.32,.29,-.10]} rotation={[0,0,-.36]}><boxGeometry args={[.068,.73,.07]}/><meshStandardMaterial color="#624136" roughness={.9}/></mesh>
-  <mesh position={[-.19,.04,.22]}><sphereGeometry args={[.023,8,6]}/><meshStandardMaterial color="#d4ad73" metalness={.45} roughness={.4}/></mesh>
-  <mesh position={[.19,.04,.22]}><sphereGeometry args={[.023,8,6]}/><meshStandardMaterial color="#d4ad73" metalness={.45} roughness={.4}/></mesh>
+  <mesh position={[0,.185,.11]}>
+   <boxGeometry args={[.49,.018,.068]}/>
+   <meshStandardMaterial color="#090b13" roughness={1}/>
+  </mesh>
+  <mesh position={[0,.065,.146]} scale={[1,.57,.2]}>
+   <sphereGeometry args={[.235,24,12]}/>
+   <meshStandardMaterial color="#353743" roughness={.93}/>
+  </mesh>
+  <mesh position={[0,-.035,.19]}>
+   <boxGeometry args={[.073,.062,.016]}/>
+   <meshStandardMaterial color="#9c9885" roughness={.5} metalness={.44}/>
+  </mesh>
+  <mesh position={[-.22,-.28,.065]}>
+   <sphereGeometry args={[.022,8,6]}/>
+   <meshStandardMaterial color="#4d5260" metalness={.1} roughness={.8}/>
+  </mesh>
  </group>;
 }
 function OfferingOrb({worldIndex,rigPoseRef,clockRef,compact,reducedMotion,onSelect}){
