@@ -68,6 +68,77 @@ export function desiredPartTransform(THREE,region,bone,root,side){
  const A=new THREE.Matrix4().makeTranslation(-info.source[0],-info.source[1],-info.source[2]);
  return T.multiply(R).multiply(S).multiply(A);
 }
+// A V6 apparition is a floating spectral entity, not a human puppet whose
+// source KayKit idle clip happens to cross its knees. These smoky wisps are
+// energy, not a cloak, robe, hood, cylindrical pot or solid platform.
+export function attachSpectralLowerBody(source,THREE){
+ const hips=source.getObjectByName('hips');
+ if(!hips?.isBone)throw Error('Cannot place spectral tail without real hips bone');
+ const group=new THREE.Group();
+ group.name='SkullMasterSpectralVapor';hips.add(group);
+ const meshes=[],materials=[],geometries=[];
+ for(let layer=0;layer<3;layer++){
+  const sides=36,rings=28,positions=[],uvs=[],indices=[];
+  const offset=layer*Math.PI*.667;
+  for(let j=0;j<=rings;j++){
+   const t=j/rings,spread=Math.pow(1-t,.65);
+   const radius=(.20+layer*.043)*spread+.015;
+   for(let i=0;i<=sides;i++){
+    const angle=i/sides*Math.PI*2;
+    const billow=Math.sin(angle*3+7*t+offset)*.048*t;
+    positions.push(Math.cos(angle)*(radius+billow)+Math.sin(t*7+offset)*.05*t,
+      -.05-1.27*t,Math.sin(angle)*(radius+billow)+Math.cos(t*6+offset)*.03*t);
+    uvs.push(i/sides,t);
+   }
+  }
+  for(let j=0;j<rings;j++)for(let i=0;i<sides;i++){
+   const a=j*(sides+1)+i,b=a+sides+1;
+   indices.push(a,b,a+1,b,b+1,a+1);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setIndex(indices);
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(positions,3));
+  geo.setAttribute('uv',new THREE.Float32BufferAttribute(uvs,2));
+  geo.computeVertexNormals();
+  const mat=new THREE.ShaderMaterial({
+   transparent:true,depthWrite:false,side:THREE.DoubleSide,
+   blending:THREE.AdditiveBlending,
+   uniforms:{uTime:{value:0},uLayer:{value:layer}},
+   vertexShader:`
+    varying vec2 vUv; varying vec3 vPos;
+    uniform float uTime; uniform float uLayer;
+    void main(){
+      vUv=uv; vec3 p=position;
+      float t=uv.y;
+      p.x+=sin(t*8.0+uTime*.45+uLayer*2.1)*.047*t;
+      p.z+=cos(t*6.0+uTime*.35+uLayer*3.3)*.037*t;
+      vPos=p;
+      gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.0);
+    }`,
+   fragmentShader:`
+    precision mediump float;
+    varying vec2 vUv;varying vec3 vPos;
+    uniform float uTime; uniform float uLayer;
+    void main(){
+      float t=vUv.y;
+      float streak=.5+.5*sin(vUv.x*36.0+t*16.0-uTime*.52+uLayer*1.8);
+      float flicker=.66+.34*sin(t*24.0+vUv.x*17.0+uTime*.65);
+      float rim=.7+.3*sin(vUv.x*6.28318+uLayer*1.3);
+      float fade=pow(max(0.0,1.0-t),1.15);
+      float opacity=fade*(.13+.14*streak)*flicker*rim;
+      vec3 ash=vec3(.24,.18,.34);
+      vec3 violet=vec3(.47,.32,.64);
+      gl_FragColor=vec4(mix(ash,violet,streak),opacity);
+    }`
+  });
+  const mesh=new THREE.Mesh(geo,mat);
+  mesh.name='SkullMasterSpectralWisp'+layer;
+  mesh.frustumCulled=false;group.add(mesh);
+  meshes.push(mesh);materials.push(mat);geometries.push(geo);
+ }
+ return {update(ms){materials.forEach(mat=>{mat.uniforms.uTime.value=Math.max(0,ms)/1000})},
+  dispose(){hips.remove(group);geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose())}};
+}
 export function attachAnatomicalSkeleton(source,anatomy,THREE){
  // glTF animation PropertyBinding sanitizes dots, spaces and punctuation in
  // bone IDs. Match *only real bones* using the same canonicalization as IK.
@@ -114,13 +185,21 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
   if(!combined)throw Error('Could not merge anatomical bones at '+name);
   const mesh=new THREE.Mesh(combined,material);
   mesh.name='SkullMasterAnatomy_'+name;
-  mesh.castShadow=true;
+  // Keep animated genuine pelvis/spine/ribs/hands/arms; replace ill-fitting
+  // crossed-knee KayKit leg poses with a volumetric ethereal lower silhouette.
+  const isLeg=/^(upperleg|lowerleg|foot)/i.test(name);
+  mesh.visible=!isLeg;
+  mesh.userData.concealedBySpectralVapor=isLeg;
+  mesh.castShadow=!isLeg;
   bone.add(mesh);
   owned.push(mesh);geos.push(combined);
  }
+ const spectral=attachSpectralLowerBody(source,THREE);
  return {
-  attached:classified,clusters:owned.length,skinsUntouched:true,
+  attached:classified,clusters:owned.length,skinsUntouched:true,spectralActive:true,
+  update:ms=>spectral.update(ms),
   dispose(){
+   spectral.dispose();
    for(const mesh of owned)mesh.parent?.remove(mesh);
    geos.forEach(g=>g.dispose());material.dispose();
   }
