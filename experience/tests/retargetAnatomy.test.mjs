@@ -25,6 +25,13 @@ test('retargeted bone parts follow the original animated rig without replacing i
  const source=new THREE.Group(),chest=new THREE.Bone();chest.name='chest';chest.position.y=.973;
  const hips=new THREE.Bone();hips.name='hips';hips.position.y=.405;
  source.add(hips);source.add(chest);
+ for(const side of ['l','r']){
+  const sign=side==='l'?1:-1;
+  const upper=new THREE.Bone();upper.name='upperarm.'+side;upper.position.set(sign*.21,.13,0);chest.add(upper);
+  const lower=new THREE.Bone();lower.name='lowerarm.'+side;lower.position.set(0,.24,0);upper.add(lower);
+  const wrist=new THREE.Bone();wrist.name='wrist.'+side;wrist.position.set(0,.26,0);lower.add(wrist);
+  const hand=new THREE.Bone();hand.name='hand.'+side;hand.position.set(0,.073,0);wrist.add(hand);
+ }
  const anatomy=new THREE.Group(),geometry=new THREE.BoxGeometry(.028,.028,.028);
  for(let i=0;i<120;i++){
   const bone=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial());
@@ -38,6 +45,9 @@ test('retargeted bone parts follow the original animated rig without replacing i
  assert.equal(out.clusters,1,'one merged draw call per animated rig bone');
  assert(out.spectralActive,'Experimental apparition should use floating spectral lower body');
  assert(hips.getObjectByName('SkullMasterSpectralVapor'));
+ assert(out.articulatedArms);
+ assert(chest.getObjectByName('SpectralMaster_Humerus_l'));
+ assert(chest.getObjectByName('SpectralMaster_Humerus_r'));
  out.update(2500);
  assert.equal(source.children.length,countBefore,'existing animation rig not replaced');
  const mesh=chest.getObjectByName('SkullMasterAnatomy_chest');
@@ -48,5 +58,6 @@ test('retargeted bone parts follow the original animated rig without replacing i
  assert(Math.abs(after.x-before.x-1.3)<1e-5,'Anatomical mesh must follow the chest');
  out.dispose();
  assert.equal(chest.getObjectByName('SkullMasterAnatomy_chest'),undefined);
+ assert.equal(chest.getObjectByName('SpectralMaster_Humerus_l'),undefined);
  geometry.dispose();
 });
