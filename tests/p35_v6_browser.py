@@ -87,7 +87,19 @@ async def inspect(pw,url,name,width,height,reduced=False):
             first=flight['miniatures']['0']
             assert first['sourceWorldIndex']==0 and not first['visible'],first
             assert flight['approachTravel']>.0,'Skull must move towards the orbit while planet stays in place'
+            reach=await capture('upright-orbit-reach',2200+4800*.47)
+            assert reach['movementMode']=='upright-orbital-pluck',reach['movementMode']
+            assert reach['groundWalkWeight']<.001,'Collector must HOVER, not walk or bend while travelling'
+            assert reach['groundPickupWeight']<.001,'Ground pickup animation must NEVER play'
+            assert reach['torsoBendRadians']<.005,'Chest and waist must stay upright during the reach'
+            assert reach['pluckReachWeight']>.95,'Actual arm must be extended before contact'
+            assert not reach['palmContactInOrbit'],'Planet stays in moving galaxy until palm contact'
+            assert not reach['miniatures']['0']['visible'],'No duplicate floor or pre-contact sphere'
             energy=await capture('orbital-contact-glow',2200+4800*.56)
+            assert energy['palmContactInOrbit'], 'The pluck occurs in space at palm contact'
+            assert energy['groundWalkWeight']<.001 and energy['groundPickupWeight']<.001
+            assert energy['torsoBendRadians']<.005,'No bowing while holding the planet'
+            assert math.dist(energy['miniatures']['0']['position'],energy['rightGrip'])<.002, 'Orbital planet must physically follow the real hand'
             assert energy['miniatures']['0']['beamVisible'],'Short contact glint must be visible as the Skull takes the world'
             assert energy['miniatures']['0']['attached'],'Orbital world should attach to real palm after contact'
             pickup=await capture('pickup',2200+4800*.61)
