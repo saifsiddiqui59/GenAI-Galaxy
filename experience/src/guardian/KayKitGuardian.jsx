@@ -84,7 +84,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   body.position.set(entrance.x,guardianFloorY(narrow,short),3.2);
   body.scale.setScalar(compactScale);
   const pickup=view.activeIndex>=0?pickupAt(ms,view.activeIndex):null;
-  body.rotation.y=pickup?Math.PI:entrance.yaw;
+  body.rotation.y=pickup?0:entrance.yaw;
   Object.values(actions).forEach(a=>a.setEffectiveWeight(0));
   function sample(name,time,weight){const a=actions[name];if(!a)return;a.enabled=true;a.time=Math.max(0,Math.min(a.getClip().duration-.00001,time));a.setEffectiveWeight(weight)}
   if(!contactLocal.current&&rig.rightHand){
