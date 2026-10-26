@@ -102,7 +102,7 @@ export function attachSpectralLowerBody(source,THREE){
   geo.computeVertexNormals();
   const mat=new THREE.ShaderMaterial({
    transparent:true,depthWrite:false,side:THREE.DoubleSide,
-   blending:THREE.AdditiveBlending,
+   blending:THREE.NormalBlending,
    uniforms:{uTime:{value:0},uLayer:{value:layer}},
    vertexShader:`
     varying vec2 vUv; varying vec3 vPos;
@@ -125,9 +125,9 @@ export function attachSpectralLowerBody(source,THREE){
       float flicker=.66+.34*sin(t*24.0+vUv.x*17.0+uTime*.65);
       float rim=.7+.3*sin(vUv.x*6.28318+uLayer*1.3);
       float fade=pow(max(0.0,1.0-t),1.15);
-      float opacity=fade*(.13+.14*streak)*flicker*rim;
-      vec3 ash=vec3(.24,.18,.34);
-      vec3 violet=vec3(.47,.32,.64);
+      float opacity=fade*(.46+.32*streak)*flicker*rim;
+      vec3 ash=vec3(.18,.12,.28);
+      vec3 violet=vec3(.48,.35,.65);
       gl_FragColor=vec4(mix(ash,violet,streak),opacity);
     }`
   });
@@ -187,7 +187,7 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
   mesh.name='SkullMasterAnatomy_'+name;
   // Keep animated genuine pelvis/spine/ribs/hands/arms; replace ill-fitting
   // crossed-knee KayKit leg poses with a volumetric ethereal lower silhouette.
-  const isLeg=/^(upperleg|lowerleg|foot)/i.test(name);
+  const isLeg=/^(hips|upperleg|lowerleg|foot)/i.test(name);
   mesh.visible=!isLeg;
   mesh.userData.concealedBySpectralVapor=isLeg;
   mesh.castShadow=!isLeg;
