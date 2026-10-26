@@ -38,10 +38,13 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
    orb.current.position.copy(source);
    orb.current.scale.setScalar(origin.scale/.135);
   }else if(pick.attached&&pose.grip){
-   const take=smooth((pick.t-CONTACT)/.11);
-   orb.current.position.copy(source).lerp(pose.grip,take);
-   if(take>=1)orb.current.position.copy(pose.grip);
-   orb.current.scale.setScalar(THREE.MathUtils.lerp(origin.scale/.135,s,take));
+   // A genuine pluck: the collector reached the orbital world FIRST.
+   // The visible planet instantly belongs to the contacted palm and follows
+   // that same animated hand. Only its miniature size changes during grasp;
+   // it never flies up from below the character or teleports to a floor orb.
+   const grasp=smooth((pick.t-CONTACT)/.11);
+   orb.current.position.copy(pose.grip);
+   orb.current.scale.setScalar(THREE.MathUtils.lerp(origin.scale/.135,s,grasp));
   }else{
    orb.current.position.copy(pose.mouth).add(new THREE.Vector3(0,-.24*s*smooth((pick.t-RELEASE)/.14),0));
    orb.current.scale.setScalar(s*(pick.t>=RELEASE?1-smooth((pick.t-.90)/.10):1));
