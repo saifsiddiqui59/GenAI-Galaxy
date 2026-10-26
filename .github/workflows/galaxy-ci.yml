@@ -67,7 +67,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install playwright==1.57.0
+      - run: python -m pip install playwright==1.57.0 Pillow==11.3.0
       # Ubuntu 24.04 hosted runners include browser shared libraries; avoid repeated
       # apt package setup, which can stall even when the actual browser tests pass.
       - run: python -m playwright install chromium
