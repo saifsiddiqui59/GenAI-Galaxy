@@ -14,8 +14,8 @@ jobs:
   curriculum-and-api:
     runs-on: ubuntu-24.04
     env:
-      GALAXY_V6_ANATOMY: ${{ github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel' && '1' || '0' }}
-      VITE_GALAXY_ANATOMY: ${{ github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel' && '1' || '0' }}
+      GALAXY_V6_ANATOMY: ${{ (github.head_ref == 'feat/v6-p234-orbit-approach-bare-skull-messenger-satchel' || github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel') && '1' || '0' }}
+      VITE_GALAXY_ANATOMY: ${{ (github.head_ref == 'feat/v6-p234-orbit-approach-bare-skull-messenger-satchel' || github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel') && '1' || '0' }}
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
@@ -77,8 +77,8 @@ jobs:
   browser-smoke:
     runs-on: ubuntu-24.04
     env:
-      GALAXY_V6_ANATOMY: ${{ github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel' && '1' || '0' }}
-      VITE_GALAXY_ANATOMY: ${{ github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel' && '1' || '0' }}
+      GALAXY_V6_ANATOMY: ${{ (github.head_ref == 'feat/v6-p234-orbit-approach-bare-skull-messenger-satchel' || github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel') && '1' || '0' }}
+      VITE_GALAXY_ANATOMY: ${{ (github.head_ref == 'feat/v6-p234-orbit-approach-bare-skull-messenger-satchel' || github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel') && '1' || '0' }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
