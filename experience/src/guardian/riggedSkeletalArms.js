@@ -5,12 +5,17 @@
 import {anatomicalShaftGeometry} from './bareSkull.js';
 
 export function attachRiggedSkeletalArms(source,THREE){
+ // Three.js PropertyBinding normalizes '.', '_' and other source-GLB names.
+ const canonical=name=>String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+ const bones=new Map();
+ source.traverse(node=>{if(node.isBone)bones.set(canonical(node.name),node)});
+ const getBone=name=>bones.get(canonical(name));
  const attached=[],geometries=[];
  const marrow=new THREE.MeshStandardMaterial({color:'#b8aa97',roughness:.98,metalness:0});
  const jointMat=new THREE.MeshStandardMaterial({color:'#9c8b7a',roughness:1,metalness:0});
  function add(parent,mesh){parent.add(mesh);attached.push(mesh);mesh.castShadow=true;if(mesh.geometry)geometries.push(mesh.geometry)}
  function segment(parentName,childName,proximal,distal,label){
-  const a=source.getObjectByName(parentName),b=source.getObjectByName(childName);
+  const a=getBone(parentName),b=getBone(childName);
   if(!a?.isBone||!b?.isBone||b.parent!==a)
    throw Error('Real bone chain missing '+parentName+' -> '+childName);
   const direction=b.position.clone(),length=direction.length();
@@ -27,7 +32,7 @@ export function attachRiggedSkeletalArms(source,THREE){
  for(const side of ['l','r']){
   segment('upperarm.'+side,'lowerarm.'+side,.062,.046,'Humerus_'+side);
   const forearm=segment('lowerarm.'+side,'wrist.'+side,.046,.036,'Ulna_'+side);
-  const wrist=source.getObjectByName('wrist.'+side);
+  const wrist=getBone('wrist.'+side);
   const v=wrist.position.clone(),len=v.length();
   for(const sign of [-1,1]){
    const path=new THREE.CatmullRomCurve3([
@@ -38,7 +43,7 @@ export function attachRiggedSkeletalArms(source,THREE){
    add(forearm,shaft);
   }
   segment('wrist.'+side,'hand.'+side,.034,.035,'Carpal_'+side);
-  const hand=source.getObjectByName('hand.'+side);
+  const hand=getBone('hand.'+side);
   const palm=new THREE.Mesh(new THREE.DodecahedronGeometry(.058,1),marrow);
   palm.name='SpectralMasterPalm';palm.scale.set(1.1,1.25,.65);
   palm.position.y=.053;add(hand,palm);
