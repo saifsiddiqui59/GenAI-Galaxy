@@ -11,7 +11,9 @@ test('CC0 candidate remains separately pinned and correctly classified to genuin
   ['Radius',-.28,'lowerarm.r'],['Radius.001',.28,'lowerarm.l'],
   ['Humerus',.22,'upperarm.l'],['Femur',-.13,'upperleg.r'],
   ['Fibula',.11,'lowerleg.l'],['Carpal.001',-.23,'hand.r'],
-  ['Metatarsal 3',.13,'foot.l'],['Ilium right',-.11,'hips']
+  ['Metatarsal 3',.13,'foot.l'],['Ilium right',-.11,'hips'],
+  ['Rib_3_left',.09,'chest'],['Finger_phalanx002',-.29,'hand.r'],
+  ['Femoral_condyle',.11,'upperleg.l']
  ]){
   assert.equal(classifyAnatomicalPart(name,x)?.bone,target,name);
  }
