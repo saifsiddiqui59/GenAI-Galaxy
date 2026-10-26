@@ -23,7 +23,8 @@ test('CC0 candidate remains separately pinned and correctly classified to genuin
 });
 test('retargeted bone parts follow the original animated rig without replacing its bones',()=>{
  const source=new THREE.Group(),chest=new THREE.Bone();chest.name='chest';chest.position.y=.973;
- source.add(chest);
+ const hips=new THREE.Bone();hips.name='hips';hips.position.y=.405;
+ source.add(hips);source.add(chest);
  const anatomy=new THREE.Group(),geometry=new THREE.BoxGeometry(.028,.028,.028);
  for(let i=0;i<120;i++){
   const bone=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial());
@@ -35,6 +36,9 @@ test('retargeted bone parts follow the original animated rig without replacing i
  const out=attachAnatomicalSkeleton(source,anatomy,THREE);
  assert.equal(out.attached,120);
  assert.equal(out.clusters,1,'one merged draw call per animated rig bone');
+ assert(out.spectralActive,'Experimental apparition should use floating spectral lower body');
+ assert(hips.getObjectByName('SkullMasterSpectralVapor'));
+ out.update(2500);
  assert.equal(source.children.length,countBefore,'existing animation rig not replaced');
  const mesh=chest.getObjectByName('SkullMasterAnatomy_chest');
  assert(mesh?.isMesh);
