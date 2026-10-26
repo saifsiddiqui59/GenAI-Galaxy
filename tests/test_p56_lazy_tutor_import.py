@@ -17,6 +17,7 @@ class LazyTutorColdstartRegression(unittest.TestCase):
         source=ast.get_source_segment(CODE,tutor)
         self.assertIn("from tutor_graph import invoke_tutor, validate_tutor_request, FREE_MODES",source)
         self.assertLess(source.index("authenticate(req)"),source.index("from tutor_graph import"))
+        self.assertLess(source.index("authenticate(req)"),source.index("rubric_catalog()"))
         self.assertLess(source.index("pending=preflight(req)"),source.index("from tutor_graph import"))
     def test_evaluator_remains_quota_gated_and_graph_free(self):
         tree=ast.parse(CODE)
@@ -25,7 +26,7 @@ class LazyTutorColdstartRegression(unittest.TestCase):
         body=ast.get_source_segment(CODE,evaluator)
         self.assertNotIn("tutor_graph",body)
         self.assertLess(body.index("authenticate(req)"),body.index("enforce_eval_quota("))
-        self.assertLess(body.index("enforce_eval_quota("),body.index("model_review(RUBRICS[k]"))
+        self.assertLess(body.index("enforce_eval_quota("),body.index("model_review(rubrics[k]"))
     def test_no_model_payment_automatic_ci(self):
         workflow=(ROOT/".github/workflows/galaxy-ci.yml").read_text()
         self.assertIn("python -m unittest discover",workflow)
