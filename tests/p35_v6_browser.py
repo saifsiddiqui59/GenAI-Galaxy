@@ -36,7 +36,7 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert await page.locator('[data-world-label]').count()==0,'Compact Galaxy must not obscure worlds with an oversized title'
         if name=='desktop' and not reduced:
             try:
-                await page.wait_for_function("() => window.__galaxySkeletonDiagnostics.currentPhase==='offering' && window.__galaxySkeletonDiagnostics.pickupLog.length===3",timeout=35000)
+                await page.wait_for_function("() => window.__galaxySkeletonDiagnostics.currentPhase==='offering' && window.__galaxySkeletonDiagnostics.pickupLog.length===3",timeout=65000)
             except Exception:
                 diag=await page.evaluate("() => window.__galaxySkeletonDiagnostics")
                 print('P218 natural timeline diagnostic',json.dumps({'time':diag.get('time'),'phase':diag.get('currentPhase'),
@@ -61,28 +61,28 @@ async def inspect(pw,url,name,width,height,reduced=False):
             intro=await capture('entrance',950)
             assert intro['atlasReveal']['phase']=='immersive' and intro['atlasReveal']['progress']==0, intro['atlasReveal']
             assert await page.locator('.guardian-journey.is-entering').count()==1
-            flight=await capture('flight',2200+2600*.12)
+            flight=await capture('approach',2200+4800*.20)
             first=flight['miniatures']['0']
-            assert first['sourceWorldIndex']==0 and first['visible'],first
-            assert math.dist(first['position'],first['atlasOrigin'])>.2,'Pickup must physically depart from original orbit'
-            energy=await capture('energy-pull',2200+2600*.24)
-            assert energy['miniatures']['0']['beamVisible'],'World extraction beam must be visible mid-transfer'
-            assert math.dist(energy['miniatures']['0']['position'],energy['miniatures']['0']['atlasOrigin'])>.5,'Energy beam should span actual orbital-to-hand travel'
-            pickup=await capture('pickup',2200+2600*.38)
+            assert first['sourceWorldIndex']==0 and not first['visible'],first
+            assert flight['approachTravel']>.0,'Skull must move towards the orbit while planet stays in place'
+            energy=await capture('orbital-contact-glow',2200+4800*.56)
+            assert energy['miniatures']['0']['beamVisible'],'Short contact glint must be visible as the Skull takes the world'
+            assert energy['miniatures']['0']['attached'],'Orbital world should attach to real palm after contact'
+            pickup=await capture('pickup',2200+4800*.61)
             assert pickup['miniatures']['0']['attached']
             assert pickup['miniatures']['0']['contactError']<.001
             assert pickup['pickupTargetError']<.04,pickup['pickupTargetError']
-            deposit=await capture('deposit',2200+2600*.79)
+            deposit=await capture('deposit',2200+4800*.79)
             assert deposit['miniatures']['0']['stage']=='deposit'
             assert deposit['atlasReveal']['progress']==0,'Atlas must not move until first pickup is finished'
-            sweep=await capture('galaxy-shift',4800+1750/2)
+            sweep=await capture('galaxy-shift',7000+1750/2)
             assert .4<sweep['atlasReveal']['progress']<.6,'Galaxy must transition across screen after the first pickup'
             # All three independent real source clip cycles must be observed.
             for order in [1,2]:
-                ms=2200+(order+.38)*2600
+                ms=2200+(order+.61)*4800
                 await page.evaluate('(ms)=>window.__galaxyV6.seek(ms)',ms)
                 await page.wait_for_function('(ms)=>Math.abs(window.__galaxySkeletonDiagnostics.time-ms)<1',arg=ms)
-        diag=await capture('offering',11200)
+        diag=await capture('offering',18800)
         assert diag['atlasReveal']['progress']==1 and diag['atlasReveal']['phase']=='atlas',diag['atlasReveal']
         assert await page.locator('.guardian-journey.is-revealed').count()==1,'Show existing atlas UI after cinematic reveal'
         assert diag['clips']==95 and diag['bones']==41,diag
