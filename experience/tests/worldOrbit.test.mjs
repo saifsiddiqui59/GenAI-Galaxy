@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {CONTACT,PER_WORLD_MS} from '../src/journey/choreography.js';
 import {atlasLayout} from '../src/space/worldAnchors.js';
 import {galaxySpaceAt,orbitAt,launchAt,flightProgress,planetHiddenFromAtlas,ORBIT_PERIOD_MS,PLANET_SPIN_PERIOD_MS,planetSpinAt} from '../src/space/worldOrbit.js';
 test('all 17 original worlds orbit deterministically without swapping indexes',()=>{
@@ -17,8 +18,9 @@ test('all 17 original worlds orbit deterministically without swapping indexes',(
 test('original planet is transferred exactly once at its collection start',()=>{
  for(let i=0;i<17;i++){
   const start=launchAt(i);
-  assert(!planetHiddenFromAtlas(start-1,i));
-  assert(planetHiddenFromAtlas(start,i));
+  assert(!planetHiddenFromAtlas(start,i),'Planet stays in orbit during Skull Master approach');
+  assert(!planetHiddenFromAtlas(start+CONTACT*PER_WORLD_MS-1,i));
+  assert(planetHiddenFromAtlas(start+CONTACT*PER_WORLD_MS,i),'Planet disappears only at palm contact');
   assert(planetHiddenFromAtlas(start+5000,i));
  }
  assert.equal(planetHiddenFromAtlas(100000,-1),false);
