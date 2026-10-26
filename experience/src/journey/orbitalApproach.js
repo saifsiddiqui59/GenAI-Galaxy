@@ -15,8 +15,12 @@ export function guardianApproachAt(ms,indexes=[],gripLocal={x:0,y:1.4,z:.3},comp
  const scale=guardianStageScale(compact,short);
  const initial=entranceAt(Math.min(Math.max(ms,0),COLLECT_START_MS),compact);
  const home={x:initial.x,y:guardianFloorY(compact,short),z:3.2};
- const homeEnd={...home,x:entranceAt(COLLECT_START_MS,compact).x};
- const homePose={...home,scale,walkWeight:initial.walkWeight,travel:0,orbitalTarget:null};
+ // Raise only the FINAL phone presentation a little. Approach / contact
+ // coordinates remain untouched and the shoulder-to-orbit reach still matches.
+ const homeEnd={...home,x:entranceAt(COLLECT_START_MS,compact).x,
+  y:home.y+(compact?.34:0)};
+ const homePose={...home,y:reduced&&compact?homeEnd.y:home.y,
+  scale,walkWeight:initial.walkWeight,travel:0,orbitalTarget:null};
  if(reduced||!safe.length||ms<COLLECT_START_MS)return homePose;
  const toPosition=(index,order)=>{
   const world=orbitContactAt(index,order,compact,short,safe.length,reduced);
