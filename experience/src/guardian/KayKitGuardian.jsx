@@ -135,13 +135,15 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    }
    arms.right.slice(0,2).forEach((b,i)=>b.quaternion.copy(before[i].slerp(b.quaternion,weight)));
   }
-  const offer=hip.clone().add(new THREE.Vector3(0,.78*scale,.70*scale));
+  // End with a side-held offering, not a planet embedded in the ribcage.
+  // The right palm supports the globe from its inner/lower rim; the left arm
+  // stays naturally idle rather than bending both arms over the thorax.
+  // The right shoulder is at ~-.21 local X; this is still inside its .50 reach.
+  const offer=hip.clone().add(new THREE.Vector3(-.58*scale,.72*scale,.32*scale));
   const offerReveal=reducedMotion?1:smooth((ms-(COLLECT_START_MS+completedCount*PER_WORLD_MS+OFFER_SETTLE_MS-650))/650);
-  if(offerReveal>0&&view.activeIndex<0&&arms.left&&arms.right){
-   const influence=offerReveal;
-   const left=offer.clone().add(new THREE.Vector3(.225*scale,-.15*scale,-.025*scale));
-   const right=offer.clone().add(new THREE.Vector3(-.225*scale,-.15*scale,-.025*scale));
-   error=Math.max(solveBlended(arms.left,left,influence),solveBlended(arms.right,right,influence));
+  if(offerReveal>0&&view.activeIndex<0&&arms.right){
+   const right=offer.clone().add(new THREE.Vector3(.16*scale,-.10*scale,-.02*scale));
+   error=solveBlended(arms.right,right,offerReveal);
   }
   source.updateWorldMatrix(true,true);
   const rightHand=rig.rightHand?.getWorldPosition(new THREE.Vector3());
