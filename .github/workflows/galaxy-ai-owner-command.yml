@@ -139,6 +139,13 @@ jobs:
                 --ref main -f confirm=ROUTE_1_RESET
               echo 'Owner requested one 512MB/max2 -> max1 -> max2 guarded routing hypothesis test.'
               ;;
+            "DIAG_HOST_EVIDENCE_$EVENT_SHA")
+              # Existing-only Azure Function platform metrics + sanitized GET
+              # detectors; manual protected OIDC, no storage/telemetry creation.
+              gh workflow run galaxy-p81-host-evidence.yml -R saifsiddiqui59/GenAI-Galaxy \
+                --ref main -f confirm=HOST_READONLY
+              echo 'Owner requested read-only Azure host and worker evidence.'
+              ;;
             "METRICS_P70_$EVENT_SHA")
               gh workflow run galaxy-p71-instance-metrics.yml -R saifsiddiqui59/GenAI-Galaxy \
                 --ref main -f confirm=READONLY

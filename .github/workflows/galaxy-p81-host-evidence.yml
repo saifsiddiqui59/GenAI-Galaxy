@@ -1,0 +1,108 @@
+name: Galaxy P81 read-only Azure host and worker evidence (manual)
+# No Azure or provider writes. Queries existing Function platform metrics and
+# sanitized built-in App Service diagnosis only; no workspace/AI telemetry creation.
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type HOST_READONLY to inspect existing Flex worker/host diagnostics"
+        required: true
+        type: string
+permissions:
+  contents: read
+concurrency:
+  group: galaxy-p81-readonly-host-diagnosis
+  cancel-in-progress: false
+jobs:
+  gather:
+    if: github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' && inputs.confirm == 'HOST_READONLY'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: dev
+    permissions:
+      id-token: write
+      contents: read
+    env:
+      RG: GenAI_Galaxy
+      APP: gengalaxy-p3-1429841605
+      START: '2026-10-26T06:06:00Z'
+      END: '2026-10-26T06:12:00Z'
+      API_VERSION: '2025-05-01'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify diagnostic is read-only and pinned to Galaxy
+        run: python -m unittest discover -s tests -p 'test_p81_host_evidence_guards.py' -v
+      - name: Verify exact Galaxy subscription and Entra identity
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          SUB: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$CLIENT" == '737d67b7-4984-48bb-bb1f-5f62599f645c' ]] || exit 1
+          [[ "$SUB" == '3a5e8018-40a4-49e3-bcba-a9af3344f50e' ]] || exit 1
+          [[ "$RG" == 'GenAI_Galaxy' && "$APP" == 'gengalaxy-p3-1429841605' ]] || exit 1
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Existing Flex runtime, scale and registered function names (non-secret)
+        shell: bash
+        run: |
+          set -euo pipefail
+          id="$(az functionapp show -g "$RG" -n "$APP" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
+          az resource show -g "$RG" -n "$APP" --resource-type Microsoft.Web/sites \
+            --query '{state:properties.state, runtime:properties.functionAppConfig.runtime,scale:properties.functionAppConfig.scaleAndConcurrency}' -o json
+          echo 'Only Galaxy Function names, never application keys, URLs, settings or customer payloads:'
+          az functionapp function list -g "$RG" -n "$APP" --query '[].name' -o json
+      - name: Time-correlate existing execution and instance metrics to failed P80 call
+        shell: bash
+        run: |
+          set -euo pipefail
+          id="$(az functionapp show -g "$RG" -n "$APP" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
+          echo 'P80 hosted no-model failure: 2026-10-26 06:08:53–06:09:33 UTC.'
+          for metric in InstanceCount OnDemandFunctionExecutionCount; do
+            agg=Total
+            if [[ "$metric" == InstanceCount ]]; then agg=Maximum; fi
+            echo "P81 existing Azure Monitor platform metric=$metric aggregate=$agg (minute buckets)"
+            az monitor metrics list --resource "$id" --metric "$metric" \
+              --interval PT1M --start-time "$START" --end-time "$END" \
+              --aggregation "$agg" \
+              --query 'value[].timeseries[].data[].{time:timeStamp,total:total,max:maximum}' -o json || echo 'Metric unavailable under existing resource permissions'
+          done
+      - name: Read only sanitized built-in site startup/crash detector metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          id="$(az functionapp show -g "$RG" -n "$APP" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Web/sites/gengalaxy-p3-1429841605 ]] || exit 1
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          for detector in runtimeavailability sitecrashes; do
+            # These GET endpoints only read existing Microsoft.Web detector output.
+            url="https://management.azure.com${id}/detectors/${detector}?api-version=${API_VERSION}&startTime=${START}&endTime=${END}"
+            if az rest --method get --url "$url" -o json >"$tmp/$detector.json" 2>/dev/null; then
+              DETECTOR="$detector" FILE="$tmp/$detector.json" python3 - <<'PY'
+          import json,os
+          try:
+              data=json.load(open(os.environ["FILE"],encoding="utf-8"))
+              props=data.get("properties") or {}
+              periods=props.get("abnormalTimePeriods") or []
+              if not isinstance(periods,list):periods=[]
+              # Never output raw descriptions, site logs, stack traces, diagnostics,
+              # customer data, session IDs or URLs from detector responses.
+              print("P81 built-in detector="+os.environ["DETECTOR"]+
+                    " available=true abnormal_period_count="+str(len(periods)))
+          except (ValueError,OSError,TypeError,AttributeError):
+              print("P81 detector="+os.environ["DETECTOR"]+" unreadable")
+          PY
+            else
+              echo "P81 built-in detector=$detector unavailable (no new telemetry provisioned)"
+            fi
+          done
+      - name: Clear OIDC session
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
