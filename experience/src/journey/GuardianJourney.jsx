@@ -31,7 +31,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
     <div className="guardian-mission">
       <button type="button" aria-expanded={sackOpen} aria-controls="guardian-sack-panel"
          className="guardian-sack" onClick={()=>setSackOpen(!sackOpen)}>
-        <span aria-hidden="true">✦</span> Satchel · {stored.length} / {completed.length} collected
+        <span aria-hidden="true">✦</span> Soul Vault · {stored.length} / {completed.length} collected
       </button>
       {sackOpen&&<div id="guardian-sack-panel" className="guardian-sack-panel">
         <div className="guardian-sack-header"><strong>Collected worlds</strong>
@@ -46,7 +46,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
     <div className="guardian-next">
       <span className="guardian-label">YOUR NEXT DISCOVERY <span aria-hidden="true">/ {String(nextIndex+1).padStart(2,'0')}</span></span>
       <strong>{nextName||'World '+(nextIndex+1)}</strong>
-      <p>Click the glowing planet in the Genie's hands, or choose Accept below.</p>
+      <p>Click the glowing planet in the Skull Master's hands, or choose Accept below.</p>
       <button type="button" className="guardian-accept" onClick={()=>onAccept?.(nextIndex)}>
        Accept this planet <span aria-hidden="true">↗</span>
       </button>
