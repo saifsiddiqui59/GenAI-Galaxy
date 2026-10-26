@@ -11,7 +11,7 @@ import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 
 export const ANATOMY_ASSET='models/cc0/InnersceneAnatomicalSkeleton.glb';
 export const ANATOMY_SHA256='e52d1b23cf15b574885846a7da30354defc0a3a51b679ded6cbc7c0c1965d996';
-export const ANATOMY_MODE=import.meta.env.VITE_GALAXY_ANATOMY==='1';
+export const ANATOMY_MODE=import.meta.env?.VITE_GALAXY_ANATOMY==='1';
 
 const bonesByRegion={
  upperArm:['upperarm.l','upperarm.r'],
