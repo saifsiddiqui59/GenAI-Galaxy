@@ -6,7 +6,7 @@ import {attachBareSkullTorso} from './bareSkull.js';
 export const STYLE_PROFILE='skullmaster-midnight-violet';
 // Reduce white toy-like shoes, gauntlets and plastic torso highlights.
 export function kitMeshTint(name){
- if(/^Skeleton_Mage_(ArmLeft|ArmRight|LegLeft|LegRight)$/.test(name))return '#8b99a4';
+ if(/^Skeleton_Mage_(ArmLeft|ArmRight|LegLeft|LegRight)$/.test(name))return '#606b7a';
  if(name==='Skeleton_Mage_Body')return '#52616d';
  return null;
 }
