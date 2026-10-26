@@ -20,5 +20,5 @@ export function cameraTrackingAt(ms,position,activeIndex,completedCount,reducedM
  // lens at grasp time makes the fingers and the contact visible to viewers.
  return {x:Math.max(-9,Math.min(9,position.x*.82*strength)),
          y:.3+Math.max(-4,Math.min(5,(position.y+.8)*.58*strength)),
-         z:12.5-2.75*strength};
+         z:12.5-4.4*strength};
 }
