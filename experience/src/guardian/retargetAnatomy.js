@@ -23,6 +23,7 @@ const bonesByRegion={
  chest:['chest'],spine:['spine'],hips:['hips'],neck:['chest']
 };
 export function classifyAnatomicalPart(name,centerX=0){
+ name=String(name).replace(/_/g,' '); // GLTFLoader normalizes glTF node whitespace
  if(/cranium|mandible|tooth/i.test(name))return null; // existing anatomical skull is more detailed
  const side=centerX>=0?0:1; // CC0 source +X corresponds to KayKit .l
  const pick=(region)=>({region,bone:bonesByRegion[region][side]||bonesByRegion[region][0]});
@@ -68,6 +69,12 @@ export function desiredPartTransform(THREE,region,bone,root,side){
  return T.multiply(R).multiply(S).multiply(A);
 }
 export function attachAnatomicalSkeleton(source,anatomy,THREE){
+ // glTF animation PropertyBinding sanitizes dots, spaces and punctuation in
+ // bone IDs. Match *only real bones* using the same canonicalization as IK.
+ const normalize=name=>String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+ const realBones=new Map();
+ source.traverse(node=>{if(node.isBone)realBones.set(normalize(node.name),node)});
+ const getBone=name=>realBones.get(normalize(name));
  if(!source||!anatomy)throw Error('Missing animated rig or anatomical geometry');
  source.updateMatrixWorld(true);
  anatomy.updateMatrixWorld(true);
@@ -81,7 +88,7 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
   bounds.setFromObject(o);bounds.getCenter(center);
   const kind=classifyAnatomicalPart(o.name,center.x);
   if(!kind){skipped.push(o.name);return;} // original CC0 detailed skull remains
-  const bone=source.getObjectByName(kind.bone);
+  const bone=getBone(kind.bone);
   if(!bone?.isBone){missed++;missing.push(o.name+'=>'+String(kind.bone));return}
   const side=kind.bone.endsWith('.r')?1:0;
   const transform=desiredPartTransform(THREE,kind.region,bone,source,side);
@@ -101,7 +108,7 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
  if(classified<100||missed)throw Error('Incomplete anatomical rigging: '+classified+' assigned, '+missed+' unmatched; missing '+JSON.stringify(missing.slice(0,30))+' skipped '+JSON.stringify(skipped.slice(0,30)));
  const material=new THREE.MeshStandardMaterial({color:'#c7b9a6',roughness:.93,metalness:0});
  for(const [name,parts] of mergedParts){
-  const bone=source.getObjectByName(name);
+  const bone=getBone(name);
   const combined=mergeGeometries(parts,false);
   parts.forEach(g=>g.dispose());
   if(!combined)throw Error('Could not merge anatomical bones at '+name);
