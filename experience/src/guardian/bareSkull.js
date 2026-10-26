@@ -7,6 +7,20 @@ export const BARE_SKULL_PROFILE=Object.freeze({
  ribs:6,bone:'#c0b5a4',shadow:'#3a4650',sternum:'#d2c5b0',
  hiddenMeshes:Object.freeze(['Skeleton_Mage_Hat','Skeleton_Mage_Body','Skeleton_Mage_ArmLeft','Skeleton_Mage_ArmRight','Skeleton_Mage_LegLeft','Skeleton_Mage_LegRight'])
 });
+// Shaped bone shafts rather than smooth toy cylinders. The proximal and
+// distal joints bulge, while the middle narrows like a real long bone.
+export function anatomicalShaftGeometry(THREE,length,proximal,distal){
+ if(![length,proximal,distal].every(Number.isFinite)||length<=0||proximal<=0||distal<=0)
+  throw new Error('Invalid skeletal segment');
+ const sections=18,profile=[];
+ for(let i=0;i<=sections;i++){
+  const t=i/sections,endpoint=Math.abs(2*t-1);
+  const collar=.62+.38*Math.pow(endpoint,2.3);
+  const radius=THREE.MathUtils.lerp(proximal,distal,t)*collar;
+  profile.push(new THREE.Vector2(radius,(t-.5)*length));
+ }
+ return new THREE.LatheGeometry(profile,14);
+}
 export function attachBareSkullTorso(source,THREE){
  const chest=source.getObjectByName('chest');
  if(!chest?.isBone)return ()=>{};
@@ -30,14 +44,20 @@ export function attachBareSkullTorso(source,THREE){
  // Deliberate rib separation and a dark visible cavity in place of a painted body.
  const torso=new THREE.Group();torso.name='SkullMasterBareRibCage';chest.add(torso);attached.push([chest,torso]);
  for(let i=0;i<BARE_SKULL_PROFILE.ribs;i++){
-  const y=.29-i*.105,span=.30+(i===0?-.055:i===5?-.035:0);
+  const y=.29-i*.108,span=.32-i*.020,front=.30-i*.027;
   for(const side of [-1,1]){
-   pipe(torso,[[side*.045,y,.39],[side*.16,y+.03,.40],
-    [side*span,y,.24],[side*(span+.02),y-.035,.08],
-    [side*(span-.05),y-.065,-.10]],.012,i%3===0?sternumMat:boneMat,'SkullMasterRib');
+   // Ribs join the central cartilage and wrap beneath the shoulders into
+   // the posterior spine. Drooping side arcs avoid the old ladder silhouette.
+   pipe(torso,[[side*.065,y,front],
+    [side*.145,y-.03,front+.034],
+    [side*span*.84,y-.078,front-.018],
+    [side*span,y-.093,.095],
+    [side*span*.85,y-.041,-.08],
+    [side*.105,y+.034,-.21]],.017,i%3===0?sternumMat:boneMat,'SkullMasterRib');
   }
  }
- pipe(torso,[[0,.37,.35],[0,.16,.40],[0,-.12,.41],[0,-.37,.34]],.034,sternumMat,'SkullMasterSternum');
+ pipe(torso,[[0,.38,.32],[0,.20,.36],[0,-.06,.34],[0,-.34,.22]],
+  .033,sternumMat,'SkullMasterSternum');
  for(const side of [-1,1]){
   pipe(torso,[[0,.37,.38],[side*.19,.40,.33],[side*.41,.32,.13]],.028,boneMat,'SkullMasterClavicle');
  }
@@ -58,13 +78,13 @@ export function attachBareSkullTorso(source,THREE){
   if(!parent?.isBone||!child?.isBone||child.parent!==parent)return false;
   const direction=child.position.clone(),length=direction.length();
   if(!Number.isFinite(length)||length<.025)return false;
-  const geometry=new THREE.CylinderGeometry(endRadius,startRadius,length,10,2);
+  const geometry=anatomicalShaftGeometry(THREE,length,startRadius,endRadius);
   const mesh=new THREE.Mesh(geometry,boneMat);
   mesh.name=label;
   mesh.position.copy(direction).multiplyScalar(.5);
   mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),direction.normalize());
   add(parent,mesh);
-  const joint=new THREE.Mesh(new THREE.IcosahedronGeometry(startRadius*1.06,1),sternumMat);
+  const joint=new THREE.Mesh(new THREE.IcosahedronGeometry(startRadius*.86,2),sternumMat);
   joint.name='SkullMasterJoint';add(parent,joint);
   return true;
  }
