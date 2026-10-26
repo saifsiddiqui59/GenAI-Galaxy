@@ -17,12 +17,14 @@ test('new commercial-ready CC0 skull is sourced and mounted without modifying an
  const attachment=mountDetailedSkull(root,detailed);
  assert(attachment.active);
  assert(attachment.model.parent===head);
- assert(originals.slice(0,2).every(x=>x.visible===false));
- assert(originals[2].visible,'Original glowing eyes should stay animated and visible');
+ assert(originals.every(x=>x.visible===false),'Toy skull, jaw and button eyes must all be hidden');
+ assert(head.getObjectByName('SkullMasterRecessedEyes'),'New recessed eyes must follow real head bone');
+ assert.equal(head.getObjectByName('SkullMasterRecessedEyes').children.length,2);
  assert(attachment.model.scale.x>.1&&attachment.model.scale.x<1);
  attachment.dispose();
  assert(originals.every(x=>x.visible===true));
  assert(!head.getObjectByName('SkullMasterCC0RealisticHead'));
+ assert(!head.getObjectByName('SkullMasterRecessedEyes'));
 });
 test('bad rig remains untouched and invalid GLB bounds fail closed',()=>{
  assert.equal(mountDetailedSkull(new THREE.Group(),new THREE.Group()).active,false);
