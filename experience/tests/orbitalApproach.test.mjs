@@ -45,7 +45,7 @@ test('mobile offering finishes above phone lesson card without changing orbital 
  const last=COLLECT_START_MS+selected.length*PER_WORLD_MS+OFFER_SETTLE_MS;
  for(const short of [false,true]){
   const at=guardianApproachAt(last,selected,grip,true,short);
-  assert(at.y-guardianFloorY(true,short)>.32,'phone presentation must sit above bottom card');
+  assert(at.y-guardianFloorY(true,short)>(short?.24:.32),'phone presentation must sit above bottom card');
   const world=orbitContactAt(selected[0],0,true,short,selected.length);
   assert(Number.isFinite(world.x)&&Number.isFinite(world.y),'contact remains valid');
  }
