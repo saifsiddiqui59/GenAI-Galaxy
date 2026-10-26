@@ -16,7 +16,7 @@ export function entranceAt(ms,compact=false){
  // The full desktop walk-in is intentionally unchanged.
  const end=compact?-.48:-2.05,start=end-(compact?.85:2.05);
  const travel=smoother(ms/1800);
- return {x:start+(end-start)*travel,yaw:Math.PI/2*(1-smoother((ms-1350)/850)),
+ return {x:start+(end-start)*travel,yaw:Math.PI/2+Math.PI/2*smoother((ms-1350)/850),
    walkWeight:1-smooth((ms-1550)/650)};
 }
 export function finiteCount(n){return Math.max(0,Math.min(17,Math.floor(Number(n)||0)))};
