@@ -12,9 +12,9 @@ test('Skull Master walks/glides to each real orbit position before grasp',()=>{
    const time=COLLECT_START_MS+(order+CONTACT)*PER_WORLD_MS;
    const pose=guardianApproachAt(time,selected,grip,compact,short);
    const sphere=orbitContactAt(selected[order],order,compact,short,selected.length);
-   near(pose.x-grip.x*scale,sphere.x);
+   near(pose.x+grip.x*scale,sphere.x);
    near(pose.y+grip.y*scale,sphere.y);
-   near(pose.z-grip.z*scale,sphere.z);
+   near(pose.z+grip.z*scale,sphere.z);
    assert.equal(pose.worldIndex,selected[order]);
    const start=guardianApproachAt(COLLECT_START_MS+order*PER_WORLD_MS,selected,grip,compact,short);
    const middle=guardianApproachAt(COLLECT_START_MS+(order+CONTACT/2)*PER_WORLD_MS,selected,grip,compact,short);
