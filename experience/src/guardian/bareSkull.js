@@ -4,7 +4,7 @@
  * real right-palm IK work without writing new animation data.
  */
 export const BARE_SKULL_PROFILE=Object.freeze({
- ribs:6,bone:'#778187',shadow:'#3a4650',sternum:'#8c9697',
+ ribs:6,bone:'#9aa4a0',shadow:'#3a4650',sternum:'#b2b8ad',
  hiddenMeshes:Object.freeze(['Skeleton_Mage_Hat','Skeleton_Mage_Body',])
 });
 export function attachBareSkullTorso(source,THREE){
