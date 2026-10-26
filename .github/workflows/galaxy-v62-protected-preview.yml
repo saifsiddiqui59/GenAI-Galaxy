@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       confirm_preview:
-        description: 'Type PUBLISH_V62_REVIEWED_9e44717 to publish only the separate V6.2 review prefix'
+        description: 'Type PUBLISH_V62_REVIEWED_1d79592 to publish only the separate V6.2 review prefix'
         required: true
         type: string
 permissions:
@@ -17,7 +17,7 @@ jobs:
     if: >-
       github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' &&
       github.event_name == 'workflow_dispatch' && github.actor_id == '80577424' &&
-      inputs.confirm_preview == 'PUBLISH_V62_REVIEWED_9e44717'
+      inputs.confirm_preview == 'PUBLISH_V62_REVIEWED_1d79592'
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
@@ -28,7 +28,7 @@ jobs:
         run: |
           import json,os,urllib.request
           root='https://api.github.com/repos/saifsiddiqui59/GenAI-Galaxy'
-          sha='9e4471712bdb0b5eb71c55e3d2896d3a5cf333b6'
+          sha='1d79592b8ee87ac59391f70635da69220ae74f0e'
           def get(path):
               request=urllib.request.Request(root+path,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
               with urllib.request.urlopen(request,timeout=30) as response:return json.load(response)
@@ -51,7 +51,7 @@ jobs:
       AZ_RG: GenAI_Galaxy
       AZ_STORAGE: gengalaxy1429841605
       PREFIX: previews/galaxy-3d-v62
-      REF_SHA: 9e4471712bdb0b5eb71c55e3d2896d3a5cf333b6
+      REF_SHA: 1d79592b8ee87ac59391f70635da69220ae74f0e
     steps:
       - uses: actions/checkout@v4
         with:
