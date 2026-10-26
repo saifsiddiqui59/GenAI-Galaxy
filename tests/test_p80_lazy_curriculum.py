@@ -22,7 +22,7 @@ class LazyRubricStartupTests(unittest.TestCase):
         fn=next(n for n in tree.body if isinstance(n,ast.FunctionDef)
                 and n.name=="rubric_catalog")
         self.assertEqual(len(fn.decorator_list),1)
-        self.assertIn("lru_cache(maxsize=1)",ast.get_source_segment(CODE,fn))
+        self.assertIn("lru_cache(maxsize=1)",ast.unparse(fn.decorator_list[0]))
         self.assertIn("'rubrics.json'",ast.get_source_segment(CODE,fn))
 
     def test_post_auth_load_and_pre_quota_order(self):
