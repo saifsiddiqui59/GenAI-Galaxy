@@ -16,8 +16,9 @@ export function cameraTrackingAt(ms,position,activeIndex,completedCount,reducedM
  const strength=Math.max(0,Math.min(1,approach));
  if(strength===0)return base;
  // Point the camera toward the real moving character, leaving enough
- // rightward space for the currently orbiting planet.
+ // rightward space for the currently orbiting planet. A tighter cinematic
+ // lens at grasp time makes the fingers and the contact visible to viewers.
  return {x:Math.max(-9,Math.min(9,position.x*.82*strength)),
          y:.3+Math.max(-4,Math.min(5,(position.y+.8)*.58*strength)),
-         z:12.5-1.0*strength};
+         z:12.5-2.75*strength};
 }
