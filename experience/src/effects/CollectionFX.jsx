@@ -40,6 +40,7 @@ function Miniature({world,order,rigPoseRef,clockRef,compact,short,completedCount
   }else if(pick.attached&&pose.grip){
    const take=smooth((pick.t-CONTACT)/.11);
    orb.current.position.copy(source).lerp(pose.grip,take);
+   if(take>=1)orb.current.position.copy(pose.grip);
    orb.current.scale.setScalar(THREE.MathUtils.lerp(origin.scale/.135,s,take));
   }else{
    orb.current.position.copy(pose.mouth).add(new THREE.Vector3(0,-.24*s*smooth((pick.t-RELEASE)/.14),0));
