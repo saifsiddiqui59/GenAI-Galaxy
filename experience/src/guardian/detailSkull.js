@@ -32,7 +32,7 @@ const REPLACED=['Skeleton_Mage_Skull','Skeleton_Mage_Jaw','Skeleton_Mage_Eyes'];
 const MIN_SIZE=.01;
 
 export function normalizedSkullTransform(bounds,options={}){
- const {targetHeight=.98,forward=.14,vertical=.26}=options;
+ const {targetHeight=.55,forward=.14,vertical=.12}=options;
  const {min,max}=bounds;
  const size={x:max.x-min.x,y:max.y-min.y,z:max.z-min.z};
  if(!Object.values(size).every(Number.isFinite) || Math.max(...Object.values(size))<MIN_SIZE)
@@ -83,23 +83,27 @@ export function mountDetailedSkull(rig,skullSource,options={}){
  // Actual hollows of the CC0 skull remain dark; a tiny deep-red slit is
  // suspended just within each socket. No large pupil spheres or orange ears.
  const sockets=new THREE.Group();sockets.name='SkullMasterRecessedEyes';head.add(sockets);
- const emberMat=new THREE.MeshBasicMaterial({color:'#db572a',toneMapped:false});
- const lowGlowMat=new THREE.MeshBasicMaterial({color:'#3b0c12',toneMapped:false});
+ // Keep accessory eyes proportional to the detailed skull instead of leaving
+ // independently scaled glowing buttons after the skull is resized.
+ const eyeRatio=(options.targetHeight??.55)/.98;
+ const emberMat=new THREE.MeshBasicMaterial({color:'#a82b1c',toneMapped:false});
+ const lowGlowMat=new THREE.MeshBasicMaterial({color:'#100609',toneMapped:false});
  const embers=[];
  for(const side of [-1,1]){
   const root=new THREE.Group();
-  root.position.set(side*.162,.347,.38);
+  root.position.set(side*.162*eyeRatio,.12+(.347-.26)*eyeRatio,.14+(.38-.14)*eyeRatio);
+  root.scale.setScalar(eyeRatio);
   root.rotation.z=-side*.23; // angry brow: outer edge tilts slightly down
   const shadow=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),lowGlowMat);
   shadow.name='SkullMasterEyeSocketShadow';
-  shadow.scale.set(.086,.051,.008);root.add(shadow);
+  shadow.scale.set(.069,.035,.004);root.add(shadow);
   const slit=new THREE.Mesh(new THREE.SphereGeometry(1,16,10),emberMat);
   slit.name='SkullMasterEyeEmber';
-  slit.position.z=.012;slit.scale.set(.045,.014,.007);
+  slit.position.z=.007;slit.scale.set(.036,.0065,.004);
   root.add(slit);sockets.add(root);embers.push(slit);
  }
- const light=new THREE.PointLight('#ff5c32',.12,.75);
- light.position.set(0,.34,.35);light.name='SkullMasterSubtleEyeFill';
+ const light=new THREE.PointLight('#ce4735',.035,.65);
+ light.position.set(0,.12+(.34-.26)*eyeRatio,.14+(.35-.14)*eyeRatio);light.name='SkullMasterSubtleEyeFill';
  head.add(light);
  return {
   active:true,model,source:SKULL_SOURCE,
