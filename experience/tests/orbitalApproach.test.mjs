@@ -41,6 +41,15 @@ test('Skull returns to presentation stage after collecting, without abrupt telep
  near(final.z,3.2);
  assert(Math.hypot(half.x-final.x,half.y-final.y,half.z-final.z)<Math.hypot(start.x-final.x,start.y-final.y,start.z-final.z));
 });
+test('mobile offering finishes above phone lesson card without changing orbital contact',()=>{
+ const last=COLLECT_START_MS+selected.length*PER_WORLD_MS+OFFER_SETTLE_MS;
+ for(const short of [false,true]){
+  const at=guardianApproachAt(last,selected,grip,true,short);
+  assert(at.y-guardianFloorY(true,short)>.32,'phone presentation must sit above bottom card');
+  const world=orbitContactAt(selected[0],0,true,short,selected.length);
+  assert(Number.isFinite(world.x)&&Number.isFinite(world.y),'contact remains valid');
+ }
+});
 test('Reduced motion never triggers orbit chasing',()=>{
  const p=guardianApproachAt(COLLECT_START_MS+PER_WORLD_MS,selected,grip,true,true,true);
  assert.equal(p.orbitalTarget,null);
