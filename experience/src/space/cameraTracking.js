@@ -14,6 +14,7 @@ export function cameraTrackingAt(ms,position,activeIndex,completedCount,reducedM
    smooth(((elapsed%PER_WORLD_MS)/PER_WORLD_MS)/.30):
    1-smooth((ms-last)/OFFER_SETTLE_MS);
  const strength=Math.max(0,Math.min(1,approach));
+ if(strength===0)return base;
  // Point the camera toward the real moving character, leaving enough
  // rightward space for the currently orbiting planet.
  return {x:Math.max(-9,Math.min(9,position.x*.82*strength)),
