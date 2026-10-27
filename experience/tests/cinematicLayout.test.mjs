@@ -35,10 +35,13 @@ test('all actual orbital planets share the same unmoving parent at contact',()=>
 test('desktop and phone remain balanced full-screen even in reduced-motion',()=>{
  const desktop=cinematicLayoutAt(0,false,false,3);
  const phone=cinematicLayoutAt(0,true,true,3);
- assert(desktop.scale[0]>=1.7&&desktop.scale[0]<=2.1);
- assert(phone.scale[0]>=.58&&phone.scale[0]<=.75);
- assert(Math.abs(desktop.position[0]+4.48*desktop.scale[0])<.05);
- assert(Math.abs(phone.position[0]+4.48*phone.scale[0])<.05);
+ const tallPhone=cinematicLayoutAt(0,true,false,3);
+ assert(desktop.scale[0]>=2.1&&desktop.scale[0]<=2.3);
+ assert(phone.scale[0]>=.80&&phone.scale[0]<=.85);
+ assert(tallPhone.scale[0]>=.87&&tallPhone.scale[0]<=.94);
+ for(const pose of [desktop,phone,tallPhone])
+  assert(Math.abs(pose.position[0]+4.48*pose.scale[0])<.05,
+   'all viewports center orbit on screen');
  for(const compact of [false,true]){
   assert.deepEqual(cinematicLayoutAt(0,compact,true,3,true),cinematicLayoutAt(99000,compact,true,3,true));
  }
