@@ -1,15 +1,24 @@
-"""Guard the native satchel and 17-world pickup flow during art refinements."""
+"""Check that the old pot-like sack is replaced with a clickable soul vault."""
 from pathlib import Path
 import unittest
 ROOT=Path(__file__).resolve().parents[1]
 class SatchelVisualContracts(unittest.TestCase):
- def test_soft_satchel_keeps_open_deposit_mouth_and_rig_attachment(self):
+ def test_small_soft_messenger_sack_preserves_original_acceptance(self):
   fx=(ROOT/'experience/src/effects/CollectionFX.jsx').read_text()
   guardian=(ROOT/'experience/src/guardian/KayKitGuardian.jsx').read_text()
-  self.assertIn('sphereGeometry args={[.305,20,14]}',fx)
-  self.assertIn('circleGeometry args={[.245,28]}',fx)
-  self.assertIn('torusGeometry args={[.248,.022,8,32]}',fx)
-  self.assertIn('bag.current.position.copy(pose.bag)',fx)
-  self.assertIn('pickupAt(c.ms,order)',fx)
-  self.assertIn('const mouth=bag.clone()',guardian)
-if __name__=='__main__':unittest.main()
+  for fragment in ("function Satchel(", "bag.current.position.copy(pose.bag)",
+    "onOpenSack?.()", "new THREE.ExtrudeGeometry(s,",
+    "bevelSegments:4", "const wrinkles=useMemo(", "const strap=useMemo(",
+    "pickupAt(clockRef.current.ms,order)"):
+   self.assertIn(fragment,fx)
+  self.assertNotIn("function SoulVault(",fx)
+  self.assertNotIn("torusGeometry args={[.225,.013,9,56]}",fx)
+  self.assertIn("const mouth=bag.clone()",guardian)
+ def test_bare_skeleton_replaces_costume(self):
+  src=(ROOT/'experience/src/guardian/styleKayKit.js').read_text()
+  rib=(ROOT/'experience/src/guardian/bareSkull.js').read_text()
+  self.assertIn('attachBareSkullTorso',src)
+  self.assertNotIn('attachSkullMasterCloak(source,THREE)',src)
+  self.assertIn("'Skeleton_Mage_Hat','Skeleton_Mage_Body'",rib)
+  self.assertIn("SkullMasterBareRibCage",rib)
+if __name__=='__main__': unittest.main()

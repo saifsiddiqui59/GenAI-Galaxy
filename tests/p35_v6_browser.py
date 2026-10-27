@@ -5,6 +5,7 @@ Screenshots and numeric diagnostics are evidence, not a substitute for opening i
 """
 import asyncio,functools,http.server,json,math,os,threading
 from pathlib import Path
+from PIL import Image
 from playwright.async_api import async_playwright
 
 ROOT=Path(__file__).resolve().parents[1]
@@ -23,7 +24,17 @@ async def inspect(pw,url,name,width,height,reduced=False):
     try:
         response=await page.goto(url,wait_until='networkidle',timeout=60000)
         assert response.status==200,response.status
-        await page.wait_for_function('() => window.__galaxySkeletonDiagnostics?.bones >= 40',timeout=45000)
+        try:
+            await page.wait_for_function('() => window.__galaxySkeletonDiagnostics?.bones >= 40',timeout=45000)
+        except Exception:
+            print('GUARDIAN STARTUP FAILURE:',json.dumps({
+              'errors':errors[-12:],
+              'recentRequests':requests[-20:],
+              'body':(await page.locator('body').inner_text())[:900],
+              'anatomyMode':os.environ.get('GALAXY_V6_ANATOMY'),
+            }),flush=True)
+            await page.screenshot(path=str(OUT/f'{name}-startup-failure.png'),full_page=True)
+            raise
         await page.wait_for_function('() => window.__galaxyV6 != null',timeout=10000)
         assert '3 SAMPLE MASTERED WORLDS' in await page.locator('.galaxy-mode-tag').inner_text()
         await page.wait_for_timeout(400)
@@ -36,7 +47,7 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert await page.locator('[data-world-label]').count()==0,'Compact Galaxy must not obscure worlds with an oversized title'
         if name=='desktop' and not reduced:
             try:
-                await page.wait_for_function("() => window.__galaxySkeletonDiagnostics.currentPhase==='offering' && window.__galaxySkeletonDiagnostics.pickupLog.length===3",timeout=35000)
+                await page.wait_for_function("() => window.__galaxySkeletonDiagnostics.currentPhase==='offering' && window.__galaxySkeletonDiagnostics.pickupLog.length===3",timeout=65000)
             except Exception:
                 diag=await page.evaluate("() => window.__galaxySkeletonDiagnostics")
                 print('P218 natural timeline diagnostic',json.dumps({'time':diag.get('time'),'phase':diag.get('currentPhase'),
@@ -53,6 +64,17 @@ async def inspect(pw,url,name,width,height,reduced=False):
             await page.wait_for_timeout(180)
             file=OUT/f'{name}-{stage}.png'
             await page.screenshot(path=str(file),full_page=True,timeout=30000)
+            # Protect against a subtle R3F failure: a positive useFrame priority
+            # takes over WebGL rendering while HTML captions still look alive.
+            # The actual planets fill far more than 12% of this middle field;
+            # an empty black canvas has under 2% bright pixels.
+            image=Image.open(file).convert('RGB')
+            iw,ih=image.size
+            sampled=[max(image.getpixel((x,y)))>80
+              for y in range(int(ih*.25),int(ih*.72),5)
+              for x in range(int(iw*.12),int(iw*.88),5)]
+            bright=sum(sampled)/len(sampled)
+            assert bright>.12,(name,stage,'WebGL scene blank',round(bright,4))
             diag=await page.evaluate('window.__galaxySkeletonDiagnostics')
             snapshots.append({'stage':stage,'time':diag['time'],'ikError':diag.get('ikError'),'pickupTargetError':diag.get('pickupTargetError'),'miniatures':diag.get('miniatures',{})})
             print(name,stage,'IK',diag.get('ikError'))
@@ -60,32 +82,68 @@ async def inspect(pw,url,name,width,height,reduced=False):
         if not reduced:
             intro=await capture('entrance',950)
             assert intro['atlasReveal']['phase']=='immersive' and intro['atlasReveal']['progress']==0, intro['atlasReveal']
+            assert len(intro.get('worldMotion',{}))==17,'Full-screen introduction must render all 17 planets'
+            for world_id,motion in intro['worldMotion'].items():
+                x,y=motion['screen']
+                assert 0<x<width and 0<y<height, ('Opening cropped an orbiting planet',name,world_id,motion['screen'])
             assert await page.locator('.guardian-journey.is-entering').count()==1
-            flight=await capture('flight',2200+2600*.12)
+            flight=await capture('approach',2200+4800*.20)
+            assert len(intro.get('worldMotion',{}))==17 and len(flight.get('worldMotion',{}))==17, 'All 17 planets must render in independently updated galaxy motion'
+            motionA=intro['worldMotion'];motionB=flight['worldMotion']
+            for i in range(17):
+                a=motionA[str(i)];b=motionB[str(i)]
+                delta=math.dist(a['position'],b['position'])
+                assert delta>.015,('Planet must visibly revolve around galaxy',i,delta)
+                assert b['spin']>a['spin'],('Planet must spin on its own axis',i)
+            rotationSpeeds=[(motionB[str(i)]['spin']-motionA[str(i)]['spin'])/(flight['time']-intro['time']) for i in range(17)]
+            assert len(set(round(v,6) for v in rotationSpeeds))>=5,'Planets need distinct axial spin speeds'
             first=flight['miniatures']['0']
-            assert first['sourceWorldIndex']==0 and first['visible'],first
-            assert math.dist(first['position'],first['atlasOrigin'])>.2,'Pickup must physically depart from original orbit'
-            energy=await capture('energy-pull',2200+2600*.24)
-            assert energy['miniatures']['0']['beamVisible'],'World extraction beam must be visible mid-transfer'
-            assert math.dist(energy['miniatures']['0']['position'],energy['miniatures']['0']['atlasOrigin'])>.5,'Energy beam should span actual orbital-to-hand travel'
-            pickup=await capture('pickup',2200+2600*.38)
+            assert first['sourceWorldIndex']==0 and not first['visible'],first
+            assert flight['approachTravel']>.0,'Skull must move towards the orbit while planet stays in place'
+            reach=await capture('upright-orbit-reach',2200+4800*.47)
+            assert reach['movementMode']=='upright-orbital-pluck',reach['movementMode']
+            assert reach['groundWalkWeight']<.001,'Collector must HOVER, not walk or bend while travelling'
+            assert reach['groundPickupWeight']<.001,'Ground pickup animation must NEVER play'
+            assert reach['torsoBendRadians']<.005,'Chest and waist must stay upright during the reach'
+            assert reach['pluckReachWeight']>.95,'Actual arm must be extended before contact'
+            assert not reach['palmContactInOrbit'],'Planet stays in moving galaxy until palm contact'
+            assert not reach['miniatures']['0']['visible'],'No duplicate floor or pre-contact sphere'
+            energy=await capture('orbital-contact-glow',2200+4800*.56)
+            assert energy['palmContactInOrbit'], 'The pluck occurs in space at palm contact'
+            assert energy['groundWalkWeight']<.001 and energy['groundPickupWeight']<.001
+            assert energy['torsoBendRadians']<.005,'No bowing while holding the planet'
+            assert math.dist(energy['miniatures']['0']['position'],energy['rightGrip'])<.002, 'Orbital planet must physically follow the real hand'
+            assert energy['miniatures']['0']['beamVisible'],'Short contact glint must be visible as the Skull takes the world'
+            assert energy['miniatures']['0']['attached'],'Orbital world should attach to real palm after contact'
+            pickup=await capture('pickup',2200+4800*.61)
             assert pickup['miniatures']['0']['attached']
             assert pickup['miniatures']['0']['contactError']<.001
             assert pickup['pickupTargetError']<.04,pickup['pickupTargetError']
-            deposit=await capture('deposit',2200+2600*.79)
+            deposit=await capture('deposit',2200+4800*.79)
             assert deposit['miniatures']['0']['stage']=='deposit'
             assert deposit['atlasReveal']['progress']==0,'Atlas must not move until first pickup is finished'
-            sweep=await capture('galaxy-shift',4800+1750/2)
+            sweep=await capture('galaxy-shift',7000+1750/2)
             assert .4<sweep['atlasReveal']['progress']<.6,'Galaxy must transition across screen after the first pickup'
             # All three independent real source clip cycles must be observed.
             for order in [1,2]:
-                ms=2200+(order+.38)*2600
+                ms=2200+(order+.61)*4800
                 await page.evaluate('(ms)=>window.__galaxyV6.seek(ms)',ms)
                 await page.wait_for_function('(ms)=>Math.abs(window.__galaxySkeletonDiagnostics.time-ms)<1',arg=ms)
-        diag=await capture('offering',11200)
+        diag=await capture('offering',18800)
         assert diag['atlasReveal']['progress']==1 and diag['atlasReveal']['phase']=='atlas',diag['atlasReveal']
         assert await page.locator('.guardian-journey.is-revealed').count()==1,'Show existing atlas UI after cinematic reveal'
         assert diag['clips']==95 and diag['bones']==41,diag
+        if os.environ.get('GALAXY_V6_ANATOMY')=='1':
+            assert diag.get('anatomyEnabled') and diag.get('anatomicalParts',0)>=280,\
+                ('New anatomical GLB must actually render in this browser run',diag.get('anatomicalParts'),diag.get('anatomyEnabled'))
+            assert 10<=diag.get('anatomicalClusters',0)<=16,diag.get('anatomicalClusters')
+            assert diag.get('spectralActive') and diag.get('articulatedArms'),('Only the floating anatomical rig with connected palms is accepted',diag)
+        assert diag.get('toyEyesHidden'),'Oversized KayKit toy eyes must stay hidden in the rendered Skull Master'
+        if diag.get('offeringCenter') and diag.get('waistPosition'):
+            # Both coordinates are world space. The globe may not sit inside
+            # the skeletal rib cage as it did in rejected visual QA images.
+            assert diag['waistPosition'][0]-diag['offeringCenter'][0]>.30,\
+                (name,'offered planet overlaps torso',diag['offeringCenter'],diag['waistPosition'])
         assert diag['hasArmIK'] and math.isfinite(diag['ikError']) and diag['ikError']<.18,diag.get('ikError')
         assert all(not m['visible'] for m in diag.get('miniatures',{}).values()),'Stored planets must be inside the bag'
         if not reduced:
@@ -125,7 +183,8 @@ async def inspect(pw,url,name,width,height,reduced=False):
             await page.get_by_role('button',name='Motion: off',exact=True).click()
         if not reduced:
             offered=await page.evaluate('window.__galaxySkeletonDiagnostics')
-            assert offered.get('offeredWorldIndex')==1 and offered.get('offeredHitPoint'),offered
+            assert offered.get('offeredWorldIndex')==1 and offered.get('offeredHitPoint') and offered.get('offeredDomTarget'),offered
+            assert await page.get_by_role('button',name='Explore offered planet: Prompt Engineering').is_visible(), 'Touch target must be visible at offered planet'
             hit=offered['offeredHitPoint']
             assert 0<hit[0]<width and 0<hit[1]<height,(name,hit)
             await page.mouse.click(hit[0],hit[1])

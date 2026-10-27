@@ -12,5 +12,5 @@ class PickupVisualPolish(unittest.TestCase):
   fx=(ROOT/'experience/src/effects/CollectionFX.jsx').read_text()
   self.assertIn('source.x+(end.x-source.x)*a',fx)
   self.assertIn("trail.current.visible=visible",fx)
-  self.assertIn('pick.t<.30',fx)
+  self.assertIn('pick.t<CONTACT',fx)
 if __name__=='__main__':unittest.main()

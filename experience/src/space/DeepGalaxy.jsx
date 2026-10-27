@@ -4,7 +4,7 @@ import {Html} from '@react-three/drei';
 import * as THREE from 'three';
 import {planetSurfaceTexture} from './PlanetSurface.js';
 import {atlasLayout} from './worldAnchors.js';
-import {orbitAt,planetSpinAt,planetHiddenFromAtlas,ORBIT_CENTER,ORBIT_Y_ASPECT} from './worldOrbit.js';
+import {orbitAt,planetSpinAt,planetTiltAt,planetHiddenFromAtlas,ORBIT_CENTER,ORBIT_Y_ASPECT} from './worldOrbit.js';
 import {overlapsGuardian} from './markerClearance.js';
 import {cinematicLayoutAt} from './cinematicLayout.js';
 import SpaceDepthFX from './SpaceDepthFX.jsx';
@@ -75,7 +75,7 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
  useFrame(state=>{
   const ms=clockRef.current.ms;
   if(orbit.current){
-   const p=orbitAt(world,ms);orbit.current.position.set(p.x,p.y,p.z);
+   const p=orbitAt(world,ms,reducedMotion);orbit.current.position.set(p.x,p.y,p.z);
    // Drei Html elements render on top of WebGL, so use projected bounding
    // coordinates to prevent labels painting over the skull or its dark hood.
    const pos=orbit.current.localToWorld(projection.current.set(0,-world.scale-.085,0)).project(state.camera);
@@ -85,7 +85,19 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
    if(titleMarker.current)titleMarker.current.style.visibility=hidden?'hidden':'visible';
   }
   const transferred=planetHiddenFromAtlas(ms,collectionOrder,reducedMotion);
-  if(group.current){group.current.rotation.y=planetSpinAt(world.index,ms,reducedMotion);group.current.visible=!transferred}
+  if(group.current){
+   const tilt=planetTiltAt(world.index);
+   group.current.rotation.set(tilt.x,planetSpinAt(world.index,ms,reducedMotion),tilt.z,'YXZ');
+   group.current.visible=!transferred;
+  }
+  if(window.__galaxySkeletonDiagnostics){
+   const d=window.__galaxySkeletonDiagnostics;
+   d.worldMotion??={};
+   const ndc=orbit.current.localToWorld(projection.current.set(0,0,0)).project(state.camera);
+   d.worldMotion[world.index]={position:[orbit.current.position.x,orbit.current.position.y,orbit.current.position.z],
+    screen:[(1+ndc.x)*state.size.width/2,(1-ndc.y)*state.size.height/2],
+    spin:planetSpinAt(world.index,ms,reducedMotion),visible:!transferred};
+  }
   if(halo.current)halo.current.visible=!transferred;
   if(ring.current)ring.current.visible=!transferred;
   if(collectedBeacon.current)collectedBeacon.current.visible=transferred;
@@ -126,16 +138,37 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
   </Html>}
  </group>;
 }
-function Observatory({compact,short}){
+function Observatory({compact,short,rigPoseRef}){
+ const platform=useRef();
+ useFrame(()=>{
+  const pose=rigPoseRef?.current;
+  if(!pose?.bodyPosition||!platform.current)return;
+  // No solid game-platform chasing a flying skeleton through space. A faint
+  // floor sigil appears only at the final lesson handoff to visually ground it.
+  platform.current.visible=pose.phase==='offering';
+  platform.current.position.copy(pose.bodyPosition);
+  platform.current.position.y-=.035;
+  platform.current.scale.setScalar(pose.scale*.82);
+ },-1);
  const x=compact?-.48:-2.05,y=guardianFloorY(compact,short)-.01,scale=guardianStageScale(compact,short);
- return <group position={[x,y,3.2]} scale={scale}>
-  <mesh rotation={[-Math.PI/2,0,0]}><circleGeometry args={[1.4,64]}/><meshStandardMaterial color="#152139" metalness={.5} roughness={.7} transparent opacity={.8}/></mesh>
-  <mesh rotation={[-Math.PI/2,0,0]} position={[0,.005,0]}><ringGeometry args={[1.35,1.365,80]}/><meshBasicMaterial color="#8bb2c9" transparent opacity={.4}/></mesh>
-  <mesh rotation={[-Math.PI/2,0,0]} position={[0,.009,0]} scale={[1,.65,1]}><circleGeometry args={[.72,48]}/><meshBasicMaterial color="#010510" transparent opacity={.52}/></mesh>
-  <mesh position={[-.68,.02,.72]} rotation={[-Math.PI/2,0,0]}><ringGeometry args={[.20,.215,40]}/><meshBasicMaterial color="#e5c68a" transparent opacity={.7}/></mesh>
+ return <group ref={platform} position={[x,y,3.2]} scale={scale} visible={false}>
+  <mesh rotation={[-Math.PI/2,0,0]}>
+   <ringGeometry args={[.76,.775,96]}/>
+   <meshBasicMaterial color="#9c83ae" transparent opacity={.24} depthWrite={false} side={THREE.DoubleSide}/>
+  </mesh>
+  <mesh rotation={[-Math.PI/2,0,0]} position={[0,.007,0]}>
+   <ringGeometry args={[.55,.56,96]}/>
+   <meshBasicMaterial color="#baa277" transparent opacity={.13} depthWrite={false} side={THREE.DoubleSide}/>
+  </mesh>
+  {[0,1,2,3,4,5].map(i=><mesh key={i}
+    rotation={[-Math.PI/2,0,i*Math.PI/3]}
+    position={[Math.cos(i*Math.PI/3)*.77,.012,Math.sin(i*Math.PI/3)*.77]}>
+   <planeGeometry args={[.12,.016]}/>
+   <meshBasicMaterial color="#dab88b" transparent opacity={.38} side={THREE.DoubleSide} depthWrite={false}/>
+  </mesh>)}
  </group>;
 }
-export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=null,onSelect,reducedMotion=false,clockRef}){
+export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=null,onSelect,reducedMotion=false,clockRef,rigPoseRef}){
  const {size,camera}=useThree();const lowPower=size.width<700,short=size.height<780;
  const atlasRoot=useRef();
  const set=new Set(masteredWorlds.map(x=>typeof x==='number'?x:x?.index).filter(Number.isInteger));
@@ -162,7 +195,7 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
   <NebulaCloud reducedMotion={reducedMotion} clockRef={clockRef}/>
   <SpaceDepthFX compact={lowPower} clockRef={clockRef} reducedMotion={reducedMotion}/>
   <Starfield lowPower={lowPower}/>
-  <Observatory compact={lowPower} short={short}/>
+  <Observatory compact={lowPower} short={short} rigPoseRef={rigPoseRef}/>
   <group ref={atlasRoot} position={startingLayout.position} scale={startingLayout.scale}>
    <OrbitLanes/>
    {layoutWorlds().map(world=><Planet key={world.index} world={world} mastered={set.has(world.index)} collectionOrder={masteredWorlds.findIndex(w=>(typeof w==='number'?w:w.index)===world.index)}

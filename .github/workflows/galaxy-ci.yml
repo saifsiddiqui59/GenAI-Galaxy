@@ -3,7 +3,7 @@ on:
   pull_request:
     branches: [main, 'feat/**'] # Supports reviewed stacked PRs before retargeting.
   push:
-    branches: [main, 'feat/**', 'fix/**', 'chore/**']
+    branches: [main, 'feat/**', '!feat/v6-p234-orbit-approach-bare-skull-messenger-satchel', 'fix/**', 'chore/**']
   workflow_dispatch:
 permissions:
   contents: read
@@ -13,6 +13,9 @@ concurrency:
 jobs:
   curriculum-and-api:
     runs-on: ubuntu-24.04
+    env:
+      GALAXY_V6_ANATOMY: ${{ (github.head_ref == 'feat/v6-p234-orbit-approach-bare-skull-messenger-satchel' || github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel') && '1' || '0' }}
+      VITE_GALAXY_ANATOMY: ${{ (github.head_ref == 'feat/v6-p234-orbit-approach-bare-skull-messenger-satchel' || github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel') && '1' || '0' }}
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
@@ -51,6 +54,18 @@ jobs:
           path: experience/dist/
           retention-days: 7
           if-no-files-found: error
+      - name: Inspect alternative CC0 anatomical GLB (isolated PR research, no app code)
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel'
+        continue-on-error: true
+        run: python scripts/v6/inspect_cc0_candidate.py
+      - name: Preserve CC0 model topology report
+        if: github.event_name == 'push' && github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel'
+        uses: actions/upload-artifact@v4
+        with:
+          name: galaxy-v6-cc0-anatomy-research
+          path: artifacts/v6-cc0-anatomy-research/
+          retention-days: 3
+          if-no-files-found: ignore
       - name: Verify server-owned rubrics are reproducible
         run: |
           python scripts/build_api_rubrics.py
@@ -61,13 +76,16 @@ jobs:
           git diff --exit-code -- docs/TOPIC_COVERAGE.csv docs/COVERAGE_REPORT.md
   browser-smoke:
     runs-on: ubuntu-24.04
+    env:
+      GALAXY_V6_ANATOMY: ${{ (github.head_ref == 'feat/v6-p234-orbit-approach-bare-skull-messenger-satchel' || github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel') && '1' || '0' }}
+      VITE_GALAXY_ANATOMY: ${{ (github.head_ref == 'feat/v6-p234-orbit-approach-bare-skull-messenger-satchel' || github.ref == 'refs/heads/feat/v6-p234-orbit-approach-bare-skull-messenger-satchel') && '1' || '0' }}
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python -m pip install playwright==1.57.0
+      - run: python -m pip install playwright==1.57.0 Pillow==11.3.0
       # Ubuntu 24.04 hosted runners include browser shared libraries; avoid repeated
       # apt package setup, which can stall even when the actual browser tests pass.
       - run: python -m playwright install chromium

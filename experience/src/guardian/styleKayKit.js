@@ -1,5 +1,4 @@
-import {addSkullMasterDetail} from './skullMasterDetail.js';
-import {attachSkullMasterCloak} from './skullMasterMantle.js';
+import {attachBareSkullTorso,BARE_SKULL_PROFILE} from './bareSkull.js';
 /* Non-destructive visual style over the preserved, rigged CC0 KayKit asset.
  * Recolors only saturated red/magenta costume texels; preserves bones, UVs,
  * geometry, 95 original animation clips and original texture provenance.
@@ -7,8 +6,8 @@ import {attachSkullMasterCloak} from './skullMasterMantle.js';
 export const STYLE_PROFILE='skullmaster-midnight-violet';
 // Reduce white toy-like shoes, gauntlets and plastic torso highlights.
 export function kitMeshTint(name){
- if(/^Skeleton_Mage_(ArmLeft|ArmRight|LegLeft|LegRight)$/.test(name))return '#7b899f';
- if(name==='Skeleton_Mage_Body')return '#7a6888';
+ if(/^Skeleton_Mage_(ArmLeft|ArmRight|LegLeft|LegRight)$/.test(name))return '#293241';
+ if(name==='Skeleton_Mage_Body')return '#52616d';
  return null;
 }
 export function isCostumeRed(r,g,b){return r>65&&r>g*1.35&&r>b*1.18&&r-g>36}
@@ -46,7 +45,7 @@ export function createStyledAtlas(original,THREE){
  map.generateMipmaps=original.generateMipmaps;map.needsUpdate=true;
  return map;
 }
-export function styleKayKit(source,THREE){
+export function styleKayKit(source,THREE,{anatomical=false}={}){
  const mats=[];source.traverse(n=>{if(n.isMesh&&n.material)mats.push(n.material)});
  const map=mats.find(m=>m.name!=='Glow'&&m.map)?.map;
  const styled=createStyledAtlas(map,THREE);
@@ -55,7 +54,7 @@ export function styleKayKit(source,THREE){
   n.material=n.material.clone();
   if(n.material.name==='Glow'){
    n.material.color.set('#ff8f2c');n.material.emissive.set('#f15c0f');
-   n.material.emissiveIntensity=2.65;n.material.toneMapped=false;
+   n.material.emissiveIntensity=1.85;n.material.toneMapped=false;
   }else{
    if(styled)n.material.map=styled;
    // Direct per-mesh tint: cooler sculpted skull, without recoloring the glowing eyes.
@@ -64,10 +63,16 @@ export function styleKayKit(source,THREE){
    n.material.roughness=.9;n.material.metalness=.02;
   }
  });
- const disposeMantle=attachSkullMasterCloak(source,THREE);
- const disposeDetail=addSkullMasterDetail(source,THREE);
- const head=source.getObjectByName('head');
- const eyeLight=head?new THREE.PointLight('#ff8e30',.32,1.5):null;
- if(eyeLight){eyeLight.name='GalaxyEyeGlow';eyeLight.position.set(0,.12,.28);head.add(eyeLight)}
- return ()=>{disposeDetail();disposeMantle();if(eyeLight){head.remove(eyeLight);eyeLight.dispose?.()}styled?.dispose();};
+ // Hide the same original KayKit clothing in both cases. Only the
+ // experimental real CC0 anatomical body skips the fake pipe-shaped bones.
+ const hidden=anatomical?BARE_SKULL_PROFILE.hiddenMeshes
+  .map(name=>source.getObjectByName(name)).filter(Boolean):[];
+ const previous=hidden.map(node=>node.visible);
+ if(anatomical)hidden.forEach(node=>{node.visible=false});
+ const disposeBareTorso=anatomical?()=>{}:attachBareSkullTorso(source,THREE);
+ return ()=>{
+  disposeBareTorso();
+  hidden.forEach((node,i)=>{node.visible=previous[i]});
+  styled?.dispose();
+ };
 }
