@@ -82,6 +82,8 @@ async def inspect(pw,url,name,width,height,reduced=False):
         if not reduced:
             intro=await capture('entrance',950)
             assert intro['atlasReveal']['phase']=='immersive' and intro['atlasReveal']['progress']==0, intro['atlasReveal']
+            assert intro['movementMode']=='upright-hover' and intro['torsoBendRadians']<.005,'Skull must never bend during entrance'
+            assert intro['groundWalkWeight']<.001 and intro['groundPickupWeight']<.001, 'No walking or floor pickup at any point'
             assert len(intro.get('worldMotion',{}))==17,'Full-screen introduction must render all 17 planets'
             for world_id,motion in intro['worldMotion'].items():
                 x,y=motion['screen']
@@ -121,17 +123,19 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert pickup['pickupTargetError']<.04,pickup['pickupTargetError']
             deposit=await capture('deposit',2200+4800*.79)
             assert deposit['miniatures']['0']['stage']=='deposit'
-            assert deposit['atlasReveal']['progress']==0,'Atlas must not move until first pickup is finished'
-            sweep=await capture('galaxy-shift',7000+1750/2)
-            assert .4<sweep['atlasReveal']['progress']<.6,'Galaxy must transition across screen after the first pickup'
+            assert deposit['atlasReveal']['progress']==0,'Galaxy must never shrink or move to the right'
+            sweep=await capture('galaxy-stays-fullscreen',7000+1750/2)
+            for snap in (flight,reach,energy,deposit,sweep):
+                assert snap['atlasReveal']['progress']==0 and snap['atlasReveal']['phase']=='immersive', 'Galaxy must NEVER become right-side atlas'
+                assert math.dist(snap['atlasReveal']['position'],intro['atlasReveal']['position'])<.001, 'Galaxy parent must remain fixed fullscreen'
             # All three independent real source clip cycles must be observed.
             for order in [1,2]:
                 ms=2200+(order+.61)*4800
                 await page.evaluate('(ms)=>window.__galaxyV6.seek(ms)',ms)
                 await page.wait_for_function('(ms)=>Math.abs(window.__galaxySkeletonDiagnostics.time-ms)<1',arg=ms)
         diag=await capture('offering',18800)
-        assert diag['atlasReveal']['progress']==1 and diag['atlasReveal']['phase']=='atlas',diag['atlasReveal']
-        assert await page.locator('.guardian-journey.is-revealed').count()==1,'Show existing atlas UI after cinematic reveal'
+        assert diag['atlasReveal']['progress']==0 and diag['atlasReveal']['phase']=='immersive', 'Fullscreen orbit must persist after collecting'
+        assert await page.locator('.guardian-journey.is-revealed').count()==1,'Show lesson controls without shrinking galaxy'
         assert diag['clips']==95 and diag['bones']==41,diag
         if os.environ.get('GALAXY_V6_ANATOMY')=='1':
             assert diag.get('anatomyEnabled') and diag.get('anatomicalParts',0)>=280,\
@@ -145,6 +149,7 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert diag['waistPosition'][0]-diag['offeringCenter'][0]>.30,\
                 (name,'offered planet overlaps torso',diag['offeringCenter'],diag['waistPosition'])
         assert diag['hasArmIK'] and math.isfinite(diag['ikError']) and diag['ikError']<.18,diag.get('ikError')
+        assert diag['torsoBendRadians']<.005,'Skull must be upright when presenting planet'
         assert all(not m['visible'] for m in diag.get('miniatures',{}).values()),'Stored planets must be inside the bag'
         if not reduced:
             assert [p['index'] for p in diag['pickupLog']][-3:]==[0,1,2],diag['pickupLog']

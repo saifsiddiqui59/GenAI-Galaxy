@@ -1,5 +1,5 @@
 /* All 17 curriculum planets stay in ONE revolving galaxy.
- * Geometry is a shared elliptical orbit with small per-world periodic phase
+ * Geometry is a shared circular orbit with small per-world periodic phase
  * changes: visually independent speeds, but no orbital overtaking/collisions.
  * Original atlas anchors, IDs and owner progress never change.
  * The same pure clock is used by rendered worlds, reach IK, and detached orbs.
@@ -14,7 +14,7 @@ export const ORBIT_PERIOD_MS=70000;
 export const ORBIT_PHASE_AMPLITUDE=.014;
 export const PLANET_SPIN_PERIOD_MS=24000;
 export const ORBIT_CENTER=Object.freeze({x:4.48,y:.10});
-export const ORBIT_Y_ASPECT=.76;
+export const ORBIT_Y_ASPECT=1.0;
 const TAU=Math.PI*2;
 const safeTime=(ms,reducedMotion=false)=>reducedMotion?0:Math.max(0,Number.isFinite(ms)?ms:0);
 

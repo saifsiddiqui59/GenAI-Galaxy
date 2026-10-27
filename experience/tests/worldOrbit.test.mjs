@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {CONTACT,PER_WORLD_MS} from '../src/journey/choreography.js';
 import {atlasLayout} from '../src/space/worldAnchors.js';
-import {galaxySpaceAt,orbitAt,launchAt,flightProgress,planetHiddenFromAtlas,ORBIT_PERIOD_MS,PLANET_SPIN_PERIOD_MS,planetSpinAt,planetSpinPeriodAt,planetTiltAt,orbitAngleAt} from '../src/space/worldOrbit.js';
+import {galaxySpaceAt,orbitAt,launchAt,flightProgress,planetHiddenFromAtlas,ORBIT_PERIOD_MS,PLANET_SPIN_PERIOD_MS,planetSpinAt,planetSpinPeriodAt,planetTiltAt,orbitAngleAt,ORBIT_Y_ASPECT} from '../src/space/worldOrbit.js';
 test('all 17 original worlds orbit deterministically without swapping indexes',()=>{
  const worlds=atlasLayout();assert.equal(worlds.length,17);
  for(const [index,world] of worlds.entries()){
@@ -28,11 +28,11 @@ test('original planet is transferred exactly once at its collection start',()=>{
  assert.equal(flightProgress(.30),1);
 });
 
-test('all 17 worlds complete a continuous elliptical 360° revolution',()=>{
+test('all 17 worlds complete a continuous CIRCULAR 360° revolution',()=>{
  const anchors=atlasLayout();
  for(const w of anchors){
   const start=orbitAt(w,0),quarter=orbitAt(w,ORBIT_PERIOD_MS/4),half=orbitAt(w,ORBIT_PERIOD_MS/2),end=orbitAt(w,ORBIT_PERIOD_MS);
-  assert(Math.hypot(quarter.x-start.x,quarter.y-start.y)>.7,`no visible travel ${w.index}`);
+  assert(Math.hypot(quarter.x-start.x,quarter.y-start.y)>.5,`no visible travel ${w.index}`);
   assert(Math.hypot(half.x-start.x,half.y-start.y)>.5,`not orbiting ${w.index}`);
   assert(Math.hypot(end.x-start.x,end.y-start.y)<1e-9,`orbit did not close ${w.index}`);
  }
@@ -57,7 +57,7 @@ test('worlds visibly orbit during a short visit while each planet spins independ
  }
 });
 
-test('individual orbit velocities differ but all 17 close their trajectories without collisions',()=>{
+test('individual orbit velocities differ but all 17 close CIRCULAR paths without collisions',()=>{
  const worlds=atlasLayout();
  const speeds=worlds.map(w=>orbitAngleAt(w.index,140)-orbitAngleAt(w.index,0));
  assert(new Set(speeds.map(v=>v.toFixed(9))).size>=8,'different planets must have their own instantaneous orbit velocity');
@@ -79,6 +79,20 @@ test('individual orbit velocities differ but all 17 close their trajectories wit
    const a=ps[i],b=ps[j];
    assert(Math.hypot(a.x-b.x,a.y-b.y)>a.scale+b.scale+.12,
     `world collision: ${i}/${j}, t=${ms}`);
+  }
+ }
+});
+
+test('all 17 worlds orbit actual circles (not the previous vertical ellipse)',()=>{
+ assert.equal(ORBIT_Y_ASPECT,1);
+ const worlds=atlasLayout();
+ for(const w of worlds){
+  const center={x:4.48,y:.10};
+  const r=Math.hypot(w.x-center.x,w.y-center.y);
+  for(let ms=0;ms<=ORBIT_PERIOD_MS;ms+=250){
+   const p=orbitAt(w,ms);
+   const currentRadius=Math.hypot(p.x-center.x,p.y-center.y);
+   assert(Math.abs(currentRadius-r)<1e-9,`noncircular radius at ${ms} for world ${w.index}`);
   }
  }
 });

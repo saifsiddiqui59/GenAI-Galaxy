@@ -10,8 +10,8 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
  const count=Math.min(MAX_COLLECTION_DISPLAY,completed.length);
  const view=useMemo(()=>phaseAt(skipped?99999:elapsed,count,reducedMotion),[skipped,elapsed,count,reducedMotion]);
  const stored=completed.slice(0,view.visible);
- const atlasSettled=cinematicLayoutAt(skipped?99999:elapsed,false,false,count,reducedMotion).progress>=.999;
- const stageRevealed=atlasSettled&&view.phase==='offering';
+ // Reveal lesson controls without shrinking or repositioning the galaxy.
+ const stageRevealed=view.phase==='offering';
  useEffect(()=>{setElapsed(0);setSkipped(false)},[nextIndex,count,reducedMotion]);
  useEffect(()=>{setElapsed(0);setSkipped(false)},[replaySignal]);
  useEffect(()=>{
@@ -40,7 +40,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
           <button type="button" onClick={()=>onSelectCompleted?.(w.index)}>
             <span aria-hidden="true" className="guardian-gem">✧</span>{w.name}
           </button>
-        </li>)}</ul>:<p>No planets stored yet. The Skull Master approaches each mastered world in orbit and collects it before the atlas moves aside.</p>}
+        </li>)}</ul>:<p>No planets stored yet. The Skull Master flies toward each mastered world and plucks it from the constantly orbiting full-screen galaxy.</p>}
       </div>}
     </div>
     <div className="guardian-next">
