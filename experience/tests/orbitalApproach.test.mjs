@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {guardianApproachAt,orbitContactAt} from '../src/journey/orbitalApproach.js';
 import {COLLECT_START_MS,PER_WORLD_MS,CONTACT,OFFER_SETTLE_MS,entranceAt} from '../src/journey/choreography.js';
 import {guardianFloorY,guardianStageScale} from '../src/guardian/guardianFraming.js';
+import {galaxySpaceAt} from '../src/space/worldOrbit.js';
 const selected=[0,2,4],grip={x:.32,y:1.60,z:.24};
 const near=(a,b)=>assert(Math.abs(a-b)<1e-8,`expected ${a} ~ ${b}`);
 test('Skull Master walks/glides to each real orbit position before grasp',()=>{
@@ -54,4 +55,23 @@ test('Reduced motion never triggers orbit chasing',()=>{
  const p=guardianApproachAt(COLLECT_START_MS+PER_WORLD_MS,selected,grip,true,true,true);
  assert.equal(p.orbitalTarget,null);
  near(p.x,entranceAt(COLLECT_START_MS,true).x);
+});
+
+test('collector follows real, moving planetary orbit each approach frame, with no hand target freeze',()=>{
+ for(const compact of [false,true])for(const short of [false,true]){
+  for(let order=0;order<selected.length;order++){
+   const start=COLLECT_START_MS+order*PER_WORLD_MS;
+   const targetSamples=[];
+   for(const stage of [.29,.37,.44,.49,CONTACT]){
+    const ms=start+stage*PER_WORLD_MS;
+    const pose=guardianApproachAt(ms,selected,grip,compact,short);
+    const moving=galaxySpaceAt(selected[order],ms,compact,short,selected.length);
+    assert(pose.orbitalTarget,'real orbit target must exist for IK');
+    for(const axis of ['x','y','z'])near(pose.orbitalTarget[axis],moving[axis]);
+    assert.equal(pose.walkWeight,0,'collector must hover upright, never walk to the planet');
+    targetSamples.push([moving.x,moving.y,moving.z]);
+   }
+   assert(targetSamples.some(p=>Math.hypot(...p.map((a,i)=>a-targetSamples[0][i]))>.025),'the targeted planet really moves while the hand tracks it');
+  }
+ }
 });
