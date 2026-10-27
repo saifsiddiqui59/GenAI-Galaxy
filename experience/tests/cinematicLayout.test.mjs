@@ -42,11 +42,11 @@ test('mobile has immersive then right-aligned view; reduced motion skips motion'
  assert.equal(cinematicLayoutAt(0,true,true,3,true).progress,1);
 });
 
-test('final art direction caps full-screen planet scale to preserve Skull Master silhouette',()=>{
+test('opening constellation fits complete orbit on desktop and portrait without stretching planets',()=>{
  const desktop=cinematicLayoutAt(0,false,false,3);
  const phone=cinematicLayoutAt(0,true,true,3);
- assert(desktop.scale[0]>=2&&desktop.scale[0]<=2.6);
- assert(phone.scale[0]>=1.3&&phone.scale[0]<=1.5);
+ assert(desktop.scale[0]>=1.7&&desktop.scale[0]<=2.1);
+ assert(phone.scale[0]>=.58&&phone.scale[0]<=.75);
  assert(desktop.scale.every(x=>x===desktop.scale[0]));
  assert(phone.scale.every(x=>x===phone.scale[0]));
 });
