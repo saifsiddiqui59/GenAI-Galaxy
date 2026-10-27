@@ -1,24 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {ATLAS_REVEAL_MS,atlasRevealStart,cinematicLayoutAt} from '../src/space/cinematicLayout.js';
-import {PER_WORLD_MS} from '../src/journey/choreography.js';
+import {cinematicLayoutAt} from '../src/space/cinematicLayout.js';
 import {atlasLayout} from '../src/space/worldAnchors.js';
 import {galaxySpaceAt,launchAt,orbitAt} from '../src/space/worldOrbit.js';
-test('the galaxy opens full-screen and shifts right only after first collected planet',()=>{
- assert.equal(atlasRevealStart(3),launchAt(0)+PER_WORLD_MS);
- assert.equal(atlasRevealStart(0),launchAt(0));
- const before=cinematicLayoutAt(1000,false,false,3);
- const firstContact=cinematicLayoutAt(launchAt(0)+1900,false,false,3);
- const middle=cinematicLayoutAt(atlasRevealStart(3)+ATLAS_REVEAL_MS/2,false,false,3);
- const end=cinematicLayoutAt(12000,false,false,3);
- assert.equal(before.phase,'immersive');
- assert.equal(firstContact.progress,0,'Keep galaxy full-screen until first planet deposited');
- assert(middle.progress>.4&&middle.progress<.6);
- assert.equal(end.phase,'atlas');
- assert(before.position[0]<-7 && end.position[0]===0);
- assert(before.scale[0]>end.scale[0]);
+
+test('the full-screen galaxy NEVER moves right or shrinks after any planet pickup',()=>{
+ for(const compact of [false,true])for(const short of [false,true]){
+  const original=cinematicLayoutAt(0,compact,short,3);
+  for(const collected of [0,1,3,17])for(const ms of [0,950,4600,7000,8000,9000,18800,90000]){
+   const current=cinematicLayoutAt(ms,compact,short,collected);
+   assert.deepEqual(current.position,original.position,'galaxy must remain centered throughout the journey');
+   assert.deepEqual(current.scale,original.scale,'every planet stays at the same fullscreen scale');
+   assert.equal(current.progress,0,'no post-collection atlas-shrink transition');
+   assert.equal(current.phase,'immersive');
+   assert(current.scale.every(v=>v===current.scale[0]),'planet spheres stay spherical');
+  }
+ }
 });
-test('pickup origin uses identical scene-space parent during all cinematic stages',()=>{
+
+test('all actual orbital planets share the same unmoving parent at contact',()=>{
  for(const compact of [false,true])for(const short of [false,true])for(const completed of [1,3,17]){
   const worlds=atlasLayout();
   for(const order of [0,Math.min(1,completed-1),completed-1]){
@@ -31,22 +31,15 @@ test('pickup origin uses identical scene-space parent during all cinematic stage
   }
  }
 });
-test('mobile has immersive then right-aligned view; reduced motion skips motion',()=>{
- const mobile=cinematicLayoutAt(0,true,true,3);
- const finished=cinematicLayoutAt(12000,true,true,3);
- assert(mobile.position[0]<finished.position[0]);
- assert.equal(finished.position[0],-.70);
- assert(finished.position[1]>=2.0,'mobile atlas should stay above character');
- assert(finished.scale.every(x=>x===finished.scale[0]),'mobile planets must stay spherical');
- assert.equal(cinematicLayoutAt(0,false,false,3,true).progress,1);
- assert.equal(cinematicLayoutAt(0,true,true,3,true).progress,1);
-});
 
-test('opening constellation fits complete orbit on desktop and portrait without stretching planets',()=>{
+test('desktop and phone remain balanced full-screen even in reduced-motion',()=>{
  const desktop=cinematicLayoutAt(0,false,false,3);
  const phone=cinematicLayoutAt(0,true,true,3);
  assert(desktop.scale[0]>=1.7&&desktop.scale[0]<=2.1);
  assert(phone.scale[0]>=.58&&phone.scale[0]<=.75);
- assert(desktop.scale.every(x=>x===desktop.scale[0]));
- assert(phone.scale.every(x=>x===phone.scale[0]));
+ assert(Math.abs(desktop.position[0]+4.48*desktop.scale[0])<.05);
+ assert(Math.abs(phone.position[0]+4.48*phone.scale[0])<.05);
+ for(const compact of [false,true]){
+  assert.deepEqual(cinematicLayoutAt(0,compact,true,3,true),cinematicLayoutAt(99000,compact,true,3,true));
+ }
 });
