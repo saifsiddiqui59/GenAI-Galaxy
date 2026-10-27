@@ -14,8 +14,10 @@ export function cinematicLayoutAt(ms,compact=false,short=false,completedCount=0,
  // circular constellation to FIT the narrow viewport; it still fills the
  // height and space background rather than drifting into the upper right.
  const pose=compact?
-   {position:[-3.05,short?.48:.62,-1.5],scale:[.68,.68,.68]}:
-   {position:[-8.30,0,1.2],scale:[1.85,1.85,1.85]};
+   (short?
+    {position:[-3.674,.48,-1.5],scale:[.82,.82,.82]}:
+    {position:[-4.032,.62,-1.5],scale:[.90,.90,.90]}):
+   {position:[-9.856,0,1.2],scale:[2.20,2.20,2.20]};
  return {progress:0,phase:'immersive',
   position:[...pose.position],scale:[...pose.scale]};
 }
