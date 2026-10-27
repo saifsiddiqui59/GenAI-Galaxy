@@ -4,6 +4,7 @@ set -euo pipefail
 : "${GALAXY_STAGE:?Specify temporary stage directory}"
 [[ -d "$GALAXY_SOURCE_ROOT/experience/dist" ]] || { echo 'Missing built Vite experience' >&2; exit 2; }
 mkdir -p "$GALAXY_STAGE/lesson/data" "$GALAXY_STAGE/lesson/speech"
+mkdir -p "$GALAXY_STAGE/lesson/features"
 cp -a "$GALAXY_SOURCE_ROOT/experience/dist/." "$GALAXY_STAGE/"
 for file in index.html styles.css app.js runtime-config.js; do
   install -m 0644 "$GALAXY_SOURCE_ROOT/$file" "$GALAXY_STAGE/lesson/$file"
@@ -12,6 +13,9 @@ for file in curriculum.json lessons.json; do
   install -m 0644 "$GALAXY_SOURCE_ROOT/data/$file" "$GALAXY_STAGE/lesson/data/$file"
 done
 install -m 0644 "$GALAXY_SOURCE_ROOT/speech/azure-speech-adapter.js" "$GALAXY_STAGE/lesson/speech/azure-speech-adapter.js"
+for file in conversation-coach.js private-study-plan.js speaking-metrics.js session-reports.js; do
+  install -m 0644 "$GALAXY_SOURCE_ROOT/features/$file" "$GALAXY_STAGE/lesson/features/$file"
+done
 python3 - "$GALAXY_STAGE" <<'PY'
 from pathlib import Path
 import sys
