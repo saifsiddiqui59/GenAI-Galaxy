@@ -45,6 +45,11 @@ export function guardianApproachAt(ms,indexes=[],gripLocal={x:0,y:1.4,z:.3},comp
  return {x:from.x+(now.x-from.x)*u,
    y:from.y+(now.y-from.y)*u,
    z:from.z+(now.z-from.z)*u,
-   scale,walkWeight:t<CONTACT?1-u*.35:0,travel:u,
-   worldIndex:safe[order],orbitalTarget:now.world};
+   scale,walkWeight:0,travel:u,
+   worldIndex:safe[order],
+   // Character travels to the predicted future contact point, but its hand
+   // continuously tracks the planet's CURRENT orbit during the final reach.
+   // These match exactly at t=CONTACT. No frozen target / teleport at grasp.
+   orbitalTarget:galaxySpaceAt(safe[order],ms,compact,short,safe.length,reduced),
+   contactTarget:now.world};
 }
