@@ -4,7 +4,7 @@ import {Html} from '@react-three/drei';
 import * as THREE from 'three';
 import {planetSurfaceTexture} from './PlanetSurface.js';
 import {atlasLayout} from './worldAnchors.js';
-import {orbitAt,planetSpinAt,planetHiddenFromAtlas,ORBIT_CENTER,ORBIT_Y_ASPECT} from './worldOrbit.js';
+import {orbitAt,planetSpinAt,planetTiltAt,planetHiddenFromAtlas,ORBIT_CENTER,ORBIT_Y_ASPECT} from './worldOrbit.js';
 import {overlapsGuardian} from './markerClearance.js';
 import {cinematicLayoutAt} from './cinematicLayout.js';
 import SpaceDepthFX from './SpaceDepthFX.jsx';
@@ -75,7 +75,7 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
  useFrame(state=>{
   const ms=clockRef.current.ms;
   if(orbit.current){
-   const p=orbitAt(world,ms);orbit.current.position.set(p.x,p.y,p.z);
+   const p=orbitAt(world,ms,reducedMotion);orbit.current.position.set(p.x,p.y,p.z);
    // Drei Html elements render on top of WebGL, so use projected bounding
    // coordinates to prevent labels painting over the skull or its dark hood.
    const pos=orbit.current.localToWorld(projection.current.set(0,-world.scale-.085,0)).project(state.camera);
@@ -85,7 +85,17 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
    if(titleMarker.current)titleMarker.current.style.visibility=hidden?'hidden':'visible';
   }
   const transferred=planetHiddenFromAtlas(ms,collectionOrder,reducedMotion);
-  if(group.current){group.current.rotation.y=planetSpinAt(world.index,ms,reducedMotion);group.current.visible=!transferred}
+  if(group.current){
+   const tilt=planetTiltAt(world.index);
+   group.current.rotation.set(tilt.x,planetSpinAt(world.index,ms,reducedMotion),tilt.z,'YXZ');
+   group.current.visible=!transferred;
+  }
+  if(window.__galaxySkeletonDiagnostics){
+   const d=window.__galaxySkeletonDiagnostics;
+   d.worldMotion??={};
+   d.worldMotion[world.index]={position:[orbit.current.position.x,orbit.current.position.y,orbit.current.position.z],
+    spin:planetSpinAt(world.index,ms,reducedMotion),visible:!transferred};
+  }
   if(halo.current)halo.current.visible=!transferred;
   if(ring.current)ring.current.visible=!transferred;
   if(collectedBeacon.current)collectedBeacon.current.visible=transferred;
