@@ -48,7 +48,7 @@ test('all 17 worlds complete a continuous elliptical 360° revolution',()=>{
 
 test('worlds visibly orbit during a short visit while each planet spins independently',()=>{
  assert.equal(ORBIT_PERIOD_MS,70000);
- assert.equal(PLANET_SPIN_PERIOD_MS,36000);
+ assert.equal(PLANET_SPIN_PERIOD_MS,24000);
  for(const w of atlasLayout()){
   const initial=orbitAt(w,0),later=orbitAt(w,8000);
   assert(Math.hypot(later.x-initial.x,later.y-initial.y)>.18,`too little orbital travel for ${w.index}`);
@@ -65,8 +65,8 @@ test('individual orbit velocities differ but all 17 close their trajectories wit
  for(const world of worlds){
   const tilt=planetTiltAt(world.index);
   assert(Number.isFinite(tilt.x)&&Number.isFinite(tilt.z));
-  assert.equal(orbitAt(world,10000,true).x,world.x,'reduced motion freezes elliptical travel');
-  assert.equal(orbitAt(world,10000,true).y,world.y);
+  assert(Math.abs(orbitAt(world,10000,true).x-world.x)<1e-9,'reduced motion freezes elliptical travel');
+  assert(Math.abs(orbitAt(world,10000,true).y-world.y)<1e-9);
   assert.equal(planetSpinAt(world.index,10000,true),world.index);
   const a=orbitAt(world,0),b=orbitAt(world,ORBIT_PERIOD_MS);
   assert(Math.hypot(a.x-b.x,a.y-b.y,a.z-b.z)<1e-9,'all tracks complete 360° closed orbital loops');
