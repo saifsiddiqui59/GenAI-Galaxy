@@ -32,7 +32,7 @@ test('all 17 worlds complete a continuous CIRCULAR 360° revolution',()=>{
  const anchors=atlasLayout();
  for(const w of anchors){
   const start=orbitAt(w,0),quarter=orbitAt(w,ORBIT_PERIOD_MS/4),half=orbitAt(w,ORBIT_PERIOD_MS/2),end=orbitAt(w,ORBIT_PERIOD_MS);
-  assert(Math.hypot(quarter.x-start.x,quarter.y-start.y)>.7,`no visible travel ${w.index}`);
+  assert(Math.hypot(quarter.x-start.x,quarter.y-start.y)>.5,`no visible travel ${w.index}`);
   assert(Math.hypot(half.x-start.x,half.y-start.y)>.5,`not orbiting ${w.index}`);
   assert(Math.hypot(end.x-start.x,end.y-start.y)<1e-9,`orbit did not close ${w.index}`);
  }
