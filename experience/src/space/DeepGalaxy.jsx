@@ -93,7 +93,9 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
   if(window.__galaxySkeletonDiagnostics){
    const d=window.__galaxySkeletonDiagnostics;
    d.worldMotion??={};
+   const ndc=orbit.current.localToWorld(projection.current.set(0,0,0)).project(state.camera);
    d.worldMotion[world.index]={position:[orbit.current.position.x,orbit.current.position.y,orbit.current.position.z],
+    screen:[(1+ndc.x)*state.size.width/2,(1-ndc.y)*state.size.height/2],
     spin:planetSpinAt(world.index,ms,reducedMotion),visible:!transferred};
   }
   if(halo.current)halo.current.visible=!transferred;
