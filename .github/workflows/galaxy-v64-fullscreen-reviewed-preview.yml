@@ -133,7 +133,7 @@ jobs:
           echo "$REF_SHA" > "$GITHUB_WORKSPACE/verification/source-sha.txt"
       - name: Install Chromium for actual hosted acceptance
         run: |
-          python -m pip install playwright==1.57.0
+          python -m pip install playwright==1.57.0 Pillow==11.3.0
           python -m playwright install chromium
       - name: Render actual hosted V6 desktop, mobile, short phone and reduced motion
         env:
