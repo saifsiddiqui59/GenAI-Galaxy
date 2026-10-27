@@ -19,7 +19,7 @@ const DETAIL_ASSET=import.meta.env.BASE_URL+SKULL_ASSET;
 const BODY_ASSET=import.meta.env.BASE_URL+(ANATOMY_MODE?ANATOMY_ASSET:SKULL_ASSET);
 const observed=()=>import.meta.env.DEV||new URLSearchParams(window.location.search).get('demo')==='1';
 export function chooseKayKitAnimation(phase,names=[]){
- const preferred=phase==='arriving'?'Walking_A':'Idle';
+ const preferred='Idle';
  return names.includes(preferred)?preferred:names.find(n=>/^Idle$/i.test(n))||names[0];
 }
 function armChain(hand){
@@ -118,6 +118,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   body.scale.setScalar(compactScale);
   const pickup=view.activeIndex>=0?pickupAt(ms,view.activeIndex):null;
   body.rotation.y=pickup?0:entrance.yaw;
+  body.rotation.x=0;body.rotation.z=0;
   Object.values(actions).forEach(a=>a.setEffectiveWeight(0));
   function sample(name,time,weight){const a=actions[name];if(!a)return;a.enabled=true;a.time=Math.max(0,Math.min(a.getClip().duration-.00001,time));a.setEffectiveWeight(weight)}
   if(!contactLocal.current&&rig.rightHand){
@@ -133,19 +134,19 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   body.position.set(approach.x,approach.y,approach.z);
   body.scale.setScalar(approach.scale);
   body.rotation.y=pickup?0:entrance.yaw;
+  body.rotation.x=0;body.rotation.z=0;
   const pluck=pickup?orbitalPluckPose(pickup.t):null;
-  // Walking_A and Interact have source keyframes that look like bending or
-  // ground pickup. They are NEVER rendered while visiting an orbital planet.
-  // Interact above is used once, invisibly, only to calibrate right-hand reach.
-  const walk=view.phase==='arriving'?entrance.walkWeight:0;
-  sample('Walking_A',((ms/1000)*.82)%1.0666667,Math.max(0,walk));
-  sample('Idle',view.phase==='collecting'?.14:(ms/1000)%1.0666667,Math.max(0,1-walk));
+  // No walking or ground-pick clips at ANY phase. The guardian travels by
+  // upright spectral hovering, then actual articulated right-hand IK plucks
+  // the orbiting globe. Source locomotion contained leg/torso bending poses.
+  const walk=0;
+  sample('Idle',.14,1);
   // Unlike useAnimations' independent delta, sample clips on the prop clock.
   // Weighted sampling replaces fadeIn/fadeOut without restarting PickUp at contact.
   mixer.update(0);
-  if(view.phase==='collecting'){
-   for(const {bone,rest} of uprightBones)bone.quaternion.copy(rest);
-  }
+  // Lock torso and legs throughout entrance, reach, return, and offering.
+  // No source animation can crouch, bow, kneel or bend the character.
+  for(const {bone,rest} of uprightBones)bone.quaternion.copy(rest);
   // Clip sampling controls all 95 animations; keep the skull/hood proportion aligned.
   const headBone=source.getObjectByName('head');
   if(headBone)headBone.scale.setScalar(SKULLMASTER_PROFILE.headScale);
@@ -200,10 +201,10 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     pickupTargetError:pickup&&grip?grip.distanceTo(palmTarget):null,staging:staging.toArray(),
     rightGrip:grip?.toArray(),waistPosition:hip.toArray(),bagMouth:mouth.toArray(),
     worldPosition:body.position.toArray(),orbitalContact:approach.orbitalTarget?[approach.orbitalTarget.x,approach.orbitalTarget.y,approach.orbitalTarget.z]:null,approachTravel:approach.travel,offeringCenter:offer.toArray(),
-    movementMode:view.phase==='collecting'?'upright-orbital-pluck':view.phase,
+    movementMode:view.phase==='collecting'?'upright-orbital-pluck':'upright-hover',
     groundWalkWeight:view.phase==='collecting'?actions['Walking_A']?.getEffectiveWeight()??0:walk,
     groundPickupWeight:actions['PickUp']?.getEffectiveWeight()??0,
-    torsoBendRadians:view.phase==='collecting'?uprightBones.reduce((m,{bone,rest})=>Math.max(m,bone.quaternion.angleTo(rest)),0):null,
+    torsoBendRadians:uprightBones.reduce((m,{bone,rest})=>Math.max(m,bone.quaternion.angleTo(rest)),0),
     pluckReachWeight:pluck?.reachWeight??0,
     palmContactInOrbit:!!pluck?.palmContact});
    const top=body.position.clone().add(new THREE.Vector3(0,3.6*scale,0)).project(state.camera);
