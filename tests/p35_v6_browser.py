@@ -82,6 +82,10 @@ async def inspect(pw,url,name,width,height,reduced=False):
         if not reduced:
             intro=await capture('entrance',950)
             assert intro['atlasReveal']['phase']=='immersive' and intro['atlasReveal']['progress']==0, intro['atlasReveal']
+            assert len(intro.get('worldMotion',{}))==17,'Full-screen introduction must render all 17 planets'
+            for world_id,motion in intro['worldMotion'].items():
+                x,y=motion['screen']
+                assert 0<x<width and 0<y<height, ('Opening cropped an orbiting planet',name,world_id,motion['screen'])
             assert await page.locator('.guardian-journey.is-entering').count()==1
             flight=await capture('approach',2200+4800*.20)
             assert len(intro.get('worldMotion',{}))==17 and len(flight.get('worldMotion',{}))==17, 'All 17 planets must render in independently updated galaxy motion'
