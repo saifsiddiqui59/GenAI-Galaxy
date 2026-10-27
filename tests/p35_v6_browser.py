@@ -84,6 +84,15 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert intro['atlasReveal']['phase']=='immersive' and intro['atlasReveal']['progress']==0, intro['atlasReveal']
             assert await page.locator('.guardian-journey.is-entering').count()==1
             flight=await capture('approach',2200+4800*.20)
+            assert len(intro.get('worldMotion',{}))==17 and len(flight.get('worldMotion',{}))==17, 'All 17 planets must render in independently updated galaxy motion'
+            motionA=intro['worldMotion'];motionB=flight['worldMotion']
+            for i in range(17):
+                a=motionA[str(i)];b=motionB[str(i)]
+                delta=math.dist(a['position'],b['position'])
+                assert delta>.015,('Planet must visibly revolve around galaxy',i,delta)
+                assert b['spin']>a['spin'],('Planet must spin on its own axis',i)
+            rotationSpeeds=[(motionB[str(i)]['spin']-motionA[str(i)]['spin'])/(flight['time']-intro['time']) for i in range(17)]
+            assert len(set(round(v,6) for v in rotationSpeeds))>=5,'Planets need distinct axial spin speeds'
             first=flight['miniatures']['0']
             assert first['sourceWorldIndex']==0 and not first['visible'],first
             assert flight['approachTravel']>.0,'Skull must move towards the orbit while planet stays in place'
