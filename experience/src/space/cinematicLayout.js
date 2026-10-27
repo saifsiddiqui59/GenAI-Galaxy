@@ -15,9 +15,12 @@ export function cinematicLayoutAt(ms,compact=false,short=false,completedCount=0,
  // the initial z-offset so spreading the orbit does not send it far from camera.
  // Give Skull Master breathing room in front of the constellation.
  // The large original opening was visually crowded despite being fullscreen.
+ // At full-screen entrance, compose the COMPLETE 17-world constellation.
+ // The old compact 1.45 zoom clipped planets on both phone edges, even before
+ // any camera motion. Keep a wide safe gutter for continuous orbital travel.
  const from=compact?
-  {position:[-6.45,short?.48:.82,-1.5],scale:[1.45,1.45,1.45]}:
-  {position:[-10.6,0,1.2],scale:[2.4,2.4,2.4]};
+  {position:[-3.05,short?.48:.62,-1.5],scale:[.68,.68,.68]}:
+  {position:[-8.30,0,1.2],scale:[1.85,1.85,1.85]};
  // Portrait: atlas floats to the upper right, leaving the walking Genie
  // legible on lower left while keeping each planet perfectly spherical.
  const to=compact?
