@@ -63,7 +63,7 @@ function OrbitLanes({compact}){
  useEffect(()=>()=>geometries.forEach(g=>g.dispose()),[geometries]);
  return <group position={[ORBIT_CENTER.x,ORBIT_CENTER.y,-3.65]}>
   {geometries.map((geo,i)=><lineLoop key={i} geometry={geo}>
-   <lineBasicMaterial color="#8aaecb" transparent opacity={.09+i*.012} depthWrite={false}/>
+   <lineBasicMaterial color={i%2?'#9d9acc':'#8baecf'} transparent opacity={.13+i*.013} depthWrite={false}/>
   </lineLoop>)}
  </group>;
 }
@@ -192,6 +192,7 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
   <directionalLight position={[3,2,-3]} color="#849fee" intensity={2.1}/>
   {/* Cooler, softer character fill creates recessed bone cavities and lets amber eyes lead. */}
   <pointLight position={[-2.6,.4,6.5]} color="#aaa0d1" intensity={8.5} distance={8.3}/>
+  <pointLight position={[4.6,2.4,-1.5]} color="#6a8ec9" intensity={5.5} distance={12}/>
   <NebulaCloud reducedMotion={reducedMotion} clockRef={clockRef}/>
   <SpaceDepthFX compact={lowPower} clockRef={clockRef} reducedMotion={reducedMotion}/>
   <Starfield lowPower={lowPower}/>

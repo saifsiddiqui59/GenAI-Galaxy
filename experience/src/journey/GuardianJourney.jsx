@@ -40,13 +40,13 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
           <button type="button" onClick={()=>onSelectCompleted?.(w.index)}>
             <span aria-hidden="true" className="guardian-gem">✧</span>{w.name}
           </button>
-        </li>)}</ul>:<p>No planets stored yet. Your Genie glides toward each mastered world and gathers it from the galaxy.</p>}
+        </li>)}</ul>:<p>No planets stored yet. Your Skull Master glides between the orbiting worlds and gathers what you have mastered.</p>}
       </div>}
     </div>
     <div className="guardian-next">
       <span className="guardian-label">YOUR NEXT DISCOVERY <span aria-hidden="true">/ {String(nextIndex+1).padStart(2,'0')}</span></span>
       <strong>{nextName||'World '+(nextIndex+1)}</strong>
-      <p>Click the glowing planet offered by the Genie, or choose Accept below.</p>
+      <p>Take the glowing knowledge planet offered by the Skull Master, or choose Accept below.</p>
       <button type="button" className="guardian-accept" onClick={()=>onAccept?.(nextIndex)}>
        Accept this planet <span aria-hidden="true">↗</span>
       </button>

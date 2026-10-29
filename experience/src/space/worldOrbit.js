@@ -15,7 +15,7 @@ export const ORBIT_PHASE_AMPLITUDE=.014;
 export const PLANET_SPIN_PERIOD_MS=24000;
 export const ORBIT_CENTER=Object.freeze({x:4.48,y:.10});
 export const ORBIT_Y_ASPECT=1.0;
-export const DESKTOP_ORBIT_SPREAD=1.12;
+export const DESKTOP_ORBIT_SPREAD=1.21;
 export const panoramicOrbitX=(x,compact=false)=>compact?x:ORBIT_CENTER.x+(x-ORBIT_CENTER.x)*DESKTOP_ORBIT_SPREAD;
 const TAU=Math.PI*2;
 const safeTime=(ms,reducedMotion=false)=>reducedMotion?0:Math.max(0,Number.isFinite(ms)?ms:0);
