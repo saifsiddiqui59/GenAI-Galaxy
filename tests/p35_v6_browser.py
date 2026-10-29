@@ -47,7 +47,8 @@ async def inspect(pw,url,name,width,height,reduced=False):
                 && e.querySelector('img')?.naturalWidth > 0;
             }""", timeout=20000)
             assert await page.locator('.galaxy-original-genie').count()==1
-            assert await page.locator('#galaxy-boot').count()==0,'Loading must clear when rig is ready'
+            await page.wait_for_selector('#galaxy-boot',state='detached',timeout=6000)
+            assert await page.locator('#galaxy-boot').count()==0,'Loading must clear after fade'
             assert 'Genie' in await page.locator('.galaxy-original-genie').get_attribute('aria-label')
 
         await page.wait_for_timeout(400)
