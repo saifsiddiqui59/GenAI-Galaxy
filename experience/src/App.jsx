@@ -8,6 +8,7 @@ import {Canvas,useFrame,useThree} from '@react-three/fiber';
 import * as THREE from 'three';
 import {cameraTrackingAt} from './space/cameraTracking.js';
 import Guardian from './guardian/KayKitGuardian.jsx';
+import SpectralFootpath from './guardian/SpectralFootpath.jsx';
 import {GalaxyScene} from './space/DeepGalaxy.jsx';
 import GuardianJourney from './journey/GuardianJourney.jsx';
 import {completedWorlds,recommendedWorld,worldKey} from './journey/story.js';
@@ -161,6 +162,7 @@ export default function App(){
          onSelect={select} reducedMotion={!animationEnabled||reduced} clockRef={choreographyRef} rigPoseRef={rigPoseRef}/>
        <Guardian rigPoseRef={rigPoseRef} clockRef={choreographyRef} completedCount={collected.length} worldIndexes={collected.map(w=>w.index)}
          onReady={ready} reducedMotion={!animationEnabled||reduced}/>
+       <SpectralFootpath rigPoseRef={rigPoseRef} reducedMotion={!animationEnabled||reduced}/>
        <GalaxyCameraFollow clockRef={choreographyRef} rigPoseRef={rigPoseRef} offeredButtonRef={offeredButtonRef}
          collectedCount={collected.length} reducedMotion={!animationEnabled||reduced}/>
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced}
