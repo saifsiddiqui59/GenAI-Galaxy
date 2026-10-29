@@ -4,7 +4,7 @@ import {Html} from '@react-three/drei';
 import * as THREE from 'three';
 import {planetSurfaceTexture} from './PlanetSurface.js';
 import {atlasLayout} from './worldAnchors.js';
-import {orbitAt,planetSpinAt,planetTiltAt,planetHiddenFromAtlas,ORBIT_CENTER,ORBIT_Y_ASPECT} from './worldOrbit.js';
+import {orbitAt,planetSpinAt,planetTiltAt,planetHiddenFromAtlas,ORBIT_CENTER,ORBIT_Y_ASPECT,DESKTOP_ORBIT_SPREAD,panoramicOrbitX} from './worldOrbit.js';
 import {overlapsGuardian} from './markerClearance.js';
 import {cinematicLayoutAt} from './cinematicLayout.js';
 import SpaceDepthFX from './SpaceDepthFX.jsx';
@@ -51,15 +51,15 @@ function NebulaCloud({reducedMotion,clockRef}){
  </mesh>;
 }
 // Dim ellipse lanes make the 360° revolution perceptible without UI clutter.
-function OrbitLanes(){
+function OrbitLanes({compact}){
  const geometries=useMemo(()=>[1.05,1.72,2.42,3.20].map(r=>{
   const p=[];for(let i=0;i<128;i++){
    const a=i/128*Math.PI*2;
-   p.push(r*Math.cos(a),r*ORBIT_Y_ASPECT*Math.sin(a),0);
+   p.push(r*Math.cos(a)*(compact?1:DESKTOP_ORBIT_SPREAD),r*ORBIT_Y_ASPECT*Math.sin(a),0);
   }
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));return g;
- }),[]);
+ }),[compact]);
  useEffect(()=>()=>geometries.forEach(g=>g.dispose()),[geometries]);
  return <group position={[ORBIT_CENTER.x,ORBIT_CENTER.y,-3.65]}>
   {geometries.map((geo,i)=><lineLoop key={i} geometry={geo}>
@@ -75,7 +75,7 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
  useFrame(state=>{
   const ms=clockRef.current.ms;
   if(orbit.current){
-   const p=orbitAt(world,ms,reducedMotion);orbit.current.position.set(p.x,p.y,p.z);
+   const p=orbitAt(world,ms,reducedMotion);orbit.current.position.set(panoramicOrbitX(p.x,lowPower),p.y,p.z);
    // Drei Html elements render on top of WebGL, so use projected bounding
    // coordinates to prevent labels painting over the skull or its dark hood.
    const pos=orbit.current.localToWorld(projection.current.set(0,-world.scale-.085,0)).project(state.camera);
@@ -197,7 +197,7 @@ export function GalaxyScene({masteredWorlds=[],recommendedIndex=0,selectedIndex=
   <Starfield lowPower={lowPower}/>
   <Observatory compact={lowPower} short={short} rigPoseRef={rigPoseRef}/>
   <group ref={atlasRoot} position={startingLayout.position} scale={startingLayout.scale}>
-   <OrbitLanes/>
+   <OrbitLanes compact={lowPower}/>
    {layoutWorlds().map(world=><Planet key={world.index} world={world} mastered={set.has(world.index)} collectionOrder={masteredWorlds.findIndex(w=>(typeof w==='number'?w:w.index)===world.index)}
     recommended={world.index===recommendedIndex} selected={world.index===selectedIndex} onSelect={onSelect}
     reducedMotion={reducedMotion} lowPower={lowPower} clockRef={clockRef}/>)}
