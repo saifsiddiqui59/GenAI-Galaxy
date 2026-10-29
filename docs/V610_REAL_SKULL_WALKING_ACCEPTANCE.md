@@ -21,3 +21,9 @@
 - We inspected the browser footage and still found the skeleton's legs/feet read as suspended rather than planted on the spectral walkway; figure resembles a puppet, and the route can feel like motion through empty space. The earlier 2.4-second sequence also visibly skated; 4.5s improved timing but not physical contact.
 - Added deterministic stance-foot correction to actual thigh/knee/ankle rig. It passed Chrome screenshot/motion QA; visually, ankle soles and bridge still need better grounding. Treat as **unaccepted DRAFT**, do not merge or deploy or call production-ready.
 - Next release gate is rendered proof of real heel-strike/toe-off and convincing foot-to-walkway contact (or a better pre-rigged full-body walking model), without losing orbital collision-free route or the 17 original worlds.
+
+## 2026-10-29 follow-up — independently verified foot grounding
+- Real browser test caught **0.4303 unit** ankle-to-planted-target distance in the earlier revision. This was not acceptable and failed the new release gate.
+- Stable heel target / calibrated bone height reduced actual desktop stance errors to **0.139 and 0.1149 units**; mobile **0.1572/0.1096**, compact phone **0.1351/0.0872**. The visual QA passed 4 viewports and 70 Node tests; source remains isolated in PR #254.
+- Refined giant square hood and introduced short split cloth panels around the pelvis, leaving both knees/ankles visible. New screenshots still required after this art revision.
+- No Azure publish/production release. Owner requested real walking between orbiting planets, not the 2D floating SVG.
