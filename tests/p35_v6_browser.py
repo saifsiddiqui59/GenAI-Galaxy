@@ -37,6 +37,20 @@ async def inspect(pw,url,name,width,height,reduced=False):
             raise
         await page.wait_for_function('() => window.__galaxyV6 != null',timeout=10000)
         assert '3 SAMPLE MASTERED WORLDS' in await page.locator('.galaxy-mode-tag').inner_text()
+        if os.environ.get('GALAXY_GENIE_EXPECT')=='1':
+            # Original Genie SVG is the visible companion; hidden KayKit bones
+            # still drive proven planet-to-palm collection for this transition.
+            await page.wait_for_function("""() => {
+              const e=document.querySelector('.galaxy-original-genie');
+              return !!e && +getComputedStyle(e).opacity > .9
+                && e.querySelector('img')?.complete
+                && e.querySelector('img')?.naturalWidth > 0;
+            }""", timeout=20000)
+            assert await page.locator('.galaxy-original-genie').count()==1
+            await page.wait_for_selector('#galaxy-boot',state='detached',timeout=6000)
+            assert await page.locator('#galaxy-boot').count()==0,'Loading must clear after fade'
+            assert 'Genie' in await page.locator('.galaxy-original-genie').get_attribute('aria-label')
+
         await page.wait_for_timeout(400)
         labels=await page.locator('[data-world-index]').evaluate_all('(nodes)=>nodes.map(n=>({index:n.dataset.worldIndex,name:n.title,text:n.textContent}))')
         print(name,'Visible atlas label nodes',len(labels),'worlds',[x['index'] for x in labels],flush=True)

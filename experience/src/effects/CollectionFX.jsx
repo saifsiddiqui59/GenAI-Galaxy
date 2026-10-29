@@ -175,7 +175,7 @@ function Satchel({onOpenSack,rigPoseRef,clockRef,count}){
   bag.current.scale.set(pose.scale*(.78+pulse),pose.scale*(.78-pulse*.5),pose.scale*.78);
   bag.current.rotation.z=Math.sin(clockRef.current.ms*.0013)*.035;
  },-1);
- return <group ref={bag} onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
+ return <group ref={bag} visible={false} onClick={e=>{e.stopPropagation();onOpenSack?.()}}>
   <mesh geometry={strap}>
    <meshStandardMaterial color="#352b30" roughness={1} metalness={0}/>
   </mesh>
