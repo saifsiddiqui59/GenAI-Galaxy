@@ -5,7 +5,7 @@ import {clone} from 'three/examples/jsm/utils/SkeletonUtils.js';
 import * as THREE from 'three';
 import {discoverRigAnchors,gripMidpoint} from './rigAnchors.js';
 import {styleKayKit,STYLE_PROFILE} from './styleKayKit.js';
-import {SKULLMASTER_PROFILE} from './skullMasterMantle.js';
+import {SKULLMASTER_PROFILE,attachSkullMasterCloak} from './skullMasterMantle.js';
 import {guardianApproachAt} from '../journey/orbitalApproach.js';
 import {orbitalPluckPose} from '../journey/orbitalPluckPose.js';
 import {mountDetailedSkull,SKULL_ASSET} from './detailSkull.js';
@@ -61,6 +61,8 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   const detailed=mountDetailedSkull(object,anatomicalSkull);
   if(!detailed.active)throw Error('CC0 detailed skull failed to attach: original rig is incompatible');
   object.userData.disposeDetail=detailed.dispose;
+  // Dark, short mantle frames the skull without hiding moving legs or feet.
+  object.userData.disposeMantle=attachSkullMasterCloak(object,THREE);
   if(ANATOMY_MODE){
    const anatomy=attachAnatomicalSkeleton(object,anatomicalBody,THREE);
    object.userData.disposeAnatomy=anatomy.dispose;
@@ -116,7 +118,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     articulatedLegs:!!source.userData.articulatedLegs,
     visibleLegMeshes:(()=>{let n=0;source.traverse(o=>{if(o.isMesh&&o.visible&&/^SkullMaster(Femur|Tibia|Foot)_/.test(o.name))n++});return n})()};
   }
-  return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeAnatomy?.();source.userData.disposeDetail?.();source.userData.disposeStyle?.()};
+  return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeAnatomy?.();source.userData.disposeDetail?.();source.userData.disposeMantle?.();source.userData.disposeStyle?.()};
  },[source,rig,mixer,animations,onReady]);
  useFrame((state,dt)=>{
   if(!root.current)return;
@@ -152,8 +154,12 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   // weight eases to zero at every planet contact, protecting the hand IK.
   const walkingClip=actions['Walking_A']?.getClip();
   const walkTime=walkingClip?(ms*.001*1.35)%Math.max(.01,walkingClip.duration):0;
-  sample('Idle',.14,1-walkWeight);
-  if(walkingClip&&walkWeight>0)sample('Walking_A',walkTime,walkWeight);
+  // Avoid the source clip's deeply tucked knees; blend its upper-body stride
+  // modestly over the original upright rest pose, then supply our own stable
+  // alternating thigh, knee and ankle movement with connected feet.
+  const clipWeight=walkWeight*.46;
+  sample('Idle',.14,1-clipWeight);
+  if(walkingClip&&walkWeight>0)sample('Walking_A',walkTime,clipWeight);
   mixer.update(0);
   const animatedLegs=new Map();
   if(walkWeight>.001)for(const {bone} of uprightBones){
@@ -165,7 +171,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   for(const {bone,rest} of uprightBones){
    bone.quaternion.copy(rest);
    const sampled=animatedLegs.get(bone);
-   if(sampled)bone.quaternion.slerp(sampled,walkWeight);
+   if(sampled)bone.quaternion.slerp(sampled,walkWeight*.20);
   }
   const gesture=articulatedHoverAt(ms,view.phase,reducedMotion);
   const joints=[
@@ -180,7 +186,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    if(entry){
     const leg=/^(upperleg|lowerleg|foot)[lr]/.test(name);
     if(!leg)entry.bone.quaternion.copy(entry.rest);
-    entry.bone.quaternion.multiply(jointRotation.setFromAxisAngle(axis,angle*(leg?1-walkWeight:1)));
+    entry.bone.quaternion.multiply(jointRotation.setFromAxisAngle(axis,angle));
    }
   }
   // Clip sampling controls all 95 animations; keep the skull/hood proportion aligned.
