@@ -12,7 +12,7 @@ import {mountDetailedSkull,SKULL_ASSET} from './detailSkull.js';
 import {ANATOMY_ASSET,ANATOMY_MODE,attachAnatomicalSkeleton} from './retargetAnatomy.js';
 import {guardianStageScale,guardianFloorY} from './guardianFraming.js';
 import {moveWrist} from './handIK.js';
-import {articulatedHoverAt} from './articulatedHover.js';
+import {groundedStrideAt,STRIDE_DISTANCE} from './groundedStride.js';
 import {straightenSkeletonLegs,lengthenSkeletonLegs} from './standingLegPose.js';
 import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS,OFFER_SETTLE_MS} from '../journey/choreography.js';
 import {phaseAt} from '../journey/story.js';
@@ -51,6 +51,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
  const narrow=useThree(state=>state.size.width<700);
  const short=useThree(state=>state.size.height<780);
  const root=useRef(),lastIndex=useRef(-1),lastEpoch=useRef(-1),contactLocal=useRef(null);
+ const leftPad=useRef(),rightPad=useRef();
  const source=useMemo(()=>{
   const object=clone(scene);object.updateMatrixWorld(true);
   const box=new THREE.Box3().setFromObject(object),height=box.getSize(new THREE.Vector3()).y;
@@ -160,7 +161,8 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   // connected foot geometry. The lower limbs must not inherit the source
   // clip's folded-knee pose. Never sample the ground PickUp clip.
   const walkingClip=actions['Walking_A']?.getClip();
-  const walkTime=walkingClip?(ms*.001*1.35)%Math.max(.01,walkingClip.duration):0;
+  const stride=groundedStrideAt(approach.walkDistance,approach.speed,reducedMotion);
+  const walkTime=walkingClip?((stride.stepDistance/STRIDE_DISTANCE)%1)*walkingClip.duration:0;
   // Avoid the source clip's deeply tucked knees; blend its upper-body stride
   // modestly over the original upright rest pose, then supply our own stable
   // alternating thigh, knee and ankle movement with connected feet.
@@ -172,7 +174,10 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   // those connected legs comes from bounded procedural leg articulation,
   // not a raw authored clip that folds both feet under the torso.
   for(const {bone,rest} of uprightBones)bone.quaternion.copy(rest);
-  const gesture=articulatedHoverAt(ms,view.phase,reducedMotion);
+  const gesture=stride;
+  // Each step uses travelled distance, not elapsed playback time.
+  // At planet contact speed and vertical weight shift converge to zero.
+  body.position.y+=gesture.pelvisBob*approach.scale;
   const joints=[
    ['upperlegl',gesture.leftThigh,jointAxis],['upperlegr',gesture.rightThigh,jointAxis],
    ['lowerlegl',gesture.leftKnee,jointAxis],['lowerlegr',gesture.rightKnee,jointAxis],
@@ -225,11 +230,30 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    error=solveBlended(arms.right,right,offerReveal);
   }
   source.updateWorldMatrix(true,true);
+  // The real ankle bones drive these floor contacts, not a proxy SVG.
+  const anklePositions={};
+  for(const side of ['l','r']){
+   const ankle=jointMap.get('foot'+side)?.bone;
+   anklePositions[side]=ankle?.getWorldPosition(new THREE.Vector3())||null;
+  }
+  for(const [side,pad,plant] of [['l',leftPad,gesture.leftPlant],['r',rightPad,gesture.rightPlant]]){
+   if(!pad.current)continue;
+   const pos=anklePositions[side];
+   pad.current.visible=!!pos&&!reducedMotion&&walkWeight>.09;
+   if(pos){
+    pad.current.position.set(pos.x,pos.y-.12*approach.scale,pos.z+.045*approach.scale);
+    pad.current.scale.setScalar(approach.scale*(.58+.20*plant));
+    pad.current.rotation.z=body.rotation.y;
+   }
+  }
   const rightHand=rig.rightHand?.getWorldPosition(new THREE.Vector3());
   const grip=rig.rightHand?.localToWorld(new THREE.Vector3(0,.045,.035));
   const hand=gripMidpoint(rig,THREE.Vector3);
   rigPoseRef.current={hand,hip,bag,mouth,staging,grip,rightHand,offer,offerReveal,scale,bodyPosition:body.position.clone(),
-   rigReady:rig.readyToOffer,waistReady:rig.readyForSatchel,ikError:error,phase:view.phase};
+   rigReady:rig.readyToOffer,waistReady:rig.readyForSatchel,ikError:error,phase:view.phase,
+   walking:walkWeight>.09,walkSpeed:approach.speed,walkDistance:approach.walkDistance,
+   walkingRouteFrom:approach.routeFrom,walkingRouteTo:approach.routeTo,walkingRouteProgress:approach.routeProgress,
+   footL:anklePositions.l?.toArray(),footR:anklePositions.r?.toArray()};
   if(observed()&&window.__galaxySkeletonDiagnostics){
    const d=window.__galaxySkeletonDiagnostics;
    if(lastEpoch.current!==c.epoch){lastEpoch.current=c.epoch;lastIndex.current=-1;d.pickupLog=[];}
@@ -242,9 +266,12 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     pickupTargetError:pickup&&grip?grip.distanceTo(palmTarget):null,staging:staging.toArray(),
     rightGrip:grip?.toArray(),waistPosition:hip.toArray(),bagMouth:mouth.toArray(),
     worldPosition:body.position.toArray(),orbitalContact:approach.orbitalTarget?[approach.orbitalTarget.x,approach.orbitalTarget.y,approach.orbitalTarget.z]:null,approachTravel:approach.travel,offeringCenter:offer.toArray(),
-    movementMode:walkWeight>.08?'walking-orbit':'upright-orbital-pluck',
+    movementMode:walkWeight>.09?'distance-linked-footsteps':'stationary-planet-reach',
     walkingClip:walkWeight>.08?'Walking_A':'Idle',
-    walkingWeight:walkWeight,walkPhase:walkTime,
+    walkingWeight:walkWeight,walkPhase:stride.phase,walkingSpeed:approach.speed,
+    walkingDistance:approach.walkDistance,stanceFoot:gesture.stanceFoot,
+    footPlantL:gesture.leftPlant,footPlantR:gesture.rightPlant,
+    feetWorld:{left:anklePositions.l?.toArray(),right:anklePositions.r?.toArray()},
     walkHeading:body.rotation.y,
     groundWalkWeight:walkWeight,
     groundPickupWeight:actions['PickUp']?.getEffectiveWeight()??0,
@@ -259,7 +286,19 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    d.screenBody={top:(1-top.y)*state.size.height/2,bottom:(1-bottom.y)*state.size.height/2};
   }
  },-2);
- return <group ref={root}><primitive object={source}/></group>;
+ return <>
+  <group ref={root}><primitive object={source}/></group>
+  {['left','right'].map((side,i)=><group key={side} ref={i===0?leftPad:rightPad} visible={false}>
+    <mesh rotation={[-Math.PI/2,0,0]}>
+     <ringGeometry args={[.12,.165,32]}/>
+     <meshBasicMaterial color="#8fdfe5" transparent opacity={.58} depthWrite={false} side={THREE.DoubleSide}/>
+    </mesh>
+    <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.004,0]}>
+     <circleGeometry args={[.11,24]}/>
+     <meshBasicMaterial color="#98afe8" transparent opacity={.12} depthWrite={false}/>
+    </mesh>
+  </group>)}
+ </>;
 }
 export default function KayKitGuardian(props){return <Suspense fallback={null}><Model {...props}/></Suspense>}
 useGLTF.preload(ASSET);
