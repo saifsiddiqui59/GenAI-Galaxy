@@ -14,3 +14,10 @@
 1. Exact branch 3/3 ordinary GitHub CI with Node path/stride tests.
 2. No-cloud Chromium screenshots: desktop entrance, mid-walk, arrival, contact, offering; mobile 390/360 and reduced motion. Assert each walk advances real distance, feet remain visible and stop at true orbital palm contact, 17 worlds still move and remain selectable. Inspect images.
 3. Keep V6.9 preview, root Azure static site and other projects **untouched**. A *new* V6.10 immutable hosted preview requires approval of release workflow after real QA. No merging rejected art on the strength of numeric tests alone.
+
+## Actual V6.10 rendered QA and remaining quality blockers (2026-10-29)
+- Source and 3/3 CI pass with deterministic 4.5-second walk per planet and three completed pickup cycles. Browser checks desktop/mobile/short-phone/reduced, real asset, full 17 orbiting worlds, exact palm contact and user navigation.
+- Video artifacts of natural actual R3F browser run were captured. Automated acceptance does **NOT** establish visual quality.
+- We inspected the browser footage and still found the skeleton's legs/feet read as suspended rather than planted on the spectral walkway; figure resembles a puppet, and the route can feel like motion through empty space. The earlier 2.4-second sequence also visibly skated; 4.5s improved timing but not physical contact.
+- Added deterministic stance-foot correction to actual thigh/knee/ankle rig. It passed Chrome screenshot/motion QA; visually, ankle soles and bridge still need better grounding. Treat as **unaccepted DRAFT**, do not merge or deploy or call production-ready.
+- Next release gate is rendered proof of real heel-strike/toe-off and convincing foot-to-walkway contact (or a better pre-rigged full-body walking model), without losing orbital collision-free route or the 17 original worlds.
