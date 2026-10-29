@@ -11,6 +11,7 @@ import Guardian from './guardian/KayKitGuardian.jsx';
 import SpectralFootpath from './guardian/SpectralFootpath.jsx';
 import {GalaxyScene} from './space/DeepGalaxy.jsx';
 import GuardianJourney from './journey/GuardianJourney.jsx';
+import {COLLECT_START_MS,PER_WORLD_MS,OFFER_SETTLE_MS} from './journey/choreography.js';
 import {completedWorlds,recommendedWorld,worldKey} from './journey/story.js';
 import WarpGate from './portal/WarpGate.jsx';
 import curriculum from '../../data/curriculum.json';
@@ -137,14 +138,17 @@ export default function App(){
  useEffect(()=>{
   if(!SHOW_SAMPLE)return;
   window.__galaxyV6={
-   seek(ms){if(!Number.isFinite(ms)||ms<0||ms>150000)throw Error('Invalid preview time');choreographyRef.current.ms=ms;choreographyRef.current.hold=true;invalidateRef.current()},
+   seek(ms){if(!Number.isFinite(ms)||ms<0||ms>250000)throw Error('Invalid preview time');choreographyRef.current.ms=ms;choreographyRef.current.hold=true;invalidateRef.current()},
    resume(){choreographyRef.current.hold=false;invalidateRef.current()},
    reset:resetClock
   };
   return()=>{delete window.__galaxyV6};
  },[resetClock]);
  const triggerReplay=useCallback(()=>{resetClock();setReplayEpoch(x=>x+1)},[resetClock]);
- const skipIntroduction=useCallback(()=>{choreographyRef.current.ms=99999;choreographyRef.current.hold=true;invalidateRef.current();},[]);
+ const skipIntroduction=useCallback(()=>{
+  choreographyRef.current.ms=COLLECT_START_MS+collected.length*PER_WORLD_MS+OFFER_SETTLE_MS+1;
+  choreographyRef.current.hold=true;invalidateRef.current();
+ },[collected.length]);
  const select=useCallback(index=>{
   if(!validWorld(index)||warp)return;
   setSelected(index);
