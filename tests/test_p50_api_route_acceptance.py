@@ -87,6 +87,11 @@ class NoChargeRouteAcceptance(unittest.TestCase):
                                     side_effect=AssertionError("Unexpected network request"))
         self.network.start()
         self.addCleanup(self.network.stop)
+        # P82: only this no-network route contract simulates a future
+        # approved PRO launch; production release and DB gates stay OFF.
+        self.pro = patch.object(api, 'enforce_pro_access')
+        self.pro.start()
+        self.addCleanup(self.pro.stop)
 
     def test_missing_bearer_fails_before_any_model_or_quota(self):
         with patch.object(api, "enforce_eval_quota") as reserve, \

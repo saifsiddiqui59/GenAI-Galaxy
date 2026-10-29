@@ -18,6 +18,37 @@ class QuotaExceeded(RuntimeError):
 class QuotaUnavailable(RuntimeError):
     """Cannot prove the quota was reserved, so no paid model call is permitted."""
 
+class ProRequired(RuntimeError):
+    """The verified Galaxy subscriber does not hold an active PRO plan."""
+
+
+def enforce_pro_access(*, token, base, public_key, request_json):
+    """Fail closed before billable requests; never trust user-supplied plan fields.
+
+    Launch gate must be explicitly activated on backend AND in the Galaxy-owned
+    quota RPC. A browser badge alone never permits metered consumption.
+    """
+    if os.environ.get("GALAXY_PAID_FEATURES_ENABLED") != "active":
+        raise QuotaUnavailable("PRO metered features are currently disabled")
+    if base != GALAXY_SUPABASE_URL or not token or not public_key:
+        raise QuotaUnavailable("Galaxy plan cannot be verified")
+    try:
+        plan = request_json(
+            base + "/rest/v1/rpc/genai_study_my_subscription",
+            method="POST", payload={}, token=token,
+            extra_headers={"apikey": public_key},
+            limit=300, timeout=12)
+    except Exception as exc:
+        raise QuotaUnavailable("Galaxy plan service unavailable") from exc
+    if not isinstance(plan, dict):
+        raise QuotaUnavailable("Galaxy plan response is unverified")
+    if (plan.get("plan_code") != "PRO"
+        or plan.get("status") not in ("ACTIVE", "TRIALING")
+        or plan.get("allowed") is not True
+        or type(plan.get("daily_eval_limit")) is not int
+        or not 1 <= plan["daily_eval_limit"] <= 20):
+        raise ProRequired("Active PRO subscription required")
+
 
 def backend_profile():
     value = os.environ.get("GALAXY_BACKEND_PROFILE", "")

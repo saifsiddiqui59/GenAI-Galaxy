@@ -15,7 +15,7 @@ import re
 import time
 import azure.functions as func
 from core import InputError, bearer_token, document_id, topic_key, extract_text, validate_review, verify_gateway, owner_document_filters, owned_storage_path, validate_interview_history, MAX_BYTES
-from consumption_security import backend_profile, enforce_eval_quota, QuotaExceeded, QuotaUnavailable, DIRECT, GATEWAY
+from consumption_security import backend_profile, enforce_eval_quota, enforce_pro_access, ProRequired, QuotaExceeded, QuotaUnavailable, DIRECT, GATEWAY
 from eval_observability import new_trace_id, record_evaluation, usage_counters
 from interview_grading import grading_system_prompt, validate_structured_review, GradingContractError
 # LangGraph and its transitive imports are lazy-loaded ONLY after a valid
@@ -193,8 +193,9 @@ def evaluate(req:func.HttpRequest)->func.HttpResponse:
         if not isinstance(question,str) or not 1<=len(question)<=500:
             raise InputError('Question is too long or missing')
         history=validate_interview_history(body.get('history'))
-        # No billed LLM call before valid JWT, valid inputs, AND quota reservation.
+        # Check verified PRO and release switch before any billable reservation.
         stage='quota'
+        enforce_pro_access(token=token,base=base,public_key=public_key,request_json=request_json)
         if backend_profile()==DIRECT:
             enforce_eval_quota(token=token,base=base,public_key=public_key,request_json=request_json)
             quota='reserved'
@@ -212,6 +213,9 @@ def evaluate(req:func.HttpRequest)->func.HttpResponse:
         if estimate is not None:
             review['estimated_model_cost']=estimate
         return result(review,200)
+    except ProRequired:
+        quota='denied'
+        return result({'error':'Active PRO subscription required'},403)
     except QuotaExceeded:
         quota='denied'
         return result({'error':'Daily evaluation limit reached'},429)
@@ -295,6 +299,7 @@ def tutor(req:func.HttpRequest)->func.HttpResponse:
         def paid_model_call(graph_state):
             nonlocal quota,stage
             stage='quota'
+            enforce_pro_access(token=token,base=base,public_key=public_key,request_json=request_json)
             if backend_profile()==DIRECT:
                 # Never touch model endpoint before atomic per-user AND global
                 # daily quota reservation succeeds.
@@ -319,6 +324,9 @@ def tutor(req:func.HttpRequest)->func.HttpResponse:
                        'reference_only':validated['mode'] in FREE_MODES,
                        'token_usage':usage,
                        **({'estimated_model_cost':estimate} if estimate is not None else {})},200)
+    except ProRequired:
+        quota='denied'
+        return result({'error':'Active PRO subscription required'},403)
     except QuotaExceeded:
         quota='denied'
         return result({'error':'Daily evaluation limit reached'},429)
@@ -338,6 +346,8 @@ def tutor(req:func.HttpRequest)->func.HttpResponse:
 def vault_extract(req:func.HttpRequest)->func.HttpResponse:
     pending=preflight(req)
     if pending:return pending
+    if os.environ.get('GALAXY_PAID_FEATURES_ENABLED')!='active':
+        return make_response(req,{'error':'PRO server extraction is disabled'},503)
     # Minimum-cost profile disables unscanned document extraction entirely.
     # Never grant access to private documents until malware quarantine exists.
     try:
@@ -380,6 +390,8 @@ def speech_token(req:func.HttpRequest)->func.HttpResponse:
     """Issue short-lived Speech SDK tokens. Only a verified user can request one."""
     pending=preflight(req)
     if pending:return pending
+    if os.environ.get('GALAXY_PAID_FEATURES_ENABLED')!='active':
+        return make_response(req,{'error':'PRO Azure Speech is disabled'},503)
     # Speech bearer tokens may be reused for many minutes of paid audio:
     # a per-request quota alone is not a credible speech consumption cap.
     try:
