@@ -14,6 +14,9 @@ from urllib.request import Request,urlopen
 
 SOURCE="https://www.innerscene.com/api/library/human-skeleton-simplified-anatomical-study-a93f4d8f/download"
 LICENSE_PAGE="https://www.innerscene.com/tools/library/3d-parts/human-skeleton-simplified-anatomical-study-a93f4d8f"
+# Previously published exact approved bytes: V6.9 hosted SHA manifest records
+# e52d1b... on this file. Read-only CDN recovery, never write to V6.9.
+FALLBACK_SOURCE="https://gengalaxy1429841605.z29.web.core.windows.net/previews/galaxy-3d-v69/models/cc0/InnersceneAnatomicalSkeleton.glb"
 SHA256="e52d1b23cf15b574885846a7da30354defc0a3a51b679ded6cbc7c0c1965d996"
 EXPECTED_BYTES=1443132
 DEST=Path(__file__).resolve().parents[1]/"public/models/cc0/InnersceneAnatomicalSkeleton.glb"
@@ -41,16 +44,30 @@ def main():
         # The approved CC0 origin sometimes stalls during CI; retry only
         # transient network transfers. Every successful response still passes
         # the exact immutable SHA256, size, glTF header and 322-node checks.
-        req=Request(SOURCE,headers={'User-Agent':'GenAI-Galaxy-V6-CC0-Anatomy/1.0'})
-        for attempt in range(3):
-            try:
-                with urlopen(req,timeout=35) as res:
-                    if res.headers.get("Content-Length") and int(res.headers['Content-Length'])>EXPECTED_BYTES:
-                        raise ValueError("Unexpected asset size")
-                    raw=res.read(EXPECTED_BYTES+1)
-                # A CDN error sometimes arrives with HTTP 200 and an HTML
-                # response. Retry it, but NEVER allow non-matching content.
-                verify(raw)
+        errors=[]
+        for url in (SOURCE,FALLBACK_SOURCE):
+            for attempt in range(3):
+                try:
+                    req=Request(url,headers={'User-Agent':'GenAI-Galaxy-V6-CC0-Anatomy/1.0'})
+                    with urlopen(req,timeout=35) as res:
+                        if res.headers.get("Content-Length") and int(res.headers['Content-Length'])>EXPECTED_BYTES:
+                            raise ValueError("Unexpected asset size")
+                        raw=res.read(EXPECTED_BYTES+1)
+                    # Verify exact immutable approved bytes even on trusted
+                    # Azure fallback. Incorrect data is NEVER accepted.
+                    verify(raw)
+                    print("Verified anatomy source:", "previous-published-sha-pinned-copy" if url==FALLBACK_SOURCE else "original-approved-origin")
+                    break
+                except (OSError,ValueError) as exc:
+                    errors.append(f"{type(exc).__name__}: {str(exc)[:110]}")
+                    print(f"Anatomy source {('origin' if url==SOURCE else 'sha-pinned published copy')} attempt {attempt+1} failed; retrying",flush=True)
+                    time.sleep(1.2*(attempt+1))
+            else:
+                continue
+            break
+        else:
+            raise RuntimeError("All approved anatomy sources unavailable or hash-invalid; refusing to build. "+repr(errors[-3:]))
+    verify(raw)
                 break
             except (OSError,ValueError) as exc:
                 if attempt==2:
