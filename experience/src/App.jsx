@@ -94,6 +94,7 @@ export default function App(){
  const choreographyRef=useRef({ms:0,epoch:0,hold:false});
  const invalidateRef=useRef(()=>{});
  const [modelReady,setModelReady]=useState(false);
+ const available3D=useMemo(canWebGL,[]);
  const [visible,setVisible]=useState(!document.hidden);
  const ready=useCallback(()=>setModelReady(true),[]);
  // The HTML boot screen is available before React/GLB downloads. Fade it only
@@ -117,7 +118,6 @@ export default function App(){
  const [effectsEpoch,setEffectsEpoch]=useState(0);
  const [replayEpoch,setReplayEpoch]=useState(0);
  const receiveAuth=useCallback(value=>setAuthSnapshot(value),[]);
- const available3D=useMemo(canWebGL,[]);
  const activeOwner=SHOW_SAMPLE?SAMPLE_USER:(authSnapshot.status==='authenticated'?authSnapshot.user?.id:null);
  const activeProgress=SHOW_SAMPLE?PREVIEW_PROGRESS:(activeOwner?authSnapshot.progress:{});
  const collected=useMemo(()=>{
