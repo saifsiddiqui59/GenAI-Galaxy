@@ -13,6 +13,7 @@ import {ANATOMY_ASSET,ANATOMY_MODE,attachAnatomicalSkeleton} from './retargetAna
 import {guardianStageScale,guardianFloorY} from './guardianFraming.js';
 import {moveWrist} from './handIK.js';
 import {groundedStrideAt,STRIDE_DISTANCE} from './groundedStride.js';
+import {plantedFootCorrection} from './footPlantIK.js';
 import {straightenSkeletonLegs,lengthenSkeletonLegs} from './standingLegPose.js';
 import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS,OFFER_SETTLE_MS} from '../journey/choreography.js';
 import {phaseAt} from '../journey/story.js';
@@ -230,6 +231,26 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    error=solveBlended(arms.right,right,offerReveal);
   }
   source.updateWorldMatrix(true,true);
+  // Real hip-knee-ankle CCD fixes the stance ankle in world space while the
+  // root walks; plant sites are derived from the deterministic path distance.
+  const contactErrors={left:0,right:0};
+  for(const [side,part] of [['left','l'],['right','r']]){
+   const chain=[jointMap.get('upperleg'+part)?.bone,jointMap.get('lowerleg'+part)?.bone,jointMap.get('foot'+part)?.bone];
+   if(!chain.every(Boolean))continue;
+   const correction=plantedFootCorrection({
+    walking:approach.walkWeight>.05,walkDistance:approach.walkDistance,
+    walkSpeed:approach.speed,walkingRouteFrom:approach.routeFrom,
+    walkingRouteTo:approach.routeTo,walkingRouteProgress:approach.routeProgress
+   },side,narrow);
+   if(correction.weight<=.01)continue;
+   source.updateWorldMatrix(true,true);
+   const current=chain[2].getWorldPosition(new THREE.Vector3());
+   const target=current.clone().sub(new THREE.Vector3(correction.dx,correction.dy,correction.dz));
+   const before=chain.slice(0,2).map(b=>b.quaternion.clone());
+   contactErrors[side]=moveWrist(chain,target,4);
+   chain.slice(0,2).forEach((b,i)=>b.quaternion.copy(before[i].slerp(b.quaternion,.73)).normalize());
+  }
+  source.updateWorldMatrix(true,true);
   // The real ankle bones drive these floor contacts, not a proxy SVG.
   const anklePositions={};
   for(const side of ['l','r']){
@@ -272,6 +293,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     walkingDistance:approach.walkDistance,stanceFoot:gesture.stanceFoot,
     footPlantL:gesture.leftPlant,footPlantR:gesture.rightPlant,
     feetWorld:{left:anklePositions.l?.toArray(),right:anklePositions.r?.toArray()},
+    stanceContactErrors:contactErrors,
     walkHeading:body.rotation.y,
     groundWalkWeight:walkWeight,
     groundPickupWeight:actions['PickUp']?.getEffectiveWeight()??0,
