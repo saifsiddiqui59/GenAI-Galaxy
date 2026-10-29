@@ -68,7 +68,14 @@ test('collector follows real, moving planetary orbit each approach frame, with n
     const moving=galaxySpaceAt(selected[order],ms,compact,short,selected.length);
     assert(pose.orbitalTarget,'real orbit target must exist for IK');
     for(const axis of ['x','y','z'])near(pose.orbitalTarget[axis],moving[axis]);
-    assert.equal(pose.walkWeight,0,'collector must hover upright, never walk to the planet');
+    assert(pose.walkWeight>=0,'walking weight must be nonnegative');
+    if(stage<CONTACT){
+      assert(pose.walkDistance>0,'Skull must step along the physical route');
+      assert(pose.speed>0,'locomotion must be driven by actual path speed');
+    }else{
+      assert.equal(pose.walkWeight,0,'the Skull must stop walking at the planet');
+      assert.equal(pose.speed,0,'the feet must stop before the hand grasps');
+    }
     targetSamples.push([moving.x,moving.y,moving.z]);
    }
    assert(targetSamples.some(p=>Math.hypot(...p.map((a,i)=>a-targetSamples[0][i]))>.025),'the targeted planet really moves while the hand tracks it');
