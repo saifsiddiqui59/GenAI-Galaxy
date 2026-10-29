@@ -4,7 +4,9 @@ const vm=require('node:vm');
 const assert=require('node:assert/strict');
 const path=require('node:path');
 const ROOT=path.join(__dirname,'..');
-const source=fs.readFileSync(path.join(ROOT,'app.js'),'utf8').replace(/\nstart\(\);\s*$/,'\n');
+const source=fs.readFileSync(path.join(ROOT,'app.js'),'utf8').replace(/\nstart\(\);\s*$/,'\n')
+ // Only this no-network regression harness simulates a later APPROVED PRO launch.
+ .replace('const PRO_COST_FEATURES_ENABLED=false;', 'const PRO_COST_FEATURES_ENABLED=true;');
 const topic={
  title:'KV cache',branch:'LLM & Transformer Fundamentals',
  group:'Inference & latency',summary:'KV cache saves keys and values.',
@@ -30,11 +32,11 @@ vm.runInContext(`
 function reset({signedIn,endpoint=URL,session=true}){
  ctx.window.GALAXY_EVALUATOR_URL=endpoint;
  button.disabled=false;button.textContent='';
- vm.runInContext('state.progress={};state.attempts=[];state.feedback=null;state.tutorResponse=null;state.tutorPending=null;state.tutorDraft="";state.user=null;state.client=null;state.isGuest=true;',ctx);
+ vm.runInContext('state.progress={};state.attempts=[];state.feedback=null;state.tutorResponse=null;state.tutorPending=null;state.tutorDraft="";state.user=null;state.client=null;state.isGuest=true;state.planInfo=null;',ctx);
  if(signedIn){
   ctx.__client={auth:{getSession:async()=>({data:{session:session?{access_token:'mock-user-token'}:null}})}};
   ctx.__user={id:'00000000-0000-4000-8000-000000000001',email:'fixture@example.com'};
-  vm.runInContext('state.user=__user;state.client=__client;state.isGuest=false;',ctx);
+  vm.runInContext('state.user=__user;state.client=__client;state.isGuest=false;state.planInfo={plan_code:'PRO',status:'ACTIVE',allowed:true,daily_eval_limit:20};',ctx);
  }
 }
 function feedback(){return vm.runInContext('state.feedback',ctx)}
@@ -108,7 +110,7 @@ async function run(){
  reset({signedIn:true});
  const route=vm.runInContext('tutorEndpoint()',ctx);
  assert.equal(route,'https://gengalaxy-p3-1429841605.azurewebsites.net/api/practice/tutor');
- assert.match(vm.runInContext('practiceMarkup()',ctx),/Ask AI tutor \(uses tokens\)/);
+ assert.match(vm.runInContext('practiceMarkup()',ctx),/Ask AI tutor[\s\S]*?\(uses tokens\)/);
  assert.match(vm.runInContext('practiceMarkup()',ctx),/Read reference \(free\)/);
  // Authenticated tutor click is explicit and uses one request, unlike a local check.
  reset({signedIn:true});
