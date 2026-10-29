@@ -23,6 +23,9 @@ test('show accessible, immediate loading until actual 3D collection machinery is
  assert(app.includes("if(!modelReady&&available3D)return undefined"));
  assert(app.includes("galaxy-original-genie"));
  assert(app.includes("models/cinematic-skull-genie.svg"));
+ assert(app.includes("models/cinematic-skull-genie-still.svg"));
+ const prepare=read('../scripts/prepare-cinematic-guardian.mjs');
+ assert(prepare.includes("writeFileSync")&&prepare.includes("still.svg"));
  assert(app.includes('galaxy-cinematic-guardian'));
  const mature=read('../public/models/cinematic-skull-genie.svg');
  assert(mature.includes('Skull Master, Guardian of the Learning Galaxy'));
