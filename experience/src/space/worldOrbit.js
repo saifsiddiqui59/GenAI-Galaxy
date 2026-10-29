@@ -15,6 +15,8 @@ export const ORBIT_PHASE_AMPLITUDE=.014;
 export const PLANET_SPIN_PERIOD_MS=24000;
 export const ORBIT_CENTER=Object.freeze({x:4.48,y:.10});
 export const ORBIT_Y_ASPECT=1.0;
+export const DESKTOP_ORBIT_SPREAD=1.12;
+export const panoramicOrbitX=(x,compact=false)=>compact?x:ORBIT_CENTER.x+(x-ORBIT_CENTER.x)*DESKTOP_ORBIT_SPREAD;
 const TAU=Math.PI*2;
 const safeTime=(ms,reducedMotion=false)=>reducedMotion?0:Math.max(0,Number.isFinite(ms)?ms:0);
 
@@ -49,7 +51,7 @@ export function galaxySpaceAt(worldIndex,ms,compact=false,short=false,completedC
  const w=orbitAt(atlasLayout()[worldIndex],ms,reducedMotion);
  const layout=cinematicLayoutAt(ms,compact,short,completedCount,reducedMotion);
  return {index:worldIndex,
-  x:layout.position[0]+w.x*layout.scale[0],
+  x:layout.position[0]+panoramicOrbitX(w.x,compact)*layout.scale[0],
   y:layout.position[1]+w.y*layout.scale[1],
   z:layout.position[2]+w.z*layout.scale[2],
   scale:w.scale*layout.scale[0]};
