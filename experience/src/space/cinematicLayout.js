@@ -11,12 +11,13 @@ export const atlasRevealStart=(completedCount=0)=>
 
 export function cinematicLayoutAt(ms,compact=false,short=false,completedCount=0,reducedMotion=false){
  // The layout is intentionally time-invariant. On a phone, scale the whole
- // circular constellation to FIT the narrow viewport; it still fills the
- // height and space background rather than drifting into the upper right.
+ // circular constellation to FIT the narrow viewport. Keep its centre at
+ // exactly x=0; slightly increase visible mobile footprint without changing
+ // collection contact geometry or moving the orbit after any pickup.
  const pose=compact?
    (short?
-    {position:[-3.674,.48,-1.5],scale:[.82,.82,.82]}:
-    {position:[-4.032,.62,-1.5],scale:[.90,.90,.90]}):
+    {position:[-3.8528,.48,-1.5],scale:[.86,.86,.86]}:
+    {position:[-4.2112,.62,-1.5],scale:[.94,.94,.94]}):
    {position:[-9.856,0,1.2],scale:[2.20,2.20,2.20]};
  return {progress:0,phase:'immersive',
   position:[...pose.position],scale:[...pose.scale]};
