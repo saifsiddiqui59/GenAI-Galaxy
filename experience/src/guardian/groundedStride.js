@@ -14,8 +14,8 @@ export function groundedStrideAt(distance=0,speed=0,reduced=false){
  const bob=active*(.036+.039*Math.cos(2*phase));
  return {
   phase,active,stepDistance:d,speed:v,stanceFoot:l<0?'left':'right',
-  leftThigh:l*.39*active,rightThigh:r*.39*active,
-  leftKnee:leftLift*.49*active,rightKnee:rightLift*.49*active,
+  leftThigh:l*.29*active,rightThigh:r*.29*active,
+  leftKnee:leftLift*.29*active,rightKnee:rightLift*.29*active,
   leftFoot:(-l*.17-leftLift*.18)*active,
   rightFoot:(-r*.17-rightLift*.18)*active,
   pelvis:Math.sin(phase)*.036*active,
