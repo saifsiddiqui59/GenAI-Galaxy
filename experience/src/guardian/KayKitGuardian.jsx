@@ -67,6 +67,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    object.userData.updateSpectral=anatomy.update;
    object.userData.spectralActive=anatomy.spectralActive;
    object.userData.articulatedArms=anatomy.articulatedArms;
+   object.userData.articulatedLegs=anatomy.articulatedLegs;
    object.userData.anatomicalParts=anatomy.attached;
    object.userData.anatomicalClusters=anatomy.clusters;
   }
