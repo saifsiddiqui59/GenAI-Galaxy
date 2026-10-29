@@ -1,45 +1,38 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-
-const read = relative=>readFileSync(new URL(relative,import.meta.url),'utf8');
-test('restore exact original Genie art vocabulary, local SVG asset and correct copy',()=>{
- const svg=read('../public/models/original-genie.svg');
- assert.match(svg,/<svg[^>]+viewBox="0 0 480 430"/);
- for(const feature of ['genie-character','genie-trail','genie-left-arm','genie-right-arm','genie-sparkles','genie-robe'])
-  assert(svg.includes(feature),'original art feature missing: '+feature);
- assert(svg.includes('genie-gift-world'),'Original Genie must offer the glowing gift globe');
- assert.match(svg,/Original Genie illustration, reused from commit 0ca9cc8/);
- assert.equal((svg.match(/<g\b/g)||[]).length,(svg.match(/<\/g>/g)||[]).length,'Original nested SVG groups must balance');
- assert(!svg.includes('http://')||svg.includes('http://www.w3.org/2000/svg'));
- const copy=read('../src/journey/GuardianJourney.jsx');
- assert(copy.includes('Skull Master glides'));
- assert(copy.includes('Take the glowing knowledge planet'));
+const read=p=>readFileSync(new URL(p,import.meta.url),'utf8');
+test('real walking original 3D Skull Master is visible, not an overlaid SVG sprite',()=>{
+ const app=read('../src/App.jsx'),guardian=read('../src/guardian/KayKitGuardian.jsx');
+ assert(app.includes('<SpectralFootpath'));
+ assert(app.includes("<Guardian rigPoseRef"));
+ assert(!app.includes('galaxy-cinematic-guardian'));
+ assert(!app.includes('genieRef'));
+ assert(guardian.includes('<primitive object={source}/>'));
+ assert(!guardian.includes('visible={false}/>'));
+ assert(guardian.includes('groundedStrideAt'));
+ assert(guardian.includes('stanceFoot'));
+ assert(guardian.includes('walkingDistance'));
 });
-test('show accessible, immediate loading until actual 3D collection machinery is ready',()=>{
+test('reuse correct 3D skeleton bones with real ankles and connected feet',()=>{
+ const body=read('../src/guardian/KayKitGuardian.jsx');
+ const legs=read('../src/guardian/riggedSkeletalLegs.js');
+ assert(body.includes('straightenSkeletonLegs'));
+ assert(body.includes('lengthenSkeletonLegs'));
+ assert(body.includes('rig.rightHand'));
+ assert(legs.includes('SkullMasterSole_'));
+ assert(legs.includes('SkullMasterToe_'));
+ const path=read('../src/journey/orbitalApproach.js');
+ assert(path.includes('walkingRouteDistance'));
+ assert(path.includes('walkDistance'));
+ assert(path.includes('speed'));
+ assert(path.includes('orbitalTarget'));
+});
+test('retain loading screen, original Genie rollback asset and normal click-to-lesson navigation',()=>{
  const html=read('../index.html'),app=read('../src/App.jsx');
- assert(html.indexOf('id="galaxy-boot"')<html.indexOf('id="root"'));
- assert(html.includes('Preparing your Genie'));
- assert(app.includes("if(!modelReady&&available3D)return undefined"));
- assert(app.includes("galaxy-original-genie"));
- assert(app.includes("models/cinematic-skull-genie.svg"));
- assert(app.includes("models/cinematic-skull-genie-still.svg"));
- const prepare=read('../scripts/prepare-cinematic-guardian.mjs');
- assert(prepare.includes("writeFileSync")&&prepare.includes("still.svg"));
- assert(app.includes('galaxy-cinematic-guardian'));
- const mature=read('../public/models/cinematic-skull-genie.svg');
- assert(mature.includes('Skull Master, Guardian of the Learning Galaxy'));
- assert(mature.includes('guardian-glowing-eyes'));
- assert(mature.includes('guardian-arm-left')&&mature.includes('guardian-arm-right'));
- assert(mature.includes('guardian-magic')&&mature.includes('guardian-tail'));
- assert.equal(mature.split('<g ').length-1,mature.split('</g>').length-1,'SVG group balance');
- assert(!mature.includes('<script'),'SVG art must not execute scripts');
- assert(app.includes("genieRef.current.style.left"));
-});
-test('old skeleton geometry is invisible, not a second ghost covering the original Genie',()=>{
- const jsx=read('../src/guardian/KayKitGuardian.jsx');
- assert(jsx.includes('<primitive object={source} visible={false}/>'));
- assert(jsx.includes('rigPoseRef.current={hand,hip,bag,mouth,staging,grip'));
- const fx=read('../src/effects/CollectionFX.jsx');
- assert(fx.includes('ref={bag} visible={false}'),'No duplicate floating 3D satchel over original illustrated sack');
+ assert(html.indexOf('galaxy-boot')<html.indexOf('id="root"'));
+ assert(app.includes('if(!modelReady&&available3D)'));
+ assert(app.includes('studyLink(index)'));
+ const rollback=read('../public/models/original-genie.svg');
+ assert(rollback.includes('genie-character'));
 });
