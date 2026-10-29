@@ -143,19 +143,30 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   const approach=guardianApproachAt(ms,worldIndexes,contactLocal.current,narrow,short,reducedMotion);
   body.position.set(approach.x,approach.y,approach.z);
   body.scale.setScalar(approach.scale);
-  body.rotation.y=pickup?0:entrance.yaw;
+  const walkWeight=Math.max(0,Math.min(1,approach.walkWeight||0));
+  body.rotation.y=walkWeight>.08?(approach.yaw??entrance.yaw):(pickup?0:entrance.yaw);
   body.rotation.x=0;body.rotation.z=0;
   const pluck=pickup?orbitalPluckPose(pickup.t):null;
-  // No floor-walk or ground-pick clips: travel remains in orbit, while
-  // real skeletal legs make a weightless, oppositely phased stride.
-  const walk=0;
-  sample('Idle',.14,1);
-  // Unlike useAnimations' independent delta, sample clips on the prop clock.
-  // Weighted sampling replaces fadeIn/fadeOut without restarting PickUp at contact.
+  // Drive the ACTUAL authored KayKit walking clip, including hip/knee/ankle
+  // rotation and arm swing. Never sample the ground PickUp clip. The walk
+  // weight eases to zero at every planet contact, protecting the hand IK.
+  const walkingClip=actions['Walking_A']?.getClip();
+  const walkTime=walkingClip?(ms*.001*1.35)%Math.max(.01,walkingClip.duration):0;
+  sample('Idle',.14,1-walkWeight);
+  if(walkingClip&&walkWeight>0)sample('Walking_A',walkTime,walkWeight);
   mixer.update(0);
-  // Restore source rest pose first; deterministic procedural articulation
-  // follows every frame and never accumulates rotation (no crouching).
-  for(const {bone,rest} of uprightBones)bone.quaternion.copy(rest);
+  const animatedLegs=new Map();
+  if(walkWeight>.001)for(const {bone} of uprightBones){
+   const name=bone.name.toLowerCase().replace(/[^a-z0-9]/g,'');
+   if(/^(upperleg|lowerleg|foot)[lr]/.test(name))animatedLegs.set(bone,bone.quaternion.clone());
+  }
+  // Keep the torso upright, but blend actual knee/foot clips into the real
+  // articulated rig while walking. No frozen legs or rigid teleport effect.
+  for(const {bone,rest} of uprightBones){
+   bone.quaternion.copy(rest);
+   const sampled=animatedLegs.get(bone);
+   if(sampled)bone.quaternion.slerp(sampled,walkWeight);
+  }
   const gesture=articulatedHoverAt(ms,view.phase,reducedMotion);
   const joints=[
    ['upperlegl',gesture.leftThigh,jointAxis],['upperlegr',gesture.rightThigh,jointAxis],
@@ -166,7 +177,11 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   ];
   for(const [name,angle,axis] of joints){
    const entry=jointMap.get(name);
-   if(entry)entry.bone.quaternion.copy(entry.rest).multiply(jointRotation.setFromAxisAngle(axis,angle));
+   if(entry){
+    const leg=/^(upperleg|lowerleg|foot)[lr]/.test(name);
+    if(!leg)entry.bone.quaternion.copy(entry.rest);
+    entry.bone.quaternion.multiply(jointRotation.setFromAxisAngle(axis,angle*(leg?1-walkWeight:1)));
+   }
   }
   // Clip sampling controls all 95 animations; keep the skull/hood proportion aligned.
   const headBone=source.getObjectByName('head');
@@ -222,12 +237,16 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     pickupTargetError:pickup&&grip?grip.distanceTo(palmTarget):null,staging:staging.toArray(),
     rightGrip:grip?.toArray(),waistPosition:hip.toArray(),bagMouth:mouth.toArray(),
     worldPosition:body.position.toArray(),orbitalContact:approach.orbitalTarget?[approach.orbitalTarget.x,approach.orbitalTarget.y,approach.orbitalTarget.z]:null,approachTravel:approach.travel,offeringCenter:offer.toArray(),
-    movementMode:view.phase==='collecting'?'articulated-orbital-pluck':'articulated-hover',
-    groundWalkWeight:view.phase==='collecting'?actions['Walking_A']?.getEffectiveWeight()??0:walk,
+    movementMode:walkWeight>.08?'walking-orbit':'upright-orbital-pluck',
+    walkingClip:walkWeight>.08?'Walking_A':'Idle',
+    walkingWeight:walkWeight,walkPhase:walkTime,
+    walkHeading:body.rotation.y,
+    groundWalkWeight:walkWeight,
     groundPickupWeight:actions['PickUp']?.getEffectiveWeight()??0,
     torsoBendRadians:uprightBones.filter(({bone})=>/^(hips|spine|chest)$/i.test(bone.name)).reduce((m,{bone,rest})=>Math.max(m,bone.quaternion.angleTo(rest)),0),
     legMotionRadians:uprightBones.filter(({bone})=>/^(upperleg|lowerleg|foot)[lr]/.test(bone.name.toLowerCase().replace(/[^a-z0-9]/g,''))).reduce((m,{bone,rest})=>Math.max(m,bone.quaternion.angleTo(rest)),0),
     legBoneCount:uprightBones.filter(({bone})=>/^(upperleg|lowerleg|foot)[lr]/.test(bone.name.toLowerCase().replace(/[^a-z0-9]/g,''))).length,
+    feetVisible:(()=>{let count=0;source.traverse(o=>{if(o.isMesh&&o.visible&&/^SkullMasterSole_/.test(o.name))count++});return count===2})(),
     pluckReachWeight:pluck?.reachWeight??0,
     palmContactInOrbit:!!pluck?.palmContact});
    const top=body.position.clone().add(new THREE.Vector3(0,3.6*scale,0)).project(state.camera);
