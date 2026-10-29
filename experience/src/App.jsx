@@ -62,11 +62,13 @@ function GalaxyCameraFollow({clockRef,rigPoseRef,offeredButtonRef,genieRef,colle
   // physical 3D path as the planet collection rig. No fake walking feet.
   if(genieRef?.current&&pose?.bodyPosition){
    const anchor=pose.bodyPosition.clone().add(new THREE.Vector3(0,pose.scale*1.55,0)).project(camera);
-   const gx=Math.max(size.width*.12,Math.min(size.width*.83,(anchor.x+1)*size.width/2));
-   const gy=Math.max(size.height*.24,Math.min(size.height*.79,(1-anchor.y)*size.height/2));
+   const gx=Math.max(size.width*(size.width<700?.33:.27),Math.min(size.width*(size.width<700?.65:.75),(anchor.x+1)*size.width/2));
+   const gy=Math.max(size.height*.30,Math.min(size.height*(size.width<700?.70:.74),(1-anchor.y)*size.height/2));
    genieRef.current.style.left=gx.toFixed(1)+'px';
    genieRef.current.style.top=gy.toFixed(1)+'px';
    genieRef.current.style.opacity='1';
+   genieRef.current.dataset.phase=pose.phase||'arriving';
+   genieRef.current.dataset.motion=reducedMotion?'reduced':'full';
   }
   // Keep a 2D accessible hit surface aligned with the rendered offered globe.
   // The original 3D raycaster was picking larger background planet hit areas.
@@ -186,8 +188,8 @@ export default function App(){
        style={{position:'absolute',display:'none',zIndex:12,
          transform:'translate(-50%,-50%)',border:0,borderRadius:'50%',
          padding:0,background:'transparent',cursor:'pointer',touchAction:'manipulation'}}/>
-     <div ref={genieRef} className="galaxy-original-genie" role="img" aria-label="Original floating Galaxy Genie">
-       <img src={import.meta.env.BASE_URL+'models/original-genie.svg'} alt=""/>
+     <div ref={genieRef} className="galaxy-original-genie galaxy-cinematic-guardian" data-guardian-version="cinematic-skull-v69" role="img" aria-label="Cinematic Skull Master, guardian of the learning galaxy">
+       <span aria-hidden="true" className="guardian-energy-ring"/><img src={import.meta.env.BASE_URL+'models/cinematic-skull-genie.svg'} alt=""/><span aria-hidden="true" className="guardian-energy-dust"/>
      </div>
    </div>}
    {!available3D&&<div className="galaxy-no-webgl" role="status">
