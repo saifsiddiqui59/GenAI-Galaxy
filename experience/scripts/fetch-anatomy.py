@@ -48,8 +48,11 @@ def main():
                     if res.headers.get("Content-Length") and int(res.headers['Content-Length'])>EXPECTED_BYTES:
                         raise ValueError("Unexpected asset size")
                     raw=res.read(EXPECTED_BYTES+1)
+                # A CDN error sometimes arrives with HTTP 200 and an HTML
+                # response. Retry it, but NEVER allow non-matching content.
+                verify(raw)
                 break
-            except OSError as exc:
+            except (OSError,ValueError) as exc:
                 if attempt==2:
                     raise
                 print(f"Anatomy download attempt {attempt+1} failed ({type(exc).__name__}); retrying",flush=True)
