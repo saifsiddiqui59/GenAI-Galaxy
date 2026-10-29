@@ -145,6 +145,15 @@ async def inspect(pw,url,name,width,height,reduced=False):
                 assert abs(b['walkPhase']-a['walkPhase'])>.2,'Visible leg gait must advance with distance'
                 assert math.dist(a['feetWorld']['left'],b['feetWorld']['left'])>.03
                 assert a['feetVisible'] and b['feetVisible']
+                for frame in (a,b):
+                    contacts=frame.get('plantedTargets',{})
+                    for side in ('left','right'):
+                        target=contacts.get(side)
+                        if not target or target.get('weight',0)<.65:continue
+                        foot=frame['feetWorld'][side]
+                        gap=math.dist(foot,[target['x'],target['y'],target['z']])
+                        print('ACTUAL STANCE GAP',name,side,round(gap,4),flush=True)
+                        assert gap<.23,('ankle must actually reach planted world-space foot anchor',name,side,gap,target,foot)
                 # Return to route-near-contact frame before continuing the pluck.
                 await page.evaluate('(ms)=>window.__galaxyV6.seek(ms)',2200+WORLD_MS*.20)
             first=flight['miniatures']['0']
