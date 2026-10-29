@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {STYLE_PROFILE,isCostumeRed,isPaleBone,remapCostumePixel} from '../src/guardian/styleKayKit.js';
@@ -20,4 +21,13 @@ test('Skull Master has smaller animated head and face-open hood with short dark 
  assert(SKULLMASTER_PROFILE.cloakLength>=.85 && SKULLMASTER_PROFILE.cloakLength<=1.05);
  assert(SKULLMASTER_PROFILE.hoodFrontGap>.6);
  assert.match(SKULLMASTER_PROFILE.outer,/^#[0-9a-f]{6}$/i);
+});
+
+test('walking Skull Master robe keeps genuine femur/shin/foot bones visible',()=>{
+ const jsx=readFileSync(new URL('../src/guardian/skullMasterMantle.js',import.meta.url),'utf8');
+ assert(jsx.includes('SkullMasterSplitWalkingRobe'));
+ assert(jsx.includes('SkullMasterWalkingRobe_'));
+ assert(jsx.includes('head.add(hood)'));
+ assert(jsx.includes('hips.add(waistGarment)'));
+ assert(!jsx.includes('leg.visible=false'));
 });
