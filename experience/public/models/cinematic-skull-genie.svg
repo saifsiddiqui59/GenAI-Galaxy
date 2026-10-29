@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- GenAI Galaxy original vector artwork: cinematic spectral Skull Master, 2026-10-29.
+     Authored for this app. The former friendly Genie remains at original-genie.svg for rollback. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 480 430" role="img" aria-labelledby="guardian-title guardian-desc">
+<title id="guardian-title">Skull Master, Guardian of the Learning Galaxy</title>
+<desc id="guardian-desc">A dark cosmic sorcerer with a dramatic hood, skeletal face, glowing teal eyes, layered robes, open clawed hands and a levitating planet</desc>
+<defs>
+ <radialGradient id="halo"><stop stop-color="#7689da" stop-opacity=".33"/><stop offset=".43" stop-color="#39336f" stop-opacity=".18"/><stop offset="1" stop-color="#20254c" stop-opacity="0"/></radialGradient>
+ <linearGradient id="cape" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#35385b"/><stop offset=".28" stop-color="#201d38"/><stop offset=".64" stop-color="#100f25"/><stop offset="1" stop-color="#061523"/></linearGradient>
+ <linearGradient id="mantle" x1="0" y1="0" x2="1" y2=".9"><stop stop-color="#4e4363"/><stop offset=".42" stop-color="#161729"/><stop offset="1" stop-color="#060b19"/></linearGradient>
+ <linearGradient id="bone" x1="0" y1=".1" x2=".8" y2="1"><stop stop-color="#f5e9d0"/><stop offset=".37" stop-color="#c6bed1"/><stop offset=".75" stop-color="#9da3bf"/><stop offset="1" stop-color="#5b6885"/></linearGradient>
+ <linearGradient id="boneShadow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#c1bed5"/><stop offset="1" stop-color="#64758f"/></linearGradient>
+ <radialGradient id="eye"><stop stop-color="#f6fcf7"/><stop offset=".23" stop-color="#9eefe7"/><stop offset=".60" stop-color="#2de6d5"/><stop offset="1" stop-color="#13758e"/></radialGradient>
+ <radialGradient id="energy"><stop stop-color="#fcf8e8"/><stop offset=".19" stop-color="#bff9ed"/><stop offset=".48" stop-color="#66a5d5"/><stop offset=".78" stop-color="#4e4db0"/><stop offset="1" stop-color="#141344"/></radialGradient>
+ <linearGradient id="trim" x1="0" x2="1" y2="1"><stop stop-color="#eecf94"/><stop offset=".5" stop-color="#a98658"/><stop offset="1" stop-color="#f3dca8"/></linearGradient>
+ <linearGradient id="mist" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#6fb5d4" stop-opacity=".5"/><stop offset=".4" stop-color="#52488d" stop-opacity=".22"/><stop offset="1" stop-color="#231b59" stop-opacity="0"/></linearGradient>
+ <filter id="softGlow" x="-110%" y="-110%" width="320%" height="320%"><feGaussianBlur stdDeviation="8"/></filter>
+ <filter id="eyeGlow" x="-90%" y="-90%" width="280%" height="280%"><feGaussianBlur stdDeviation="2.4"/></filter>
+ <filter id="auraBlur" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="13"/></filter>
+</defs>
+<style>
+.guardian-figure{transform-origin:242px 241px;animation:skull-breathe 5.3s ease-in-out infinite}
+.guardian-tail{transform-origin:238px 293px;animation:skull-tail 4.4s ease-in-out infinite alternate}
+.guardian-cape-back{transform-origin:243px 219px;animation:skull-cape 6.1s ease-in-out infinite alternate}
+.guardian-arm-left{transform-origin:191px 218px;animation:skull-arm-left 4.1s ease-in-out infinite alternate}
+.guardian-arm-right{transform-origin:290px 219px;animation:skull-arm-right 4.9s -.6s ease-in-out infinite alternate}
+.guardian-head{transform-origin:240px 177px;animation:skull-look 6.9s ease-in-out infinite}
+.guardian-glowing-eyes{animation:skull-vision 3.5s ease-in-out infinite alternate}
+.guardian-aura{animation:skull-aura 5.8s ease-in-out infinite alternate}
+.guardian-magic{transform-origin:246px 280px;animation:skull-orb 4.8s ease-in-out infinite}
+.guardian-rune{transform-origin:246px 280px;animation:skull-runes 14s linear infinite}
+.guardian-sparkles{animation:skull-twinkle 3s ease-in-out infinite alternate}
+@keyframes skull-breathe{0%,100%{transform:translateY(2px) rotate(-.7deg)}50%{transform:translateY(-9px) rotate(.8deg)}}
+@keyframes skull-tail{from{transform:skewX(-3deg) rotate(-2deg)}to{transform:skewX(4deg) rotate(3deg)}}
+@keyframes skull-cape{from{transform:rotate(-1.6deg)}to{transform:rotate(1.8deg)}}
+@keyframes skull-arm-left{from{transform:rotate(-5deg)}to{transform:rotate(10deg)}}
+@keyframes skull-arm-right{from{transform:rotate(8deg)}to{transform:rotate(-11deg)}}
+@keyframes skull-look{0%,65%,100%{transform:rotate(0)}78%{transform:rotate(3deg)}}
+@keyframes skull-vision{from{opacity:.72}to{opacity:1}}
+@keyframes skull-aura{from{opacity:.48}to{opacity:.89}}
+@keyframes skull-orb{0%,100%{transform:translateY(3px) scale(.98)}50%{transform:translateY(-9px) scale(1.04)}}
+@keyframes skull-runes{to{transform:rotate(360deg)}}
+@keyframes skull-twinkle{from{opacity:.4}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important}}
+</style>
+<g class="guardian-aura">
+ <ellipse cx="240" cy="232" rx="169" ry="173" fill="url(#halo)" filter="url(#auraBlur)"/>
+ <ellipse cx="240" cy="232" rx="144" ry="166" stroke="#aaadf3" stroke-width="1" stroke-opacity=".19" fill="none" stroke-dasharray="2 13"/>
+ <path d="M99 197Q241 49 384 195" stroke="#7286ca" stroke-opacity=".35" stroke-width="1.5" fill="none"/>
+</g>
+<g class="guardian-tail">
+ <path d="M198 281 C175 325 205 355 183 383 C211 365 246 385 259 414 C250 371 329 360 298 319 L285 278Z" fill="url(#mist)"/>
+ <path d="M213 303 C205 354 251 352 236 406" fill="none" stroke="#6e9ac4" stroke-opacity=".42" stroke-width="5" stroke-linecap="round"/>
+ <path d="M269 302Q307 334 275 380Q302 365 311 350" fill="none" stroke="#a594e6" stroke-opacity=".24" stroke-width="3"/>
+</g>
+<g class="guardian-figure">
+ <g class="guardian-cape-back">
+  <path d="M208 187Q169 176 146 218Q111 268 138 317Q157 351 167 382Q165 342 199 330Q247 357 286 334Q319 338 324 381Q343 338 357 284Q370 239 310 184Q266 156 208 187Z" fill="url(#cape)" stroke="#6e6a9d" stroke-opacity=".63" stroke-width="3"/>
+  <path d="M155 234Q139 288 171 363 M326 217Q360 266 324 370" fill="none" stroke="#8a7aa7" stroke-width="4" stroke-opacity=".47"/>
+  <path d="M170 298Q166 337 189 347 M303 312Q314 346 302 357" fill="none" stroke="#7ccef1" stroke-opacity=".32" stroke-width="2"/>
+ </g>
+ <!-- Robe and chest: severe triangular silhouette; chest is a separate motion layer -->
+ <path d="M198 203Q169 219 170 266Q177 324 224 343Q264 357 309 321Q319 267 304 210Q257 192 198 203Z" fill="url(#mantle)" stroke="#8b83a9" stroke-opacity=".63" stroke-width="3"/>
+ <path d="M194 230Q241 248 293 228M184 282Q244 316 308 284" fill="none" stroke="url(#trim)" stroke-opacity=".7" stroke-width="2"/>
+ <path d="M213 263L242 307L268 262M220 296L241 322L260 296" fill="none" stroke="#c8a16c" stroke-width="3" stroke-opacity=".8"/>
+ <path d="M229 244L239 233L249 244L240 260Z" fill="#a8865e" stroke="#f1d7a1" stroke-width="2"/>
+ <circle cx="240" cy="245" r="6" fill="#81f5e0" filter="url(#eyeGlow)"/>
+ <!-- Gem chain and satchel -->
+ <path d="M181 272Q177 310 171 330Q186 353 216 340L224 311Q215 286 181 272Z" fill="#322944" stroke="#d0ad78" stroke-width="3"/>
+ <path d="M185 293Q201 300 218 294L214 328Q191 341 178 324Z" fill="#211f31" stroke="#aa8b5c" stroke-width="1.5"/>
+ <path d="M188 282Q195 272 207 281" fill="none" stroke="#d7c28f" stroke-width="3"/>
+ <circle cx="200" cy="312" r="7" fill="#4ac7c8" stroke="#dcc68f" stroke-width="2"/>
+ <g class="guardian-head">
+  <!-- Hood forms a swept spectral crown, not a child's cap -->
+  <path d="M166 157Q163 107 198 82L227 56L243 32L264 60Q308 64 321 123Q328 163 302 216Q275 234 244 227Q201 237 176 213Z" fill="url(#cape)" stroke="#b6a3a3" stroke-opacity=".66" stroke-width="3"/>
+  <path d="M200 96Q183 62 166 66Q186 93 176 121M284 93Q314 61 335 70Q308 94 318 122" fill="#2b2948" stroke="#bd996f" stroke-width="3"/>
+  <path d="M176 144Q164 193 195 216Q181 190 193 173M298 170Q315 197 289 219" fill="#141528" stroke="#958aaa" stroke-opacity=".5" stroke-width="2"/>
+  <path d="M181 145Q200 101 241 99Q284 99 305 148Q300 207 244 224Q191 215 181 145Z" fill="#030c19"/>
+  <path d="M200 147Q207 121 241 119Q270 122 282 146L277 189Q264 210 243 210Q213 207 203 185Z" fill="url(#bone)" stroke="#a9b0c9" stroke-width="2.1"/>
+  <path d="M209 139Q235 127 241 134Q247 126 271 140" fill="none" stroke="#fff1dc" stroke-opacity=".35" stroke-width="2"/>
+  <!-- Skull, deeply inset slanted sockets, narrow nasal void, sharply cut jaw -->
+  <path d="M207 155Q222 149 235 164Q227 179 217 178Q206 173 207 155Z" fill="#071626"/>
+  <path d="M245 165Q260 148 278 156Q275 174 258 179Q247 176 245 165Z" fill="#071626"/>
+  <g class="guardian-glowing-eyes">
+   <ellipse cx="224" cy="164" rx="8" ry="5" fill="#5ce6ef" filter="url(#eyeGlow)"/>
+   <ellipse cx="262" cy="164" rx="8" ry="5" fill="#5ce6ef" filter="url(#eyeGlow)"/>
+   <path d="M218 164L231 163M254 163L267 164" stroke="#c7fff3" stroke-width="3" stroke-linecap="round"/>
+  </g>
+  <path d="M242 168L234 184L239 189L247 189L251 184Z" fill="#233042"/>
+  <path d="M213 190Q227 202 240 198Q259 200 273 189L265 211Q241 222 216 209Z" fill="url(#boneShadow)" stroke="#66728a" stroke-width="1.4"/>
+  <path d="M224 201V213M234 203V216M245 204V216M256 202V212" stroke="#313b54" stroke-width="2"/>
+  <!-- Hood frame, metallic rune and gothic crest -->
+  <path d="M182 147Q188 104 230 100Q284 100 306 149" fill="none" stroke="#766581" stroke-width="8" stroke-linecap="round"/>
+  <path d="M190 128Q213 103 242 101Q273 103 294 129" fill="none" stroke="#d3aa76" stroke-width="2" opacity=".8"/>
+  <path d="M240 56L227 91L240 103L253 91Z" fill="#433350" stroke="#d0a96f" stroke-width="2.7"/>
+  <circle cx="240" cy="83" r="6" fill="#8fece8" stroke="#e9d39b" stroke-width="1.5"/>
+  <path d="M179 187L200 208M297 207L313 185" stroke="#d3ad79" stroke-opacity=".6" stroke-width="3"/>
+ </g>
+ <!-- Long separated jointed arms and talon hands visibly orbit the gift -->
+ <g class="guardian-arm-left">
+  <path d="M193 218Q154 205 128 232Q113 247 127 268" fill="none" stroke="#2e2a48" stroke-width="25" stroke-linecap="round"/>
+  <path d="M190 220Q154 210 133 236" fill="none" stroke="#867a9a" stroke-width="4" stroke-linecap="round" stroke-opacity=".72"/>
+  <path d="M126 257L133 280L147 284L157 272L151 258Z" fill="url(#bone)" stroke="#7d93a4" stroke-width="2"/>
+  <path d="M130 269L122 294L128 302M139 278L140 303L149 306M150 274L162 294L166 292" fill="none" stroke="url(#bone)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M121 301L130 310M149 305L155 313" stroke="#7be9dc" stroke-width="2.4" stroke-linecap="round"/>
+ </g>
+ <g class="guardian-arm-right">
+  <path d="M289 220Q337 208 356 239Q373 263 356 281" fill="none" stroke="#282741" stroke-width="25" stroke-linecap="round"/>
+  <path d="M289 220Q336 212 356 243" fill="none" stroke="#8b7798" stroke-width="4" stroke-opacity=".7"/>
+  <path d="M350 270L341 283L330 281L324 267L334 258Z" fill="url(#bone)" stroke="#8b98b6" stroke-width="2"/>
+  <path d="M339 279L335 302L327 309M330 279L315 298L309 305M347 272L355 293L351 302" fill="none" stroke="url(#bone)" stroke-width="5" stroke-linecap="round"/>
+  <path d="M327 308L320 316M309 305L302 314" stroke="#7be9dc" stroke-width="2.4" stroke-linecap="round"/>
+ </g>
+ <!-- Suspended knowledge planet, luminous rings and fine orbit runes -->
+ <g class="guardian-magic">
+  <ellipse cx="246" cy="280" rx="70" ry="56" fill="#7b79e3" opacity=".23" filter="url(#softGlow)"/>
+  <circle cx="246" cy="280" r="41" fill="url(#energy)" stroke="#d6c296" stroke-width="2.4"/>
+  <path d="M217 268Q239 244 267 270M216 292Q242 310 276 283" stroke="#d7f7ed" stroke-width="3" stroke-opacity=".68" fill="none"/>
+  <path d="M229 258Q242 254 249 264Q265 269 261 285Q243 288 240 303" fill="#36689b" fill-opacity=".33"/>
+  <circle cx="231" cy="265" r="7" fill="#ffffff" opacity=".62"/>
+  <g class="guardian-rune" fill="none" stroke="#b9a6e7" stroke-opacity=".7">
+   <ellipse cx="246" cy="280" rx="60" ry="22" transform="rotate(-28 246 280)" stroke-width="2"/>
+   <circle cx="246" cy="280" r="55" stroke-width="1" stroke-dasharray="3 13"/>
+  </g>
+ </g>
+</g>
+<g class="guardian-sparkles" fill="#e2c88f">
+ <path d="M110 137L115 123L120 137L134 142L120 147L115 164L110 147L97 142Z"/>
+ <path d="M354 105L358 94L362 105L374 109L362 112L358 126L354 112L344 109Z"/>
+ <path d="M372 309L375 299L378 309L389 313L378 316L375 329L372 316L363 313Z"/>
+ <circle cx="166" cy="91" r="2.5"/><circle cx="337" cy="207" r="2"/>
+</g>
+</svg>
