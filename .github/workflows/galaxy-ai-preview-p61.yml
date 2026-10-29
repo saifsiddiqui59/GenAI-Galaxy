@@ -44,7 +44,7 @@ jobs:
           # Release the current reviewed frontend without needless Azure Function
           # redeployment if all actual backend code/config matches its known good
           # protected deployment. Never bypass this check for backend changes.
-          backend_sha='5d32a1f66e5e0a414552f70c0bdeadd9ec8c5903'
+          backend_sha='882780290b0f01cfbd1a3d8a9fa7fc3b35a5f6a4'
           git cat-file -e "$backend_sha^{commit}"
           git diff --quiet "$backend_sha" "$GITHUB_SHA" -- api/ infra/azure/backend/ .github/workflows/galaxy-p3-flex-deploy.yml || {
             echo '::error::Backend sources changed; fresh protected backend deployment required'; exit 1;
@@ -59,6 +59,8 @@ jobs:
           node tests/test_p60_interview_layout.cjs
           node tests/test_p59_ai_timeout.cjs
           node tests/test_p73_focused_interview.cjs
+          grep -Fq 'const PRO_COST_FEATURES_ENABLED=false;' app.js
+          node tests/test_p82_pro_cost_ui.cjs
           node tests/test_p74_lesson_ai_wait.cjs
       - uses: azure/login@v3
         with:
