@@ -235,7 +235,9 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    d.screenBody={top:(1-top.y)*state.size.height/2,bottom:(1-bottom.y)*state.size.height/2};
   }
  },-2);
- return <group ref={root}><primitive object={source}/></group>;
+ // Keep the existing verified 3D physics / palm-contact rig as a hidden driver.
+ // The visible character is the ORIGINAL Galaxy Genie SVG (App.jsx).
+ return <group ref={root}><primitive object={source} visible={false}/></group>;
 }
 export default function KayKitGuardian(props){return <Suspense fallback={null}><Model {...props}/></Suspense>}
 useGLTF.preload(ASSET);
