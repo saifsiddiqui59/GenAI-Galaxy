@@ -93,7 +93,11 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   const ankles=['footl','footr'].map(name=>ankleBones.get(name)?.getWorldPosition(new THREE.Vector3()));
   if(ankles.some(v=>!v))throw Error('Walking model needs both original ankle bones');
   const rootY=object.getWorldPosition(new THREE.Vector3()).y;
-  object.userData.ankleFloorOffset=(ankles[0].y+ankles[1].y)/2-rootY;
+  // The rig's authored resting ankle is lower than the actual animated
+  // ankle during stance. Align the bridge with physically REACHABLE heel
+  // targets instead of asking the tibia to stretch below its length.
+  // Calibrated against the actual browser-measured 0.43-unit stance gap.
+  object.userData.ankleFloorOffset=(ankles[0].y+ankles[1].y)/2-rootY+.28;
   return object;
  },[scene,anatomicalSkull,anatomicalBody]);
  const rig=useMemo(()=>discoverRigAnchors(source),[source]);
