@@ -57,26 +57,39 @@ function answerStructureChecklist(text){
   ' · Sufficient detail: '+status(a.sufficientDetail)+'</p>'+
   '<p class="footnote">These indicators are based on visible wording, not semantic correctness. Verify the lesson reference and sources.</p></details>';
 }
-// Galaxy-only entitlement display. The database quota RPC, not these cards, is authoritative.
+// P82: paid features are OFF for everyone until separately released.
+// The Supabase quota RPC and the Azure backend also independently deny spending.
+const PRO_COST_FEATURES_ENABLED=false;
+function proEligible(){
+ const p=state.planInfo;
+ return !state.isGuest&&!!state.user&&p?.plan_code==='PRO'&&p.allowed===true&&
+  (p.status==='ACTIVE'||p.status==='TRIALING')&&Number.isInteger(p.daily_eval_limit)&&p.daily_eval_limit>0;
+}
+function proTag(){return '<span class="galaxy-pro-badge" aria-label="PRO-only feature">PRO</span>'}
+function proFeatureNotice(){
+ return '<div class="pro-feature-notice" role="note">'+proTag()+
+  '<span>Metered features are temporarily disabled for every plan. Free learning and local checks remain available. <a href="#" data-pro-plans>See subscriptions</a>.</span></div>';
+}
 const PLAN_FEATURES=[
  ['246 study topics',true,true,true],
  ['Local guided practice',true,true,true],
  ['Private learning progress',true,true,true],
- ['Model evaluations / user / UTC day','5','10','20'],
  ['Five-question practice sessions',true,true,true],
  ['Priority review scheduling',true,true,true],
- ['Advanced interviewer scenarios','Planned','Planned','Planned'],
- ['AI contextual interviewer','Quota-based','Quota-based','Quota-based']
+ ['AI answer evaluation (Azure OpenAI)',false,false,'PRO · Paused'],
+ ['AI contextual tutor and follow-ups',false,false,'PRO · Paused'],
+ ['Azure Speech transcription',false,false,'PRO · Paused'],
+ ['Server PDF/DOCX extraction',false,false,'PRO · Paused'],
+ ['Advanced interviewer scenarios','Planned','Planned','Planned']
 ];
 function plansMarkup(){
- const code=state.planInfo?.plan_code||'FREE';
- const limit=state.planInfo?.daily_eval_limit||5;
- const cap=state.planInfo?.allowed===false?'Access restricted':`${limit} model evaluations per UTC day`;
+ const code=state.planInfo?.plan_code||'FREE',status=state.planInfo?.status||'Unknown';
  const tiers=['FREE','PLUS','PRO'];
- return intro('ACCOUNT & CAPABILITIES','Your <span class="gradient-text">Galaxy plan.</span>','A transparent feature matrix. No payments or self-service upgrades are enabled; daily AI usage is enforced by the secure backend.')+
- `<div class="panel"><h2>${state.isGuest?'Guest preview':escapeHtml(state.user?.email||'Account')}</h2><p>Current entitlement: <strong>${escapeHtml(code)}</strong> · ${escapeHtml(cap)}</p><p>Galaxy onboarding: <strong>${escapeHtml(state.approvalInfo?.status||'Not checked')}</strong>${state.approvalInfo?.approval_required?' · Admin approval enforced':' · Review gate not yet enforced'}</p><p class="footnote">${state.isGuest?'Sign in to load your account entitlement.':'This is your server-owned subscription status, never a browser-controlled plan.'}</p><button class="btn accent" id="plan-refresh">Refresh plan</button>${state.isGuest?'<button class="btn ghost" id="plan-signin">Sign in</button>':''}</div>`+renewalNoticeMarkup()+
- `<div class="grid-two" style="margin-top:16px">${tiers.map((tier,i)=>`<section class="panel"><span class="eyebrow">${tier}</span><h2>${tier==='FREE'?'Free study':tier==='PLUS'?'Expanded practice':'Highest daily allowance'}</h2><p>${[5,10,20][i]} AI evaluations per day, subject to existing global quota</p><p class="footnote">${tier===code?'Your current plan':tier==='FREE'?'No payment needed':'No purchase or upgrade available yet'}</p></section>`).join('')}</div>`+
- `<div class="panel" style="margin-top:16px;overflow-x:auto"><h2>Capability comparison</h2><table style="width:100%;text-align:left"><thead><tr><th>Feature</th><th>FREE</th><th>PLUS</th><th>PRO</th></tr></thead><tbody>${PLAN_FEATURES.map(row=>`<tr>${row.map(cell=>`<td style="padding:10px;border-bottom:1px solid rgba(150,170,210,.18)">${cell===true?'✓':escapeHtml(cell)}</td>`).join('')}</tr>`).join('')}</tbody></table><p class="footnote">Planned features are not currently included in any tier. Entitlements cannot be granted from browser JavaScript.</p></div>`;
+ return intro('ACCOUNT & CAPABILITIES','Your <span class="gradient-text">Galaxy plan.</span>',
+  'Metered AI features are PRO-only and currently disabled. No payments or self-service upgrades are enabled.')+
+  `<div class="panel"><h2>${state.isGuest?'Guest preview':escapeHtml(state.user?.email||'Account')}</h2><p>Subscription: <strong>${escapeHtml(code)}</strong> · ${escapeHtml(status)}</p><p>Paid features: <strong>Disabled for all plans</strong></p><p>Galaxy onboarding: <strong>${escapeHtml(state.approvalInfo?.status||'Not checked')}</strong></p><p class="footnote">${state.isGuest?'Sign in to load your subscription.':'Your plan comes from the server; badges never grant entitlement.'}</p><button class="btn accent" id="plan-refresh">Refresh plan</button>${state.isGuest?'<button class="btn ghost" id="plan-signin">Sign in</button>':''}</div>`+renewalNoticeMarkup()+
+  `<div class="grid-two galaxy-plan-tiers" style="margin-top:16px">${tiers.map(tier=>`<section class="panel"><span class="eyebrow">${tier}</span><h2>${tier==='FREE'?'Free learning':tier==='PLUS'?'Expanded learning':'AI-powered coaching'}</h2><p>${tier==='PRO'?'Eligible for PRO metered services once launched; at most 20 model calls per UTC day.':'Lessons, guided answers, review and local interview practice; no paid AI calls.'}</p><p class="footnote">${tier===code?'Your current plan':tier==='FREE'?'Free access':'No paid upgrade available yet'}</p></section>`).join('')}</div>`+
+  `<div class="panel" style="margin-top:16px;overflow-x:auto"><h2>Capability comparison</h2>${proFeatureNotice()}<table class="galaxy-plan-matrix"><thead><tr><th>Feature</th><th>FREE</th><th>PLUS</th><th>PRO</th></tr></thead><tbody>${PLAN_FEATURES.map(row=>`<tr>${row.map((cell,i)=>`<td>${cell===true?'✓':cell===false?'—':escapeHtml(cell)}${i===0&&row[1]===false?' '+proTag():''}</td>`).join('')}</tr>`).join('')}</tbody></table><p class="footnote">Legacy quota values FREE 5 / PLUS 10 / PRO 20 are not authorization to spend. Paid AI remains paused until a separately approved release and PRO verification. No prices or checkout are configured.</p></div>`;
 }
 async function refreshPlan(){
  if(state.isGuest||typeof state.client?.rpc!=='function'){state.planInfo=null;state.planLifecycle=null;render();return}
