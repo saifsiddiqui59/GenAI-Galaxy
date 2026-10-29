@@ -3,7 +3,7 @@
    The hood follows the real head bone; mantle follows chest; all 95 animations stay alive.
 */
 export const SKULLMASTER_PROFILE=Object.freeze({
-  headScale:.96,hoodFrontGap:.78,hoodRings:6,cloakLength:.94,
+  headScale:.96,hoodFrontGap:.78,hoodRings:6,cloakLength:.94,robeDrop:.26,
   outer:'#14111e',inner:'#040710',trim:'#352a40'
 });
 function surface(THREE,sections,start,end,segments=32){
@@ -108,8 +108,8 @@ export function attachSkullMasterCloak(source,THREE){
   piece.position.set(side*.37,-.24,-.13);piece.rotation.z=side*.32;
   cape.add(piece);
  }
- // A split leather-and-cloth waist mantle conceals the exposed puppet hips
- // but ends ABOVE the knee. Two individual panels leave original femurs, shins,
+ // A SMALL split waist mantle covers only the hip connection, not the thighs,
+ // knees, shins or feet. A prior long version was rejected in screenshots. Two individual panels leave original femurs, shins,
  // foot IK and movement clearly visible throughout the orbital walk.
  const hips=source.getObjectByName('hips');
  if(hips?.isBone){
@@ -121,8 +121,8 @@ export function attachSkullMasterCloak(source,THREE){
   ];
   for(const [i,p] of panels.entries()){
    const rows=[
-    {y:.14,r:.31,z:.04},{y:-.13,r:.40,z:.09},
-    {y:-.41,r:.42,z:.15},{y:-.63+(i?.06:0),r:.35,z:.19}
+    {y:.14,r:.25,z:.02},{y:.02,r:.29,z:.05},
+    {y:-.12,r:.30,z:.08},{y:-.26+(i?.03:0),r:.28,z:.10}
    ];
    const cloth=addCloth(waistGarment,
      surface(THREE,rows,p.start,p.end,18),
