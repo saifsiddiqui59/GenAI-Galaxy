@@ -3,7 +3,7 @@
    The hood follows the real head bone; mantle follows chest; all 95 animations stay alive.
 */
 export const SKULLMASTER_PROFILE=Object.freeze({
-  headScale:.96,hoodFrontGap:.78,hoodRings:6,cloakLength:.94,robeDrop:.26,
+  headScale:.96,hoodFrontGap:.78,hoodRings:6,cloakLength:.94,
   outer:'#14111e',inner:'#040710',trim:'#352a40'
 });
 function surface(THREE,sections,start,end,segments=32){
@@ -108,32 +108,16 @@ export function attachSkullMasterCloak(source,THREE){
   piece.position.set(side*.37,-.24,-.13);piece.rotation.z=side*.32;
   cape.add(piece);
  }
- // A SMALL split waist mantle covers only the hip connection, not the thighs,
- // knees, shins or feet. A prior long version was rejected in screenshots. Two individual panels leave original femurs, shins,
- // foot IK and movement clearly visible throughout the orbital walk.
+ // The waist is finished with a thin circlet only. Larger cloth panels
+ // were visibly covering the legs even after shortening; do not reintroduce
+ // them until independently verified against rendered footfall screenshots.
  const hips=source.getObjectByName('hips');
  if(hips?.isBone){
-  const waistGarment=new THREE.Group();
-  waistGarment.name='SkullMasterSplitWalkingRobe';
-  hips.add(waistGarment);attached.push([hips,waistGarment]);
-  const panels=[
-   {start:-1.28,end:-.16},{start:.16,end:1.28}
-  ];
-  for(const [i,p] of panels.entries()){
-   const rows=[
-    {y:.14,r:.25,z:.02},{y:.02,r:.29,z:.05},
-    {y:-.12,r:.30,z:.08},{y:-.26+(i?.03:0),r:.28,z:.10}
-   ];
-   const cloth=addCloth(waistGarment,
-     surface(THREE,rows,p.start,p.end,18),
-     i?'#241d33':'#1d1a2e',THREE,.93);
-   cloth.name='SkullMasterWalkingRobe_'+i;
-  }
-  const clasp=new THREE.Mesh(
-   new THREE.IcosahedronGeometry(.055,1),
-   new THREE.MeshStandardMaterial({color:'#c2a673',metalness:.40,roughness:.45}));
-  clasp.name='SkullMasterHipClasp';
-  clasp.position.set(0,.17,.30);waistGarment.add(clasp);
+  const belt=new THREE.Mesh(
+   new THREE.TorusGeometry(.27,.027,7,30),
+   new THREE.MeshStandardMaterial({color:'#4a374f',roughness:.8,metalness:.17}));
+  belt.name='SkullMasterWaistBelt';belt.rotation.x=Math.PI/2;
+  belt.position.set(0,.16,.02);hips.add(belt);attached.push([hips,belt]);
  }
  // Restore only display-owned objects and generated GPU resources.
  return ()=>{
