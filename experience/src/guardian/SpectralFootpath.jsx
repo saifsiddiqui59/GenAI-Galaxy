@@ -49,7 +49,7 @@ export default function SpectralFootpath({rigPoseRef,reducedMotion=false}){
    const t=i/9,site=walkingPathPoint(a,b,t,compact);
    const visible=i<spacing;
    matrix.compose(new THREE.Vector3(site.x,site.y+offset-.016*scale,site.z),rotation,
-    new THREE.Vector3(visible?.26*scale:.00001,visible?.26*scale:.00001,visible?.26*scale:.00001));
+    new THREE.Vector3(visible ? 0.26*scale : 0.00001,visible ? 0.26*scale : 0.00001,visible ? 0.26*scale : 0.00001));
    points.current.setMatrixAt(i,matrix);
   }
   points.current.instanceMatrix.needsUpdate=true;
