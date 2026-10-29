@@ -9,6 +9,7 @@ from PIL import Image
 from playwright.async_api import async_playwright
 
 ROOT=Path(__file__).resolve().parents[1]
+WORLD_MS=9000  # true 4.5s walk per planet; keep in sync with choreography.js
 OUT=Path(os.environ.get('GALAXY_V6_ARTIFACTS',ROOT/'artifacts/p35-v6'))
 OUT.mkdir(parents=True,exist_ok=True)
 
@@ -127,7 +128,7 @@ async def inspect(pw,url,name,width,height,reduced=False):
                 x,y=motion['screen']
                 assert 0<x<width and 0<y<height, ('Opening cropped an orbiting planet',name,world_id,motion['screen'])
             assert await page.locator('.guardian-journey.is-entering').count()==1
-            flight=await capture('approach',2200+4800*.20)
+            flight=await capture('approach',2200+WORLD_MS*.20)
             assert len(intro.get('worldMotion',{}))==17 and len(flight.get('worldMotion',{}))==17, 'All 17 planets must render in independently updated galaxy motion'
             motionA=intro['worldMotion'];motionB=flight['worldMotion']
             for i in range(17):
@@ -145,7 +146,7 @@ async def inspect(pw,url,name,width,height,reduced=False):
                 assert math.dist(a['feetWorld']['left'],b['feetWorld']['left'])>.03
                 assert a['feetVisible'] and b['feetVisible']
                 # Return to route-near-contact frame before continuing the pluck.
-                await page.evaluate('(ms)=>window.__galaxyV6.seek(ms)',2200+4800*.20)
+                await page.evaluate('(ms)=>window.__galaxyV6.seek(ms)',2200+WORLD_MS*.20)
             first=flight['miniatures']['0']
             assert first['sourceWorldIndex']==0 and not first['visible'],first
             assert flight['approachTravel']>.0,'Skull must move towards the orbit while planet stays in place'
@@ -154,7 +155,7 @@ async def inspect(pw,url,name,width,height,reduced=False):
                 assert flight['movementMode']=='distance-linked-footsteps'
                 assert flight.get('walkableRoute',{}).get('railsVisible')
                 assert flight['feetVisible'], 'Both feet must be visibly attached to the real rig'
-            reach=await capture('upright-orbit-reach',2200+4800*.47)
+            reach=await capture('upright-orbit-reach',2200+WORLD_MS*.47)
             assert reach['movementMode'] in ('distance-linked-footsteps','stationary-planet-reach') if os.environ.get('GALAXY_WALKING_EXPECT')=='1' else reach['movementMode']=='articulated-orbital-pluck',reach['movementMode']
             assert reach['groundWalkWeight']>=0,'Walk stops before grabbing the orbital planet'
             assert reach['groundPickupWeight']<.001,'Ground pickup animation must NEVER play'
@@ -163,7 +164,7 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert reach['legMotionRadians']>=0,'Legs remain present while walking/reaching'
             assert not reach['palmContactInOrbit'],'Planet stays in moving galaxy until palm contact'
             assert not reach['miniatures']['0']['visible'],'No duplicate floor or pre-contact sphere'
-            energy=await capture('orbital-contact-glow',2200+4800*.56)
+            energy=await capture('orbital-contact-glow',2200+WORLD_MS*.56)
             assert energy['palmContactInOrbit'], 'The pluck occurs in space at palm contact'
             if os.environ.get('GALAXY_WALKING_EXPECT')=='1':
                 assert energy['movementMode']=='stationary-planet-reach'
@@ -174,23 +175,23 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert math.dist(energy['miniatures']['0']['position'],energy['rightGrip'])<.002, 'Orbital planet must physically follow the real hand'
             assert energy['miniatures']['0']['beamVisible'],'Short contact glint must be visible as the Skull takes the world'
             assert energy['miniatures']['0']['attached'],'Orbital world should attach to real palm after contact'
-            pickup=await capture('pickup',2200+4800*.61)
+            pickup=await capture('pickup',2200+WORLD_MS*.61)
             assert pickup['miniatures']['0']['attached']
             assert pickup['miniatures']['0']['contactError']<.001
             assert pickup['pickupTargetError']<.04,pickup['pickupTargetError']
-            deposit=await capture('deposit',2200+4800*.79)
+            deposit=await capture('deposit',2200+WORLD_MS*.79)
             assert deposit['miniatures']['0']['stage']=='deposit'
             assert deposit['atlasReveal']['progress']==0,'Galaxy must never shrink or move to the right'
-            sweep=await capture('galaxy-stays-fullscreen',7000+1750/2)
+            sweep=await capture('galaxy-stays-fullscreen',(2200+WORLD_MS)+1750/2)
             for snap in (flight,reach,energy,deposit,sweep):
                 assert snap['atlasReveal']['progress']==0 and snap['atlasReveal']['phase']=='immersive', 'Galaxy must NEVER become right-side atlas'
                 assert math.dist(snap['atlasReveal']['position'],intro['atlasReveal']['position'])<.001, 'Galaxy parent must remain fixed fullscreen'
             # All three independent real source clip cycles must be observed.
             for order in [1,2]:
-                ms=2200+(order+.61)*4800
+                ms=2200+(order+.61)*WORLD_MS
                 await page.evaluate('(ms)=>window.__galaxyV6.seek(ms)',ms)
                 await page.wait_for_function('(ms)=>Math.abs(window.__galaxySkeletonDiagnostics.time-ms)<1',arg=ms)
-        diag=await capture('offering',18800)
+        diag=await capture('offering',(2200+3*WORLD_MS+2600))
         assert diag['atlasReveal']['progress']==0 and diag['atlasReveal']['phase']=='immersive', 'Fullscreen orbit must persist after collecting'
         assert await page.locator('.guardian-journey.is-revealed').count()==1,'Show lesson controls without shrinking galaxy'
         assert diag['clips']==95 and diag['bones']==41,diag
