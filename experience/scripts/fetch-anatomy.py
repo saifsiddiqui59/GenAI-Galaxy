@@ -40,43 +40,35 @@ def main():
         return
     if DEST.exists():
         raw=DEST.read_bytes()
+        verify(raw)
     else:
-        # The approved CC0 origin sometimes stalls during CI; retry only
-        # transient network transfers. Every successful response still passes
-        # the exact immutable SHA256, size, glTF header and 322-node checks.
         errors=[]
         for url in (SOURCE,FALLBACK_SOURCE):
             for attempt in range(3):
                 try:
                     req=Request(url,headers={'User-Agent':'GenAI-Galaxy-V6-CC0-Anatomy/1.0'})
-                    with urlopen(req,timeout=35) as res:
-                        if res.headers.get("Content-Length") and int(res.headers['Content-Length'])>EXPECTED_BYTES:
-                            raise ValueError("Unexpected asset size")
-                        raw=res.read(EXPECTED_BYTES+1)
-                    # Verify exact immutable approved bytes even on trusted
-                    # Azure fallback. Incorrect data is NEVER accepted.
+                    with urlopen(req,timeout=35) as response:
+                        raw=response.read(EXPECTED_BYTES+1)
+                    # SHA256, size, 322 meshes and original GLB topology
+                    # must match before this cache/source is accepted.
                     verify(raw)
-                    print("Verified anatomy source:", "previous-published-sha-pinned-copy" if url==FALLBACK_SOURCE else "original-approved-origin")
-                    break
                 except (OSError,ValueError) as exc:
                     errors.append(f"{type(exc).__name__}: {str(exc)[:110]}")
-                    print(f"Anatomy source {('origin' if url==SOURCE else 'sha-pinned published copy')} attempt {attempt+1} failed; retrying",flush=True)
+                    print(f"Approved anatomy fetch attempt {attempt+1} failed; retrying",flush=True)
                     time.sleep(1.2*(attempt+1))
+                else:
+                    print("Verified approved anatomy source:",
+                          "published immutable copy" if url==FALLBACK_SOURCE else "origin")
+                    break
             else:
                 continue
             break
         else:
-            raise RuntimeError("All approved anatomy sources unavailable or hash-invalid; refusing to build. "+repr(errors[-3:]))
+            raise RuntimeError("Approved anatomy unavailable / hash invalid; refusing to build. "+repr(errors[-3:]))
+        DEST.parent.mkdir(parents=True,exist_ok=True)
+        DEST.write_bytes(raw)
     verify(raw)
-                break
-            except (OSError,ValueError) as exc:
-                if attempt==2:
-                    raise
-                print(f"Anatomy download attempt {attempt+1} failed ({type(exc).__name__}); retrying",flush=True)
-                time.sleep(1.5*(attempt+1))
-    verify(raw)
-    DEST.parent.mkdir(parents=True,exist_ok=True)
-    if not DEST.exists():DEST.write_bytes(raw)
     print(f"Verified original CC0 skeleton: {EXPECTED_BYTES} B, 322 mesh nodes, {SHA256}")
 
-if __name__=="__main__":main()
+if __name__=="__main__":
+    main()
