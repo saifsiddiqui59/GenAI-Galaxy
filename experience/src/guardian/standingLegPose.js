@@ -4,6 +4,22 @@
  * No remeshing, new rig, geometry distortion or synthetic hand positions.
  */
 const canonical=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+// Lengthen original bone offsets, NOT visual mesh scales, so new femur and
+// tibia geometry generated from the rig continues to bridge hip/knee/ankle.
+export function lengthenSkeletonLegs(source,factor=1.27){
+ if(!Number.isFinite(factor)||factor<1||factor>1.4)throw Error('Unsafe leg proportion factor');
+ const bones=[];source.traverse(n=>{if(n.isBone)bones.push(n)});
+ let corrected=0;
+ for(const joint of bones){
+  const name=canonical(joint.name);
+  if(/^(lowerleg|foot)[lr]$/.test(name)){
+   joint.position.multiplyScalar(factor);corrected++;
+  }
+ }
+ if(corrected!==4)throw Error('Both source leg chains required for anatomical proportion fix');
+ source.updateMatrixWorld(true);
+ return {corrected,factor};
+}
 export function straightenSkeletonLegs(source,THREE){
  const bones=new Map();source.traverse(n=>{if(n.isBone)bones.set(canonical(n.name),n)});
  const v=()=>new THREE.Vector3();
