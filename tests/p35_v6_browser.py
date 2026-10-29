@@ -49,7 +49,14 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert await page.locator('.galaxy-original-genie').count()==1
             await page.wait_for_selector('#galaxy-boot',state='detached',timeout=6000)
             assert await page.locator('#galaxy-boot').count()==0,'Loading must clear after fade'
-            assert 'Genie' in await page.locator('.galaxy-original-genie').get_attribute('aria-label')
+            assert ('Genie' in await page.locator('.galaxy-original-genie').get_attribute('aria-label')
+                    or 'Skull Master' in await page.locator('.galaxy-original-genie').get_attribute('aria-label'))
+            if os.environ.get('GALAXY_CINEMATIC_EXPECT')=='1':
+                assert await page.locator('[data-guardian-version="cinematic-skull-v69"]').count()==1
+                assert 'cinematic-skull-genie.svg' in await page.locator('.galaxy-cinematic-guardian img').get_attribute('src')
+                dimensions=await page.locator('.galaxy-cinematic-guardian').bounding_box()
+                assert dimensions and dimensions['width']>=(170 if width<700 else 300),dimensions
+                assert dimensions['x']+dimensions['width']>0 and dimensions['x']<width,'Character offscreen'
 
         await page.wait_for_timeout(400)
         labels=await page.locator('[data-world-index]').evaluate_all('(nodes)=>nodes.map(n=>({index:n.dataset.worldIndex,name:n.title,text:n.textContent}))')
