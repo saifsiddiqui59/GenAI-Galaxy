@@ -36,7 +36,7 @@ function reset({signedIn,endpoint=URL,session=true}){
  if(signedIn){
   ctx.__client={auth:{getSession:async()=>({data:{session:session?{access_token:'mock-user-token'}:null}})}};
   ctx.__user={id:'00000000-0000-4000-8000-000000000001',email:'fixture@example.com'};
-  vm.runInContext('state.user=__user;state.client=__client;state.isGuest=false;state.planInfo={plan_code:'PRO',status:'ACTIVE',allowed:true,daily_eval_limit:20};',ctx);
+  vm.runInContext("state.user=__user;state.client=__client;state.isGuest=false;state.planInfo={plan_code:'PRO',status:'ACTIVE',allowed:true,daily_eval_limit:20};",ctx);
  }
 }
 function feedback(){return vm.runInContext('state.feedback',ctx)}
