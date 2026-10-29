@@ -1,0 +1,159 @@
+name: Galaxy V6.9 cinematic Skull Master immersive hosted Chromium review
+on:
+  issue_comment:
+    types: [created]
+  workflow_dispatch:
+    inputs:
+      confirm_preview:
+        description: 'Type PUBLISH_V69_REVIEWED_d3cf457 to publish only the isolated V6 preview'
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: galaxy-v69-protected-publisher
+  cancel-in-progress: false
+jobs:
+  source-ci:
+    if: >-
+      github.repository == 'saifsiddiqui59/GenAI-Galaxy' && github.ref == 'refs/heads/main' &&
+      ((github.event_name == 'workflow_dispatch' && github.actor_id == '80577424' && inputs.confirm_preview == 'PUBLISH_V69_REVIEWED_d3cf457') ||
+       (github.event_name == 'issue_comment' && github.event.issue.number == 131 &&
+        github.event.comment.user.id == 80577424 && github.event.comment.body == 'PUBLISH_V69_REVIEWED_d3cf457'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Require three successful validation jobs on the exact immutable visual source
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: python
+        run: |
+          import json,os,urllib.request
+          root='https://api.github.com/repos/saifsiddiqui59/GenAI-Galaxy'
+          sha='d3cf45740fd001b68b801a6bf6945ac3886600a2'
+          def get(path):
+              request=urllib.request.Request(root+path,headers={'Authorization':'Bearer '+os.environ['GH_TOKEN'],'Accept':'application/vnd.github+json'})
+              with urllib.request.urlopen(request,timeout=30) as response:return json.load(response)
+          runs=get('/actions/runs?head_sha='+sha+'&per_page=30')['workflow_runs']
+          candidates=[r for r in runs if r['head_sha']==sha and r['name']=='Galaxy V4 validation' and r['status']=='completed' and r['conclusion']=='success']
+          assert candidates,'No successful exact-source CI run; do not deploy'
+          run=max(candidates,key=lambda r:r['id'])
+          jobs={j['name']:j['conclusion'] for j in get('/actions/runs/'+str(run['id'])+'/jobs')['jobs']}
+          assert all(jobs.get(name)=='success' for name in ['curriculum-and-api','browser-smoke','release-safety']),jobs
+          print('Verified exact-source CI:',run['html_url'],jobs)
+  publish:
+    needs: source-ci
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      AZ_RG: GenAI_Galaxy
+      AZ_STORAGE: gengalaxy1429841605
+      PREFIX: previews/galaxy-3d-v69
+      REF_SHA: d3cf45740fd001b68b801a6bf6945ac3886600a2
+      GALAXY_V6_ANATOMY: '1'
+      GALAXY_GENIE_EXPECT: '1'
+      GALAXY_CINEMATIC_EXPECT: '1'
+      VITE_GALAXY_ANATOMY: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ env.REF_SHA }}
+          path: source
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build locked source and stage only public preview assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(git -C source rev-parse HEAD)" == "$REF_SHA" ]]
+          npm ci --prefix source/experience --no-audit --no-fund
+          npm run --prefix source/experience build
+          test "$(stat -c%s source/experience/public/models/kaykit/Skeleton_Mage.glb)" -eq 4761048
+          stage="$RUNNER_TEMP/galaxy-v69-stage"
+          GALAXY_SOURCE_ROOT="$GITHUB_WORKSPACE/source" GALAXY_STAGE="$stage" bash source/scripts/p16/stage-preview.sh
+          echo "STAGE=$stage" >> "$GITHUB_ENV"
+      - name: Verify existing dedicated Azure identity
+        shell: bash
+        env:
+          CLIENT: ${{ secrets.AZURE_CLIENT_ID }}
+          TENANT: ${{ secrets.AZURE_TENANT_ID }}
+          SUBSCRIPTION: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          set -euo pipefail
+          [[ "${CLIENT,,}" == 737d67b7-4984-48bb-bb1f-5f62599f645c ]]
+          [[ -n "$TENANT" && -n "$SUBSCRIPTION" ]]
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      - name: Publish ONLY the fixed V6 prefix on existing storage
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$AZ_RG" == GenAI_Galaxy && "$AZ_STORAGE" == gengalaxy1429841605 ]]
+          [[ "$PREFIX" == 'previews/galaxy-3d-v69' ]]
+          id="$(az storage account show -g "$AZ_RG" -n "$AZ_STORAGE" --query id -o tsv)"
+          [[ "$id" == */resourceGroups/GenAI_Galaxy/providers/Microsoft.Storage/storageAccounts/gengalaxy1429841605 ]]
+          enabled="$(az storage account blob-service-properties show -g "$AZ_RG" --account-name "$AZ_STORAGE" --query staticWebsite.enabled -o tsv)"
+          [[ "${enabled,,}" == true ]]
+          az storage container show --auth-mode login --account-name "$AZ_STORAGE" --name '$web' >/dev/null
+          site='https://gengalaxy1429841605.z29.web.core.windows.net'
+          curl --fail --silent --show-error --retry 3 "$site/index.html" | sha256sum > "$RUNNER_TEMP/homepage-before.sha256"
+          az storage blob upload-batch --auth-mode login --account-name "$AZ_STORAGE" \
+            --destination '$web' --destination-path "$PREFIX" --source "$STAGE" --overwrite true --only-show-errors
+          for file in index.html lesson/index.html; do
+            az storage blob upload --auth-mode login --account-name "$AZ_STORAGE" \
+              --container-name '$web' --name "$PREFIX/$file" --file "$STAGE/$file" \
+              --content-type 'text/html; charset=utf-8' --overwrite --only-show-errors
+          done
+      - name: Require hosted SHA256 parity for every staged file and unchanged homepage
+        shell: bash
+        run: |
+          set -euo pipefail
+          site='https://gengalaxy1429841605.z29.web.core.windows.net'
+          mkdir -p "$GITHUB_WORKSPACE/verification"
+          while IFS= read -r file; do
+            expected="$(sha256sum "$STAGE/$file" | cut -d' ' -f1)"
+            hosted="$(curl --fail --silent --show-error --retry 3 --retry-delay 2 "$site/$PREFIX/$file" | sha256sum | cut -d' ' -f1)"
+            [[ "$expected" == "$hosted" ]] || { echo "::error::Hosted SHA mismatch: $file"; exit 1; }
+            echo "$hosted  $file" >> "$GITHUB_WORKSPACE/verification/hosted-sha256.txt"
+          done < <(cd "$STAGE" && find . -type f -printf '%P\n' | sort)
+          curl --fail --silent --show-error --retry 3 "$site/index.html" | sha256sum > "$RUNNER_TEMP/homepage-after.sha256"
+          cmp "$RUNNER_TEMP/homepage-before.sha256" "$RUNNER_TEMP/homepage-after.sha256"
+          cp "$RUNNER_TEMP/homepage-before.sha256" "$GITHUB_WORKSPACE/verification/homepage-unchanged.sha256"
+          echo "$REF_SHA" > "$GITHUB_WORKSPACE/verification/source-sha.txt"
+      - name: Install Chromium for actual hosted acceptance
+        run: |
+          python -m pip install playwright==1.57.0 Pillow==11.3.0
+          python -m playwright install chromium
+      - name: Render actual hosted V6 desktop, mobile, short phone and reduced motion
+        env:
+          GALAXY_V6_URL: https://gengalaxy1429841605.z29.web.core.windows.net/previews/galaxy-3d-v69/index.html?demo=1
+          GALAXY_V6_ARTIFACTS: ${{ github.workspace }}/verification/screenshots
+        run: python source/tests/p35_v6_browser.py
+      - name: Record verified hosted preview
+        shell: bash
+        run: |
+          echo '[Open verified V6.9 permanent full-screen orbit review](https://gengalaxy1429841605.z29.web.core.windows.net/previews/galaxy-3d-v69/index.html?demo=1)' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Every staged asset matched SHA256; homepage hash unchanged; hosted Chromium passed four viewport/motion variants.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: galaxy-v69-hosted-evidence
+          path: verification/
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: Logout Azure
+        if: always()
+        run: az logout >/dev/null 2>&1 || true
