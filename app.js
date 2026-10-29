@@ -273,6 +273,7 @@ async function aiJsonOnce(url,options,timeoutMs=AI_RESPONSE_TIMEOUT_MS,onStage=n
 // The deployed runtime-config.js contains only an approved public API URL.
 // Do not send an AI request without an authenticated session and a deliberate click.
 function modelAvailability(){
+ if(!state.user||state.isGuest)return {ready:false,message:'Guest mode uses a free keyword check, not an LLM. PRO AI is temporarily disabled. Sign in to view plans.'};
  if(!PRO_COST_FEATURES_ENABLED)return {ready:false,message:'PRO · Azure AI evaluation and tutoring are temporarily disabled. The free local check remains available.'};
  if(!proEligible())return {ready:false,message:'PRO subscription required for model-backed evaluation and tutoring. Local practice is free.'};
  const endpoint=window.GALAXY_EVALUATOR_URL;
