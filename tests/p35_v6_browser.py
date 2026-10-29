@@ -17,7 +17,8 @@ async def inspect(pw,url,name,width,height,reduced=False):
     args=['--no-sandbox','--disable-dev-shm-usage','--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']
     if binary:args+=['--no-zygote','--single-process']
     browser=await pw.chromium.launch(headless=True,args=args,**({'executable_path':binary} if binary else {}))
-    page=await browser.new_page(viewport={'width':width,'height':height},reduced_motion='reduce' if reduced else 'no-preference')
+    video_options={'record_video_dir':str(OUT),'record_video_size':{'width':width,'height':height}} if name=='desktop' and os.environ.get('GALAXY_WALKING_EXPECT')=='1' else {}
+    page=await browser.new_page(viewport={'width':width,'height':height},reduced_motion='reduce' if reduced else 'no-preference',**video_options)
     errors=[];requests=[]
     page.on('pageerror',lambda error:errors.append(str(error)))
     page.on('request',lambda req:requests.append(req.url))
@@ -136,6 +137,15 @@ async def inspect(pw,url,name,width,height,reduced=False):
                 assert b['spin']>a['spin'],('Planet must spin on its own axis',i)
             rotationSpeeds=[(motionB[str(i)]['spin']-motionA[str(i)]['spin'])/(flight['time']-intro['time']) for i in range(17)]
             assert len(set(round(v,6) for v in rotationSpeeds))>=5,'Planets need distinct axial spin speeds'
+            if os.environ.get('GALAXY_WALKING_EXPECT')=='1':
+                a=await capture('walking-step-a',2820)
+                b=await capture('walking-step-b',3460)
+                assert b['walkingDistance']>a['walkingDistance']
+                assert abs(b['walkPhase']-a['walkPhase'])>.2,'Visible leg gait must advance with distance'
+                assert math.dist(a['feetWorld']['left'],b['feetWorld']['left'])>.03
+                assert a['feetVisible'] and b['feetVisible']
+                # Return to route-near-contact frame before continuing the pluck.
+                await page.evaluate('(ms)=>window.__galaxyV6.seek(ms)',2200+4800*.20)
             first=flight['miniatures']['0']
             assert first['sourceWorldIndex']==0 and not first['visible'],first
             assert flight['approachTravel']>.0,'Skull must move towards the orbit while planet stays in place'
@@ -251,7 +261,12 @@ async def inspect(pw,url,name,width,height,reduced=False):
         result={'viewport':[width,height],'reduced':reduced,'screenshots':snapshots,'rectangles':rects,'lessonUrl':page.url,'errors':errors}
         (OUT/f'{name}-evidence.json').write_text(json.dumps(result,indent=2))
         print(name,'V6 BROWSER PASS',result['viewport'])
-    finally:await browser.close()
+    finally:
+        if page.video:
+            recording=page.video
+            await page.close()
+            await recording.save_as(str(OUT/'desktop-real-skull-walking.webm'))
+        await browser.close()
 
 async def main():
     url=os.environ.get('GALAXY_V6_URL');server=None
