@@ -8,6 +8,7 @@ test('restore exact original Genie art vocabulary, local SVG asset and correct c
  assert.match(svg,/<svg[^>]+viewBox="0 0 480 430"/);
  for(const feature of ['genie-character','genie-trail','genie-left-arm','genie-right-arm','genie-sparkles','genie-robe'])
   assert(svg.includes(feature),'original art feature missing: '+feature);
+ assert(svg.includes('genie-gift-world'),'Original Genie must offer the glowing gift globe');
  assert.match(svg,/Original Genie illustration, reused from commit 0ca9cc8/);
  assert.equal((svg.match(/<g\b/g)||[]).length,(svg.match(/<\/g>/g)||[]).length,'Original nested SVG groups must balance');
  assert(!svg.includes('http://')||svg.includes('http://www.w3.org/2000/svg'));
@@ -28,4 +29,6 @@ test('old skeleton geometry is invisible, not a second ghost covering the origin
  const jsx=read('../src/guardian/KayKitGuardian.jsx');
  assert(jsx.includes('<primitive object={source} visible={false}/>'));
  assert(jsx.includes('rigPoseRef.current={hand,hip,bag,mouth,staging,grip'));
+ const fx=read('../src/effects/CollectionFX.jsx');
+ assert(fx.includes('ref={bag} visible={false}'),'No duplicate floating 3D satchel over original illustrated sack');
 });
