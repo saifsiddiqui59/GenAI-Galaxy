@@ -1,5 +1,6 @@
 import React,{useEffect,useMemo,useState} from 'react';
 import {phaseAt} from './story.js';
+import {COLLECT_START_MS,PER_WORLD_MS,OFFER_SETTLE_MS} from './choreography.js';
 import {cinematicLayoutAt} from '../space/cinematicLayout.js';
 import './journey.css';
 const MAX_COLLECTION_DISPLAY=17;
@@ -8,7 +9,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
  const [skipped,setSkipped]=useState(false);
  const [sackOpen,setSackOpen]=useState(false);
  const count=Math.min(MAX_COLLECTION_DISPLAY,completed.length);
- const view=useMemo(()=>phaseAt(skipped?99999:elapsed,count,reducedMotion),[skipped,elapsed,count,reducedMotion]);
+ const view=useMemo(()=>phaseAt(skipped?COLLECT_START_MS+count*PER_WORLD_MS+OFFER_SETTLE_MS+1:elapsed,count,reducedMotion),[skipped,elapsed,count,reducedMotion]);
  const stored=completed.slice(0,view.visible);
  // Reveal lesson controls without shrinking or repositioning the galaxy.
  const stageRevealed=view.phase==='offering';
@@ -53,7 +54,7 @@ export default function GuardianJourney({completed=[],nextIndex=0,nextName='',on
     </div>
     <p className="guardian-live-status" role="status">{!ready?'Preparing your companion':view.phase==='arriving'?'Your guide is arriving':view.phase==='collecting'?`Gathering your discoveries · ${view.visible} / ${count}`:'Your next world awaits'}</p>
     {!reducedMotion&&!skipped&&view.phase!=='offering'&&
-      <button type="button" className="guardian-skip" onClick={()=>{clockRef.current.ms=99999;setSkipped(true)}}>Skip introduction</button>}
+      <button type="button" className="guardian-skip" onClick={()=>{clockRef.current.ms=COLLECT_START_MS+count*PER_WORLD_MS+OFFER_SETTLE_MS+1;setSkipped(true)}}>Skip introduction</button>}
     {!reducedMotion&&view.phase==='offering'&&<button type="button" className="guardian-replay" onClick={()=>{setElapsed(0);setSkipped(false);onReplay?.()}}>
       Replay guardian entrance
     </button>}
