@@ -96,6 +96,18 @@ export default function App(){
  const [modelReady,setModelReady]=useState(false);
  const [visible,setVisible]=useState(!document.hidden);
  const ready=useCallback(()=>setModelReady(true),[]);
+ // The HTML boot screen is available before React/GLB downloads. Fade it only
+ // when the real rig is ready; no arbitrary five-second animation delay.
+ useEffect(()=>{
+  if(!modelReady&&available3D)return undefined;
+  const splash=document.getElementById('galaxy-boot');if(!splash)return undefined;
+  let timer=0;
+  const raf=requestAnimationFrame(()=>{
+   splash.style.pointerEvents='none';splash.style.opacity='0';
+   timer=window.setTimeout(()=>splash.remove(),500);
+  });
+  return ()=>{cancelAnimationFrame(raf);window.clearTimeout(timer)};
+ },[modelReady,available3D]);
  const [sequence,setSequence]=useState({activeIndex:-1,visible:0,skipped:false});
  const [selected,setSelected]=useState(null);
  const [warp,setWarp]=useState(null);
@@ -165,7 +177,7 @@ export default function App(){
        style={{position:'absolute',display:'none',zIndex:12,
          transform:'translate(-50%,-50%)',border:0,borderRadius:'50%',
          padding:0,background:'transparent',cursor:'pointer',touchAction:'manipulation'}}/>
-     {!modelReady&&<div className="guardian-loading" role="status">Preparing your galaxy<span>Loading the companion and learning worlds</span></div>}
+
    </div>}
    {!available3D&&<div className="galaxy-no-webgl" role="status">
       <h2>3D graphics unavailable on this device</h2>
