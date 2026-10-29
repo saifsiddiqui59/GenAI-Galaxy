@@ -8,6 +8,7 @@ import hashlib
 import json
 import os
 import struct
+import time
 from pathlib import Path
 from urllib.request import Request,urlopen
 
@@ -37,11 +38,22 @@ def main():
     if DEST.exists():
         raw=DEST.read_bytes()
     else:
+        # The approved CC0 origin sometimes stalls during CI; retry only
+        # transient network transfers. Every successful response still passes
+        # the exact immutable SHA256, size, glTF header and 322-node checks.
         req=Request(SOURCE,headers={'User-Agent':'GenAI-Galaxy-V6-CC0-Anatomy/1.0'})
-        with urlopen(req,timeout=35) as res:
-            if res.headers.get("Content-Length") and int(res.headers['Content-Length'])>EXPECTED_BYTES:
-                raise ValueError("Unexpected asset size")
-            raw=res.read(EXPECTED_BYTES+1)
+        for attempt in range(3):
+            try:
+                with urlopen(req,timeout=35) as res:
+                    if res.headers.get("Content-Length") and int(res.headers['Content-Length'])>EXPECTED_BYTES:
+                        raise ValueError("Unexpected asset size")
+                    raw=res.read(EXPECTED_BYTES+1)
+                break
+            except OSError as exc:
+                if attempt==2:
+                    raise
+                print(f"Anatomy download attempt {attempt+1} failed ({type(exc).__name__}); retrying",flush=True)
+                time.sleep(1.5*(attempt+1))
     verify(raw)
     DEST.parent.mkdir(parents=True,exist_ok=True)
     if not DEST.exists():DEST.write_bytes(raw)
