@@ -19,7 +19,7 @@ jobs:
       VITE_GALAXY_ANATOMY: '1'
       GALAXY_V6_ANATOMY: '1'
       GALAXY_V6_ARTIFACTS: ${{ github.workspace }}/verification/screenshots
-      GALAXY_V6_STAGE: ${{ runner.temp }}/v67-stage
+      GALAXY_V6_STAGE: ${{ github.workspace }}/v67-stage
     steps:
       - uses: actions/checkout@v4
         with:
