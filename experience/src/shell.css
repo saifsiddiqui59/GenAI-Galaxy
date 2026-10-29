@@ -50,3 +50,47 @@ button,a{font:inherit}button:focus-visible,a:focus-visible,input:focus-visible{o
 @keyframes galaxy-genie-floating{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
 @media(max-width:700px){.galaxy-original-genie{width:clamp(130px,42vw,188px);z-index:5}}
 @media(prefers-reduced-motion:reduce){.galaxy-original-genie img{animation:none}}
+
+/* V6.9: Mature Skull Master. One accessible character image, authored SVG
+   layers/eye glows/limbs animate inside the local source, while this DOM stage
+   follows the proven R3F planet-collection path. No walking in empty space. */
+.galaxy-original-genie.galaxy-cinematic-guardian{
+ width:clamp(300px,31vw,448px); aspect-ratio:480 / 430;
+ z-index:5; isolation:isolate; filter:drop-shadow(0 18px 30px #020515ee);
+}
+.galaxy-cinematic-guardian::before{
+ content:"";position:absolute;inset:12% 12% 1%;border-radius:50%;z-index:-2;
+ background:radial-gradient(ellipse at 50% 48%,#6368a924 5%,#4a468318 38%,transparent 71%);
+ box-shadow:0 0 55px #746e9f13;pointer-events:none;
+}
+.galaxy-cinematic-guardian img{
+ position:relative;z-index:2;filter:drop-shadow(0 6px 14px #030412bd) drop-shadow(0 0 13px #a49ce32b);
+ animation:guardian-stage-levitate 5.3s ease-in-out infinite;
+}
+.galaxy-cinematic-guardian .guardian-energy-ring{position:absolute;inset:27% 12% 13%;
+ border:1px solid #a89ac92e;border-radius:50%;transform:rotate(-19deg) scaleX(.82);
+ box-shadow:inset 0 0 35px #8772bb0a,0 0 26px #66a4df18;z-index:-1;opacity:.74;
+ animation:guardian-stage-ring 12s linear infinite;pointer-events:none}
+.galaxy-cinematic-guardian .guardian-energy-dust{
+ position:absolute;inset:5%;z-index:-1;pointer-events:none;
+ background-image:radial-gradient(circle,#fff6d0dd 0 1px,transparent 2px),radial-gradient(circle,#8dd7f1af 0 1px,transparent 2px);
+ background-size:53px 79px,73px 61px;opacity:.3;mask-image:radial-gradient(ellipse,black,transparent 72%);
+ animation:guardian-stage-dust 8s ease-in-out infinite alternate;
+}
+@keyframes guardian-stage-levitate{0%,100%{transform:translateY(3px)}50%{transform:translateY(-9px)}}
+@keyframes guardian-stage-ring{to{transform:rotate(341deg) scaleX(.82)}}
+@keyframes guardian-stage-dust{to{transform:translateY(-12px);opacity:.53}}
+@media(min-width:1100px){
+ .galaxy-cinematic-guardian[data-phase="offering"]{filter:drop-shadow(0 22px 48px #050718c7)}
+}
+@media(max-width:700px){
+ .galaxy-original-genie.galaxy-cinematic-guardian{
+  width:clamp(172px,51vw,226px);z-index:5;
+ }
+ .galaxy-cinematic-guardian .guardian-energy-ring{opacity:.33}
+ .galaxy-cinematic-guardian .guardian-energy-dust{opacity:.16}
+}
+@media(prefers-reduced-motion:reduce){
+ .galaxy-cinematic-guardian img,.galaxy-cinematic-guardian .guardian-energy-ring,
+ .galaxy-cinematic-guardian .guardian-energy-dust{animation:none!important}
+}
