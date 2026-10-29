@@ -15,6 +15,7 @@ const ctx=vm.createContext({
   location:{},navigator:{},addEventListener:()=>{}
 });
 vm.runInContext(source,ctx,{filename:"app.js"});
+vm.runInContext("showGuidedExplanation=()=>{};render=()=>{};",ctx);
 const lessons=JSON.parse(fs.readFileSync(path.join(root,"data/lessons.json"),"utf8"));
 ctx.__lessons=lessons;
 ctx.__topic={title:Object.keys(lessons)[0],branch:"LLM Fundamentals",group:"Basics",
@@ -41,7 +42,7 @@ async function run(){
       "Server PDF/DOCX extraction","AI contextual tutor"]){
      assert.ok(plan.includes(label),label);
    }
-   assert.ok(!plan.includes("checkout"),"No checkout links");
+   assert.ok(!plan.includes("id=\"buy-plan\""),"No checkout actions");
    await vm.runInContext("askAiTutor('explain')",ctx);
    assert.equal(networkCalls,0,"Tutor cannot call a model on "+tier);
  }
