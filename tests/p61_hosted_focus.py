@@ -48,6 +48,10 @@ async def one(browser, width, height):
     await page.screenshot(path=str(OUT/f'lesson-{width}x{height}.png'),full_page=True,animations='disabled',timeout=15000)
     await page.locator('#practice-this').click()
     assert await page.locator('#evaluate-btn').is_visible()
+    assert await page.locator('.galaxy-pro-badge').count() >= 1
+    assert await page.locator('#tutor-explain').is_disabled()
+    assert await page.locator('#tutor-followup').is_disabled()
+    assert await page.locator('#pro-evaluate').is_disabled()
     # Capture the uncluttered entry state before submitting; never trigger a model.
     OUT.mkdir(parents=True,exist_ok=True)
     await page.screenshot(path=str(OUT/f'interview-question-{width}x{height}.png'),full_page=True,animations='disabled',timeout=15000)
@@ -63,6 +67,14 @@ async def one(browser, width, height):
     assert await page.get_by_text('04 · Improved interview-ready answer').count()==1
     OUT.mkdir(parents=True,exist_ok=True)
     await page.screenshot(path=str(OUT/f'interview-{width}x{height}.png'),full_page=True,animations='disabled',timeout=15000)
+    # Existing Plans screen must describe PRO restrictions without checkout.
+    await page.locator('[data-pro-plans]').first.click()
+    await page.locator('.galaxy-plan-matrix').wait_for(timeout=12000)
+    matrix=await page.locator('.galaxy-plan-matrix').inner_text()
+    assert 'AI answer evaluation' in matrix
+    assert 'Azure Speech transcription' in matrix
+    assert 'PRO · Paused' in matrix
+    await page.screenshot(path=str(OUT/f'pro-plans-{width}x{height}.png'),full_page=True,animations='disabled',timeout=15000)
     assert not errors,errors
     print(f'P61 hosted public-only guest interview {width}x{height} PASS; no model call')
     await page.close()
