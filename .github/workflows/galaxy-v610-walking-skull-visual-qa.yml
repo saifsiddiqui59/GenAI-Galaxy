@@ -5,7 +5,6 @@ on:
       - 'experience/**'
       - 'tests/p35_v6_browser.py'
       - '.github/workflows/galaxy-v610-walking-skull-visual-qa.yml'
-      - '.github/workflows/galaxy-v610-walking-skull-visual-qa.yml'
   workflow_dispatch:
 permissions:
   contents: read
