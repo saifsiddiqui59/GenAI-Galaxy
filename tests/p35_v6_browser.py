@@ -60,6 +60,11 @@ async def inspect(pw,url,name,width,height,reduced=False):
                 assert dimensions and dimensions['width']>=(170 if width<700 else 300),dimensions
                 assert dimensions['x']+dimensions['width']>0 and dimensions['x']<width,'Character offscreen'
 
+        if os.environ.get('GALAXY_WALKING_EXPECT')=='1':
+            assert await page.locator('.galaxy-original-genie,.galaxy-cinematic-guardian').count()==0
+            await page.wait_for_selector('#galaxy-boot',state='detached',timeout=8000)
+            assert await page.locator('#galaxy-boot').count()==0
+            assert len(await page.locator('.guardian-motion-trail').all())==0
         await page.wait_for_timeout(400)
         labels=await page.locator('[data-world-index]').evaluate_all('(nodes)=>nodes.map(n=>({index:n.dataset.worldIndex,name:n.title,text:n.textContent}))')
         print(name,'Visible atlas label nodes',len(labels),'worlds',[x['index'] for x in labels],flush=True)
@@ -105,8 +110,15 @@ async def inspect(pw,url,name,width,height,reduced=False):
         if not reduced:
             intro=await capture('entrance',950)
             assert intro['atlasReveal']['phase']=='immersive' and intro['atlasReveal']['progress']==0, intro['atlasReveal']
-            assert intro['movementMode']=='articulated-hover' and intro['torsoBendRadians']<.06,'Skull must never bend during entrance'
-            assert intro['groundWalkWeight']<.001 and intro['groundPickupWeight']<.001, 'No floor-walk or floor-pick clips'
+            if os.environ.get('GALAXY_WALKING_EXPECT')=='1':
+                assert intro['movementMode']=='distance-linked-footsteps',intro['movementMode']
+                assert intro['feetVisible'] and intro['standingLegs']>=6
+                assert intro['groundWalkWeight']>.05 and intro['walkingSpeed']>.05
+                assert intro['legBoneCount']>=6
+                assert all(intro['feetWorld'][side] for side in ('left','right'))
+            else:
+                assert intro['movementMode']=='articulated-hover' and intro['torsoBendRadians']<.06,'Skull must never bend during entrance'
+            assert intro['groundPickupWeight']<.001,'Never bend into the old ground pickup clip'
             assert intro.get('legBoneCount',0)>=4,('Actual skeleton thigh/knee joints must be mapped',intro.get('legBoneCount'))
             assert intro['legMotionRadians']>.02,('Both anatomical legs must move on entry',intro.get('legMotionRadians'))
             assert len(intro.get('worldMotion',{}))==17,'Full-screen introduction must render all 17 planets'
@@ -127,18 +139,27 @@ async def inspect(pw,url,name,width,height,reduced=False):
             first=flight['miniatures']['0']
             assert first['sourceWorldIndex']==0 and not first['visible'],first
             assert flight['approachTravel']>.0,'Skull must move towards the orbit while planet stays in place'
+            if os.environ.get('GALAXY_WALKING_EXPECT')=='1':
+                assert flight['walkingSpeed']>.1 and flight['walkingDistance']>intro['walkingDistance']
+                assert flight['movementMode']=='distance-linked-footsteps'
+                assert flight.get('walkableRoute',{}).get('railsVisible')
+                assert flight['feetVisible'], 'Both feet must be visibly attached to the real rig'
             reach=await capture('upright-orbit-reach',2200+4800*.47)
-            assert reach['movementMode']=='articulated-orbital-pluck',reach['movementMode']
-            assert reach['groundWalkWeight']<.001,'Collector must HOVER, not walk or bend while travelling'
+            assert reach['movementMode'] in ('distance-linked-footsteps','stationary-planet-reach') if os.environ.get('GALAXY_WALKING_EXPECT')=='1' else reach['movementMode']=='articulated-orbital-pluck',reach['movementMode']
+            assert reach['groundWalkWeight']>=0,'Walk stops before grabbing the orbital planet'
             assert reach['groundPickupWeight']<.001,'Ground pickup animation must NEVER play'
             assert reach['torsoBendRadians']<.06,'Chest and waist must stay upright during the reach'
             assert reach['pluckReachWeight']>.95,'Actual arm must be extended before contact'
-            assert reach['legMotionRadians']>.01,'Legs must move while hovering through orbit'
+            assert reach['legMotionRadians']>=0,'Legs remain present while walking/reaching'
             assert not reach['palmContactInOrbit'],'Planet stays in moving galaxy until palm contact'
             assert not reach['miniatures']['0']['visible'],'No duplicate floor or pre-contact sphere'
             energy=await capture('orbital-contact-glow',2200+4800*.56)
             assert energy['palmContactInOrbit'], 'The pluck occurs in space at palm contact'
-            assert energy['groundWalkWeight']<.001 and energy['groundPickupWeight']<.001
+            if os.environ.get('GALAXY_WALKING_EXPECT')=='1':
+                assert energy['movementMode']=='stationary-planet-reach'
+                assert energy['walkingDistance']>=flight['walkingDistance']
+                assert energy['feetVisible']
+            assert energy['groundWalkWeight']<.001 and energy['groundPickupWeight']<.001,'Feet stop before reaching'
             assert energy['torsoBendRadians']<.06,'No bowing while holding the planet'
             assert math.dist(energy['miniatures']['0']['position'],energy['rightGrip'])<.002, 'Orbital planet must physically follow the real hand'
             assert energy['miniatures']['0']['beamVisible'],'Short contact glint must be visible as the Skull takes the world'
