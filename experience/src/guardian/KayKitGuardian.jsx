@@ -13,6 +13,7 @@ import {ANATOMY_ASSET,ANATOMY_MODE,attachAnatomicalSkeleton} from './retargetAna
 import {guardianStageScale,guardianFloorY} from './guardianFraming.js';
 import {moveWrist} from './handIK.js';
 import {articulatedHoverAt} from './articulatedHover.js';
+import {straightenSkeletonLegs} from './standingLegPose.js';
 import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS,OFFER_SETTLE_MS} from '../journey/choreography.js';
 import {phaseAt} from '../journey/story.js';
 const ASSET=import.meta.env.BASE_URL+'models/kaykit/Skeleton_Mage.glb';
@@ -73,6 +74,9 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    object.userData.anatomicalParts=anatomy.attached;
    object.userData.anatomicalClusters=anatomy.clusters;
   }
+  // Stabilize legs in a real extended standing pose before storing the rest
+  // quaternions. The original source clips tuck knees under the rib cage.
+  object.userData.standingLegs=straightenSkeletonLegs(object,THREE);
   return object;
  },[scene,anatomicalSkull,anatomicalBody]);
  const rig=useMemo(()=>discoverRigAnchors(source),[source]);
@@ -116,6 +120,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     spectralActive:!!source.userData.spectralActive,
     articulatedArms:!!source.userData.articulatedArms,
     articulatedLegs:!!source.userData.articulatedLegs,
+    standingLegs:source.userData.standingLegs?.corrected||0,
     visibleLegMeshes:(()=>{let n=0;source.traverse(o=>{if(o.isMesh&&o.visible&&/^SkullMaster(Femur|Tibia|Foot)_/.test(o.name))n++});return n})()};
   }
   return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeAnatomy?.();source.userData.disposeDetail?.();source.userData.disposeMantle?.();source.userData.disposeStyle?.()};
@@ -149,9 +154,9 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   body.rotation.y=walkWeight>.08?(approach.yaw??entrance.yaw):(pickup?0:entrance.yaw);
   body.rotation.x=0;body.rotation.z=0;
   const pluck=pickup?orbitalPluckPose(pickup.t):null;
-  // Drive the ACTUAL authored KayKit walking clip, including hip/knee/ankle
-  // rotation and arm swing. Never sample the ground PickUp clip. The walk
-  // weight eases to zero at every planet contact, protecting the hand IK.
+  // Drive the authored KayKit walking arm/torso clip while using upright,
+  // connected foot geometry. The lower limbs must not inherit the source
+  // clip's folded-knee pose. Never sample the ground PickUp clip.
   const walkingClip=actions['Walking_A']?.getClip();
   const walkTime=walkingClip?(ms*.001*1.35)%Math.max(.01,walkingClip.duration):0;
   // Avoid the source clip's deeply tucked knees; blend its upper-body stride
@@ -161,18 +166,10 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   sample('Idle',.14,1-clipWeight);
   if(walkingClip&&walkWeight>0)sample('Walking_A',walkTime,clipWeight);
   mixer.update(0);
-  const animatedLegs=new Map();
-  if(walkWeight>.001)for(const {bone} of uprightBones){
-   const name=bone.name.toLowerCase().replace(/[^a-z0-9]/g,'');
-   if(/^(upperleg|lowerleg|foot)[lr]/.test(name))animatedLegs.set(bone,bone.quaternion.clone());
-  }
-  // Keep the torso upright, but blend actual knee/foot clips into the real
-  // articulated rig while walking. No frozen legs or rigid teleport effect.
-  for(const {bone,rest} of uprightBones){
-   bone.quaternion.copy(rest);
-   const sampled=animatedLegs.get(bone);
-   if(sampled)bone.quaternion.slerp(sampled,walkWeight*.20);
-  }
+  // Corrected standing chains are the neutral base. Walk-cycle motion on
+  // those connected legs comes from bounded procedural leg articulation,
+  // not a raw authored clip that folds both feet under the torso.
+  for(const {bone,rest} of uprightBones)bone.quaternion.copy(rest);
   const gesture=articulatedHoverAt(ms,view.phase,reducedMotion);
   const joints=[
    ['upperlegl',gesture.leftThigh,jointAxis],['upperlegr',gesture.rightThigh,jointAxis],
