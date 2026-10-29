@@ -218,7 +218,7 @@ export default function App(){
         strokeLinecap="round" strokeLinejoin="round"/>
      </svg>
      <div ref={genieRef} className="galaxy-original-genie galaxy-cinematic-guardian" data-guardian-version="cinematic-skull-v69" role="img" aria-label="Cinematic Skull Master, guardian of the learning galaxy">
-       <span aria-hidden="true" className="guardian-energy-ring"/><img src={import.meta.env.BASE_URL+'models/cinematic-skull-genie.svg'} alt=""/><span aria-hidden="true" className="guardian-energy-dust"/>
+       <span aria-hidden="true" className="guardian-energy-ring"/><img src={import.meta.env.BASE_URL+(animationEnabled&&!reduced?'models/cinematic-skull-genie.svg':'models/cinematic-skull-genie-still.svg')} alt=""/><span aria-hidden="true" className="guardian-energy-dust"/>
        <span className="guardian-character-label" aria-hidden="true">THE SKULL MASTER</span>
      </div>
    </div>}
