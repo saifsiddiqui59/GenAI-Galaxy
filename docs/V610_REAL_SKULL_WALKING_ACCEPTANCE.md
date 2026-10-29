@@ -29,3 +29,5 @@
 - No Azure publish/production release. Owner requested real walking between orbiting planets, not the 2D floating SVG.
 
 - Visual QA exposed a serious regression: first split-waist robe ended below the knees and completely concealed both walking feet. It was **rejected**. Shortened the panel drop to 0.26 local units and added a regression limit; original anatomical thigh/knee/feet remain exposed for real walking. Review the next rendered screenshot before approval.
+
+- Second visual QA still found front cloth hiding one leg and both thighs. Rejected the hip panels completely; retained a narrow waist circlet only. Foot IK/bridge and original real 3D gait are unchanged. Do not merge until source and browser QA pass and visual quality is reviewed.
