@@ -9,6 +9,7 @@
  */
 import {mergeGeometries} from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import {attachRiggedSkeletalArms} from './riggedSkeletalArms.js';
+import {attachRiggedSkeletalLegs} from './riggedSkeletalLegs.js';
 
 export const ANATOMY_ASSET='models/cc0/InnersceneAnatomicalSkeleton.glb';
 export const ANATOMY_SHA256='e52d1b23cf15b574885846a7da30354defc0a3a51b679ded6cbc7c0c1965d996';
@@ -186,22 +187,25 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
   if(!combined)throw Error('Could not merge anatomical bones at '+name);
   const mesh=new THREE.Mesh(combined,material);
   mesh.name='SkullMasterAnatomy_'+name;
-  // Keep animated genuine pelvis/spine/ribs/hands/arms; replace ill-fitting
-  // crossed-knee KayKit leg poses with a volumetric ethereal lower silhouette.
-  const isLeg=/^(hips|upperleg|lowerleg|foot|upperarm|lowerarm|hand)/i.test(name);
-  mesh.visible=!isLeg;
-  mesh.userData.concealedBySpectralVapor=isLeg;
-  mesh.castShadow=!isLeg;
+  // Keep original unskinned arm and leg clusters hidden: they cross at the
+  // knees in motion. The connected KayKit rig gains independently articulated
+  // anatomical legs and arms below; retain the authentic pelvis/rib cage.
+  const replaced=/^(upperleg|lowerleg|foot|upperarm|lowerarm|hand)/i.test(name);
+  mesh.visible=!replaced;
+  mesh.userData.replacedByRiggedBones=replaced;
+  mesh.castShadow=!replaced;
   bone.add(mesh);
   owned.push(mesh);geos.push(combined);
  }
- const spectral=attachSpectralLowerBody(source,THREE);
+ // No vapor cone obscuring the thighs: the owner requested visible feet,
+ // knees and natural upper-body motion on the *original* anatomical bones.
  const arms=attachRiggedSkeletalArms(source,THREE);
+ const legs=attachRiggedSkeletalLegs(source,THREE);
  return {
-  attached:classified,clusters:owned.length,skinsUntouched:true,spectralActive:true,articulatedArms:true,
-  update:ms=>spectral.update(ms),
+  attached:classified,clusters:owned.length,skinsUntouched:true,spectralActive:false,articulatedArms:true,articulatedLegs:true,
+  update:()=>{},
   dispose(){
-   spectral.dispose();arms.dispose();
+   legs.dispose();arms.dispose();
    for(const mesh of owned)mesh.parent?.remove(mesh);
    geos.forEach(g=>g.dispose());material.dispose();
   }

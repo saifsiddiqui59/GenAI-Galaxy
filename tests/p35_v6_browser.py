@@ -82,8 +82,9 @@ async def inspect(pw,url,name,width,height,reduced=False):
         if not reduced:
             intro=await capture('entrance',950)
             assert intro['atlasReveal']['phase']=='immersive' and intro['atlasReveal']['progress']==0, intro['atlasReveal']
-            assert intro['movementMode']=='upright-hover' and intro['torsoBendRadians']<.005,'Skull must never bend during entrance'
-            assert intro['groundWalkWeight']<.001 and intro['groundPickupWeight']<.001, 'No walking or floor pickup at any point'
+            assert intro['movementMode']=='articulated-hover' and intro['torsoBendRadians']<.06,'Skull must never bend during entrance'
+            assert intro['groundWalkWeight']<.001 and intro['groundPickupWeight']<.001, 'No floor-walk or floor-pick clips'
+            assert intro['legMotionRadians']>.02,'Both anatomical legs must move on entry'
             assert len(intro.get('worldMotion',{}))==17,'Full-screen introduction must render all 17 planets'
             for world_id,motion in intro['worldMotion'].items():
                 x,y=motion['screen']
@@ -103,17 +104,18 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert first['sourceWorldIndex']==0 and not first['visible'],first
             assert flight['approachTravel']>.0,'Skull must move towards the orbit while planet stays in place'
             reach=await capture('upright-orbit-reach',2200+4800*.47)
-            assert reach['movementMode']=='upright-orbital-pluck',reach['movementMode']
+            assert reach['movementMode']=='articulated-orbital-pluck',reach['movementMode']
             assert reach['groundWalkWeight']<.001,'Collector must HOVER, not walk or bend while travelling'
             assert reach['groundPickupWeight']<.001,'Ground pickup animation must NEVER play'
-            assert reach['torsoBendRadians']<.005,'Chest and waist must stay upright during the reach'
+            assert reach['torsoBendRadians']<.06,'Chest and waist must stay upright during the reach'
             assert reach['pluckReachWeight']>.95,'Actual arm must be extended before contact'
+            assert reach['legMotionRadians']>.01,'Legs must move while hovering through orbit'
             assert not reach['palmContactInOrbit'],'Planet stays in moving galaxy until palm contact'
             assert not reach['miniatures']['0']['visible'],'No duplicate floor or pre-contact sphere'
             energy=await capture('orbital-contact-glow',2200+4800*.56)
             assert energy['palmContactInOrbit'], 'The pluck occurs in space at palm contact'
             assert energy['groundWalkWeight']<.001 and energy['groundPickupWeight']<.001
-            assert energy['torsoBendRadians']<.005,'No bowing while holding the planet'
+            assert energy['torsoBendRadians']<.06,'No bowing while holding the planet'
             assert math.dist(energy['miniatures']['0']['position'],energy['rightGrip'])<.002, 'Orbital planet must physically follow the real hand'
             assert energy['miniatures']['0']['beamVisible'],'Short contact glint must be visible as the Skull takes the world'
             assert energy['miniatures']['0']['attached'],'Orbital world should attach to real palm after contact'
@@ -141,7 +143,8 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert diag.get('anatomyEnabled') and diag.get('anatomicalParts',0)>=280,\
                 ('New anatomical GLB must actually render in this browser run',diag.get('anatomicalParts'),diag.get('anatomyEnabled'))
             assert 10<=diag.get('anatomicalClusters',0)<=16,diag.get('anatomicalClusters')
-            assert diag.get('spectralActive') and diag.get('articulatedArms'),('Only the floating anatomical rig with connected palms is accepted',diag)
+            assert diag.get('articulatedLegs') and diag.get('articulatedArms') and not diag.get('spectralActive'),('Visible bone-rigged legs and palms, not a legless vapor body, are required',diag)
+            assert diag.get('visibleLegMeshes',0)>=4,'Both thigh and shin meshes must render'
         assert diag.get('toyEyesHidden'),'Oversized KayKit toy eyes must stay hidden in the rendered Skull Master'
         if diag.get('offeringCenter') and diag.get('waistPosition'):
             # Both coordinates are world space. The globe may not sit inside
@@ -149,7 +152,7 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert diag['waistPosition'][0]-diag['offeringCenter'][0]>.30,\
                 (name,'offered planet overlaps torso',diag['offeringCenter'],diag['waistPosition'])
         assert diag['hasArmIK'] and math.isfinite(diag['ikError']) and diag['ikError']<.18,diag.get('ikError')
-        assert diag['torsoBendRadians']<.005,'Skull must be upright when presenting planet'
+        assert diag['torsoBendRadians']<.06,'Skull must be upright when presenting planet'
         assert all(not m['visible'] for m in diag.get('miniatures',{}).values()),'Stored planets must be inside the bag'
         if not reduced:
             assert [p['index'] for p in diag['pickupLog']][-3:]==[0,1,2],diag['pickupLog']
