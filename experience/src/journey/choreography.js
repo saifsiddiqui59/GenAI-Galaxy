@@ -1,6 +1,8 @@
-// One shared simulation clock: body, original clip, palm contact and prop release.
+// One shared simulation clock: body, walking footsteps, palm contact and prop release.
+// Walk time is intentionally longer (4.5 s per approach) so the character
+// takes readable steps instead of sliding across the 17-world galaxy.
 export const COLLECT_START_MS=2200;
-export const PER_WORLD_MS=4800;
+export const PER_WORLD_MS=9000;
 export const OFFER_SETTLE_MS=1700;
 export const CONTACT=.50;
 export const RELEASE=.84;
