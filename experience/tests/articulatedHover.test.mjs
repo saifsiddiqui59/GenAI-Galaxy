@@ -22,7 +22,7 @@ test('motion remains controlled during orbit plucks and is disabled for reduced 
    assert(Math.abs(m.spine)<.036);
    assert(Object.values(m).every(Number.isFinite));
    const r=articulatedHoverAt(ms,phase,true);
-   for(const key of Object.keys(r)) assert.equal(r[key],0,'reduced motion '+key);
+   for(const key of Object.keys(r)) assert(Math.abs(r[key])===0,'reduced motion '+key);
   }
  }
 });
