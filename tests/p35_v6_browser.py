@@ -84,7 +84,8 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert intro['atlasReveal']['phase']=='immersive' and intro['atlasReveal']['progress']==0, intro['atlasReveal']
             assert intro['movementMode']=='articulated-hover' and intro['torsoBendRadians']<.06,'Skull must never bend during entrance'
             assert intro['groundWalkWeight']<.001 and intro['groundPickupWeight']<.001, 'No floor-walk or floor-pick clips'
-            assert intro['legMotionRadians']>.02,'Both anatomical legs must move on entry'
+            assert intro.get('legBoneCount',0)>=4,('Actual skeleton thigh/knee joints must be mapped',intro.get('legBoneCount'))
+            assert intro['legMotionRadians']>.02,('Both anatomical legs must move on entry',intro.get('legMotionRadians'))
             assert len(intro.get('worldMotion',{}))==17,'Full-screen introduction must render all 17 planets'
             for world_id,motion in intro['worldMotion'].items():
                 x,y=motion['screen']
