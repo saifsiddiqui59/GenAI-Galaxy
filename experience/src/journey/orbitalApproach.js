@@ -20,8 +20,10 @@ export function guardianApproachAt(ms,indexes=[],gripLocal={x:0,y:1.4,z:.3},comp
  const homeEnd={...home,x:entranceAt(COLLECT_START_MS,compact).x,
   y:home.y+(compact?(short?.26:.34):0)};
  const homePose={...home,y:reduced&&compact?homeEnd.y:home.y,
-  scale,walkWeight:initial.walkWeight,travel:0,orbitalTarget:null};
+  scale,walkWeight:reduced?0:initial.walkWeight,yaw:initial.yaw,
+  travel:0,orbitalTarget:null};
  if(reduced||!safe.length||ms<COLLECT_START_MS)return homePose;
+ const heading=(dx,dz)=>Math.max(-.82,Math.min(.82,Math.atan2(dx,Math.abs(dz)+1)));
  const toPosition=(index,order)=>{
   const world=orbitContactAt(index,order,compact,short,safe.length,reduced);
   return {x:world.x-gripLocal.x*scale,
@@ -35,17 +37,23 @@ export function guardianApproachAt(ms,indexes=[],gripLocal={x:0,y:1.4,z:.3},comp
   const u=smoother((ms-endOfCollections)/OFFER_SETTLE_MS);
   return {x:last.x+(homeEnd.x-last.x)*u,
    y:last.y+(homeEnd.y-last.y)*u,z:last.z+(homeEnd.z-last.z)*u,
-   scale,walkWeight:1-u,travel:u,orbitalTarget:last.world};
+   scale,walkWeight:reduced?0:Math.sin(Math.PI*u),yaw:heading(homeEnd.x-last.x,homeEnd.z-last.z),
+   travel:u,orbitalTarget:last.world};
  }
  const order=Math.min(safe.length-1,Math.floor((ms-COLLECT_START_MS)/PER_WORLD_MS));
  const now=toPosition(safe[order],order);
  const from=order?toPosition(safe[order-1],order-1):homeEnd;
  const t=(ms-launchAt(order))/PER_WORLD_MS;
  const u=smoother(t/CONTACT);
- return {x:from.x+(now.x-from.x)*u,
+ // Travel around each world's rim on a smooth sidestep arc. The offset is
+ // zero at takeoff and palm contact, so the true orbit-contact IK stays exact.
+ const dx=now.x-from.x,dz=now.z-from.z;
+ const planar=Math.max(.001,Math.hypot(dx,dz));
+ const bow=(compact?.16:.48)*Math.sin(Math.PI*u);
+ return {x:from.x+dx*u+(-dz/planar)*bow,
    y:from.y+(now.y-from.y)*u,
-   z:from.z+(now.z-from.z)*u,
-   scale,walkWeight:0,travel:u,
+   z:from.z+dz*u+(dx/planar)*bow,
+   scale,walkWeight:reduced?0:Math.sin(Math.PI*u),yaw:heading(dx,dz),travel:u,
    worldIndex:safe[order],
    // Character travels to the predicted future contact point, but its hand
    // continuously tracks the planet's CURRENT orbit during the final reach.
