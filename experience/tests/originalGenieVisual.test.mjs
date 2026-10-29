@@ -9,7 +9,7 @@ test('restore exact original Genie art vocabulary, local SVG asset and correct c
  for(const feature of ['genie-character','genie-trail','genie-left-arm','genie-right-arm','genie-sparkles','genie-robe'])
   assert(svg.includes(feature),'original art feature missing: '+feature);
  assert.match(svg,/Original Genie illustration, reused from commit 0ca9cc8/);
- assert.equal((svg.match(/<g\\b/g)||[]).length,(svg.match(/<\\/g>/g)||[]).length,'Original nested SVG groups must balance');
+ assert.equal((svg.match(/<g\b/g)||[]).length,(svg.match(/<\/g>/g)||[]).length,'Original nested SVG groups must balance');
  assert(!svg.includes('http://')||svg.includes('http://www.w3.org/2000/svg'));
  const copy=read('../src/journey/GuardianJourney.jsx');
  assert(copy.includes('Your Genie glides'));
