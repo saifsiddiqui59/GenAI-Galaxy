@@ -59,7 +59,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   object.scale.setScalar(factor);
   object.position.set(-box.getCenter(new THREE.Vector3()).x*factor,-box.min.y*factor,-box.getCenter(new THREE.Vector3()).z*factor);
   object.userData.geometryHeight=height;
-  object.userData.legProportions=lengthenSkeletonLegs(object,1.27);
+  object.userData.legProportions=lengthenSkeletonLegs(object,1.55);
   object.userData.disposeStyle=styleKayKit(object,THREE,{anatomical:ANATOMY_MODE});
   const detailed=mountDetailedSkull(object,anatomicalSkull);
   if(!detailed.active)throw Error('CC0 detailed skull failed to attach: original rig is incompatible');
