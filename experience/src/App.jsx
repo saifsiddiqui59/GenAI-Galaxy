@@ -48,9 +48,11 @@ function canWebGL(){
   return !!(canvas.getContext('webgl2')||canvas.getContext('webgl'));
  }catch{return false;}
 }
-function GalaxyCameraFollow({clockRef,rigPoseRef,offeredButtonRef,genieRef,collectedCount=0,reducedMotion=false}){
+function GalaxyCameraFollow({clockRef,rigPoseRef,offeredButtonRef,genieRef,trailRef,trailSvgRef,collectedCount=0,reducedMotion=false}){
  const {camera,size}=useThree();
  const projected=useRef(new THREE.Vector3());
+ const previousTrailTime=useRef(null);
+ const trailHistory=useRef([]);
  useFrame(()=>{
   const c=clockRef.current;
   const pose=rigPoseRef.current;
@@ -69,6 +71,23 @@ function GalaxyCameraFollow({clockRef,rigPoseRef,offeredButtonRef,genieRef,colle
    genieRef.current.style.opacity='1';
    genieRef.current.dataset.phase=pose.phase||'arriving';
    genieRef.current.dataset.motion=reducedMotion?'reduced':'full';
+   if(trailRef?.current && trailSvgRef?.current){
+    trailSvgRef.current.setAttribute('viewBox',`0 0 ${size.width} ${size.height}`);
+    const last=trailHistory.current.at(-1);
+    const now=c.ms;
+    if(previousTrailTime.current===null || now<previousTrailTime.current ||
+       now-previousTrailTime.current>750)trailHistory.current=[];
+    previousTrailTime.current=now;
+    const prev=trailHistory.current.at(-1);
+    if(!prev||Math.hypot(prev.x-gx,prev.y-gy)>2.6){
+     trailHistory.current.push({x:gx,y:gy});
+     if(trailHistory.current.length>20)trailHistory.current.shift();
+    }
+    const moving=(pose.phase==='arriving'||pose.phase==='collecting')&&!reducedMotion;
+    const segments=trailHistory.current;
+    const path=segments.length>2?'M'+segments.map(v=>v.x.toFixed(1)+' '+v.y.toFixed(1)).join(' L'):'';
+    trailRef.current.setAttribute('d',moving?path:'');
+   }
   }
   // Keep a 2D accessible hit surface aligned with the rendered offered globe.
   // The original 3D raycaster was picking larger background planet hit areas.
@@ -104,6 +123,8 @@ export default function App(){
  const rigPoseRef=useRef(null);
  const offeredButtonRef=useRef(null);
  const genieRef=useRef(null);
+ const trailRef=useRef(null);
+ const trailSvgRef=useRef(null);
  const choreographyRef=useRef({ms:0,epoch:0,hold:false});
  const invalidateRef=useRef(()=>{});
  const [modelReady,setModelReady]=useState(false);
@@ -174,7 +195,7 @@ export default function App(){
          onSelect={select} reducedMotion={!animationEnabled||reduced} clockRef={choreographyRef} rigPoseRef={rigPoseRef}/>
        <Guardian rigPoseRef={rigPoseRef} clockRef={choreographyRef} completedCount={collected.length} worldIndexes={collected.map(w=>w.index)}
          onReady={ready} reducedMotion={!animationEnabled||reduced}/>
-       <GalaxyCameraFollow clockRef={choreographyRef} rigPoseRef={rigPoseRef} offeredButtonRef={offeredButtonRef} genieRef={genieRef}
+       <GalaxyCameraFollow clockRef={choreographyRef} rigPoseRef={rigPoseRef} offeredButtonRef={offeredButtonRef} genieRef={genieRef} trailRef={trailRef} trailSvgRef={trailSvgRef}
          collectedCount={collected.length} reducedMotion={!animationEnabled||reduced}/>
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced}
          epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
@@ -188,8 +209,17 @@ export default function App(){
        style={{position:'absolute',display:'none',zIndex:12,
          transform:'translate(-50%,-50%)',border:0,borderRadius:'50%',
          padding:0,background:'transparent',cursor:'pointer',touchAction:'manipulation'}}/>
+     <svg ref={trailSvgRef} className="guardian-motion-trail" aria-hidden="true" preserveAspectRatio="none">
+       <defs><linearGradient id="guardian-trail-gradient" x1="0" y1="0" x2="1" y2="0">
+        <stop offset="0" stopColor="#8cc5ef" stopOpacity="0"/><stop offset=".5" stopColor="#7be7e4" stopOpacity=".43"/>
+        <stop offset="1" stopColor="#e4c18d" stopOpacity=".70"/>
+       </linearGradient></defs>
+       <path ref={trailRef} fill="none" stroke="url(#guardian-trail-gradient)" strokeWidth="2.6"
+        strokeLinecap="round" strokeLinejoin="round"/>
+     </svg>
      <div ref={genieRef} className="galaxy-original-genie galaxy-cinematic-guardian" data-guardian-version="cinematic-skull-v69" role="img" aria-label="Cinematic Skull Master, guardian of the learning galaxy">
        <span aria-hidden="true" className="guardian-energy-ring"/><img src={import.meta.env.BASE_URL+'models/cinematic-skull-genie.svg'} alt=""/><span aria-hidden="true" className="guardian-energy-dust"/>
+       <span className="guardian-character-label" aria-hidden="true">THE SKULL MASTER</span>
      </div>
    </div>}
    {!available3D&&<div className="galaxy-no-webgl" role="status">
