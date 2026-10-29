@@ -13,7 +13,7 @@ import {ANATOMY_ASSET,ANATOMY_MODE,attachAnatomicalSkeleton} from './retargetAna
 import {guardianStageScale,guardianFloorY} from './guardianFraming.js';
 import {moveWrist} from './handIK.js';
 import {groundedStrideAt,STRIDE_DISTANCE} from './groundedStride.js';
-import {plantedFootCorrection} from './footPlantIK.js';
+import {walkingFootTarget} from './footPlantIK.js';
 import {straightenSkeletonLegs,lengthenSkeletonLegs} from './standingLegPose.js';
 import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS,OFFER_SETTLE_MS} from '../journey/choreography.js';
 import {phaseAt} from '../journey/story.js';
@@ -80,6 +80,13 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   // Stabilize legs in a real extended standing pose before storing the rest
   // quaternions. The original source clips tuck knees under the rib cage.
   object.userData.standingLegs=straightenSkeletonLegs(object,THREE);
+  object.updateWorldMatrix(true,true);
+  // One stable floor reference from the immutable, straight-legged rest pose;
+  // NOT recalculated from gait ankle positions every animation frame.
+  const ankles=['foot.l','foot.r'].map(name=>object.getObjectByName(name)?.getWorldPosition(new THREE.Vector3()));
+  if(ankles.some(v=>!v))throw Error('Walking model needs both original ankle bones');
+  const rootY=object.getWorldPosition(new THREE.Vector3()).y;
+  object.userData.ankleFloorOffset=(ankles[0].y+ankles[1].y)/2-rootY;
   return object;
  },[scene,anatomicalSkull,anatomicalBody]);
  const rig=useMemo(()=>discoverRigAnchors(source),[source]);
@@ -231,41 +238,53 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    error=solveBlended(arms.right,right,offerReveal);
   }
   source.updateWorldMatrix(true,true);
-  // Real hip-knee-ankle CCD fixes the stance ankle in world space while the
-  // root walks; plant sites are derived from the deterministic path distance.
-  const contactErrors={left:0,right:0};
+  // V6.10.1: stable world-space landing sites. Each foot's landing is a
+  // constant point for its entire stance half-cycle. The walkable surface is
+  // independently built from the immutable neutral ankle height, never
+  // recalculated from a moving ankle (which previously made it drift).
+  const contactErrors={left:0,right:0},groundContacts={};
+  source.updateWorldMatrix(true,true);
   for(const [side,part] of [['left','l'],['right','r']]){
    const chain=[jointMap.get('upperleg'+part)?.bone,jointMap.get('lowerleg'+part)?.bone,jointMap.get('foot'+part)?.bone];
    if(!chain.every(Boolean))continue;
-   const correction=plantedFootCorrection({
-    walking:approach.walkWeight>.05,walkDistance:approach.walkDistance,
+   const target=walkingFootTarget({
+    walking:walkWeight>.04,walkDistance:approach.walkDistance,
     walkSpeed:approach.speed,walkingRouteFrom:approach.routeFrom,
     walkingRouteTo:approach.routeTo,walkingRouteProgress:approach.routeProgress
-   },side,narrow);
-   if(correction.weight<=.01)continue;
+   },side,narrow,approach.scale,source.userData.ankleFloorOffset);
+   groundContacts[side]=target;
+   if(!target||target.weight<.025)continue;
+   const neutral=chain[2].getWorldPosition(new THREE.Vector3());
+   const desired=neutral.lerp(new THREE.Vector3(target.x,target.y,target.z),target.weight);
+   // CCD acts on real femur and tibia, never on detached ankle meshes.
+   moveWrist(chain,desired,16);
    source.updateWorldMatrix(true,true);
-   const current=chain[2].getWorldPosition(new THREE.Vector3());
-   const target=current.clone().sub(new THREE.Vector3(correction.dx,correction.dy,correction.dz));
-   const before=chain.slice(0,2).map(b=>b.quaternion.clone());
-   contactErrors[side]=moveWrist(chain,target,4);
-   chain.slice(0,2).forEach((b,i)=>b.quaternion.copy(before[i].slerp(b.quaternion,.73)).normalize());
+   const actual=chain[2].getWorldPosition(new THREE.Vector3());
+   contactErrors[side]=actual.distanceTo(desired);
   }
   source.updateWorldMatrix(true,true);
-  // The real ankle bones drive these floor contacts, not a proxy SVG.
   const anklePositions={};
   for(const side of ['l','r']){
    const ankle=jointMap.get('foot'+side)?.bone;
    anklePositions[side]=ankle?.getWorldPosition(new THREE.Vector3())||null;
   }
-  for(const [side,pad,plant] of [['l',leftPad,gesture.leftPlant],['r',rightPad,gesture.rightPlant]]){
+  for(const [side,pad] of [['left',leftPad],['right',rightPad]]){
    if(!pad.current)continue;
-   const pos=anklePositions[side];
-   pad.current.visible=!!pos&&!reducedMotion&&walkWeight>.09;
-   if(pos){
-    pad.current.position.set(pos.x,pos.y-.12*approach.scale,pos.z+.045*approach.scale);
-    pad.current.scale.setScalar(approach.scale*(.58+.20*plant));
-    pad.current.rotation.z=body.rotation.y;
+   const site=groundContacts[side],pos=anklePositions[side==='left'?'l':'r'];
+   const strength=site?.weight||0;
+   pad.current.visible=!!pos&&!reducedMotion&&strength>.16;
+   if(site){
+    const floorHeight=site.y-.11*approach.scale;
+    pad.current.position.set(site.x,floorHeight,site.z);
+    pad.current.scale.setScalar(approach.scale*(.72+.16*strength));
+    pad.current.rotation.set(0,0,0);
    }
+   pad.current.children.forEach(mesh=>{
+    if(mesh.material?.opacity!==undefined)mesh.material.opacity=
+     mesh.userData.baseOpacity==null
+      ?(mesh.material.opacity=.45*strength,mesh.userData.baseOpacity=.45)
+      :mesh.userData.baseOpacity*strength;
+   });
   }
   const rightHand=rig.rightHand?.getWorldPosition(new THREE.Vector3());
   const grip=rig.rightHand?.localToWorld(new THREE.Vector3(0,.045,.035));
@@ -274,7 +293,9 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    rigReady:rig.readyToOffer,waistReady:rig.readyForSatchel,ikError:error,phase:view.phase,
    walking:walkWeight>.09,walkSpeed:approach.speed,walkDistance:approach.walkDistance,
    walkingRouteFrom:approach.routeFrom,walkingRouteTo:approach.routeTo,walkingRouteProgress:approach.routeProgress,
-   footL:anklePositions.l?.toArray(),footR:anklePositions.r?.toArray()};
+   footL:anklePositions.l?.toArray(),footR:anklePositions.r?.toArray(),
+   walkFloorOffset:source.userData.ankleFloorOffset-.11,
+   plantedTargets:groundContacts};
   if(observed()&&window.__galaxySkeletonDiagnostics){
    const d=window.__galaxySkeletonDiagnostics;
    if(lastEpoch.current!==c.epoch){lastEpoch.current=c.epoch;lastIndex.current=-1;d.pickupLog=[];}
@@ -294,6 +315,8 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     footPlantL:gesture.leftPlant,footPlantR:gesture.rightPlant,
     feetWorld:{left:anklePositions.l?.toArray(),right:anklePositions.r?.toArray()},
     stanceContactErrors:contactErrors,
+    plantedTargets:groundContacts,
+    walkwayOffset:source.userData.ankleFloorOffset-.11,
     walkHeading:body.rotation.y,
     groundWalkWeight:walkWeight,
     groundPickupWeight:actions['PickUp']?.getEffectiveWeight()??0,
