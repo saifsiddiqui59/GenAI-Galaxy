@@ -3,7 +3,7 @@
    The hood follows the real head bone; mantle follows chest; all 95 animations stay alive.
 */
 export const SKULLMASTER_PROFILE=Object.freeze({
-  headScale:.90,hoodFrontGap:.73,hoodRings:6,cloakLength:1.48,
+  headScale:.90,hoodFrontGap:.73,hoodRings:6,cloakLength:.94,
   outer:'#14111e',inner:'#040710',trim:'#352a40'
 });
 function surface(THREE,sections,start,end,segments=32){
@@ -43,6 +43,9 @@ export function attachSkullMasterCloak(source,THREE){
  const attached=[];
  const hood=new THREE.Group();hood.name='SkullMasterDarkHood';
  head.add(hood);attached.push([head,hood]);
+ // Original art geometry was nearly twice the skull's size; keep the face visible.
+ hood.scale.set(.61,.66,.64);
+ hood.position.set(0,.06,-.05);
  // Open face wedge at the FRONT (+Z). Sides and back wrap around the skull.
  const ring=[
   {y:-.14,r:.42,z:-.06},{y:.05,r:.51,z:-.055},
@@ -73,6 +76,7 @@ export function attachSkullMasterCloak(source,THREE){
  // No thick forehead bar: the dark canopy itself frames the anatomical skull.
  const cape=new THREE.Group();cape.name='SkullMasterMantle';
  chest.add(cape);attached.push([chest,cape]);
+ cape.scale.set(.73,.82,.78);
  // Back panel drapes from shoulder below waist. Real head/hand bones remain free.
  const segments=20,rows=12,vertices=[],uvs=[],indices=[];
  for(let i=0;i<=rows;i++){
