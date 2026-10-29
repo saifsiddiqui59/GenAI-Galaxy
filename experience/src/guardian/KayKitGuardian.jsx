@@ -5,7 +5,7 @@ import {clone} from 'three/examples/jsm/utils/SkeletonUtils.js';
 import * as THREE from 'three';
 import {discoverRigAnchors,gripMidpoint} from './rigAnchors.js';
 import {styleKayKit,STYLE_PROFILE} from './styleKayKit.js';
-import {SKULLMASTER_PROFILE} from './skullMasterMantle.js';
+import {SKULLMASTER_PROFILE,attachSkullMasterCloak} from './skullMasterMantle.js';
 import {guardianApproachAt} from '../journey/orbitalApproach.js';
 import {orbitalPluckPose} from '../journey/orbitalPluckPose.js';
 import {mountDetailedSkull,SKULL_ASSET} from './detailSkull.js';
@@ -13,6 +13,7 @@ import {ANATOMY_ASSET,ANATOMY_MODE,attachAnatomicalSkeleton} from './retargetAna
 import {guardianStageScale,guardianFloorY} from './guardianFraming.js';
 import {moveWrist} from './handIK.js';
 import {articulatedHoverAt} from './articulatedHover.js';
+import {straightenSkeletonLegs,lengthenSkeletonLegs} from './standingLegPose.js';
 import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS,OFFER_SETTLE_MS} from '../journey/choreography.js';
 import {phaseAt} from '../journey/story.js';
 const ASSET=import.meta.env.BASE_URL+'models/kaykit/Skeleton_Mage.glb';
@@ -57,10 +58,13 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   object.scale.setScalar(factor);
   object.position.set(-box.getCenter(new THREE.Vector3()).x*factor,-box.min.y*factor,-box.getCenter(new THREE.Vector3()).z*factor);
   object.userData.geometryHeight=height;
+  object.userData.legProportions=lengthenSkeletonLegs(object,1.27);
   object.userData.disposeStyle=styleKayKit(object,THREE,{anatomical:ANATOMY_MODE});
   const detailed=mountDetailedSkull(object,anatomicalSkull);
   if(!detailed.active)throw Error('CC0 detailed skull failed to attach: original rig is incompatible');
   object.userData.disposeDetail=detailed.dispose;
+  // Dark, short mantle frames the skull without hiding moving legs or feet.
+  object.userData.disposeMantle=attachSkullMasterCloak(object,THREE);
   if(ANATOMY_MODE){
    const anatomy=attachAnatomicalSkeleton(object,anatomicalBody,THREE);
    object.userData.disposeAnatomy=anatomy.dispose;
@@ -71,6 +75,9 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    object.userData.anatomicalParts=anatomy.attached;
    object.userData.anatomicalClusters=anatomy.clusters;
   }
+  // Stabilize legs in a real extended standing pose before storing the rest
+  // quaternions. The original source clips tuck knees under the rib cage.
+  object.userData.standingLegs=straightenSkeletonLegs(object,THREE);
   return object;
  },[scene,anatomicalSkull,anatomicalBody]);
  const rig=useMemo(()=>discoverRigAnchors(source),[source]);
@@ -114,9 +121,11 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     spectralActive:!!source.userData.spectralActive,
     articulatedArms:!!source.userData.articulatedArms,
     articulatedLegs:!!source.userData.articulatedLegs,
+    standingLegs:source.userData.standingLegs?.corrected||0,
+    legLengthFactor:source.userData.legProportions?.factor||1,
     visibleLegMeshes:(()=>{let n=0;source.traverse(o=>{if(o.isMesh&&o.visible&&/^SkullMaster(Femur|Tibia|Foot)_/.test(o.name))n++});return n})()};
   }
-  return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeAnatomy?.();source.userData.disposeDetail?.();source.userData.disposeStyle?.()};
+  return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeAnatomy?.();source.userData.disposeDetail?.();source.userData.disposeMantle?.();source.userData.disposeStyle?.()};
  },[source,rig,mixer,animations,onReady]);
  useFrame((state,dt)=>{
   if(!root.current)return;
@@ -143,18 +152,25 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   const approach=guardianApproachAt(ms,worldIndexes,contactLocal.current,narrow,short,reducedMotion);
   body.position.set(approach.x,approach.y,approach.z);
   body.scale.setScalar(approach.scale);
-  body.rotation.y=pickup?0:entrance.yaw;
+  const walkWeight=Math.max(0,Math.min(1,approach.walkWeight||0));
+  body.rotation.y=walkWeight>.08?(approach.yaw??entrance.yaw):(pickup?0:entrance.yaw);
   body.rotation.x=0;body.rotation.z=0;
   const pluck=pickup?orbitalPluckPose(pickup.t):null;
-  // No floor-walk or ground-pick clips: travel remains in orbit, while
-  // real skeletal legs make a weightless, oppositely phased stride.
-  const walk=0;
-  sample('Idle',.14,1);
-  // Unlike useAnimations' independent delta, sample clips on the prop clock.
-  // Weighted sampling replaces fadeIn/fadeOut without restarting PickUp at contact.
+  // Drive the authored KayKit walking arm/torso clip while using upright,
+  // connected foot geometry. The lower limbs must not inherit the source
+  // clip's folded-knee pose. Never sample the ground PickUp clip.
+  const walkingClip=actions['Walking_A']?.getClip();
+  const walkTime=walkingClip?(ms*.001*1.35)%Math.max(.01,walkingClip.duration):0;
+  // Avoid the source clip's deeply tucked knees; blend its upper-body stride
+  // modestly over the original upright rest pose, then supply our own stable
+  // alternating thigh, knee and ankle movement with connected feet.
+  const clipWeight=walkWeight*.46;
+  sample('Idle',.14,1-clipWeight);
+  if(walkingClip&&walkWeight>0)sample('Walking_A',walkTime,clipWeight);
   mixer.update(0);
-  // Restore source rest pose first; deterministic procedural articulation
-  // follows every frame and never accumulates rotation (no crouching).
+  // Corrected standing chains are the neutral base. Walk-cycle motion on
+  // those connected legs comes from bounded procedural leg articulation,
+  // not a raw authored clip that folds both feet under the torso.
   for(const {bone,rest} of uprightBones)bone.quaternion.copy(rest);
   const gesture=articulatedHoverAt(ms,view.phase,reducedMotion);
   const joints=[
@@ -166,7 +182,11 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   ];
   for(const [name,angle,axis] of joints){
    const entry=jointMap.get(name);
-   if(entry)entry.bone.quaternion.copy(entry.rest).multiply(jointRotation.setFromAxisAngle(axis,angle));
+   if(entry){
+    const leg=/^(upperleg|lowerleg|foot)[lr]/.test(name);
+    if(!leg)entry.bone.quaternion.copy(entry.rest);
+    entry.bone.quaternion.multiply(jointRotation.setFromAxisAngle(axis,angle));
+   }
   }
   // Clip sampling controls all 95 animations; keep the skull/hood proportion aligned.
   const headBone=source.getObjectByName('head');
@@ -222,12 +242,16 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     pickupTargetError:pickup&&grip?grip.distanceTo(palmTarget):null,staging:staging.toArray(),
     rightGrip:grip?.toArray(),waistPosition:hip.toArray(),bagMouth:mouth.toArray(),
     worldPosition:body.position.toArray(),orbitalContact:approach.orbitalTarget?[approach.orbitalTarget.x,approach.orbitalTarget.y,approach.orbitalTarget.z]:null,approachTravel:approach.travel,offeringCenter:offer.toArray(),
-    movementMode:view.phase==='collecting'?'articulated-orbital-pluck':'articulated-hover',
-    groundWalkWeight:view.phase==='collecting'?actions['Walking_A']?.getEffectiveWeight()??0:walk,
+    movementMode:walkWeight>.08?'walking-orbit':'upright-orbital-pluck',
+    walkingClip:walkWeight>.08?'Walking_A':'Idle',
+    walkingWeight:walkWeight,walkPhase:walkTime,
+    walkHeading:body.rotation.y,
+    groundWalkWeight:walkWeight,
     groundPickupWeight:actions['PickUp']?.getEffectiveWeight()??0,
     torsoBendRadians:uprightBones.filter(({bone})=>/^(hips|spine|chest)$/i.test(bone.name)).reduce((m,{bone,rest})=>Math.max(m,bone.quaternion.angleTo(rest)),0),
     legMotionRadians:uprightBones.filter(({bone})=>/^(upperleg|lowerleg|foot)[lr]/.test(bone.name.toLowerCase().replace(/[^a-z0-9]/g,''))).reduce((m,{bone,rest})=>Math.max(m,bone.quaternion.angleTo(rest)),0),
     legBoneCount:uprightBones.filter(({bone})=>/^(upperleg|lowerleg|foot)[lr]/.test(bone.name.toLowerCase().replace(/[^a-z0-9]/g,''))).length,
+    feetVisible:(()=>{let count=0;source.traverse(o=>{if(o.isMesh&&o.visible&&/^SkullMasterSole_/.test(o.name))count++});return count===2})(),
     pluckReachWeight:pluck?.reachWeight??0,
     palmContactInOrbit:!!pluck?.palmContact});
    const top=body.position.clone().add(new THREE.Vector3(0,3.6*scale,0)).project(state.camera);
@@ -235,9 +259,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    d.screenBody={top:(1-top.y)*state.size.height/2,bottom:(1-bottom.y)*state.size.height/2};
   }
  },-2);
- // Keep the existing verified 3D physics / palm-contact rig as a hidden driver.
- // The visible character is the ORIGINAL Galaxy Genie SVG (App.jsx).
- return <group ref={root}><primitive object={source} visible={false}/></group>;
+ return <group ref={root}><primitive object={source}/></group>;
 }
 export default function KayKitGuardian(props){return <Suspense fallback={null}><Model {...props}/></Suspense>}
 useGLTF.preload(ASSET);
