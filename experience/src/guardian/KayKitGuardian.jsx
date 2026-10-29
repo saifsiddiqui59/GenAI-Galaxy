@@ -291,11 +291,11 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   {['left','right'].map((side,i)=><group key={side} ref={i===0?leftPad:rightPad} visible={false}>
     <mesh rotation={[-Math.PI/2,0,0]}>
      <ringGeometry args={[.12,.165,32]}/>
-     <meshBasicMaterial color="#8fdfe5" transparent opacity={.58} depthWrite={false} side={THREE.DoubleSide}/>
+     <meshBasicMaterial color="#8fdfe5" transparent opacity={.83} depthWrite={false} side={THREE.DoubleSide}/>
     </mesh>
     <mesh rotation={[-Math.PI/2,0,0]} position={[0,-.004,0]}>
      <circleGeometry args={[.11,24]}/>
-     <meshBasicMaterial color="#98afe8" transparent opacity={.12} depthWrite={false}/>
+     <meshBasicMaterial color="#98afe8" transparent opacity={.21} depthWrite={false}/>
     </mesh>
   </group>)}
  </>;
