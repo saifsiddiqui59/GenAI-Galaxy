@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Restored original 2026 Genie artwork from GitHub commit 0ca9cc8, maintained locally; no new remote assets. -->
+<svg class="genie-art" role="img" aria-labelledby="genie-title genie-desc" viewBox="0 0 480 430" xmlns="http://www.w3.org/2000/svg"><title id="genie-title">Original GenAI Galaxy Genie</title><desc id="genie-desc">A turquoise and violet genie floating with arms, robe and magical mist</desc><style>.genie-character{transform-origin:240px 250px;animation:original-genie-breathe 4.5s ease-in-out infinite}.genie-trail{animation:original-genie-trail 3.6s ease-in-out infinite}.genie-left-arm{transform-origin:189px 232px;animation:original-genie-wave 3.3s ease-in-out infinite alternate}.genie-right-arm{transform-origin:289px 232px;animation:original-genie-wave 3.3s .65s ease-in-out infinite alternate-reverse}.genie-sparkles{animation:original-genie-stars 2s ease-in-out infinite alternate}@keyframes original-genie-breathe{50%{transform:translateY(-7px)}}@keyframes original-genie-trail{50%{opacity:.6;transform:translateY(5px)}}@keyframes original-genie-wave{50%{transform:rotate(7deg)}}@keyframes original-genie-stars{to{opacity:.38}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}</style>
+        <defs>
+          <linearGradient id="genie-robe" x1="0" x2="1" y2="1"><stop stop-color="#74e5ef"/><stop offset=".5" stop-color="#6271e9"/><stop offset="1" stop-color="#4d2a9b"/></linearGradient>
+          <linearGradient id="genie-mist" x1="0" x2="1" y2="1"><stop stop-color="#67edff" stop-opacity=".5"/><stop offset="1" stop-color="#8e64f7" stop-opacity="0"/></linearGradient>
+          <radialGradient id="genie-world"><stop stop-color="#eefbff"/><stop offset=".37" stop-color="#acb7ff"/><stop offset=".72" stop-color="#8f74eb"/><stop offset="1" stop-color="#231a6b"/></radialGradient>
+          <linearGradient id="genie-sack" x1="0" x2="1" y2="1"><stop stop-color="#f0bd73"/><stop offset="1" stop-color="#8e4c7a"/></linearGradient>
+          <filter id="genie-bloom" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="11"/></filter>
+        </defs>
+        <g class="genie-trail">
+          <path d="M236 296 C310 340 185 330 247 374 C285 402 215 413 204 423 C272 410 322 387 283 354 C246 326 302 325 273 280Z" fill="url(#genie-mist)"/>
+          <path d="M242 295 C220 343 288 351 256 380" fill="none" stroke="#9dc3ff" stroke-opacity=".44" stroke-width="8" stroke-linecap="round"/>
+        </g>
+        <g class="genie-character">
+          <ellipse cx="242" cy="269" rx="93" ry="70" fill="#8b7cf2" opacity=".12" filter="url(#genie-bloom)"/>
+          <path d="M180 251 Q179 215 209 207 L269 207 Q307 226 304 270 Q289 306 244 321 Q197 307 180 251Z" fill="url(#genie-robe)" stroke="#a3c7f6" stroke-opacity=".5" stroke-width="3"/>
+          <path d="M188 267 Q236 288 297 267" fill="none" stroke="#e6c578" stroke-width="9" stroke-linecap="round"/>
+          <path d="M198 290 Q238 310 282 289" fill="none" stroke="#9df1ff" stroke-opacity=".55" stroke-width="3"/>
+          <g class="genie-sack"><path d="M147 274 Q132 286 138 318 Q162 344 211 329 Q234 309 218 279Z" fill="url(#genie-sack)" stroke="#f9d19d" stroke-width="3"/><path d="M149 277 Q187 292 216 278" fill="none" stroke="#f4d492" stroke-width="10" stroke-linecap="round"/></g>
+            <path d="M149 277 Q187 292 216 278" fill="none" stroke="#f4d492" stroke-width="10" stroke-linecap="round"/>
+            <path d="M181 285 L176 297 M193 285 L199 298" fill="none" stroke="#57305d" stroke-width="3"/>
+          </g>
+          <path d="M220 203 L220 187 L262 187 L262 204Z" fill="#8ed0f2"/>
+          <ellipse cx="240" cy="156" rx="55" ry="62" fill="#83cde4" stroke="#c0edff" stroke-width="3"/>
+          <path d="M187 143 Q200 83 244 90 Q282 88 296 145 Q244 130 187 143Z" fill="#35328d"/>
+          <path d="M189 123 Q191 93 235 76 Q278 91 290 123 Q244 104 189 123Z" fill="#ddc4fe" stroke="#7b78d4" stroke-width="3"/>
+          <path d="M213 107 Q241 117 268 107" fill="none" stroke="#f6d791" stroke-width="9" stroke-linecap="round"/>
+          <path d="M240 78 L234 66 L241 49 L247 66Z" fill="#ffd98e"/>
+          <circle cx="241" cy="106" r="7" fill="#8863ca" stroke="#fff0c3" stroke-width="2"/>
+          <path d="M199 154 Q212 149 221 154 M258 154 Q271 149 282 154" stroke="#253065" stroke-width="5" stroke-linecap="round" fill="none"/>
+          <circle cx="217" cy="159" r="3" fill="#132d5d"/><circle cx="264" cy="159" r="3" fill="#132d5d"/>
+          <path d="M229 180 Q242 188 255 179" stroke="#34477d" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <path d="M197 178 Q213 227 239 218 Q265 226 282 179 Q276 237 241 241 Q205 239 197 178Z" fill="#7ac9eb" opacity=".55"/>
+        </g>
+        
+        <g class="genie-left-arm">
+          <path d="M195 236 Q166 226 141 205 Q120 184 152 177 Q178 188 210 212" stroke="#628dda" stroke-width="22" fill="none" stroke-linecap="round"/>
+          <path d="M154 178 Q169 172 182 184 Q178 199 162 198Z" fill="#9adae9"/>
+        </g>
+        <g class="genie-right-arm">
+          <path d="M286 236 Q316 225 335 203 Q354 179 328 174 Q308 183 275 212" stroke="#6587dc" stroke-width="22" fill="none" stroke-linecap="round"/>
+          <path d="M326 175 Q313 171 303 184 Q309 198 326 197Z" fill="#9adae9"/>
+        </g>
+        <g class="genie-sparkles" fill="#f8dfa4">
+          <path d="M111 154 L115 139 L119 154 L134 158 L119 162 L115 177 L111 162 L96 158Z"/>
+          <path d="M371 126 L376 108 L380 126 L397 131 L380 136 L376 151 L371 136 L356 131Z"/>
+          <circle cx="341" cy="268" r="4"/><circle cx="112" cy="250" r="3"/>
+        </g>
+      </svg>
