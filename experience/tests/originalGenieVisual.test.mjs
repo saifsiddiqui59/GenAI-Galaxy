@@ -13,8 +13,8 @@ test('restore exact original Genie art vocabulary, local SVG asset and correct c
  assert.equal((svg.match(/<g\b/g)||[]).length,(svg.match(/<\/g>/g)||[]).length,'Original nested SVG groups must balance');
  assert(!svg.includes('http://')||svg.includes('http://www.w3.org/2000/svg'));
  const copy=read('../src/journey/GuardianJourney.jsx');
- assert(copy.includes('Your Genie glides'));
- assert(!copy.includes('Skull Master'));
+ assert(copy.includes('Skull Master glides'));
+ assert(copy.includes('Take the glowing knowledge planet'));
 });
 test('show accessible, immediate loading until actual 3D collection machinery is ready',()=>{
  const html=read('../index.html'),app=read('../src/App.jsx');
@@ -22,7 +22,15 @@ test('show accessible, immediate loading until actual 3D collection machinery is
  assert(html.includes('Preparing your Genie'));
  assert(app.includes("if(!modelReady&&available3D)return undefined"));
  assert(app.includes("galaxy-original-genie"));
- assert(app.includes("models/original-genie.svg"));
+ assert(app.includes("models/cinematic-skull-genie.svg"));
+ assert(app.includes('galaxy-cinematic-guardian'));
+ const mature=read('../public/models/cinematic-skull-genie.svg');
+ assert(mature.includes('Skull Master, Guardian of the Learning Galaxy'));
+ assert(mature.includes('guardian-glowing-eyes'));
+ assert(mature.includes('guardian-arm-left')&&mature.includes('guardian-arm-right'));
+ assert(mature.includes('guardian-magic')&&mature.includes('guardian-tail'));
+ assert.equal((mature.match(/<g\\b/g)||[]).length,(mature.match(/<\\/g>/g)||[]).length);
+ assert(!mature.includes('<script'),'SVG art must not execute scripts');
  assert(app.includes("genieRef.current.style.left"));
 });
 test('old skeleton geometry is invisible, not a second ghost covering the original Genie',()=>{
