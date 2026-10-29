@@ -48,7 +48,7 @@ function canWebGL(){
   return !!(canvas.getContext('webgl2')||canvas.getContext('webgl'));
  }catch{return false;}
 }
-function GalaxyCameraFollow({clockRef,rigPoseRef,offeredButtonRef,collectedCount=0,reducedMotion=false}){
+function GalaxyCameraFollow({clockRef,rigPoseRef,offeredButtonRef,genieRef,collectedCount=0,reducedMotion=false}){
  const {camera,size}=useThree();
  const projected=useRef(new THREE.Vector3());
  useFrame(()=>{
@@ -58,6 +58,16 @@ function GalaxyCameraFollow({clockRef,rigPoseRef,offeredButtonRef,collectedCount
   camera.position.set(next.x,next.y,next.z);
   camera.lookAt(next.x,next.y+.12,0);
   camera.updateMatrixWorld();
+  // Restore the original floating Genie visual, positioned by the same
+  // physical 3D path as the planet collection rig. No fake walking feet.
+  if(genieRef?.current&&pose?.bodyPosition){
+   const anchor=pose.bodyPosition.clone().add(new THREE.Vector3(0,pose.scale*1.55,0)).project(camera);
+   const gx=Math.max(size.width*.12,Math.min(size.width*.83,(anchor.x+1)*size.width/2));
+   const gy=Math.max(size.height*.24,Math.min(size.height*.79,(1-anchor.y)*size.height/2));
+   genieRef.current.style.left=gx.toFixed(1)+'px';
+   genieRef.current.style.top=gy.toFixed(1)+'px';
+   genieRef.current.style.opacity='1';
+  }
   // Keep a 2D accessible hit surface aligned with the rendered offered globe.
   // The original 3D raycaster was picking larger background planet hit areas.
   const button=offeredButtonRef.current;
@@ -91,11 +101,23 @@ export default function App(){
  const [modelPhase,setModelPhase]=useState('arriving');
  const rigPoseRef=useRef(null);
  const offeredButtonRef=useRef(null);
+ const genieRef=useRef(null);
  const choreographyRef=useRef({ms:0,epoch:0,hold:false});
  const invalidateRef=useRef(()=>{});
  const [modelReady,setModelReady]=useState(false);
+ const available3D=useMemo(canWebGL,[]);
  const [visible,setVisible]=useState(!document.hidden);
  const ready=useCallback(()=>setModelReady(true),[]);
+ useEffect(()=>{
+  if(!modelReady&&available3D)return undefined;
+  const splash=document.getElementById('galaxy-boot');if(!splash)return undefined;
+  let timer=0;
+  const frame=requestAnimationFrame(()=>{
+   splash.style.opacity='0';splash.style.pointerEvents='none';
+   timer=window.setTimeout(()=>splash.remove(),430);
+  });
+  return ()=>{cancelAnimationFrame(frame);window.clearTimeout(timer)};
+ },[modelReady,available3D]);
  const [sequence,setSequence]=useState({activeIndex:-1,visible:0,skipped:false});
  const [selected,setSelected]=useState(null);
  const [warp,setWarp]=useState(null);
@@ -105,7 +127,6 @@ export default function App(){
  const [effectsEpoch,setEffectsEpoch]=useState(0);
  const [replayEpoch,setReplayEpoch]=useState(0);
  const receiveAuth=useCallback(value=>setAuthSnapshot(value),[]);
- const available3D=useMemo(canWebGL,[]);
  const activeOwner=SHOW_SAMPLE?SAMPLE_USER:(authSnapshot.status==='authenticated'?authSnapshot.user?.id:null);
  const activeProgress=SHOW_SAMPLE?PREVIEW_PROGRESS:(activeOwner?authSnapshot.progress:{});
  const collected=useMemo(()=>{
@@ -151,7 +172,7 @@ export default function App(){
          onSelect={select} reducedMotion={!animationEnabled||reduced} clockRef={choreographyRef} rigPoseRef={rigPoseRef}/>
        <Guardian rigPoseRef={rigPoseRef} clockRef={choreographyRef} completedCount={collected.length} worldIndexes={collected.map(w=>w.index)}
          onReady={ready} reducedMotion={!animationEnabled||reduced}/>
-       <GalaxyCameraFollow clockRef={choreographyRef} rigPoseRef={rigPoseRef} offeredButtonRef={offeredButtonRef}
+       <GalaxyCameraFollow clockRef={choreographyRef} rigPoseRef={rigPoseRef} offeredButtonRef={offeredButtonRef} genieRef={genieRef}
          collectedCount={collected.length} reducedMotion={!animationEnabled||reduced}/>
        <CollectionFX completed={collected} reducedMotion={!animationEnabled||reduced}
          epoch={effectsEpoch} phase={modelPhase} nextWorldIndex={nextIndex}
@@ -165,7 +186,9 @@ export default function App(){
        style={{position:'absolute',display:'none',zIndex:12,
          transform:'translate(-50%,-50%)',border:0,borderRadius:'50%',
          padding:0,background:'transparent',cursor:'pointer',touchAction:'manipulation'}}/>
-     {!modelReady&&<div className="guardian-loading" role="status">Preparing your galaxy<span>Loading the companion and learning worlds</span></div>}
+     <div ref={genieRef} className="galaxy-original-genie" role="img" aria-label="Original floating Galaxy Genie">
+       <img src={import.meta.env.BASE_URL+'models/original-genie.svg'} alt=""/>
+     </div>
    </div>}
    {!available3D&&<div className="galaxy-no-webgl" role="status">
       <h2>3D graphics unavailable on this device</h2>
