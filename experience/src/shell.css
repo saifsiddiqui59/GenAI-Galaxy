@@ -94,3 +94,12 @@ button,a{font:inherit}button:focus-visible,a:focus-visible,input:focus-visible{o
  .galaxy-cinematic-guardian img,.galaxy-cinematic-guardian .guardian-energy-ring,
  .galaxy-cinematic-guardian .guardian-energy-dust{animation:none!important}
 }
+/* An explicitly bounded history of the guardian's actual projected path.
+   Purely decorative: pointer events never intercept orbital planet links. */
+.guardian-motion-trail{position:absolute;inset:0;z-index:4;width:100%;height:100%;
+ overflow:visible;pointer-events:none;filter:drop-shadow(0 0 5px #86dded76)}
+.guardian-character-label{position:absolute;bottom:-.5%;left:50%;transform:translateX(-50%);
+ white-space:nowrap;font-size:9px;letter-spacing:.27em;color:#d5b783b9;
+ text-shadow:0 0 16px #080d1e;opacity:.75;z-index:3}
+@media(max-width:700px){.guardian-character-label{display:none}.guardian-motion-trail{opacity:.46}}
+@media(prefers-reduced-motion:reduce){.guardian-motion-trail{display:none}}
