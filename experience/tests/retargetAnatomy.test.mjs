@@ -31,6 +31,11 @@ test('retargeted bone parts follow the original animated rig without replacing i
   const lower=new THREE.Bone();lower.name='lowerarm.'+side;lower.position.set(0,.24,0);upper.add(lower);
   const wrist=new THREE.Bone();wrist.name='wrist.'+side;wrist.position.set(0,.26,0);lower.add(wrist);
   const hand=new THREE.Bone();hand.name='hand.'+side;hand.position.set(0,.073,0);wrist.add(hand);
+  // Real connected knee/ankle chain, matching the original KayKit hierarchy.
+  const thigh=new THREE.Bone();thigh.name='upperleg.'+side;thigh.position.set(sign*.115,-.1,0);hips.add(thigh);
+  const knee=new THREE.Bone();knee.name='lowerleg.'+side;knee.position.set(0,-.40,0);thigh.add(knee);
+  const ankle=new THREE.Bone();ankle.name='foot.'+side;ankle.position.set(0,-.37,0);knee.add(ankle);
+  const toes=new THREE.Bone();toes.name='toes.'+side;toes.position.set(0,-.11,.13);ankle.add(toes);
  }
  const anatomy=new THREE.Group(),geometry=new THREE.BoxGeometry(.028,.028,.028);
  for(let i=0;i<120;i++){
@@ -43,8 +48,12 @@ test('retargeted bone parts follow the original animated rig without replacing i
  const out=attachAnatomicalSkeleton(source,anatomy,THREE);
  assert.equal(out.attached,120);
  assert.equal(out.clusters,1,'one merged draw call per animated rig bone');
- assert(out.spectralActive,'Experimental apparition should use floating spectral lower body');
- assert(hips.getObjectByName('SkullMasterSpectralVapor'));
+ assert(!out.spectralActive,'Visible anatomical legs must not be covered by spectral vapor');
+ assert(!hips.getObjectByName('SkullMasterSpectralVapor'));
+ assert(out.articulatedLegs,'Both knee/ankle chains must have leg geometry');
+ assert(hips.getObjectByName('SkullMasterFemur_l'));
+ assert(hips.getObjectByName('SkullMasterTibia_r'));
+ assert(hips.getObjectByName('SkullMasterFoot_l'));
  assert(out.articulatedArms);
  assert(chest.getObjectByName('SpectralMaster_Humerus_l'));
  assert(chest.getObjectByName('SpectralMaster_Humerus_r'));
@@ -59,5 +68,6 @@ test('retargeted bone parts follow the original animated rig without replacing i
  out.dispose();
  assert.equal(chest.getObjectByName('SkullMasterAnatomy_chest'),undefined);
  assert.equal(chest.getObjectByName('SpectralMaster_Humerus_l'),undefined);
+ assert.equal(hips.getObjectByName('SkullMasterFemur_l'),undefined);
  geometry.dispose();
 });
