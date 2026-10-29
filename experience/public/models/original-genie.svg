@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Original Genie illustration, reused from commit 0ca9cc8. -->
-<svg class="genie-art" role="img" aria-labelledby="genie-title genie-desc" viewBox="0 0 480 430" xmlns="http://www.w3.org/2000/svg"><title id="genie-title">Original GenAI Galaxy Genie</title><desc id="genie-desc">A turquoise and violet genie floating with arms, robe and magical mist</desc><style>.genie-character{transform-origin:240px 250px;animation:original-genie-breathe 4.5s ease-in-out infinite}.genie-trail{animation:original-genie-trail 3.6s ease-in-out infinite}.genie-left-arm{transform-origin:189px 232px;animation:original-genie-wave 3.3s ease-in-out infinite alternate}.genie-right-arm{transform-origin:289px 232px;animation:original-genie-wave 3.3s .65s ease-in-out infinite alternate-reverse}.genie-sparkles{animation:original-genie-stars 2s ease-in-out infinite alternate}@keyframes original-genie-breathe{50%{transform:translateY(-7px)}}@keyframes original-genie-trail{50%{opacity:.6;transform:translateY(5px)}}@keyframes original-genie-wave{50%{transform:rotate(7deg)}}@keyframes original-genie-stars{to{opacity:.38}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}</style>
+<svg class="genie-art" role="img" aria-labelledby="genie-title genie-desc" viewBox="0 0 480 430" xmlns="http://www.w3.org/2000/svg"><title id="genie-title">Original GenAI Galaxy Genie</title><desc id="genie-desc">A turquoise and violet Genie offering a glowing knowledge planet with magical mist</desc><style>.genie-character{transform-origin:240px 250px;animation:original-genie-breathe 4.5s ease-in-out infinite}.genie-trail{animation:original-genie-trail 3.6s ease-in-out infinite}.genie-left-arm{transform-origin:189px 232px;animation:original-genie-wave 3.3s ease-in-out infinite alternate}.genie-right-arm{transform-origin:289px 232px;animation:original-genie-wave 3.3s .65s ease-in-out infinite alternate-reverse}.genie-sparkles{animation:original-genie-stars 2s ease-in-out infinite alternate}.genie-gift-world{transform-origin:242px 202px;animation:original-genie-offer 3.8s ease-out both}@keyframes original-genie-breathe{50%{transform:translateY(-7px)}}@keyframes original-genie-trail{50%{opacity:.6;transform:translateY(5px)}}@keyframes original-genie-wave{50%{transform:rotate(7deg)}}@keyframes original-genie-stars{to{opacity:.38}}@keyframes original-genie-offer{from{opacity:0;transform:translateY(45px) scale(.45)}to{opacity:1;transform:none}}@media(prefers-reduced-motion:reduce){*{animation:none!important}}</style>
         <defs>
           <linearGradient id="genie-robe" x1="0" x2="1" y2="1"><stop stop-color="#74e5ef"/><stop offset=".5" stop-color="#6271e9"/><stop offset="1" stop-color="#4d2a9b"/></linearGradient>
           <linearGradient id="genie-mist" x1="0" x2="1" y2="1"><stop stop-color="#67edff" stop-opacity=".5"/><stop offset="1" stop-color="#8e64f7" stop-opacity="0"/></linearGradient>
@@ -35,7 +35,12 @@
           <path d="M229 180 Q242 188 255 179" stroke="#34477d" stroke-width="4" stroke-linecap="round" fill="none"/>
           <path d="M197 178 Q213 227 239 218 Q265 226 282 179 Q276 237 241 241 Q205 239 197 178Z" fill="#7ac9eb" opacity=".55"/>
         </g>
-        
+        <g class="genie-gift-world">
+          <circle cx="242" cy="202" r="53" fill="#899bff" opacity=".45" filter="url(#genie-bloom)"/>
+          <circle id="genie-gift-orb" cx="242" cy="202" r="43" fill="url(#genie-world)" stroke="#d8deff" stroke-opacity=".6" stroke-width="2"/>
+          <path d="M205 192 Q235 159 273 190 M206 217 Q241 248 276 213" fill="none" stroke="#d2e9ff" stroke-opacity=".44" stroke-width="4"/>
+          <circle cx="226" cy="184" r="9" fill="#f9fcff" opacity=".65"/>
+        </g>
         <g class="genie-left-arm">
           <path d="M195 236 Q166 226 141 205 Q120 184 152 177 Q178 188 210 212" stroke="#628dda" stroke-width="22" fill="none" stroke-linecap="round"/>
           <path d="M154 178 Q169 172 182 184 Q178 199 162 198Z" fill="#9adae9"/>
