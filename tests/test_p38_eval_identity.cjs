@@ -29,7 +29,7 @@ const A=user('00000000-0000-4000-8000-000000000001'),B=user('00000000-0000-4000-
 const result={review_status:'model_reviewed',accuracy:91,clarity:91,has_factual_errors:false,missing_concepts:[],
  feedback:'Clear explanation',improved_answer:'A correct example',followup:'How would you bound cache memory?'};
 async function tick(){await new Promise(resolve=>setImmediate(resolve));}
-function signin(u,auth){cx.__u=u;cx.__auth=auth;x('state.user=__u;state.isGuest=false;state.client={auth:__auth};state.pendingEvaluation=null;state.progress={};state.attempts=[];state.feedback=null;state.planInfo={plan_code:'PRO',status:'ACTIVE',allowed:true,daily_eval_limit:20};');}
+function signin(u,auth){cx.__u=u;cx.__auth=auth;x("state.user=__u;state.isGuest=false;state.client={auth:__auth};state.pendingEvaluation=null;state.progress={};state.attempts=[];state.feedback=null;state.planInfo={plan_code:'PRO',status:'ACTIVE',allowed:true,daily_eval_limit:20};");}
 async function run(){
  // Session request resolves after a logout: must never call the expensive endpoint.
  let resolveSession;
