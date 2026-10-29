@@ -147,6 +147,7 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert diag.get('articulatedLegs') and diag.get('articulatedArms') and not diag.get('spectralActive'),('Visible bone-rigged legs and palms, not a legless vapor body, are required',diag)
             assert diag.get('visibleLegMeshes',0)>=4,'Both thigh and shin meshes must render'
             assert diag.get('feetVisible'),'Both ankle-linked feet must be present'
+            assert diag.get('standingLegs',0)==6,'Both hips, knees and feet must be in an extended pose'
         assert diag.get('toyEyesHidden'),'Oversized KayKit toy eyes must stay hidden in the rendered Skull Master'
         if diag.get('offeringCenter') and diag.get('waistPosition'):
             # Both coordinates are world space. The globe may not sit inside
