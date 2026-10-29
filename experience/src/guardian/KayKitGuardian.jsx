@@ -79,7 +79,10 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
  const uprightBones=useMemo(()=>{
   const list=[];
   source.traverse(node=>{
-   if(node.isBone&&/^(hips|spine|chest|upperleg[._]|lowerleg[._]|foot[._])/i.test(node.name)){
+   // glTFLoader normalizes separator characters in bone IDs; compare the same
+   // canonical names used by the already-working IK / anatomical rig mapping.
+   const key=String(node.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+   if(node.isBone&&/^(hips|spine|chest|upperleg[lr]|lowerleg[lr]|foot[lr])/.test(key)){
     list.push({bone:node,rest:node.quaternion.clone()});
    }
   });
@@ -222,7 +225,8 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     groundWalkWeight:view.phase==='collecting'?actions['Walking_A']?.getEffectiveWeight()??0:walk,
     groundPickupWeight:actions['PickUp']?.getEffectiveWeight()??0,
     torsoBendRadians:uprightBones.filter(({bone})=>/^(hips|spine|chest)$/i.test(bone.name)).reduce((m,{bone,rest})=>Math.max(m,bone.quaternion.angleTo(rest)),0),
-    legMotionRadians:uprightBones.filter(({bone})=>/^(upperleg|lowerleg|foot)[._]/i.test(bone.name)).reduce((m,{bone,rest})=>Math.max(m,bone.quaternion.angleTo(rest)),0),
+    legMotionRadians:uprightBones.filter(({bone})=>/^(upperleg|lowerleg|foot)[lr]/.test(bone.name.toLowerCase().replace(/[^a-z0-9]/g,''))).reduce((m,{bone,rest})=>Math.max(m,bone.quaternion.angleTo(rest)),0),
+    legBoneCount:uprightBones.filter(({bone})=>/^(upperleg|lowerleg|foot)[lr]/.test(bone.name.toLowerCase().replace(/[^a-z0-9]/g,''))).length,
     pluckReachWeight:pluck?.reachWeight??0,
     palmContactInOrbit:!!pluck?.palmContact});
    const top=body.position.clone().add(new THREE.Vector3(0,3.6*scale,0)).project(state.camera);
