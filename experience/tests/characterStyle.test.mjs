@@ -15,9 +15,9 @@ test('costume colors turn violet without painting skeleton bone or pale skin',()
  assert(b>r&&r>g);
 });
 
-test('Skull Master has smaller animated head and face-open hood with full dark cape',()=>{
+test('Skull Master has face-open hood and short mantle leaving both walking legs visible',()=>{
  assert(SKULLMASTER_PROFILE.headScale>=.84 && SKULLMASTER_PROFILE.headScale<1);
- assert(SKULLMASTER_PROFILE.cloakLength>=1.1);
+ assert(SKULLMASTER_PROFILE.cloakLength>=.80 && SKULLMASTER_PROFILE.cloakLength<=1.1);
  assert(SKULLMASTER_PROFILE.hoodFrontGap>.6);
  assert.match(SKULLMASTER_PROFILE.outer,/^#[0-9a-f]{6}$/i);
 });
