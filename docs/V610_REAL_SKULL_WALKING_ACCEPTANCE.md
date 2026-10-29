@@ -27,3 +27,5 @@
 - Stable heel target / calibrated bone height reduced actual desktop stance errors to **0.139 and 0.1149 units**; mobile **0.1572/0.1096**, compact phone **0.1351/0.0872**. The visual QA passed 4 viewports and 70 Node tests; source remains isolated in PR #254.
 - Refined giant square hood and introduced short split cloth panels around the pelvis, leaving both knees/ankles visible. New screenshots still required after this art revision.
 - No Azure publish/production release. Owner requested real walking between orbiting planets, not the 2D floating SVG.
+
+- Visual QA exposed a serious regression: first split-waist robe ended below the knees and completely concealed both walking feet. It was **rejected**. Shortened the panel drop to 0.26 local units and added a regression limit; original anatomical thigh/knee/feet remain exposed for real walking. Review the next rendered screenshot before approval.
