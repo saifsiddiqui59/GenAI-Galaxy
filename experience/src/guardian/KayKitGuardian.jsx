@@ -13,7 +13,7 @@ import {ANATOMY_ASSET,ANATOMY_MODE,attachAnatomicalSkeleton} from './retargetAna
 import {guardianStageScale,guardianFloorY} from './guardianFraming.js';
 import {moveWrist} from './handIK.js';
 import {articulatedHoverAt} from './articulatedHover.js';
-import {straightenSkeletonLegs} from './standingLegPose.js';
+import {straightenSkeletonLegs,lengthenSkeletonLegs} from './standingLegPose.js';
 import {entranceAt,pickupAt,smooth,CONTACT,RELEASE,COLLECT_START_MS,PER_WORLD_MS,OFFER_SETTLE_MS} from '../journey/choreography.js';
 import {phaseAt} from '../journey/story.js';
 const ASSET=import.meta.env.BASE_URL+'models/kaykit/Skeleton_Mage.glb';
@@ -58,6 +58,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   object.scale.setScalar(factor);
   object.position.set(-box.getCenter(new THREE.Vector3()).x*factor,-box.min.y*factor,-box.getCenter(new THREE.Vector3()).z*factor);
   object.userData.geometryHeight=height;
+  object.userData.legProportions=lengthenSkeletonLegs(object,1.27);
   object.userData.disposeStyle=styleKayKit(object,THREE,{anatomical:ANATOMY_MODE});
   const detailed=mountDetailedSkull(object,anatomicalSkull);
   if(!detailed.active)throw Error('CC0 detailed skull failed to attach: original rig is incompatible');
@@ -121,6 +122,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     articulatedArms:!!source.userData.articulatedArms,
     articulatedLegs:!!source.userData.articulatedLegs,
     standingLegs:source.userData.standingLegs?.corrected||0,
+    legLengthFactor:source.userData.legProportions?.factor||1,
     visibleLegMeshes:(()=>{let n=0;source.traverse(o=>{if(o.isMesh&&o.visible&&/^SkullMaster(Femur|Tibia|Foot)_/.test(o.name))n++});return n})()};
   }
   return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeAnatomy?.();source.userData.disposeDetail?.();source.userData.disposeMantle?.();source.userData.disposeStyle?.()};
