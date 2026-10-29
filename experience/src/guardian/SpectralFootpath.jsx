@@ -33,15 +33,14 @@ export default function SpectralFootpath({rigPoseRef,reducedMotion=false}){
  const rotation=new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,0));
  useFrame(()=>{
   const pose=rigPoseRef?.current;
-  const ready=!reducedMotion&&pose?.walking&&pose.walkingRouteFrom&&pose.walkingRouteTo;
+  const ready=!reducedMotion&&pose?.walkingRouteFrom&&pose.walkingRouteTo;
   if(!left.current||!right.current||!points.current||!surface.current)return;
   left.current.visible=!!ready;right.current.visible=!!ready;points.current.visible=!!ready;surface.current.visible=!!ready;
   if(!ready)return;
   const a=pose.walkingRouteFrom,b=pose.walkingRouteTo,scale=pose.scale;
-  const feet=[pose.footL,pose.footR].filter(Boolean);
-  // A line under the ACTUAL rig ankles, never in the middle of the torso.
-  const ankleY=feet.length?feet.reduce((sum,f)=>sum+f[1],0)/feet.length:pose.bodyPosition.y-.2*scale;
-  const offset=THREE.MathUtils.clamp(ankleY-pose.bodyPosition.y-.10*scale,-1.8*scale,.35*scale);
+  // Same constant neutral bone height as the actual foot IK. Never derive
+  // the bridge height from moving ankle bones; it must NOT bob or skate.
+  const offset=(Number.isFinite(pose.walkFloorOffset)?pose.walkFloorOffset:-.12)*scale;
   const dx=b.x-a.x,dz=b.z-a.z,len=Math.max(.001,Math.hypot(dx,dz));
   const nx=-dz/len,nz=dx/len;
   for(let i=0;i<=N;i++){
@@ -67,7 +66,8 @@ export default function SpectralFootpath({rigPoseRef,reducedMotion=false}){
   points.current.instanceMatrix.needsUpdate=true;
   if(window.__galaxySkeletonDiagnostics){
    window.__galaxySkeletonDiagnostics.walkableRoute={from:[a.x,a.y,a.z],to:[b.x,b.y,b.z],
-    railsVisible:true,progress:pose.walkingRouteProgress,stepPlates:spacing};
+    railsVisible:true,progress:pose.walkingRouteProgress,stepPlates:spacing,
+    stableFloorOffset:offset};
   }
  },-1);
  return <>
