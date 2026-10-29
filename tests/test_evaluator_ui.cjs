@@ -134,7 +134,7 @@ async function run(){
  assert.match(vm.runInContext('practiceMarkup()',ctx),/Measured tokens/);
  assert.match(vm.runInContext('practiceMarkup()',ctx),/Estimated model-token cost/);
  assert.match(vm.runInContext('practiceMarkup()',ctx),/Ask the AI tutor \(optional\)/);
- assert.match(vm.runInContext('practiceMarkup()',ctx),/Get AI follow-up \(uses tokens\)/);
+ assert.match(vm.runInContext('practiceMarkup()',ctx),/AI follow-up[\s\S]*?\(uses tokens\)/);
  ctx.__capturedMode=null;ctx.__capturedMessage=null;
  ctx.fetch=async (_url,options)=>{
   const body=JSON.parse(options.body);
