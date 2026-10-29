@@ -83,7 +83,14 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
   object.updateWorldMatrix(true,true);
   // One stable floor reference from the immutable, straight-legged rest pose;
   // NOT recalculated from gait ankle positions every animation frame.
-  const ankles=['foot.l','foot.r'].map(name=>object.getObjectByName(name)?.getWorldPosition(new THREE.Vector3()));
+  const ankleBones=new Map();
+  object.traverse(node=>{
+   if(node.isBone){
+    const key=String(node.name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+    if(key==='footl'||key==='footr')ankleBones.set(key,node);
+   }
+  });
+  const ankles=['footl','footr'].map(name=>ankleBones.get(name)?.getWorldPosition(new THREE.Vector3()));
   if(ankles.some(v=>!v))throw Error('Walking model needs both original ankle bones');
   const rootY=object.getWorldPosition(new THREE.Vector3()).y;
   object.userData.ankleFloorOffset=(ankles[0].y+ankles[1].y)/2-rootY;
