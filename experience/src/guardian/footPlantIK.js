@@ -36,3 +36,48 @@ export function plantedFootCorrection(pose,side,compact=false){
  const dz=clamp(now.z-planted.z,-.42,.42)*weight;
  return {dx,dy,dz,weight,stanceStart,worldPoint:planted};
 }
+
+/* V6.10.1: A foot has a fixed WORLD-SPACE landing target for the complete
+ * stance half-cycle. The old correction used the moving ankle to define the
+ * "floor"; that feedback loop made both ankles drift with the character.
+ * Compute the landing by arc-length from the immutable approach route.
+ * Contact sites are also used by the WALKWAY and footfall discs.
+ */
+const smoothly=x=>{const t=clamp(x);return t*t*(3-2*t)};
+export function walkingFootTarget(pose,side,compact=false,scale=1,floorOffset=0){
+ if(!['left','right'].includes(side))throw Error('Unknown foot side');
+ if(!pose?.walkingRouteFrom||!pose.walkingRouteTo||
+   !Number.isFinite(pose.walkDistance)||!Number.isFinite(pose.walkingRouteProgress))
+  return null;
+ const from=pose.walkingRouteFrom,to=pose.walkingRouteTo;
+ const routeProgress=clamp(pose.walkingRouteProgress);
+ const travelled=walkingRouteDistance(from,to,routeProgress,compact);
+ const prefix=pose.walkDistance-travelled;
+ const d=pose.walkDistance;
+ // Right foot lands at quarter strides, left at three-quarter strides;
+ // each stance target is CONSTANT over a half-cycle of travelled distance.
+ const strideIndex=Math.floor(d/STRIDE_DISTANCE);
+ const phase=2*Math.PI*d/STRIDE_DISTANCE;
+ const swing=Math.sin(phase)*(side==='left'?1:-1);
+ const center=(strideIndex+(side==='left'?.75:.25))*STRIDE_DISTANCE;
+ const stanceDistance=side==='left'&&d/STRIDE_DISTANCE-strideIndex<.5
+    ?center-STRIDE_DISTANCE:center;
+ const local=clamp(stanceDistance-prefix,0,walkingRouteDistance(from,to,1,compact));
+ const u=invertRouteDistance(from,to,local,compact);
+ const spot=walkingPathPoint(from,to,u,compact);
+ const behind=walkingPathPoint(from,to,clamp(u-.009),compact);
+ const ahead=walkingPathPoint(from,to,clamp(u+.009),compact);
+ const dx=ahead.x-behind.x,dz=ahead.z-behind.z;
+ const length=Math.max(.0001,Math.hypot(dx,dz));
+ const sideSign=side==='left'?-1:1;
+ const lane=.20*scale;
+ const landing={x:spot.x-sideSign*dz/length*lane,
+   y:spot.y+floorOffset*scale,
+   z:spot.z+sideSign*dx/length*lane};
+ // Lock until toe-off; soften the transitions so the knees cannot snap.
+ const contact=smoothly(clamp((-swing+.30)/.65));
+ const movement=clamp((pose.walkSpeed||0)/.42);
+ const weight=pose.walking?contact*movement:0;
+ return {...landing,weight,contact,phase,stanceDistance,
+   routeU:u,routeProgress,side};
+}
