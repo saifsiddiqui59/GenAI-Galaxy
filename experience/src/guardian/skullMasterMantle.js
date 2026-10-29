@@ -3,7 +3,7 @@
    The hood follows the real head bone; mantle follows chest; all 95 animations stay alive.
 */
 export const SKULLMASTER_PROFILE=Object.freeze({
-  headScale:.90,hoodFrontGap:.73,hoodRings:6,cloakLength:.94,
+  headScale:.96,hoodFrontGap:.78,hoodRings:6,cloakLength:.94,
   outer:'#14111e',inner:'#040710',trim:'#352a40'
 });
 function surface(THREE,sections,start,end,segments=32){
@@ -44,7 +44,7 @@ export function attachSkullMasterCloak(source,THREE){
  const hood=new THREE.Group();hood.name='SkullMasterDarkHood';
  head.add(hood);attached.push([head,hood]);
  // Original art geometry was nearly twice the skull's size; keep the face visible.
- hood.scale.set(.61,.66,.64);
+ hood.scale.set(.49,.55,.55);
  hood.position.set(0,.06,-.05);
  // Open face wedge at the FRONT (+Z). Sides and back wrap around the skull.
  const ring=[
@@ -107,6 +107,33 @@ export function attachSkullMasterCloak(source,THREE){
     new THREE.MeshStandardMaterial({color:'#241a30',roughness:.95,side:THREE.DoubleSide}));
   piece.position.set(side*.37,-.24,-.13);piece.rotation.z=side*.32;
   cape.add(piece);
+ }
+ // A split leather-and-cloth waist mantle conceals the exposed puppet hips
+ // but ends ABOVE the knee. Two individual panels leave original femurs, shins,
+ // foot IK and movement clearly visible throughout the orbital walk.
+ const hips=source.getObjectByName('hips');
+ if(hips?.isBone){
+  const waistGarment=new THREE.Group();
+  waistGarment.name='SkullMasterSplitWalkingRobe';
+  hips.add(waistGarment);attached.push([hips,waistGarment]);
+  const panels=[
+   {start:-1.28,end:-.16},{start:.16,end:1.28}
+  ];
+  for(const [i,p] of panels.entries()){
+   const rows=[
+    {y:.14,r:.31,z:.04},{y:-.13,r:.40,z:.09},
+    {y:-.41,r:.42,z:.15},{y:-.63+(i?.06:0),r:.35,z:.19}
+   ];
+   const cloth=addCloth(waistGarment,
+     surface(THREE,rows,p.start,p.end,18),
+     i?'#241d33':'#1d1a2e',THREE,.93);
+   cloth.name='SkullMasterWalkingRobe_'+i;
+  }
+  const clasp=new THREE.Mesh(
+   new THREE.IcosahedronGeometry(.055,1),
+   new THREE.MeshStandardMaterial({color:'#c2a673',metalness:.40,roughness:.45}));
+  clasp.name='SkullMasterHipClasp';
+  clasp.position.set(0,.17,.30);waistGarment.add(clasp);
  }
  // Restore only display-owned objects and generated GPU resources.
  return ()=>{
