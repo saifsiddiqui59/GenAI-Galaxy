@@ -29,7 +29,7 @@ test('show accessible, immediate loading until actual 3D collection machinery is
  assert(mature.includes('guardian-glowing-eyes'));
  assert(mature.includes('guardian-arm-left')&&mature.includes('guardian-arm-right'));
  assert(mature.includes('guardian-magic')&&mature.includes('guardian-tail'));
- assert.equal((mature.match(/<g\\b/g)||[]).length,(mature.match(/<\\/g>/g)||[]).length);
+ assert.equal(mature.split('<g ').length-1,mature.split('</g>').length-1,'SVG group balance');
  assert(!mature.includes('<script'),'SVG art must not execute scripts');
  assert(app.includes("genieRef.current.style.left"));
 });
