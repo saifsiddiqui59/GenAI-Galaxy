@@ -60,3 +60,13 @@ test('visual bridge and ankle IK both use a stable neutral-floor height',()=>{
  assert(skeleton.includes('walkingFootTarget('));
  assert(skeleton.includes('stanceContactErrors'));
 });
+
+test('real floor has dimensional walking stones and a visible stable bridge beneath the ankles',()=>{
+ const source=readFileSync(new URL('../src/guardian/SpectralFootpath.jsx',import.meta.url),'utf8');
+ assert(source.includes('solidWalkway:true'));
+ assert(source.includes('cylinderGeometry args={[.36,.4,.045,12]}'));
+ assert(source.includes('opacity={.54}'),'Deck must not disappear behind the galaxy glow');
+ assert(source.includes('pose.walkFloorOffset'));
+ assert(source.includes('depthWrite={false}'));
+ assert(!source.includes('feet.reduce('),'Never tie walkway to moving ankle positions');
+});
