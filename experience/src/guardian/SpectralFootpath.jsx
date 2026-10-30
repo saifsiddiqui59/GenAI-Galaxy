@@ -62,7 +62,9 @@ export default function SpectralFootpath({rigPoseRef,reducedMotion=false}){
   for(let i=0;i<10;i++){
    const t=i/9,site=walkingPathPoint(a,b,t,compact);
    const visible=i<spacing;
-   matrix.compose(new THREE.Vector3(site.x,site.y+offset-.06*scale,site.z),new THREE.Quaternion(),
+   // Raised stepping-stone tops sit near the planted soles, not under the
+   // opaque ribbon. It should look like actual foot contact from camera view.
+   matrix.compose(new THREE.Vector3(site.x,site.y+offset+.065*scale,site.z),new THREE.Quaternion(),
     new THREE.Vector3(visible ? 1.05*scale : 0.00001,visible ? 0.85*scale : 0.00001,visible ? 1.05*scale : 0.00001));
    points.current.setMatrixAt(i,matrix);
   }
