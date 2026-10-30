@@ -74,7 +74,8 @@ export default function SpectralFootpath({rigPoseRef,reducedMotion=false}){
     railsVisible:true,solidWalkway:true,progress:pose.walkingRouteProgress,stepPlates:spacing,
     stableFloorOffset:offset};
   }
- },-1);
+ },0); // Same frame as Guardian (mounted first): read the NEW ankle pose,
+        // never the previous frame's world/foot position.
  return <>
   <mesh ref={surface} geometry={deck} visible={false}>
     <meshBasicMaterial color="#26394f" transparent opacity={.54} side={THREE.DoubleSide} depthWrite={false}/>
