@@ -15,9 +15,9 @@ function makeLine(){
  return g;
 }
 export default function SpectralFootpath({rigPoseRef,reducedMotion=false}){
- const left=useRef(),right=useRef(),points=useRef(),surface=useRef();
+ const left=useRef(),right=useRef(),points=useRef(),surface=useRef(),keel=useRef();
  const compact=useThree(s=>s.size.width<700);
- const geo=useMemo(()=>[makeLine(),makeLine()],[]);
+ const geo=useMemo(()=>[makeLine(),makeLine(),makeLine()],[]);
  const deck=useMemo(()=>{
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.BufferAttribute(new Float32Array((N+1)*2*3),3));
@@ -30,12 +30,11 @@ export default function SpectralFootpath({rigPoseRef,reducedMotion=false}){
  },[]);
  useEffect(()=>()=>{geo.forEach(g=>g.dispose());deck.dispose()},[geo,deck]);
  const matrix=new THREE.Matrix4();
- const rotation=new THREE.Quaternion().setFromEuler(new THREE.Euler(-Math.PI/2,0,0));
  useFrame(()=>{
   const pose=rigPoseRef?.current;
   const ready=!reducedMotion&&pose?.walkingRouteFrom&&pose.walkingRouteTo;
-  if(!left.current||!right.current||!points.current||!surface.current)return;
-  left.current.visible=!!ready;right.current.visible=!!ready;points.current.visible=!!ready;surface.current.visible=!!ready;
+  if(!left.current||!right.current||!points.current||!surface.current||!keel.current)return;
+  left.current.visible=!!ready;right.current.visible=!!ready;points.current.visible=!!ready;surface.current.visible=!!ready;keel.current.visible=!!ready;
   if(!ready)return;
   const a=pose.walkingRouteFrom,b=pose.walkingRouteTo,scale=pose.scale;
   // Same constant neutral bone height as the actual foot IK. Never derive
@@ -47,42 +46,50 @@ export default function SpectralFootpath({rigPoseRef,reducedMotion=false}){
    const t=i/N,p=walkingPathPoint(a,b,t,compact);
    for(const [idx,side] of [-1,1].entries()){
     const attr=geo[idx].getAttribute('position');
-    attr.setXYZ(i,p.x+nx*side*.33*scale,p.y+offset,p.z+nz*side*.33*scale);
-    deck.getAttribute('position').setXYZ(i*2+idx,p.x+nx*side*.33*scale,p.y+offset-.01*scale,p.z+nz*side*.33*scale);
+    attr.setXYZ(i,p.x+nx*side*.45*scale,p.y+offset,p.z+nz*side*.45*scale);
+    deck.getAttribute('position').setXYZ(i*2+idx,p.x+nx*side*.45*scale,p.y+offset-.018*scale,p.z+nz*side*.45*scale);
    }
+  }
+  for(let i=0;i<=N;i++){
+   const p=walkingPathPoint(a,b,i/N,compact);
+   geo[2].getAttribute('position').setXYZ(i,p.x,p.y+offset-.028*scale,p.z);
   }
   geo.forEach(g=>{g.attributes.position.needsUpdate=true;g.computeBoundingSphere()});
   deck.attributes.position.needsUpdate=true;deck.computeVertexNormals();deck.computeBoundingSphere();
   // Short, evenly spaced luminous stepping plates, light enough not to
   // compete with the seventeen clickable world markers.
-  const spacing=compact?5:9;
+  const spacing=10;
   for(let i=0;i<10;i++){
    const t=i/9,site=walkingPathPoint(a,b,t,compact);
    const visible=i<spacing;
-   matrix.compose(new THREE.Vector3(site.x,site.y+offset-.016*scale,site.z),rotation,
-    new THREE.Vector3(visible ? 0.43*scale : 0.00001,visible ? 0.26*scale : 0.00001,visible ? 0.26*scale : 0.00001));
+   matrix.compose(new THREE.Vector3(site.x,site.y+offset-.06*scale,site.z),new THREE.Quaternion(),
+    new THREE.Vector3(visible ? 1.05*scale : 0.00001,visible ? 0.85*scale : 0.00001,visible ? 1.05*scale : 0.00001));
    points.current.setMatrixAt(i,matrix);
   }
   points.current.instanceMatrix.needsUpdate=true;
   if(window.__galaxySkeletonDiagnostics){
    window.__galaxySkeletonDiagnostics.walkableRoute={from:[a.x,a.y,a.z],to:[b.x,b.y,b.z],
-    railsVisible:true,progress:pose.walkingRouteProgress,stepPlates:spacing,
+    railsVisible:true,solidWalkway:true,progress:pose.walkingRouteProgress,stepPlates:spacing,
     stableFloorOffset:offset};
   }
  },-1);
  return <>
   <mesh ref={surface} geometry={deck} visible={false}>
-    <meshBasicMaterial color="#769fcb" transparent opacity={.11} side={THREE.DoubleSide} depthWrite={false}/>
+    <meshBasicMaterial color="#26394f" transparent opacity={.54} side={THREE.DoubleSide} depthWrite={false}/>
   </mesh>
   <line ref={left} geometry={geo[0]} visible={false}>
-   <lineBasicMaterial color="#72b9d1" transparent opacity={.59} depthWrite={false}/>
+   <lineBasicMaterial color="#8fecef" transparent opacity={.83} depthWrite={false}/>
   </line>
   <line ref={right} geometry={geo[1]} visible={false}>
-   <lineBasicMaterial color="#b6a0df" transparent opacity={.28} depthWrite={false}/>
+   <lineBasicMaterial color="#9cb0ed" transparent opacity={.72} depthWrite={false}/>
+  </line>
+  <line ref={keel} geometry={geo[2]} visible={false}>
+   <lineBasicMaterial color="#d4ba82" transparent opacity={.35} depthWrite={false}/>
   </line>
   <instancedMesh ref={points} args={[null,null,10]} visible={false} frustumCulled={false}>
-   <ringGeometry args={[.65,.75,24]}/>
-   <meshBasicMaterial color="#8bb4d9" transparent opacity={.42} side={THREE.DoubleSide} depthWrite={false}/>
+   <cylinderGeometry args={[.36,.4,.045,12]}/>
+   <meshStandardMaterial color="#546d91" emissive="#5e80ad" emissiveIntensity={.32}
+    transparent opacity={.43} metalness={.34} roughness={.52} depthWrite={false}/>
   </instancedMesh>
  </>;
 }
