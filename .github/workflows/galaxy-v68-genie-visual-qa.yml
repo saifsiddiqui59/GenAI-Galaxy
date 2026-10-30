@@ -2,9 +2,10 @@ name: Galaxy V6.8 Original Genie Visual QA (no cloud)
 on:
   pull_request:
     paths:
-      - 'experience/**'
-      - 'tests/p35_v6_browser.py'
-      - '.github/workflows/galaxy-v68-local-visual-qa.yml'
+      # V6.8 is archived; its sprite assertions cannot pass the V6.10 walking
+      # character by design. Keep this workflow for explicit/manual legacy QA.
+      - 'experience/public/models/original-genie.svg'
+      - '.github/workflows/galaxy-v68-genie-visual-qa.yml'
   workflow_dispatch:
 permissions:
   contents: read
