@@ -70,3 +70,12 @@ test('real floor has dimensional walking stones and a visible stable bridge bene
  assert(source.includes('depthWrite={false}'));
  assert(!source.includes('feet.reduce('),'Never tie walkway to moving ankle positions');
 });
+
+test('walkway uses current-frame guardian ankle/route state, never a stale frame',()=>{
+ const bridge=readFileSync(new URL('../src/guardian/SpectralFootpath.jsx',import.meta.url),'utf8');
+ const app=readFileSync(new URL('../src/App.jsx',import.meta.url),'utf8');
+ assert(bridge.includes('},0); // Same frame as Guardian'));
+ assert(!bridge.includes('},-1);'),'Negative priority would update bridge before walking skeleton');
+ assert(app.indexOf('<Guardian rigPoseRef')<app.indexOf('<SpectralFootpath rigPoseRef'),
+   'Guardian must publish new frame before footbridge reads it');
+});
