@@ -69,5 +69,31 @@ test('retargeted bone parts follow the original animated rig without replacing i
  assert.equal(chest.getObjectByName('SkullMasterAnatomy_chest'),undefined);
  assert.equal(chest.getObjectByName('SpectralMaster_Humerus_l'),undefined);
  assert.equal(hips.getObjectByName('SkullMasterFemur_l'),undefined);
+
+ // A separate experimental pass must retain the REAL source femur, tibia,
+ // metatarsal, humerus, radius and carpal meshes on the same original rig.
+ // Synthetic bone shafts are not an acceptable stand-in for these assets.
+ for(const side of [-1,1])for(const [name,y] of [
+  ['Femur',.74],['Tibia',.36],['Metatarsal 1',.11],
+  ['Humerus',1.39],['Radius',1.08],['Carpal',.86]
+ ]){
+  const part=new THREE.Mesh(geometry,new THREE.MeshStandardMaterial());
+  part.name=name;part.position.set(side*.22,y,0);
+  anatomy.add(part);
+ }
+ const native=attachAnatomicalSkeleton(source,anatomy,THREE,{nativeLimbs:true});
+ assert.equal(native.nativeLimbs,true);
+ assert.equal(native.articulatedLegs,true);
+ for(const side of ['l','r']){
+  for(const bone of ['upperleg','lowerleg','foot','upperarm','lowerarm','hand']){
+   const shape=source.getObjectByName('SkullMasterAnatomy_'+bone+'.'+side);
+   assert(shape?.visible, 'Actual CC0 geometry must be visible: '+bone+'.'+side);
+   assert.equal(shape.userData.nativeAnatomicalLimb,true);
+  }
+ }
+ assert(!source.getObjectByName('SkullMasterFemur_l'),'No duplicate artificial femur');
+ assert(!source.getObjectByName('SpectralMaster_Humerus_l'),'No procedural humerus');
+ native.dispose();
+ assert.equal(source.getObjectByName('SkullMasterAnatomy_foot.l'),undefined);
  geometry.dispose();
 });
