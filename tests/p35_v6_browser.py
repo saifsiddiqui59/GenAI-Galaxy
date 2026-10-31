@@ -20,9 +20,11 @@ async def inspect(pw,url,name,width,height,reduced=False):
     browser=await pw.chromium.launch(headless=True,args=args,**({'executable_path':binary} if binary else {}))
     video_options={'record_video_dir':str(OUT),'record_video_size':{'width':width,'height':height}} if name=='desktop' and os.environ.get('GALAXY_WALKING_EXPECT')=='1' else {}
     page=await browser.new_page(viewport={'width':width,'height':height},reduced_motion='reduce' if reduced else 'no-preference',**video_options)
-    errors=[];requests=[]
+    errors=[];requests=[];missing_lesson_modules=[]
     page.on('pageerror',lambda error:errors.append(str(error)))
     page.on('request',lambda req:requests.append(req.url))
+    page.on('response',lambda response:missing_lesson_modules.append((response.status,response.url))
+            if response.status>=400 and '/lesson/features/' in response.url else None)
     try:
         response=await page.goto(url,wait_until='networkidle',timeout=60000)
         assert response.status==200,response.status
@@ -266,6 +268,7 @@ async def inspect(pw,url,name,width,height,reduced=False):
         await page.wait_for_url('**/lesson/index.html?galaxyWorld=1',timeout=20000)
         await page.wait_for_function('() => window.GenAIGalaxyTest != null',timeout=15000)
         assert await page.locator('body').inner_text() # Verify actual lesson document loads.
+        assert not missing_lesson_modules,('Lesson feature scripts failed to load',missing_lesson_modules)
         assert not errors,errors
         assert not any('/rest/v1/' in r or '/auth/v1/' in r or '/api/practice/' in r for r in requests),requests
         result={'viewport':[width,height],'reduced':reduced,'screenshots':snapshots,'rectangles':rects,'lessonUrl':page.url,'errors':errors}
