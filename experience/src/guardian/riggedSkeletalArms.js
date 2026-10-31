@@ -11,8 +11,9 @@ export function attachRiggedSkeletalArms(source,THREE){
  source.traverse(node=>{if(node.isBone)bones.set(canonical(node.name),node)});
  const getBone=name=>bones.get(canonical(name));
  const attached=[],geometries=[];
- const marrow=new THREE.MeshStandardMaterial({color:'#b8aa97',roughness:.98,metalness:0});
- const jointMat=new THREE.MeshStandardMaterial({color:'#9c8b7a',roughness:1,metalness:0});
+ // Match the cool graphite anatomical ribs and legs; keep hand details visible.
+ const marrow=new THREE.MeshStandardMaterial({color:'#858792',roughness:.94,metalness:.02});
+ const jointMat=new THREE.MeshStandardMaterial({color:'#636775',roughness:.98,metalness:0});
  function add(parent,mesh){parent.add(mesh);attached.push(mesh);mesh.castShadow=true;if(mesh.geometry)geometries.push(mesh.geometry)}
  function segment(parentName,childName,proximal,distal,label){
   const a=getBone(parentName),b=getBone(childName);
