@@ -9,8 +9,9 @@ export function attachRiggedSkeletalLegs(source,THREE){
  source.traverse(n=>{if(n.isBone)bones.set(canonical(n.name),n)});
  const bone=name=>bones.get(canonical(name));
  const owned=[],geometries=[];
- const boneMat=new THREE.MeshStandardMaterial({color:'#c2b3a2',roughness:.96,metalness:0});
- const jointMat=new THREE.MeshStandardMaterial({color:'#9b8c80',roughness:.99,metalness:0});
+ // Keep physically visible feet while removing the bright toy-ivory look.
+ const boneMat=new THREE.MeshStandardMaterial({color:'#858792',roughness:.94,metalness:.02});
+ const jointMat=new THREE.MeshStandardMaterial({color:'#636775',roughness:.98,metalness:0});
  function attach(parent,mesh){parent.add(mesh);mesh.castShadow=true;owned.push(mesh);geometries.push(mesh.geometry)}
  function link(from,to,wide,narrow,label){
   const a=bone(from),b=bone(to);
