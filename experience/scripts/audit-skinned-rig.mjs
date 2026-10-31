@@ -45,6 +45,12 @@ function accessor(gltf,bin,index){
 
 export function auditGlb(input){
  const {gltf:g,bin}=parseGlb(input),errors=[],warnings=[];
+ const parents=new Map();
+ (g.nodes??[]).forEach((node,i)=>(node.children??[]).forEach(child=>{
+  if(!g.nodes?.[child])errors.push('Node '+i+' has missing child '+child);
+  if(parents.has(child))errors.push('Joint node '+child+' has multiple parents');
+  parents.set(child,i);
+ }));
  const skinNodes=(g.nodes??[]).filter(n=>isInt(n.skin)&&isInt(n.mesh));
  let triangles=0,skinnedPrimitives=0,weightedVertices=0;
  for(const [i,skin] of (g.skins??[]).entries()){
@@ -53,9 +59,15 @@ export function auditGlb(input){
   try{
    const ibm=accessor(g,bin,skin.inverseBindMatrices);
    if(ibm.type!=='MAT4'||ibm.count!==skin.joints.length)errors.push('Skin '+i+' inverse bind count/type mismatch');
-   else for(let j=0;j<ibm.count;j++){const m=ibm.read(j);if(m.some(v=>!Number.isFinite(v))||Math.abs(m[0]*m[5]*m[10])<1e-10)errors.push('Skin '+i+' invalid inverse bind matrix '+j);}
+   else for(let j=0;j<ibm.count;j++){const m=ibm.read(j);if(m.some(v=>!Number.isFinite(v))||Math.abs(m[0]*(m[5]*m[10]-m[9]*m[6])-m[4]*(m[1]*m[10]-m[9]*m[2])+m[8]*(m[1]*m[6]-m[5]*m[2]))<1e-10)errors.push('Skin '+i+' invalid inverse bind matrix '+j);}
   }catch(e){errors.push(String(e.message));}
   for(const joint of skin.joints)if(!g.nodes?.[joint])errors.push('Skin '+i+' references missing joint '+joint);
+  const set=new Set(skin.joints),root=skin.skeleton??skin.joints.find(j=>!set.has(parents.get(j)));
+  const linked=j=>{const seen=new Set();while(isInt(j)&&!seen.has(j)){
+   if(j===root)return true;seen.add(j);j=parents.get(j);
+  }return false;};
+  if(!isInt(root)||!g.nodes?.[root]||skin.joints.filter(linked).length<skin.joints.length*.8)
+   errors.push('Skin '+i+' has disconnected joint hierarchy; cannot retarget gait safely');
  }
  if(!skinNodes.length)errors.push('No mesh node is bound to a skin');
  for(const node of skinNodes){
