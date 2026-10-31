@@ -212,6 +212,9 @@ async def inspect(pw,url,name,width,height,reduced=False):
             assert 10<=diag.get('anatomicalClusters',0)<=16,diag.get('anatomicalClusters')
             assert diag.get('articulatedLegs') and diag.get('articulatedArms') and not diag.get('spectralActive'),('Visible bone-rigged legs and palms, not a legless vapor body, are required',diag)
             assert diag.get('visibleLegMeshes',0)>=4,'Both thigh and shin meshes must render'
+            if os.environ.get('GALAXY_V6_NATIVE')=='1':
+                assert diag.get('nativeAnatomicalLimbs') is True, 'V6.11 must render the real authored bone geometry, not rods'
+                assert diag.get('visibleLegMeshes',0)>=6, 'Real both-side thigh/shin/foot geometry is required'
         assert diag.get('toyEyesHidden'),'Oversized KayKit toy eyes must stay hidden in the rendered Skull Master'
         if diag.get('offeringCenter') and diag.get('waistPosition'):
             # Both coordinates are world space. The globe may not sit inside

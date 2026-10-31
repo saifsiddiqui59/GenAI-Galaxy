@@ -17,6 +17,8 @@ jobs:
     timeout-minutes: 20
     env:
       VITE_GALAXY_ANATOMY: '1'
+      VITE_GALAXY_NATIVE_ANATOMICAL_LIMBS: '1'
+      GALAXY_V6_NATIVE: '1'
       GALAXY_V6_ANATOMY: '1'
       GALAXY_WALKING_EXPECT: '1'
       GALAXY_V6_ARTIFACTS: ${{ github.workspace }}/verification/screenshots
