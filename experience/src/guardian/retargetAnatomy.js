@@ -46,11 +46,14 @@ export function classifyAnatomicalPart(name,centerX=0){
  return null;
 }
 function groupAnchor(region,side){
+ // The source anatomy is authored in an A-pose. Earlier 90-degree arm
+ // rotation forced its real humerus/radius meshes into a permanent T-pose.
+ // Preserve authored down-facing orientation and let animated bone IK move it.
  const sign=side===0?1:-1;
  switch(region){
-  case 'upperArm':return {source:[sign*.21,1.40,0],scale:1.13,angle:sign*Math.PI/2};
-  case 'lowerArm':return {source:[sign*.26,1.105,0],scale:1.16,angle:sign*Math.PI/2};
-  case 'hand':return {source:[sign*.28,.865,0],scale:1.09,angle:sign*Math.PI/2};
+  case 'upperArm':return {source:[sign*.21,1.40,0],scale:1.13,angle:0};
+  case 'lowerArm':return {source:[sign*.26,1.105,0],scale:1.16,angle:0};
+  case 'hand':return {source:[sign*.28,.865,0],scale:1.09,angle:0};
   case 'upperLeg':return {source:[sign*.122,.86,0],scale:.83,angle:0};
   case 'lowerLeg':return {source:[sign*.113,.48,0],scale:.66,angle:0};
   case 'foot':return {source:[sign*.114,.14,0],scale:1.04,angle:0};
