@@ -179,7 +179,10 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
   classified++;
  });
  if(classified<100||missed)throw Error('Incomplete anatomical rigging: '+classified+' assigned, '+missed+' unmatched; missing '+JSON.stringify(missing.slice(0,30))+' skipped '+JSON.stringify(skipped.slice(0,30)));
- const material=new THREE.MeshStandardMaterial({color:'#a89b8a',roughness:.97,metalness:0});
+ // Dark, desaturated anatomical torso is necessary for a mature Skull Master.
+  // Bright ivory ribs made the actual 1440px and 390px renders read as a toy.
+  // The detailed CC0 skull remains separately lit to preserve facial contrast.
+  const material=new THREE.MeshStandardMaterial({color:'#686b77',roughness:.96,metalness:.025});
  for(const [name,parts] of mergedParts){
   const bone=getBone(name);
   const combined=mergeGeometries(parts,false);

@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {STYLE_PROFILE,isCostumeRed,isPaleBone,remapCostumePixel} from '../src/guardian/styleKayKit.js';
@@ -15,9 +16,18 @@ test('costume colors turn violet without painting skeleton bone or pale skin',()
  assert(b>r&&r>g);
 });
 
-test('Skull Master has smaller animated head and face-open hood with full dark cape',()=>{
+test('Skull Master has smaller animated head and face-open hood with short dark mantle that keeps both legs and feet visible',()=>{
  assert(SKULLMASTER_PROFILE.headScale>=.84 && SKULLMASTER_PROFILE.headScale<1);
- assert(SKULLMASTER_PROFILE.cloakLength>=1.1);
+ assert(SKULLMASTER_PROFILE.cloakLength>=.85 && SKULLMASTER_PROFILE.cloakLength<=1.05);
  assert(SKULLMASTER_PROFILE.hoodFrontGap>.6);
  assert.match(SKULLMASTER_PROFILE.outer,/^#[0-9a-f]{6}$/i);
+});
+
+test('walking Skull Master has face-open hood and bare rigged femur/shin/feet, no front robe occlusion',()=>{
+ const jsx=readFileSync(new URL('../src/guardian/skullMasterMantle.js',import.meta.url),'utf8');
+ assert(!jsx.includes('SkullMasterWalkingRobe_'),'No front cloth may obscure real thigh/feet');
+ assert(jsx.includes('SkullMasterWaistBelt'));
+ assert(jsx.includes('head.add(hood)'));
+ assert(jsx.includes('hips.add(belt)'));
+ assert(!jsx.includes('leg.visible=false'));
 });

@@ -8,11 +8,15 @@ import hashlib
 import json
 import os
 import struct
+import time
 from pathlib import Path
 from urllib.request import Request,urlopen
 
 SOURCE="https://www.innerscene.com/api/library/human-skeleton-simplified-anatomical-study-a93f4d8f/download"
 LICENSE_PAGE="https://www.innerscene.com/tools/library/3d-parts/human-skeleton-simplified-anatomical-study-a93f4d8f"
+# Previously published exact approved bytes: V6.9 hosted SHA manifest records
+# e52d1b... on this file. Read-only CDN recovery, never write to V6.9.
+FALLBACK_SOURCE="https://gengalaxy1429841605.z29.web.core.windows.net/previews/galaxy-3d-v69/models/cc0/InnersceneAnatomicalSkeleton.glb"
 SHA256="e52d1b23cf15b574885846a7da30354defc0a3a51b679ded6cbc7c0c1965d996"
 EXPECTED_BYTES=1443132
 DEST=Path(__file__).resolve().parents[1]/"public/models/cc0/InnersceneAnatomicalSkeleton.glb"
@@ -36,15 +40,35 @@ def main():
         return
     if DEST.exists():
         raw=DEST.read_bytes()
+        verify(raw)
     else:
-        req=Request(SOURCE,headers={'User-Agent':'GenAI-Galaxy-V6-CC0-Anatomy/1.0'})
-        with urlopen(req,timeout=35) as res:
-            if res.headers.get("Content-Length") and int(res.headers['Content-Length'])>EXPECTED_BYTES:
-                raise ValueError("Unexpected asset size")
-            raw=res.read(EXPECTED_BYTES+1)
+        errors=[]
+        for url in (SOURCE,FALLBACK_SOURCE):
+            for attempt in range(3):
+                try:
+                    req=Request(url,headers={'User-Agent':'GenAI-Galaxy-V6-CC0-Anatomy/1.0'})
+                    with urlopen(req,timeout=35) as response:
+                        raw=response.read(EXPECTED_BYTES+1)
+                    # SHA256, size, 322 meshes and original GLB topology
+                    # must match before this cache/source is accepted.
+                    verify(raw)
+                except (OSError,ValueError) as exc:
+                    errors.append(f"{type(exc).__name__}: {str(exc)[:110]}")
+                    print(f"Approved anatomy fetch attempt {attempt+1} failed; retrying",flush=True)
+                    time.sleep(1.2*(attempt+1))
+                else:
+                    print("Verified approved anatomy source:",
+                          "published immutable copy" if url==FALLBACK_SOURCE else "origin")
+                    break
+            else:
+                continue
+            break
+        else:
+            raise RuntimeError("Approved anatomy unavailable / hash invalid; refusing to build. "+repr(errors[-3:]))
+        DEST.parent.mkdir(parents=True,exist_ok=True)
+        DEST.write_bytes(raw)
     verify(raw)
-    DEST.parent.mkdir(parents=True,exist_ok=True)
-    if not DEST.exists():DEST.write_bytes(raw)
     print(f"Verified original CC0 skeleton: {EXPECTED_BYTES} B, 322 mesh nodes, {SHA256}")
 
-if __name__=="__main__":main()
+if __name__=="__main__":
+    main()

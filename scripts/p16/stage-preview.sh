@@ -13,7 +13,7 @@ for file in curriculum.json lessons.json; do
   install -m 0644 "$GALAXY_SOURCE_ROOT/data/$file" "$GALAXY_STAGE/lesson/data/$file"
 done
 install -m 0644 "$GALAXY_SOURCE_ROOT/speech/azure-speech-adapter.js" "$GALAXY_STAGE/lesson/speech/azure-speech-adapter.js"
-for file in conversation-coach.js private-study-plan.js speaking-metrics.js session-reports.js; do
+for file in conversation-coach.js private-study-plan.js speaking-metrics.js session-reports.js evaluation-evidence.js milestones.js saas-operations.js offline-misconceptions.js; do
   install -m 0644 "$GALAXY_SOURCE_ROOT/features/$file" "$GALAXY_STAGE/lesson/features/$file"
 done
 python3 - "$GALAXY_STAGE" <<'PY'

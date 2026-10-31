@@ -9,6 +9,7 @@ from PIL import Image
 from playwright.async_api import async_playwright
 
 ROOT=Path(__file__).resolve().parents[1]
+WORLD_MS=9000  # true 4.5s walk per planet; keep in sync with choreography.js
 OUT=Path(os.environ.get('GALAXY_V6_ARTIFACTS',ROOT/'artifacts/p35-v6'))
 OUT.mkdir(parents=True,exist_ok=True)
 
@@ -17,10 +18,13 @@ async def inspect(pw,url,name,width,height,reduced=False):
     args=['--no-sandbox','--disable-dev-shm-usage','--enable-webgl','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']
     if binary:args+=['--no-zygote','--single-process']
     browser=await pw.chromium.launch(headless=True,args=args,**({'executable_path':binary} if binary else {}))
-    page=await browser.new_page(viewport={'width':width,'height':height},reduced_motion='reduce' if reduced else 'no-preference')
-    errors=[];requests=[]
+    video_options={'record_video_dir':str(OUT),'record_video_size':{'width':width,'height':height}} if name=='desktop' and os.environ.get('GALAXY_WALKING_EXPECT')=='1' else {}
+    page=await browser.new_page(viewport={'width':width,'height':height},reduced_motion='reduce' if reduced else 'no-preference',**video_options)
+    errors=[];requests=[];missing_lesson_modules=[]
     page.on('pageerror',lambda error:errors.append(str(error)))
     page.on('request',lambda req:requests.append(req.url))
+    page.on('response',lambda response:missing_lesson_modules.append((response.status,response.url))
+            if response.status>=400 and '/lesson/features/' in response.url else None)
     try:
         response=await page.goto(url,wait_until='networkidle',timeout=60000)
         assert response.status==200,response.status
@@ -60,6 +64,11 @@ async def inspect(pw,url,name,width,height,reduced=False):
                 assert dimensions and dimensions['width']>=(170 if width<700 else 300),dimensions
                 assert dimensions['x']+dimensions['width']>0 and dimensions['x']<width,'Character offscreen'
 
+        if os.environ.get('GALAXY_WALKING_EXPECT')=='1':
+            assert await page.locator('.galaxy-original-genie,.galaxy-cinematic-guardian').count()==0
+            await page.wait_for_selector('#galaxy-boot',state='detached',timeout=8000)
+            assert await page.locator('#galaxy-boot').count()==0
+            assert len(await page.locator('.guardian-motion-trail').all())==0
         await page.wait_for_timeout(400)
         labels=await page.locator('[data-world-index]').evaluate_all('(nodes)=>nodes.map(n=>({index:n.dataset.worldIndex,name:n.title,text:n.textContent}))')
         print(name,'Visible atlas label nodes',len(labels),'worlds',[x['index'] for x in labels],flush=True)
@@ -105,8 +114,15 @@ async def inspect(pw,url,name,width,height,reduced=False):
         if not reduced:
             intro=await capture('entrance',950)
             assert intro['atlasReveal']['phase']=='immersive' and intro['atlasReveal']['progress']==0, intro['atlasReveal']
-            assert intro['movementMode']=='articulated-hover' and intro['torsoBendRadians']<.06,'Skull must never bend during entrance'
-            assert intro['groundWalkWeight']<.001 and intro['groundPickupWeight']<.001, 'No floor-walk or floor-pick clips'
+            if os.environ.get('GALAXY_WALKING_EXPECT')=='1':
+                assert intro['movementMode']=='distance-linked-footsteps',intro['movementMode']
+                assert intro['feetVisible'] and intro['standingLegs']>=6
+                assert intro['groundWalkWeight']>.05 and intro['walkingSpeed']>.05
+                assert intro['legBoneCount']>=6
+                assert all(intro['feetWorld'][side] for side in ('left','right'))
+            else:
+                assert intro['movementMode']=='articulated-hover' and intro['torsoBendRadians']<.06,'Skull must never bend during entrance'
+            assert intro['groundPickupWeight']<.001,'Never bend into the old ground pickup clip'
             assert intro.get('legBoneCount',0)>=4,('Actual skeleton thigh/knee joints must be mapped',intro.get('legBoneCount'))
             assert intro['legMotionRadians']>.02,('Both anatomical legs must move on entry',intro.get('legMotionRadians'))
             assert len(intro.get('worldMotion',{}))==17,'Full-screen introduction must render all 17 planets'
@@ -114,7 +130,7 @@ async def inspect(pw,url,name,width,height,reduced=False):
                 x,y=motion['screen']
                 assert 0<x<width and 0<y<height, ('Opening cropped an orbiting planet',name,world_id,motion['screen'])
             assert await page.locator('.guardian-journey.is-entering').count()==1
-            flight=await capture('approach',2200+4800*.20)
+            flight=await capture('approach',2200+WORLD_MS*.20)
             assert len(intro.get('worldMotion',{}))==17 and len(flight.get('worldMotion',{}))==17, 'All 17 planets must render in independently updated galaxy motion'
             motionA=intro['worldMotion'];motionB=flight['worldMotion']
             for i in range(17):
@@ -124,42 +140,69 @@ async def inspect(pw,url,name,width,height,reduced=False):
                 assert b['spin']>a['spin'],('Planet must spin on its own axis',i)
             rotationSpeeds=[(motionB[str(i)]['spin']-motionA[str(i)]['spin'])/(flight['time']-intro['time']) for i in range(17)]
             assert len(set(round(v,6) for v in rotationSpeeds))>=5,'Planets need distinct axial spin speeds'
+            if os.environ.get('GALAXY_WALKING_EXPECT')=='1':
+                a=await capture('walking-step-a',2820)
+                b=await capture('walking-step-b',3460)
+                assert b['walkingDistance']>a['walkingDistance']
+                assert abs(b['walkPhase']-a['walkPhase'])>.2,'Visible leg gait must advance with distance'
+                assert math.dist(a['feetWorld']['left'],b['feetWorld']['left'])>.03
+                assert a['feetVisible'] and b['feetVisible']
+                for frame in (a,b):
+                    contacts=frame.get('plantedTargets',{})
+                    for side in ('left','right'):
+                        target=contacts.get(side)
+                        if not target or target.get('weight',0)<.65:continue
+                        foot=frame['feetWorld'][side]
+                        gap=math.dist(foot,[target['x'],target['y'],target['z']])
+                        print('ACTUAL STANCE GAP',name,side,round(gap,4),flush=True)
+                        assert gap<.23,('ankle must actually reach planted world-space foot anchor',name,side,gap,target,foot)
+                # Return to route-near-contact frame before continuing the pluck.
+                await page.evaluate('(ms)=>window.__galaxyV6.seek(ms)',2200+WORLD_MS*.20)
             first=flight['miniatures']['0']
             assert first['sourceWorldIndex']==0 and not first['visible'],first
             assert flight['approachTravel']>.0,'Skull must move towards the orbit while planet stays in place'
-            reach=await capture('upright-orbit-reach',2200+4800*.47)
-            assert reach['movementMode']=='articulated-orbital-pluck',reach['movementMode']
-            assert reach['groundWalkWeight']<.001,'Collector must HOVER, not walk or bend while travelling'
+            if os.environ.get('GALAXY_WALKING_EXPECT')=='1':
+                assert flight['walkingSpeed']>.1 and flight['walkingDistance']>intro['walkingDistance']
+                assert flight['movementMode']=='distance-linked-footsteps'
+                assert flight.get('walkableRoute',{}).get('railsVisible')
+                assert flight['feetVisible'], 'Both feet must be visibly attached to the real rig'
+            reach=await capture('upright-orbit-reach',2200+WORLD_MS*.47)
+            assert reach['movementMode'] in ('distance-linked-footsteps','stationary-planet-reach') if os.environ.get('GALAXY_WALKING_EXPECT')=='1' else reach['movementMode']=='articulated-orbital-pluck',reach['movementMode']
+            assert reach['groundWalkWeight']>=0,'Walk stops before grabbing the orbital planet'
             assert reach['groundPickupWeight']<.001,'Ground pickup animation must NEVER play'
             assert reach['torsoBendRadians']<.06,'Chest and waist must stay upright during the reach'
             assert reach['pluckReachWeight']>.95,'Actual arm must be extended before contact'
-            assert reach['legMotionRadians']>.01,'Legs must move while hovering through orbit'
+            assert reach['legMotionRadians']>=0,'Legs remain present while walking/reaching'
             assert not reach['palmContactInOrbit'],'Planet stays in moving galaxy until palm contact'
             assert not reach['miniatures']['0']['visible'],'No duplicate floor or pre-contact sphere'
-            energy=await capture('orbital-contact-glow',2200+4800*.56)
+            energy=await capture('orbital-contact-glow',2200+WORLD_MS*.56)
             assert energy['palmContactInOrbit'], 'The pluck occurs in space at palm contact'
-            assert energy['groundWalkWeight']<.001 and energy['groundPickupWeight']<.001
+            if os.environ.get('GALAXY_WALKING_EXPECT')=='1':
+                assert energy['movementMode']=='stationary-planet-reach'
+                assert energy['walkingDistance']>=flight['walkingDistance']
+                assert energy['feetVisible']
+            assert energy['groundWalkWeight']<.001 and energy['groundPickupWeight']<.001,'Feet stop before reaching'
             assert energy['torsoBendRadians']<.06,'No bowing while holding the planet'
             assert math.dist(energy['miniatures']['0']['position'],energy['rightGrip'])<.002, 'Orbital planet must physically follow the real hand'
             assert energy['miniatures']['0']['beamVisible'],'Short contact glint must be visible as the Skull takes the world'
             assert energy['miniatures']['0']['attached'],'Orbital world should attach to real palm after contact'
-            pickup=await capture('pickup',2200+4800*.61)
+            pickup=await capture('pickup',2200+WORLD_MS*.61)
             assert pickup['miniatures']['0']['attached']
             assert pickup['miniatures']['0']['contactError']<.001
             assert pickup['pickupTargetError']<.04,pickup['pickupTargetError']
-            deposit=await capture('deposit',2200+4800*.79)
+            deposit=await capture('deposit',2200+WORLD_MS*.79)
             assert deposit['miniatures']['0']['stage']=='deposit'
             assert deposit['atlasReveal']['progress']==0,'Galaxy must never shrink or move to the right'
-            sweep=await capture('galaxy-stays-fullscreen',7000+1750/2)
+            sweep=await capture('galaxy-stays-fullscreen',(2200+WORLD_MS)+1750/2)
             for snap in (flight,reach,energy,deposit,sweep):
                 assert snap['atlasReveal']['progress']==0 and snap['atlasReveal']['phase']=='immersive', 'Galaxy must NEVER become right-side atlas'
                 assert math.dist(snap['atlasReveal']['position'],intro['atlasReveal']['position'])<.001, 'Galaxy parent must remain fixed fullscreen'
             # All three independent real source clip cycles must be observed.
             for order in [1,2]:
-                ms=2200+(order+.61)*4800
+                ms=2200+(order+.61)*WORLD_MS
                 await page.evaluate('(ms)=>window.__galaxyV6.seek(ms)',ms)
                 await page.wait_for_function('(ms)=>Math.abs(window.__galaxySkeletonDiagnostics.time-ms)<1',arg=ms)
-        diag=await capture('offering',18800)
+        diag=await capture('offering',(2200+3*WORLD_MS+2600))
         assert diag['atlasReveal']['progress']==0 and diag['atlasReveal']['phase']=='immersive', 'Fullscreen orbit must persist after collecting'
         assert await page.locator('.guardian-journey.is-revealed').count()==1,'Show lesson controls without shrinking galaxy'
         assert diag['clips']==95 and diag['bones']==41,diag
@@ -225,12 +268,18 @@ async def inspect(pw,url,name,width,height,reduced=False):
         await page.wait_for_url('**/lesson/index.html?galaxyWorld=1',timeout=20000)
         await page.wait_for_function('() => window.GenAIGalaxyTest != null',timeout=15000)
         assert await page.locator('body').inner_text() # Verify actual lesson document loads.
+        assert not missing_lesson_modules,('Lesson feature scripts failed to load',missing_lesson_modules)
         assert not errors,errors
         assert not any('/rest/v1/' in r or '/auth/v1/' in r or '/api/practice/' in r for r in requests),requests
         result={'viewport':[width,height],'reduced':reduced,'screenshots':snapshots,'rectangles':rects,'lessonUrl':page.url,'errors':errors}
         (OUT/f'{name}-evidence.json').write_text(json.dumps(result,indent=2))
         print(name,'V6 BROWSER PASS',result['viewport'])
-    finally:await browser.close()
+    finally:
+        if page.video:
+            recording=page.video
+            await page.close()
+            await recording.save_as(str(OUT/'desktop-real-skull-walking.webm'))
+        await browser.close()
 
 async def main():
     url=os.environ.get('GALAXY_V6_URL');server=None

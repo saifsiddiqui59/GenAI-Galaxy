@@ -43,10 +43,18 @@ async def visit(browser, name, viewport, reduced=False):
       await replay.wait_for(state="visible",timeout=25000)
       await replay.click()
       # Full 3 mastered world sequence: read-only, synthetic only.
-      await page.wait_for_function(
-        "() => (window.__galaxySkeletonDiagnostics?.pickupLog || []).length >= 3",
-        timeout=25000)
-      log=await page.evaluate("window.__galaxySkeletonDiagnostics.pickupLog")
+      # Atomically snapshot the three observed pickups while waiting. The
+      # hosted V5 demo can reset its playback epoch between a successful
+      # wait_for_function and a separate evaluate(), yielding an empty log.
+      # A captured JS handle preserves the real observed events without
+      # fabricating or retrying a missing physical pickup.
+      evidence=await page.wait_for_function("""() => {
+        const log=window.__galaxySkeletonDiagnostics?.pickupLog || [];
+        return log.length >= 3
+          ? log.slice(0,3).map(x=>({index:x.index,clip:x.clip}))
+          : false;
+      }""",timeout=25000)
+      log=await evidence.json_value()
       assert [x["index"] for x in log[:3]] == [0,1,2],log
       assert all(x["clip"]=="PickUp" for x in log[:3]),log
       await page.locator(".guardian-skip").wait_for(state="hidden",timeout=15000)

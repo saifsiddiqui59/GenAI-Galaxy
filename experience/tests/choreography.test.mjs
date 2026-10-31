@@ -33,7 +33,7 @@ test('walk arrives without position or heading discontinuities',()=>{
 test('skip and reduced motion do not fake progress or replay pickups',()=>{
  assert.deepEqual(phaseAt(0,0,true),{phase:'offering',visible:0,activeIndex:-1});
  assert.deepEqual(phaseAt(0,3,true),{phase:'offering',visible:3,activeIndex:-1});
- assert.deepEqual(phaseAt(99999,17),{phase:'offering',visible:17,activeIndex:-1});
+ assert.deepEqual(phaseAt(COLLECT_START_MS+PER_WORLD_MS*17+OFFER_SETTLE_MS+1,17),{phase:'offering',visible:17,activeIndex:-1});
  assert.equal(phaseAt(COLLECT_START_MS+PER_WORLD_MS*17-1,17).visible,16);
 });
 
