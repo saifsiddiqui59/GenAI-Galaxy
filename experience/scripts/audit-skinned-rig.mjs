@@ -89,7 +89,18 @@ export function auditGlb(input){
   }
  }
  if(!skinnedPrimitives)errors.push('No valid skinned primitives');
- const clips=(g.animations??[]).map((a,i)=>({name:a.name??'(unnamed '+i+')',channels:a.channels?.length??0}));
+ const clips=(g.animations??[]).map((a,i)=>{
+  const paths={},targets=new Set();let duration=0;
+  for(const ch of a.channels??[]){
+   const path=ch.target?.path??'unknown';paths[path]=(paths[path]??0)+1;
+   targets.add(g.nodes?.[ch.target?.node]?.name??'(unnamed)');
+   try{const t=accessor(g,bin,a.samplers[ch.sampler].input);
+    duration=Math.max(duration,t.read(t.count-1)[0]-t.read(0)[0]);
+   }catch{}
+  }
+  return {name:a.name??'(unnamed '+i+')',channels:a.channels?.length??0,
+   durationSeconds:Number(duration.toFixed(3)),paths,targets:[...targets].slice(0,30)};
+ });
  const walking=clips.filter(x=>/walk|stride|locomot|gait/i.test(x.name));
  if(!walking.length)errors.push('No named walking animation clip; cannot verify gait source');
  if(!clips.some(x=>x.channels>0))errors.push('No animation channels');
@@ -105,7 +116,7 @@ export function auditGlb(input){
  if(triangles<15000)warnings.push('Under 15k skinned triangles; may read as a low-poly toy');
  const names=(g.skins??[]).flatMap(s=>s.joints??[]).map(j=>g.nodes?.[j]?.name??'').join(' ').toLowerCase();
  for(const [label,re] of [['pelvis',/hip|pelvis|root/],['legs',/thigh|upperleg|upleg/],['knees',/shin|calf|lowerleg|knee/],['feet',/foot|ankle/],['arms',/upperarm|arm/],['hands',/hand|wrist/]])if(!re.test(names))warnings.push('Unmapped joint semantics: '+label+' (manual mapping required)');
- const result={sha256:crypto.createHash('sha256').update(input).digest('hex'),bytes:input.length,skins:g.skins?.length??0,skinNodes:skinNodes.length,joints:(g.skins??[]).map(s=>s.joints?.length??0),skinnedPrimitives,weightedVertices,triangles,materials,images,texturedMaterials:textured,clips,walkingClips:walking.map(x=>x.name),errors,warnings,technicallyRigged:errors.length===0,visualAccepted:false};
+ const result={sha256:crypto.createHash('sha256').update(input).digest('hex'),bytes:input.length,skins:g.skins?.length??0,skinNodes:skinNodes.length,joints:(g.skins??[]).map(s=>s.joints?.length??0),jointNames:(g.skins??[]).map(s=>(s.joints??[]).map(j=>g.nodes?.[j]?.name??'(unnamed)')),skinnedPrimitives,weightedVertices,triangles,materials,images,texturedMaterials:textured,clips,walkingClips:walking.map(x=>x.name),errors,warnings,technicallyRigged:errors.length===0,visualAccepted:false};
  return result;
 }
 
