@@ -78,7 +78,7 @@ export default function SpectralFootpath({rigPoseRef,reducedMotion=false}){
         // never the previous frame's world/foot position.
  return <>
   <mesh ref={surface} geometry={deck} visible={false}>
-    <meshBasicMaterial color="#26394f" transparent opacity={.22} side={THREE.DoubleSide} depthWrite={false}/>
+    <meshBasicMaterial color="#26394f" transparent opacity={.54} side={THREE.DoubleSide} depthWrite={false}/>
   </mesh>
   <line ref={left} geometry={geo[0]} visible={false}>
    <lineBasicMaterial color="#8fecef" transparent opacity={.83} depthWrite={false}/>
