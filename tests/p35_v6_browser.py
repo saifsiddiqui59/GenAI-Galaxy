@@ -249,13 +249,14 @@ async def inspect(pw,url,name,width,height,reduced=False):
         await page.locator('.guardian-sack').click()
         assert await page.locator('#guardian-sack-panel li').count()==3
         await page.get_by_role('button',name='Close satchel').click()
-        rects=await page.evaluate('''() => Object.fromEntries(['.guardian-journey-top','.guardian-next','.galaxy-view-actions','.guardian-mission'].map(s=>{let r=document.querySelector(s).getBoundingClientRect();return [s,{x:r.x,y:r.y,w:r.width,h:r.height}]}))''')
+        rects=await page.evaluate('''() => Object.fromEntries(['.guardian-journey-top','.guardian-next','.galaxy-view-actions','.guardian-mission','.galaxy-mode-tag'].map(s=>{let r=document.querySelector(s).getBoundingClientRect();return [s,{x:r.x,y:r.y,w:r.width,h:r.height}]}))''')
         for key,r in rects.items():
             assert r['x']>=0 and r['x']+r['w']<=width+1,(name,key,r)
             assert r['y']>=0 and r['y']+r['h']<=max(height,740)+1,(name,key,r)
         def intersects(a,b):return a['x']<b['x']+b['w'] and b['x']<a['x']+a['w'] and a['y']<b['y']+b['h'] and b['y']<a['y']+a['h']
         assert not intersects(rects['.guardian-next'],rects['.galaxy-view-actions'])
         if width<700:
+            assert rects['.guardian-journey-top']['y']>=rects['.galaxy-mode-tag']['y']+rects['.galaxy-mode-tag']['h']+1,(name,'status banner overlaps title',rects)
             assert diag['screenBody']['bottom']<rects['.guardian-next']['y']-4,(diag['screenBody'],rects)
             assert diag['screenBody']['top']>rects['.guardian-journey-top']['y']+rects['.guardian-journey-top']['h'],(diag['screenBody'],rects)
         if not reduced:
