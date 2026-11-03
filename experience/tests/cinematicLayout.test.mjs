@@ -37,8 +37,8 @@ test('desktop and phone remain balanced full-screen even in reduced-motion',()=>
  const phone=cinematicLayoutAt(0,true,true,3);
  const tallPhone=cinematicLayoutAt(0,true,false,3);
  assert(desktop.scale[0]>=2.1&&desktop.scale[0]<=2.3);
- assert(phone.scale[0]>=.85&&phone.scale[0]<=.88);
- assert(tallPhone.scale[0]>=.93&&tallPhone.scale[0]<=.96);
+ assert(phone.scale[0]>=.99&&phone.scale[0]<=1.01);
+ assert(tallPhone.scale[0]>=1.01&&tallPhone.scale[0]<=1.03);
  for(const pose of [desktop,phone,tallPhone])
   assert(Math.abs(pose.position[0]+4.48*pose.scale[0])<(pose===desktop?.40:.05),
    'all viewports center orbit on screen');

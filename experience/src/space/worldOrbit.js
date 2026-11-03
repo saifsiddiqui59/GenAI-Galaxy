@@ -1,6 +1,6 @@
 /* All 17 curriculum planets stay in ONE revolving galaxy.
- * Geometry is a shared circular orbit with small per-world periodic phase
- * changes: visually independent speeds, but no orbital overtaking/collisions.
+ * All 17 maintain safe original XY circles, plus individual inclined
+ * foreground/background movement and bounded velocity variation.
  * Original atlas anchors, IDs and owner progress never change.
  * The same pure clock is used by rendered worlds, reach IK, and detached orbs.
  */
@@ -11,7 +11,7 @@ import {cinematicLayoutAt} from './cinematicLayout.js';
 // Every planet makes a full orbit in 70 seconds. Small zero-mean perturbations
 // change its instantaneous velocity by up to ~6%, then close exactly on beat.
 export const ORBIT_PERIOD_MS=70000;
-export const ORBIT_PHASE_AMPLITUDE=.014;
+export const ORBIT_PHASE_AMPLITUDE=.025; // bounded independent orbital velocities
 export const PLANET_SPIN_PERIOD_MS=24000;
 export const ORBIT_CENTER=Object.freeze({x:4.48,y:.10});
 export const ORBIT_Y_ASPECT=1.0;
@@ -44,7 +44,24 @@ export function orbitAt(world,ms,reducedMotion=false){
  return {...world,
   x:ORBIT_CENTER.x+dx*cosine-dy*sine,
   y:ORBIT_CENTER.y+(dx*sine+dy*cosine)*ORBIT_Y_ASPECT,
-  z:world.z+.22*Math.sin(theta+world.index*.24)-.22*Math.sin(world.index*.24)};
+  z:orbitDepthAt(world,ms,reducedMotion)};
+}
+// True foreground/background orbital excursion with alternating inclined
+// planes. Preserve existing XY circles (and collision clearances), original
+// anchors at t=0, exact 70s closure, and reduced-motion static coordinates.
+// Hand IK and renderer both call orbitAt/galaxySpaceAt for the SAME moving XYZ.
+export function orbitInclinationAt(index){
+ if(!Number.isInteger(index)||index<0||index>=17)throw Error('Invalid orbital plane');
+ return (index%2===0?1:-1)*(.18+.005*index);
+}
+export function orbitDepthAt(world,ms,reducedMotion=false){
+ if(reducedMotion)return world.z;
+ const theta=orbitAngleAt(world.index,ms);
+ const dx=world.x-ORBIT_CENTER.x,dy=(world.y-ORBIT_CENTER.y)/ORBIT_Y_ASPECT;
+ const incline=Math.sin(orbitInclinationAt(world.index));
+ const inclined=incline*(dx*Math.sin(theta)+dy*(Math.cos(theta)-1));
+ const localDrift=.22*(Math.sin(theta+world.index*.24)-Math.sin(world.index*.24));
+ return world.z+inclined+localDrift;
 }
 export function galaxySpaceAt(worldIndex,ms,compact=false,short=false,completedCount=0,reducedMotion=false){
  if(!Number.isInteger(worldIndex)||worldIndex<0||worldIndex>=17)throw Error('Invalid world');

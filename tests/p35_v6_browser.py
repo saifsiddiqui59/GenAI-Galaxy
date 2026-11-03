@@ -129,6 +129,13 @@ async def inspect(pw,url,name,width,height,reduced=False):
             for world_id,motion in intro['worldMotion'].items():
                 x,y=motion['screen']
                 assert 0<x<width and 0<y<height, ('Opening cropped an orbiting planet',name,world_id,motion['screen'])
+                # The original test checked the centre only: a 30px globe
+                # can be visibly cut off despite a valid x/y centre.
+                if width<700 and motion['visible']:
+                    radius=motion.get('radiusPx',0)
+                    assert radius>3,('Missing actual projected globe radius',name,world_id,motion)
+                    assert radius+1<x<width-radius-1 and radius+1<y<height-radius-1, (
+                        'Planet sphere cropped at phone viewport edge',name,world_id,motion['screen'],radius)
             assert await page.locator('.guardian-journey.is-entering').count()==1
             flight=await capture('approach',2200+WORLD_MS*.20)
             assert len(intro.get('worldMotion',{}))==17 and len(flight.get('worldMotion',{}))==17, 'All 17 planets must render in independently updated galaxy motion'
@@ -242,13 +249,14 @@ async def inspect(pw,url,name,width,height,reduced=False):
         await page.locator('.guardian-sack').click()
         assert await page.locator('#guardian-sack-panel li').count()==3
         await page.get_by_role('button',name='Close satchel').click()
-        rects=await page.evaluate('''() => Object.fromEntries(['.guardian-journey-top','.guardian-next','.galaxy-view-actions','.guardian-mission'].map(s=>{let r=document.querySelector(s).getBoundingClientRect();return [s,{x:r.x,y:r.y,w:r.width,h:r.height}]}))''')
+        rects=await page.evaluate('''() => Object.fromEntries(['.guardian-journey-top','.guardian-next','.galaxy-view-actions','.guardian-mission','.galaxy-mode-tag'].map(s=>{let r=document.querySelector(s).getBoundingClientRect();return [s,{x:r.x,y:r.y,w:r.width,h:r.height}]}))''')
         for key,r in rects.items():
             assert r['x']>=0 and r['x']+r['w']<=width+1,(name,key,r)
             assert r['y']>=0 and r['y']+r['h']<=max(height,740)+1,(name,key,r)
         def intersects(a,b):return a['x']<b['x']+b['w'] and b['x']<a['x']+a['w'] and a['y']<b['y']+b['h'] and b['y']<a['y']+a['h']
         assert not intersects(rects['.guardian-next'],rects['.galaxy-view-actions'])
         if width<700:
+            assert rects['.guardian-journey-top']['y']>=rects['.galaxy-mode-tag']['y']+rects['.galaxy-mode-tag']['h']+1,(name,'status banner overlaps title',rects)
             assert diag['screenBody']['bottom']<rects['.guardian-next']['y']-4,(diag['screenBody'],rects)
             assert diag['screenBody']['top']>rects['.guardian-journey-top']['y']+rects['.guardian-journey-top']['h'],(diag['screenBody'],rects)
         if not reduced:

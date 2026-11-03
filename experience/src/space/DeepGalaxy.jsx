@@ -50,20 +50,23 @@ function NebulaCloud({reducedMotion,clockRef}){
   <planeGeometry/><shaderMaterial ref={mat} vertexShader={vertex} fragmentShader={fragment} uniforms={uniforms} depthWrite={false}/>
  </mesh>;
 }
-// Dim ellipse lanes make the 360° revolution perceptible without UI clutter.
+// Faint inclined 3D navigation lanes (not a bright, flat orbital diagram).
 function OrbitLanes({compact}){
- const geometries=useMemo(()=>[1.05,1.72,2.42,3.20].map(r=>{
+ const geometries=useMemo(()=>[1.05,1.72,2.42,3.20].map((r,planeIndex)=>{
   const p=[];for(let i=0;i<128;i++){
    const a=i/128*Math.PI*2;
-   p.push(r*Math.cos(a)*(compact?1:DESKTOP_ORBIT_SPREAD),r*ORBIT_Y_ASPECT*Math.sin(a),0);
+   const tilt=(planeIndex%2===0?1:-1)*(.15+.035*planeIndex);
+   p.push(r*Math.cos(a)*(compact?1:DESKTOP_ORBIT_SPREAD),
+     r*ORBIT_Y_ASPECT*Math.sin(a),
+     -3.65+r*Math.sin(a+planeIndex*.36)*Math.sin(tilt));
   }
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.Float32BufferAttribute(p,3));return g;
  }),[compact]);
  useEffect(()=>()=>geometries.forEach(g=>g.dispose()),[geometries]);
- return <group position={[ORBIT_CENTER.x,ORBIT_CENTER.y,-3.65]}>
+ return <group position={[ORBIT_CENTER.x,ORBIT_CENTER.y,0]}>
   {geometries.map((geo,i)=><lineLoop key={i} geometry={geo}>
-   <lineBasicMaterial color={i%2?'#9d9acc':'#8baecf'} transparent opacity={.13+i*.013} depthWrite={false}/>
+   <lineBasicMaterial color={i%2?'#9d9acc':'#8baecf'} transparent opacity={.06+i*.009} depthWrite={false}/>
   </lineLoop>)}
  </group>;
 }
@@ -94,9 +97,17 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
    const d=window.__galaxySkeletonDiagnostics;
    d.worldMotion??={};
    const ndc=orbit.current.localToWorld(projection.current.set(0,0,0)).project(state.camera);
+   // projection.current is a REUSED mutable vector. Preserve projected center
+   // scalars before updating it for the globe edge (otherwise radius is zero).
+   const cx=ndc.x,cy=ndc.y;
+   const edge=orbit.current.localToWorld(projection.current.set(world.scale,0,0)).project(state.camera);
+   // An on-screen planet CENTER can still have half its textured sphere
+   // clipped at the viewport edge. Expose the actual projected radius for
+   // portrait pixel QA; do not silently hide/crop any of the 17 worlds.
+   const radiusPx=Math.abs(edge.x-cx)*state.size.width/2;
    d.worldMotion[world.index]={position:[orbit.current.position.x,orbit.current.position.y,orbit.current.position.z],
-    screen:[(1+ndc.x)*state.size.width/2,(1-ndc.y)*state.size.height/2],
-    spin:planetSpinAt(world.index,ms,reducedMotion),visible:!transferred};
+    screen:[(1+cx)*state.size.width/2,(1-cy)*state.size.height/2],
+    radiusPx,spin:planetSpinAt(world.index,ms,reducedMotion),visible:!transferred};
   }
   if(halo.current)halo.current.visible=!transferred;
   if(ring.current)ring.current.visible=!transferred;
