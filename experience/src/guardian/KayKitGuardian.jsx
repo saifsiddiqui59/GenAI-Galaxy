@@ -76,6 +76,7 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
    object.userData.articulatedLegs=anatomy.articulatedLegs;
    object.userData.anatomicalParts=anatomy.attached;
    object.userData.anatomicalClusters=anatomy.clusters;
+   object.userData.nativeAnatomicalLimbs=anatomy.nativeLimbs;
   }
   // Stabilize legs in a real extended standing pose before storing the rest
   // quaternions. The original source clips tuck knees under the rib cage.
@@ -138,12 +139,13 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     toyEyesHidden:!source.getObjectByName('Skeleton_Mage_Eyes')?.visible,
     anatomyEnabled:ANATOMY_MODE,anatomicalParts:source.userData.anatomicalParts||0,
     anatomicalClusters:source.userData.anatomicalClusters||0,
+    nativeAnatomicalLimbs:!!source.userData.nativeAnatomicalLimbs,
     spectralActive:!!source.userData.spectralActive,
     articulatedArms:!!source.userData.articulatedArms,
     articulatedLegs:!!source.userData.articulatedLegs,
     standingLegs:source.userData.standingLegs?.corrected||0,
     legLengthFactor:source.userData.legProportions?.factor||1,
-    visibleLegMeshes:(()=>{let n=0;source.traverse(o=>{if(o.isMesh&&o.visible&&/^SkullMaster(Femur|Tibia|Foot)_/.test(o.name))n++});return n})()};
+    visibleLegMeshes:(()=>{let n=0;source.traverse(o=>{if(o.isMesh&&o.visible&&(/^(SkullMaster(Femur|Tibia|Foot)_)/.test(o.name)||(/^(SkullMasterAnatomy_(upperleg|lowerleg|foot)\.)/.test(o.name))))n++});return n})()};
   }
   return ()=>{mixer.stopAllAction();mixer.uncacheRoot(source);source.userData.disposeAnatomy?.();source.userData.disposeDetail?.();source.userData.disposeMantle?.();source.userData.disposeStyle?.()};
  },[source,rig,mixer,animations,onReady]);
@@ -334,7 +336,9 @@ function Model({rigPoseRef,clockRef,completedCount=0,worldIndexes=[],reducedMoti
     torsoBendRadians:uprightBones.filter(({bone})=>/^(hips|spine|chest)$/i.test(bone.name)).reduce((m,{bone,rest})=>Math.max(m,bone.quaternion.angleTo(rest)),0),
     legMotionRadians:uprightBones.filter(({bone})=>/^(upperleg|lowerleg|foot)[lr]/.test(bone.name.toLowerCase().replace(/[^a-z0-9]/g,''))).reduce((m,{bone,rest})=>Math.max(m,bone.quaternion.angleTo(rest)),0),
     legBoneCount:uprightBones.filter(({bone})=>/^(upperleg|lowerleg|foot)[lr]/.test(bone.name.toLowerCase().replace(/[^a-z0-9]/g,''))).length,
-    feetVisible:(()=>{let count=0;source.traverse(o=>{if(o.isMesh&&o.visible&&/^SkullMasterSole_/.test(o.name))count++});return count===2})(),
+    feetVisible:(()=>{const native=!!source.userData.nativeAnatomicalLimbs;
+      if(native)return ['l','r'].every(side=>source.getObjectByName('SkullMasterAnatomy_foot.'+side)?.visible);
+      let count=0;source.traverse(o=>{if(o.isMesh&&o.visible&&/^SkullMasterSole_/.test(o.name))count++});return count===2})(),
     pluckReachWeight:pluck?.reachWeight??0,
     palmContactInOrbit:!!pluck?.palmContact});
    const top=body.position.clone().add(new THREE.Vector3(0,3.6*scale,0)).project(state.camera);

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>V6.11 | Internal skinned actor audit — NOT a public Galaxy preview</title>
+<style>
+:root{color-scheme:dark;font:14px/1.5 system-ui,Arial,sans-serif;background:#070916;color:#dbe5f7}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;display:flex;flex-direction:column}
+header{z-index:10;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px;padding:11px 17px;border-bottom:1px solid #2b3140;background:#0c101c}
+strong{font-size:14px;letter-spacing:.07em}small{color:#97a6c0}
+nav{display:flex;align-items:center;gap:8px}button{background:#17243d;color:#edf2ff;padding:8px 12px;border:1px solid #52617a;border-radius:8px;cursor:pointer}
+button[aria-pressed=true]{background:#365685;border-color:#b8caff}
+main{position:relative;flex:1;min-height:420px;overflow:hidden;background:radial-gradient(ellipse at 50% 38%,#293049 0%,#111828 47%,#04060d 100%)}
+#rig-stage{position:absolute;inset:0}#status{position:absolute;bottom:14px;left:14px;right:14px;max-width:760px;color:#bdcdec;font:12px/1.4 ui-monospace,monospace;background:#070c17d9;border:1px solid #2b3649;padding:8px 10px;border-radius:8px}
+aside{position:absolute;top:16px;left:16px;max-width:min(320px,80vw);color:#bfcbde;text-shadow:0 2px 8px black;pointer-events:none;font-size:12px}
+aside b{display:block;color:#fff;font-size:17px}
+@media(max-width:600px){header{padding:9px 12px}small{display:none}main{min-height:360px}#status{font-size:10px}aside{font-size:10px}}
+</style>
+</head>
+<body>
+<header><div><strong>V6.11 ACTOR AUDIT</strong><small> · Unapproved third-party rig · Isolated test only</small></div>
+<nav><button id="idle" aria-pressed="true" type="button">Idle</button><button id="walk" aria-pressed="false" type="button">Walk cycle</button></nav></header>
+<main><div id="rig-stage"></div><aside><b>Skull Master candidate 01</b>Verify the actual body, costume, gait, hands and face. This is NOT the finished Galaxy.</aside><div id="status">Loading actual licensed GLB and rig…</div></main>
+<script type="module" src="/src/candidateRigPreview.jsx"></script></body>
+</html>

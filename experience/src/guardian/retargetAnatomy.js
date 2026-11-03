@@ -14,6 +14,9 @@ import {attachRiggedSkeletalLegs} from './riggedSkeletalLegs.js';
 export const ANATOMY_ASSET='models/cc0/InnersceneAnatomicalSkeleton.glb';
 export const ANATOMY_SHA256='e52d1b23cf15b574885846a7da30354defc0a3a51b679ded6cbc7c0c1965d996';
 export const ANATOMY_MODE=import.meta.env?.VITE_GALAXY_ANATOMY==='1';
+// Isolated V6.11 art experiment: use the detailed CC0 femur/shin/foot/hand
+// meshes instead of stylized rods. Keep disabled outside isolated art QA.
+export const ANATOMY_LIMBS_MODE=import.meta.env?.VITE_GALAXY_NATIVE_ANATOMICAL_LIMBS==='1';
 
 const bonesByRegion={
  upperArm:['upperarm.l','upperarm.r'],
@@ -43,11 +46,14 @@ export function classifyAnatomicalPart(name,centerX=0){
  return null;
 }
 function groupAnchor(region,side){
+ // The source anatomy is authored in an A-pose. Earlier 90-degree arm
+ // rotation forced its real humerus/radius meshes into a permanent T-pose.
+ // Preserve authored down-facing orientation and let animated bone IK move it.
  const sign=side===0?1:-1;
  switch(region){
-  case 'upperArm':return {source:[sign*.21,1.40,0],scale:1.13,angle:sign*Math.PI/2};
-  case 'lowerArm':return {source:[sign*.26,1.105,0],scale:1.16,angle:sign*Math.PI/2};
-  case 'hand':return {source:[sign*.28,.865,0],scale:1.09,angle:sign*Math.PI/2};
+  case 'upperArm':return {source:[sign*.21,1.40,0],scale:1.13,angle:0};
+  case 'lowerArm':return {source:[sign*.26,1.105,0],scale:1.16,angle:0};
+  case 'hand':return {source:[sign*.28,.865,0],scale:1.09,angle:0};
   case 'upperLeg':return {source:[sign*.122,.86,0],scale:.83,angle:0};
   case 'lowerLeg':return {source:[sign*.113,.48,0],scale:.66,angle:0};
   case 'foot':return {source:[sign*.114,.14,0],scale:1.04,angle:0};
@@ -141,7 +147,7 @@ export function attachSpectralLowerBody(source,THREE){
  return {update(ms){materials.forEach(mat=>{mat.uniforms.uTime.value=Math.max(0,ms)/1000})},
   dispose(){hips.remove(group);geometries.forEach(g=>g.dispose());materials.forEach(m=>m.dispose())}};
 }
-export function attachAnatomicalSkeleton(source,anatomy,THREE){
+export function attachAnatomicalSkeleton(source,anatomy,THREE,{nativeLimbs=ANATOMY_LIMBS_MODE}={}){
  // glTF animation PropertyBinding sanitizes dots, spaces and punctuation in
  // bone IDs. Match *only real bones* using the same canonicalization as IK.
  const normalize=name=>String(name||'').toLowerCase().replace(/[^a-z0-9]/g,'');
@@ -193,22 +199,24 @@ export function attachAnatomicalSkeleton(source,anatomy,THREE){
   // Keep original unskinned arm and leg clusters hidden: they cross at the
   // knees in motion. The connected KayKit rig gains independently articulated
   // anatomical legs and arms below; retain the authentic pelvis/rib cage.
-  const replaced=/^(upperleg|lowerleg|foot|upperarm|lowerarm|hand)/i.test(name);
+  const limb=/^(upperleg|lowerleg|foot|upperarm|lowerarm|hand)/i.test(name);
+  const replaced=limb&&!nativeLimbs;
   mesh.visible=!replaced;
   mesh.userData.replacedByRiggedBones=replaced;
+  mesh.userData.nativeAnatomicalLimb=limb&&nativeLimbs;
   mesh.castShadow=!replaced;
   bone.add(mesh);
   owned.push(mesh);geos.push(combined);
  }
  // No vapor cone obscuring the thighs: the owner requested visible feet,
  // knees and natural upper-body motion on the *original* anatomical bones.
- const arms=attachRiggedSkeletalArms(source,THREE);
- const legs=attachRiggedSkeletalLegs(source,THREE);
+ const arms=nativeLimbs?null:attachRiggedSkeletalArms(source,THREE);
+ const legs=nativeLimbs?null:attachRiggedSkeletalLegs(source,THREE);
  return {
-  attached:classified,clusters:owned.length,skinsUntouched:true,spectralActive:false,articulatedArms:true,articulatedLegs:true,
+  attached:classified,clusters:owned.length,skinsUntouched:true,spectralActive:false,articulatedArms:true,articulatedLegs:true,nativeLimbs,
   update:()=>{},
   dispose(){
-   legs.dispose();arms.dispose();
+   legs?.dispose();arms?.dispose();
    for(const mesh of owned)mesh.parent?.remove(mesh);
    geos.forEach(g=>g.dispose());material.dispose();
   }

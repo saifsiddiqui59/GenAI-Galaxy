@@ -17,6 +17,8 @@ jobs:
     timeout-minutes: 20
     env:
       VITE_GALAXY_ANATOMY: '1'
+      VITE_GALAXY_NATIVE_ANATOMICAL_LIMBS: '1'
+      GALAXY_V6_NATIVE: '1'
       GALAXY_V6_ANATOMY: '1'
       GALAXY_WALKING_EXPECT: '1'
       GALAXY_V6_ARTIFACTS: ${{ github.workspace }}/verification/screenshots
@@ -46,6 +48,28 @@ jobs:
           python -m playwright install chromium
       - name: Render real foot-planted walking Skull Master and validate desktop/mobile planet collection
         run: python tests/p35_v6_browser.py
+      # Research-only V6.11 actor evidence. Uses NO Azure, paid models or releases.
+      # Run on the experimental draft branch only; do not alter V6.10 for others.
+      - name: Retrieve pinned third-party skinned rig for isolated V6.11 inspection
+        if: github.head_ref == 'feat/v611-cinematic-skullmaster-rebuild-20261031'
+        run: |
+          set -euo pipefail
+          mkdir -p experience/public/research verification/v611-actor
+          curl --fail --location --retry 2 --max-time 110 \
+            'https://pub-63ab27389d044634a73e89c1a0c6d4a6.r2.dev/free-library/3d-models/skeleton-gunslinger/skeleton-gunslinger.glb' \
+            --output experience/public/research/v611-skeleton-gunslinger.glb
+          echo 'd200c0716355d50a48b34fc17e0eceeea8609e47f357c16c18df4886c89526f9  experience/public/research/v611-skeleton-gunslinger.glb' | sha256sum --check
+          node experience/scripts/audit-skinned-rig.mjs experience/public/research/v611-skeleton-gunslinger.glb > verification/v611-actor/rig-byte-audit.json
+      - name: Capture real idle and walking actor at desktop and two mobile sizes
+        if: github.head_ref == 'feat/v611-cinematic-skullmaster-rebuild-20261031'
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd experience
+          ./node_modules/.bin/vite --host 127.0.0.1 --port 4177 --strictPort \
+            > "$GITHUB_WORKSPACE/verification/v611-actor/vite.log" 2>&1 &
+          cd "$GITHUB_WORKSPACE"
+          python tests/p36_v611_candidate_browser.py
       - uses: actions/upload-artifact@v4
         if: always()
         with:

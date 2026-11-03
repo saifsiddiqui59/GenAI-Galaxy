@@ -1,0 +1,42 @@
+name: V6.11 skinned actor candidate byte audit (research only)
+on:
+  push:
+    branches: [feat/v611-cinematic-skullmaster-rebuild-20261031]
+    paths:
+      - 'experience/scripts/audit-skinned-rig.mjs'
+      - 'experience/tests/skinnedRigAssetAudit.test.mjs'
+      - '.github/workflows/galaxy-v611-rig-asset-audit.yml'
+      - 'docs/V611_RIGGED_ASSET_AUDIT.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  rig-asset-preflight:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Verify rig audit parser and negative cases
+        run: node --test experience/tests/skinnedRigAssetAudit.test.mjs
+      - name: Download and inspect published CC0 skeleton candidate (NO deployment)
+        id: candidate
+        continue-on-error: true
+        run: |
+          node experience/scripts/audit-skinned-rig.mjs \
+            https://pub-63ab27389d044634a73e89c1a0c6d4a6.r2.dev/free-library/3d-models/skeleton-gunslinger/skeleton-gunslinger.glb
+      - name: Record honest acceptance gate
+        if: always()
+        env:
+          CANDIDATE_OUTCOME: ${{ steps.candidate.outcome }}
+        run: |
+          echo '## V6.11 skinned asset research only' >> "$GITHUB_STEP_SUMMARY"
+          echo "Candidate binary inspection: $CANDIDATE_OUTCOME" >> "$GITHUB_STEP_SUMMARY"
+          echo 'This checks file bytes, bind matrices, skin weights and named walk clips only. It does NOT validate visual art, motion quality, rights chain, satchel, IK, planets or owner acceptance.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Never merge, deploy or declare V6.11 visually accepted based on this workflow.' >> "$GITHUB_STEP_SUMMARY"
+          if [ "$CANDIDATE_OUTCOME" != success ]; then
+            echo 'Candidate rejected or download blocked; inspect audit logs.' >> "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi

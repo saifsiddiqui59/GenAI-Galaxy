@@ -1,0 +1,69 @@
+name: V6.11 actual skinned actor visual evidence (isolated; no release)
+on:
+  pull_request:
+    branches: [feat/v611-cinematic-skullmaster-rebuild-20261031]
+    paths:
+      - 'experience/rig-candidate.html'
+      - 'experience/src/candidateRigPreview.jsx'
+      - 'experience/src/guardian/candidateSkinnedRig.js'
+      - 'experience/scripts/audit-skinned-rig.mjs'
+      - 'tests/p36_v611_candidate_browser.py'
+      - '.github/workflows/galaxy-v611-candidate-visual-qa.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: v611-actor-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  unapproved-actor-preview:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 19
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install isolated local visual dependencies
+        run: |
+          npm ci --prefix experience --no-audit --no-fund
+          python -m pip install playwright==1.57.0 Pillow==11.3.0
+          python -m playwright install chromium
+      - name: Download pinned ORIGINAL rig only into ephemeral QA server
+        run: |
+          set -euo pipefail
+          mkdir -p experience/public/research verification/v611-actor
+          curl --fail --location --retry 2 --max-time 110 \
+            'https://pub-63ab27389d044634a73e89c1a0c6d4a6.r2.dev/free-library/3d-models/skeleton-gunslinger/skeleton-gunslinger.glb' \
+            --output experience/public/research/v611-skeleton-gunslinger.glb
+          echo 'd200c0716355d50a48b34fc17e0eceeea8609e47f357c16c18df4886c89526f9  experience/public/research/v611-skeleton-gunslinger.glb' | sha256sum --check
+          node experience/scripts/audit-skinned-rig.mjs experience/public/research/v611-skeleton-gunslinger.glb > verification/v611-actor/rig-byte-audit.json
+      - name: Render exact publisher GLB idle and walk on desktop and two phones
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd experience
+          ./node_modules/.bin/vite --host 127.0.0.1 --port 4177 --strictPort \
+            > "$GITHUB_WORKSPACE/verification/v611-actor/vite.log" 2>&1 &
+          echo "$!" > "$GITHUB_WORKSPACE/verification/v611-actor/vite.pid"
+          cd "$GITHUB_WORKSPACE"
+          python tests/p36_v611_candidate_browser.py
+      - name: Always upload honest visual evidence
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v611-unapproved-actor-real-render
+          path: verification/v611-actor/
+          retention-days: 14
+          if-no-files-found: ignore
+      - name: State visual gate explicitly
+        if: always()
+        run: |
+          echo '### Experimental candidate: NOT APPROVED' >> "$GITHUB_STEP_SUMMARY"
+          echo 'The cowboy gunslinger model was rendered in an isolated browser; passing tests only means screenshots and true animation samples exist.' >> "$GITHUB_STEP_SUMMARY"
+          echo 'Manually reject or advance based on actual full-size desktop/mobile images, asset rights and motion. Never merge/deploy based on this check.' >> "$GITHUB_STEP_SUMMARY"
