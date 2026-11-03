@@ -129,6 +129,13 @@ async def inspect(pw,url,name,width,height,reduced=False):
             for world_id,motion in intro['worldMotion'].items():
                 x,y=motion['screen']
                 assert 0<x<width and 0<y<height, ('Opening cropped an orbiting planet',name,world_id,motion['screen'])
+                # The original test checked the centre only: a 30px globe
+                # can be visibly cut off despite a valid x/y centre.
+                if width<700 and motion['visible']:
+                    radius=motion.get('radiusPx',0)
+                    assert radius>3,('Missing actual projected globe radius',name,world_id,motion)
+                    assert radius+1<x<width-radius-1 and radius+1<y<height-radius-1, (
+                        'Planet sphere cropped at phone viewport edge',name,world_id,motion['screen'],radius)
             assert await page.locator('.guardian-journey.is-entering').count()==1
             flight=await capture('approach',2200+WORLD_MS*.20)
             assert len(intro.get('worldMotion',{}))==17 and len(flight.get('worldMotion',{}))==17, 'All 17 planets must render in independently updated galaxy motion'
