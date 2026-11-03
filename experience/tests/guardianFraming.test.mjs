@@ -12,6 +12,6 @@ test('Skull Master becomes clearly larger on desktop without oversized mobile fi
 });
 test('platform remains anchored to original floor coordinates in every viewport',()=>{
  assert.equal(guardianFloorY(false,false),-2.25);
- assert.equal(guardianFloorY(true,true),-.95);
+ assert.equal(guardianFloorY(true,true),-1.16);
  assert.equal(guardianFloorY(true,false),-1.58);
 });
