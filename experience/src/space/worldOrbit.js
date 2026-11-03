@@ -52,7 +52,7 @@ export function orbitAt(world,ms,reducedMotion=false){
 // Hand IK and renderer both call orbitAt/galaxySpaceAt for the SAME moving XYZ.
 export function orbitInclinationAt(index){
  if(!Number.isInteger(index)||index<0||index>=17)throw Error('Invalid orbital plane');
- return (index%2===0?1:-1)*(.18+.026*(index%5));
+ return (index%2===0?1:-1)*(.18+.005*index);
 }
 export function orbitDepthAt(world,ms,reducedMotion=false){
  if(reducedMotion)return world.z;
