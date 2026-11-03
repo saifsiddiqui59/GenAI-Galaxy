@@ -5,8 +5,8 @@ import {guardianStageScale,guardianFloorY} from '../src/guardian/guardianFraming
 test('Skull Master becomes clearly larger on desktop without oversized mobile figure',()=>{
  const large=guardianStageScale(false,false);
  assert(large>=1.34&&large<=1.42,'Desktop body must be visually prominent');
- assert.equal(guardianStageScale(true,true),.91);
- assert.equal(guardianStageScale(true,false),.97);
+ assert.equal(guardianStageScale(true,true),.82);
+ assert.equal(guardianStageScale(true,false),.90);
  assert(guardianStageScale(true,true)<guardianStageScale(true,false),'Short phones retain action-card clearance');
  assert.equal(guardianStageScale(false,true),large);
 });
