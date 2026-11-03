@@ -1,6 +1,6 @@
 name: V6.11 actual skinned actor visual evidence (isolated; no release)
 on:
-  push:
+  pull_request:
     branches: [feat/v611-cinematic-skullmaster-rebuild-20261031]
     paths:
       - 'experience/rig-candidate.html'
