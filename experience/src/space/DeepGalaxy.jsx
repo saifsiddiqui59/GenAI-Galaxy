@@ -97,13 +97,16 @@ function Planet({world,mastered,collectionOrder=-1,recommended,selected,onSelect
    const d=window.__galaxySkeletonDiagnostics;
    d.worldMotion??={};
    const ndc=orbit.current.localToWorld(projection.current.set(0,0,0)).project(state.camera);
+   // projection.current is a REUSED mutable vector. Preserve projected center
+   // scalars before updating it for the globe edge (otherwise radius is zero).
+   const cx=ndc.x,cy=ndc.y;
    const edge=orbit.current.localToWorld(projection.current.set(world.scale,0,0)).project(state.camera);
    // An on-screen planet CENTER can still have half its textured sphere
    // clipped at the viewport edge. Expose the actual projected radius for
    // portrait pixel QA; do not silently hide/crop any of the 17 worlds.
-   const radiusPx=Math.abs(edge.x-ndc.x)*state.size.width/2;
+   const radiusPx=Math.abs(edge.x-cx)*state.size.width/2;
    d.worldMotion[world.index]={position:[orbit.current.position.x,orbit.current.position.y,orbit.current.position.z],
-    screen:[(1+ndc.x)*state.size.width/2,(1-ndc.y)*state.size.height/2],
+    screen:[(1+cx)*state.size.width/2,(1-cy)*state.size.height/2],
     radiusPx,spin:planetSpinAt(world.index,ms,reducedMotion),visible:!transferred};
   }
   if(halo.current)halo.current.visible=!transferred;
